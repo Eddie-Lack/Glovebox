@@ -1,0 +1,109 @@
+diff --git a/python/libgarib/display_lists.py b/python/libgarib/display_lists.py
+index 2d3e606..2ef8724 100644
+--- a/python/libgarib/display_lists.py
++++ b/python/libgarib/display_lists.py
+@@ -587,7 +587,7 @@ def f3dex_to_prims(display_list, bank, lighting, texture_db, scale_factor):
+         primitives[material] = prims
+         prims.face_count = face_count
+         prims.material = material
+-        prims.texture = texture_db.byId[material.texture_id]
++        prims.texture = texture_db.byId.get(material.texture_id)
+         # TODO: don't dupe vertices if you don't have to
+         prims.vertex_count = face_count * 3
+         prims.index_count = face_count * 3
+@@ -609,7 +609,7 @@ def f3dex_to_prims(display_list, bank, lighting, texture_db, scale_factor):
+             prims.uv[cursor] = (v.u/env["texture_size"][0], v.v/env["texture_size"][1])
+             if lighting is True:
+                 norm_mag = math.sqrt(v.nx**2 + v.ny**2 + v.nz**2)
+-                prims.norm[cursor] = (v.nx/norm_mag, v.ny/norm_mag, v.nz/norm_mag)
++                prims.norm[cursor] = (v.nx/norm_mag, v.ny/norm_mag, v.nz/norm_mag) if norm_mag else (0, 1, 0)
+             else:
+                 prims.color[cursor] = (v.r, v.g, v.b, 1)
+             cursor += 1
+diff --git a/python/libgarib/gltf_helper.py b/python/libgarib/gltf_helper.py
+index a0e117f..919c98b 100644
+--- a/python/libgarib/gltf_helper.py
++++ b/python/libgarib/gltf_helper.py
+@@ -558,7 +558,7 @@ def addMeshDataToGLTFMesh(primitives, render_mode, gltf_mesh, file, data):
+     ###############################################
+     # Build actual GLTF structures:
+ 
+-    for prims in sorted(primitives, key=lambda p: p.material.texture_id):
++    for prims in sorted(primitives, key=lambda p: (p.material.texture_id is not None, p.material.texture_id or 0)):
+         indices_data = prims.indices.astype("=H").tobytes()
+         indices_bufferview_handle = len(file.bufferViews)
+         file.bufferViews.append(gltf.BufferView(
+diff --git a/python/libgarib/objects.py b/python/libgarib/objects.py
+index 0049e51..f7b1651 100644
+--- a/python/libgarib/objects.py
++++ b/python/libgarib/objects.py
+@@ -10,6 +10,14 @@ import typing
+ import numpy as np
+ import pygltflib as gltf
+ 
++# Newer numpy/pygltflib combinations leave numpy scalars in the glTF dict, which json can't encode.
++_gltf_json_serial = gltf.json_serial
++def _json_serial(obj):
++    if isinstance(obj, np.generic):
++        return obj.item()
++    return _gltf_json_serial(obj)
++gltf.json_serial = _json_serial
++
+ from .gbi import F3DEX
+ from .parsers.glover_objbank import GloverObjbank
+ from .parsers.construct import glover_objbank as objbank_writer
+@@ -1119,7 +1127,7 @@ def actor_to_gltf(obj_root, texture_db, scale_factor):
+             file.animations[anim_idx].extras[AnimMetadata.FIELDS.slot.name] = slots
+ 
+     if len(exported_anims) > 0:
+-        global_timeline_to_gltf(obj_root.mesh, file, data)
++        global_timeline_to_gltf(obj_root.mesh, file, data, scale_factor)
+ 
+     animation_props = actorAnimationMetadataToJson(obj_root)
+     file.nodes[0].extras[MeshMetadata.FIELDS.animation_props.name] = animation_props
+@@ -1206,7 +1214,7 @@ def mesh_geo_to_prims(geo, render_mode, texture_db, scale_factor):
+                 face_cn = geo.face_cn[face_idx]
+                 norm_byte = struct.unpack(">bbbb", struct.pack(">I",face_cn))[:-1]
+                 norm_mag = math.sqrt(sum(coord ** 2 for coord in norm_byte))
+-                norm_norm = tuple(coord / norm_mag for coord in norm_byte)
++                norm_norm = tuple(coord / norm_mag for coord in norm_byte) if norm_mag else (0, 1, 0)
+                 prims.norm[attr_cursor:attr_cursor+3] = (
+                     norm_norm,
+                     norm_norm,
+@@ -1394,7 +1402,7 @@ def mesh_to_gltf(mesh, file, gltf_parent, data, texture_db, scale_factor):
+     return {"gltf_parent": mesh_node}
+ 
+ 
+-def global_timeline_to_gltf(root_mesh, file, data):
++def global_timeline_to_gltf(root_mesh, file, data, scale_factor):
+     max_time = 0
+     def scrape_max(mesh):
+         nonlocal max_time
+@@ -1409,7 +1417,7 @@ def global_timeline_to_gltf(root_mesh, file, data):
+     file.animations.append(anim_root)
+     for_each_mesh(root_mesh, gltf_helper.addAnimationDataToGLTF,
+         gltf_animation=anim_root, clip=(0, max_time),
+-        file=file, data=data)
++        file=file, data=data, scale_factor=scale_factor)
+ 
+ 
+ def animation_to_gltf(anim, root_mesh, file, data, scale_factor):
+diff --git a/tools/objbank-tool.py b/tools/objbank-tool.py
+index 1954148..3d23041 100755
+--- a/tools/objbank-tool.py
++++ b/tools/objbank-tool.py
+@@ -102,8 +102,13 @@ def unpack(args):
+             obj = entry.obj_root
+             if obj is None:
+                 continue
++            try:
++                glb = libgarib.objects.actor_to_gltf(obj, texture_db, args.scale)
++            except Exception as e:
++                print("skipping object 0x{:08x}: {:}: {:}".format(obj.obj_id, type(e).__name__, e), file=sys.stderr)
++                continue
+             with open(os.path.join(args.output_dir, "0x{:08x}-{:}.glb".format(obj.obj_id, obj.mesh.name.strip("\0"))), "wb") as f:
+-                f.write(libgarib.objects.actor_to_gltf(obj, texture_db, args.scale))
++                f.write(glb)
+ 
+ 
+ def pack(args):

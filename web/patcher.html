@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Everything happens in this page. connect-src 'none' means the browser blocks any network request. The
+     ROM and patch you choose can't be sent anywhere. The script is pinned by hash (tools/build_patcher.py). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rBf/CZnN21VZuGU29bE3tUHBdUAUV+tswpkDXj5wShc='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Glover Level Patcher</title>
+<style>
+  :root { --bg: #15161b; --panel: #1d1f26; --panel-2: #252832; --line: #323642; --text: #e6e7ec; --muted: #9aa0ae;
+          --accent: #f2c14e; --ok: #6bd88a; --danger: #ff6b6b; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f4f4f6; --panel: #ffffff; --panel-2: #eef0f4; --line: #d8dbe3; --text: #1b1d24; --muted: #5d6372; --accent: #a87400; --ok: #1d7a3d; --danger: #b3261e; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } h1 span { color: var(--accent); }
+  .lede { color: var(--muted); margin: 0 0 20px; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .step h2 { font-size: 14px; margin: 0 0 8px; display: flex; gap: 8px; align-items: center; }
+  .step h2 b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--panel-2); font-size: 12px; }
+  .step.done h2 b { background: var(--ok); color: #fff; }
+  .drop { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .drop.over { border-color: var(--accent); background: var(--panel-2); }
+  button { font: inherit; color: inherit; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #231a00); font-weight: 600; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --on-accent: #ffffff; } }
+  button:disabled { opacity: .45; cursor: default; }
+  .info { margin-top: 8px; font-size: 13px; }
+  .info dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0 0; }
+  .info dt { color: var(--muted); } .info dd { margin: 0; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .ok { color: var(--ok); } .err { color: var(--danger); } .muted { color: var(--muted); font-size: 13px; }
+  .bar { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 18px; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Glover <span>Level Patcher</span></h1>
+  <p class="lede">Play a level made with Glovebox on your own copy of Glover (N64, USA).
+    Your ROM never leaves this page. Your browser reads, patches and saves it.</p>
+
+  <section class="step" id="step-rom">
+    <h2><b>1</b> Your Glover ROM</h2>
+    <div class="drop" id="drop-rom"><button id="pick-rom">Choose ROM…</button><span class="muted">.z64, .v64 or .n64; or drop it here</span></div>
+    <input type="file" id="file-rom" accept=".z64,.v64,.n64,.rom,.bin">
+    <div class="info" id="rom-info"></div>
+  </section>
+
+  <section class="step" id="step-patch">
+    <h2><b>2</b> The level patch</h2>
+    <div class="drop" id="drop-patch"><button id="pick-patch">Choose patch…</button><span class="muted">.bps from the editor’s “Export patch”; or drop it here</span></div>
+    <input type="file" id="file-patch" accept=".bps">
+    <div class="info" id="patch-info"></div>
+  </section>
+
+  <section class="step" id="step-go">
+    <h2><b>3</b> Patch and save</h2>
+    <button class="primary" id="go" disabled>Create patched ROM</button>
+    <div class="bar" id="bar"><i></i></div>
+    <div class="info" id="result"></div>
+  </section>
+
+  <footer>A BPS patch holds only what the edit changes.
+    The page refuses a wrong ROM or a damaged patch.
+    It works offline and makes no network requests.</footer>
+</main>
+<script>
+"use strict";
+(() => {
+  // Glover (USA) — the ROM the editor's patches are made against (gloveworld README, NGVE.sha1)
+  const KNOWN_SHA1 = "270be17b3c8da9b88a7b99c2a545b0bce16837f4";
+  const MAX_ROM = 64 << 20, MAX_PATCH = 32 << 20, MAX_TARGET = 64 << 20;
+  const $ = (id) => document.getElementById(id);
+  const state = { rom: null, romName: "", patch: null, patchMeta: null };
+
+  // ---- small, DOM-safe helpers (text only: nothing from a file is ever inserted as HTML) ----
+  function line(parent, text, cls) { const d = document.createElement("div"); d.textContent = text; if (cls) d.className = cls; parent.appendChild(d); return d; }
+  function defs(parent, rows) {
+    const dl = document.createElement("dl");
+    for (const [k, v] of rows) { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); }
+    parent.appendChild(dl);
+  }
+  const clear = (el) => el.replaceChildren();
+  const hex8 = (n) => (n >>> 0).toString(16).padStart(8, "0");
+
+  // ---- CRC32 (as used by BPS) ----
+  const CRC_TABLE = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  function crc32(u8, start = 0, end = u8.length) { let c = 0xFFFFFFFF; for (let i = start; i < end; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  async function sha1(u8) {
+    if (!(globalThis.crypto && crypto.subtle)) return null;
+    const d = new Uint8Array(await crypto.subtle.digest("SHA-1", u8));
+    return [...d].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // ---- ROM byte order: .z64 big-endian, .v64 byte-swapped, .n64 little-endian ----
+  function toZ64(u8) {
+    const m = (a, b, c, d) => u8[0] === a && u8[1] === b && u8[2] === c && u8[3] === d;
+    if (m(0x80, 0x37, 0x12, 0x40)) return { data: u8, order: "z64 (big-endian)" };
+    const out = new Uint8Array(u8.length);
+    if (m(0x37, 0x80, 0x40, 0x12)) { for (let i = 0; i + 1 < u8.length; i += 2) { out[i] = u8[i + 1]; out[i + 1] = u8[i]; } return { data: out, order: "v64 (byte-swapped), converted" }; }
+    if (m(0x40, 0x12, 0x37, 0x80)) { for (let i = 0; i + 3 < u8.length; i += 4) { out[i] = u8[i + 3]; out[i + 1] = u8[i + 2]; out[i + 2] = u8[i + 1]; out[i + 3] = u8[i]; } return { data: out, order: "n64 (little-endian), converted" }; }
+    return null;
+  }
+  const ascii = (u8, a, b) => String.fromCharCode(...u8.subarray(a, b)).replace(/[^\x20-\x7E]/g, "").trim();
+
+  // ---- BPS decoding, with every read and copy bounds-checked ----
+  class PatchError extends Error {}
+  function bpsHeader(p) {
+    if (p.length < 19 || p[0] !== 0x42 || p[1] !== 0x50 || p[2] !== 0x53 || p[3] !== 0x31) throw new PatchError("This isn't a BPS patch.");
+    const end = p.length - 12;
+    let pos = 4;
+    const varint = () => {
+      let data = 0, shift = 1;
+      for (;;) {
+        if (pos >= end) throw new PatchError("The patch is truncated.");
+        const x = p[pos++];
+        data += (x & 0x7F) * shift;
+        if (x & 0x80) return data;
+        shift *= 128; data += shift;
+        if (shift > 2 ** 42) throw new PatchError("The patch contains an invalid number.");
+      }
+    };
+    const sourceSize = varint(), targetSize = varint(), metaSize = varint();
+    if (metaSize > end - pos) throw new PatchError("The patch's metadata is truncated.");
+    const meta = p.subarray(pos, pos + metaSize);
+    pos += metaSize;
+    const view = new DataView(p.buffer, p.byteOffset, p.byteLength);
+    return { sourceSize, targetSize, meta, pos, end, varint: () => varint(), setPos: (v) => { pos = v; }, getPos: () => pos,
+             sourceCrc: view.getUint32(end, true), targetCrc: view.getUint32(end + 4, true), patchCrc: view.getUint32(end + 8, true) };
+  }
+  function bpsApply(src, p, onProgress) {
+    const h = bpsHeader(p);
+    if (crc32(p, 0, p.length - 4) !== h.patchCrc) throw new PatchError("The patch file is damaged (its checksum doesn't match).");
+    if (src.length !== h.sourceSize) throw new PatchError(`This patch expects a ${h.sourceSize}-byte ROM; yours is ${src.length} bytes.`);
+    if (crc32(src) !== h.sourceCrc) throw new PatchError("This patch was made for a different ROM (CRC32 " + hex8(h.sourceCrc) + "); yours is " + hex8(crc32(src)) + ".");
+    if (h.targetSize > MAX_TARGET) throw new PatchError("The patch would produce a file larger than 64 MB.");
+    const out = new Uint8Array(h.targetSize);
+    let o = 0, srcRel = 0, tgtRel = 0, steps = 0;
+    while (h.getPos() < h.end) {
+      const d = h.varint();
+      const cmd = d % 4, len = Math.floor(d / 4) + 1;
+      if (o + len > out.length) throw new PatchError("The patch writes past the end of the ROM.");
+      if (cmd === 0) {                       // SourceRead
+        if (o + len > src.length) throw new PatchError("The patch reads past the end of the ROM.");
+        out.set(src.subarray(o, o + len), o);
+      } else if (cmd === 1) {                // TargetRead
+        const pos = h.getPos();
+        if (pos + len > h.end) throw new PatchError("The patch is truncated.");
+        out.set(p.subarray(pos, pos + len), o);
+        h.setPos(pos + len);
+      } else {
+        const v = h.varint();
+        const off = v & 1 ? -Math.floor(v / 2) : Math.floor(v / 2);
+        if (cmd === 2) {                     // SourceCopy
+          srcRel += off;
+          if (srcRel < 0 || srcRel + len > src.length) throw new PatchError("The patch copies from outside the ROM.");
+          out.set(src.subarray(srcRel, srcRel + len), o);
+          srcRel += len;
+        } else {                             // TargetCopy (may overlap: byte by byte)
+          tgtRel += off;
+          if (tgtRel < 0 || tgtRel >= o) throw new PatchError("The patch copies from outside the output.");
+          for (let k = 0; k < len; k++) out[o + k] = out[tgtRel + k];
+          tgtRel += len;
+        }
+      }
+      o += len;
+      if (onProgress && (++steps & 1023) === 0) onProgress(o / out.length);
+    }
+    if (o !== out.length) throw new PatchError("The patch ended before the ROM was complete.");
+    if (crc32(out) !== h.targetCrc) throw new PatchError("The result doesn't match the patch's checksum; nothing was saved.");
+    return out;
+  }
+  function readMeta(p) {
+    try {
+      const h = bpsHeader(p);
+      const text = new TextDecoder("utf-8", { fatal: false }).decode(h.meta);
+      if (!text) return { header: h, meta: null };
+      const raw = JSON.parse(text);
+      const meta = {};
+      // Only known fields, as short plain strings
+      for (const k of ["tool", "game", "level", "levelId", "created", "sourceSha1", "targetSha1"]) if (typeof raw[k] === "string") meta[k] = raw[k].slice(0, 80);
+      if (typeof raw.quickboot === "boolean") meta.quickboot = raw.quickboot;
+      if (typeof raw.needsExpansionPak === "boolean") meta.needsExpansionPak = raw.needsExpansionPak;
+      if (Array.isArray(raw.importedModels)) meta.importedModels = raw.importedModels.filter((x) => typeof x === "string" && /^0x[0-9A-F]{8}$/.test(x)).slice(0, 64);
+      return { header: h, meta };
+    } catch (e) {
+      if (e instanceof PatchError) throw e;
+      return { header: bpsHeader(p), meta: null };
+    }
+  }
+
+  // ---- UI ----
+  async function readFile(file, max, what) {
+    if (file.size > max) throw new Error(`That ${what} is ${(file.size / 1048576).toFixed(1)} MB, larger than any ${what} this page accepts.`);
+    return new Uint8Array(await file.arrayBuffer());
+  }
+  async function setRom(file) {
+    const info = $("rom-info"); clear(info);
+    state.rom = null; update();
+    try {
+      const raw = await readFile(file, MAX_ROM, "ROM");
+      const conv = toZ64(raw);
+      if (!conv) { line(info, "This doesn't look like an N64 ROM (unknown header).", "err"); return; }
+      const rom = conv.data, digest = await sha1(rom);
+      state.rom = rom; state.romName = file.name;
+      const title = ascii(rom, 0x20, 0x34), code = ascii(rom, 0x3B, 0x3F);
+      line(info, digest === KNOWN_SHA1 ? "✓ Glover (USA), the ROM the editor's patches are made for." :
+        digest ? "This isn't the Glover (USA) ROM the editor uses. The patch's own checksum will decide whether it fits." : "Loaded (this browser can't compute SHA-1 here; the patch's CRC32 check still applies).",
+        digest === KNOWN_SHA1 ? "ok" : "muted");
+      defs(info, [["File", file.name], ["Title", title || "?"], ["Game code", code || "?"], ["Byte order", conv.order], ["Size", rom.length.toLocaleString() + " bytes"], ["SHA-1", digest || "n/a"]]);
+      $("step-rom").classList.add("done");
+    } catch (e) { line(info, e.message, "err"); }
+    update();
+  }
+  async function setPatch(file) {
+    try {
+      showPatch(await readFile(file, MAX_PATCH, "patch"), file.name);
+    } catch (e) { clear($("patch-info")); line($("patch-info"), e.message, "err"); }
+    update();
+  }
+  function showPatch(p, name) {
+    const info = $("patch-info"); clear(info);
+    state.patch = null; state.patchMeta = null; update();
+    try {
+      const { header, meta } = readMeta(p);
+      if (crc32(p, 0, p.length - 4) !== header.patchCrc) throw new PatchError("The patch file is damaged (its checksum doesn't match).");
+      state.patch = p; state.patchMeta = meta;
+      line(info, "✓ Valid BPS patch.", "ok");
+      const rows = [["File", name], ["Size", p.length.toLocaleString() + " bytes"]];
+      if (meta?.level) rows.push(["Level", meta.level + (meta.levelId ? ` (${meta.levelId})` : "")]);
+      if (meta?.tool) rows.push(["Made with", meta.tool]);
+      if (meta?.created) rows.push(["Created", meta.created]);
+      if (meta && "quickboot" in meta) rows.push(["Boots into level", meta.quickboot ? "yes (skips the title screens)" : "no (normal start)"]);
+      if (meta?.importedModels?.length) rows.push(["Imported models", meta.importedModels.length + " from other levels"]);
+      if (meta?.needsExpansionPak) rows.push(["Needs", "the N64 Expansion Pak (in an emulator, keep it switched on)"]);
+      rows.push(["Needs ROM CRC32", hex8(header.sourceCrc)]);
+      defs(info, rows);
+      $("step-patch").classList.add("done");
+    } catch (e) { line(info, e.message, "err"); }
+    update();
+  }
+  function update() {
+    $("go").disabled = !(state.rom && state.patch);
+    if (!state.rom) $("step-rom").classList.remove("done");
+    if (!state.patch) $("step-patch").classList.remove("done");
+  }
+  function outName() {
+    const lvl = (state.patchMeta?.level || "edited").replace(/[^A-Za-z0-9 '()-]+/g, "").trim().slice(0, 60) || "edited";
+    return `Glover - ${lvl}.z64`;
+  }
+  async function go() {
+    const res = $("result"); clear(res);
+    const bar = $("bar"); bar.style.display = "block"; bar.firstElementChild.style.width = "0%";
+    $("go").disabled = true;
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const out = bpsApply(state.rom, state.patch, (f) => { bar.firstElementChild.style.width = (f * 100).toFixed(0) + "%"; });
+      bar.firstElementChild.style.width = "100%";
+      const digest = await sha1(out);
+      const meta = state.patchMeta;
+      line(res, "✓ Patched. The result matches the patch's checksum" + (meta?.targetSha1 && digest ? (digest === meta.targetSha1 ? " and the editor's SHA-1." : ", but not the SHA-1 in its notes.") : "."), "ok");
+      defs(res, [["Output", outName()], ["Size", out.length.toLocaleString() + " bytes"], ["SHA-1", digest || "n/a"]]);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([out], { type: "application/octet-stream" }));
+      a.download = outName();
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      line(res, "Your browser is saving it now. Load it in an emulator or flash cart like any .z64 ROM.", "muted");
+      $("step-go").classList.add("done");
+    } catch (e) {
+      line(res, (e instanceof PatchError ? "" : "Unexpected error: ") + e.message, "err");
+    } finally { $("go").disabled = !(state.rom && state.patch); }
+  }
+
+  function wire(kind, setter) {
+    const input = $("file-" + kind), drop = $("drop-" + kind);
+    $("pick-" + kind).addEventListener("click", () => input.click());
+    input.addEventListener("change", () => { const f = input.files[0]; input.value = ""; if (f) setter(f); });
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) setter(f); });
+  }
+  wire("rom", setRom);
+  wire("patch", setPatch);
+  // A page can carry its patch in a data block (base64), which the CSP
+  // allows because the browser never runs it. Then only the ROM is asked for.
+  const embedded = $("embedded-patch");
+  if (embedded) {
+    try {
+      const b = atob(embedded.textContent.replace(/\s+/g, ""));
+      const p = new Uint8Array(b.length);
+      for (let i = 0; i < b.length; i++) p[i] = b.charCodeAt(i);
+      $("drop-patch").remove();
+      showPatch(p, embedded.dataset.name || "built in");
+    } catch (e) { line($("patch-info"), "The patch built into this page is damaged.", "err"); }
+  }
+  $("go").addEventListener("click", go);
+  // A file dropped outside the boxes goes to the ROM or patch step by its extension; the browser doesn't open it
+  addEventListener("dragover", (e) => e.preventDefault());
+  addEventListener("drop", (e) => {
+    e.preventDefault();
+    const f = e.dataTransfer.files[0];
+    if (f) (/\.bps$/i.test(f.name) && !embedded ? setPatch : setRom)(f);
+  });
+  // For automated tests
+  globalThis.__patcher = { bpsApply, toZ64, crc32, readMeta };
+})();
+</script>
+</body>
+</html>

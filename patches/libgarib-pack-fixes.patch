@@ -1,0 +1,56 @@
+diff --git a/python/libgarib/display_lists.py b/python/libgarib/display_lists.py
+index 2ef8724..5ee31ef 100644
+--- a/python/libgarib/display_lists.py
++++ b/python/libgarib/display_lists.py
+@@ -292,6 +292,7 @@ def prepare_variants(dl_cmds, tri_indices, vertex_cache, batch_mapping, current_
+     # Check if vertices are already in the cache but need to be modified.
+     # If so, write the appropriate dlist commands
+     for full_idx in tri_indices:
++        full_idx = int(full_idx)
+         all_variants = full_idx & 0xfffffffc
+         cache_idx = batch_mapping[full_idx >> 2]
+         variant_idx = full_idx & 0x3
+@@ -315,8 +316,8 @@ def prepare_variants(dl_cmds, tri_indices, vertex_cache, batch_mapping, current_
+                     val=pack_uv(new[gltf_helper.MeshData.AttrType.uv])
+                 )
+ 
+-            if (tuple(old[gltf_helper.MeshData.AttrType.color]) !=
+-                tuple(new[gltf_helper.MeshData.AttrType.color])):
++            if (tuple(old.get(gltf_helper.MeshData.AttrType.color, ())) !=
++                tuple(new.get(gltf_helper.MeshData.AttrType.color, ()))):
+                 dl_cmds.data += F3DEX["G_MODIFYVTX"].pack(
+                     where="G_MWO_POINT_RGBA",
+                     vtx=cache_idx,
+diff --git a/python/libgarib/gbi.py b/python/libgarib/gbi.py
+index 6c35e50..118d1bf 100644
+--- a/python/libgarib/gbi.py
++++ b/python/libgarib/gbi.py
+@@ -54,7 +54,7 @@ class Vertex(object):
+                 int(self.x), int(self.y), int(self.z),
+                 0,
+                 int(self.u * (2**5)), int(self.v * (2**5)),
+-                int(self.nx * 128), int(self.ny * 128), int(self.nz * 128), int(self.a * 255))
++                int(self.nx * 127), int(self.ny * 127), int(self.nz * 127), int(self.a * 255))
+         else:
+             return struct.pack(
+                 self.GBI_STRUCTURE_UNLIT,
+diff --git a/python/libgarib/gltf_helper.py b/python/libgarib/gltf_helper.py
+index 919c98b..c194b19 100644
+--- a/python/libgarib/gltf_helper.py
++++ b/python/libgarib/gltf_helper.py
+@@ -432,8 +432,13 @@ class MeshData(object):
+                         if tuple(variant[self.AttrType.uv]) == uv:
+                             break
+                     else:
+-                        if len(self.variants[new_idx]) > 4:
+-                            raise Exception("Too many vertex variants")
++                        if len(self.variants[new_idx]) == 4:
++                            # Two index bits pick a variant. Start another vertex at this position.
++                            for attr_type in old_attrs:
++                                self.attrs[attr_type][attr_wr_cursor] = old_attrs[attr_type][idx]
++                            new_idx = dedup_mapping[v_key] = attr_wr_cursor << 2
++                            attr_wr_cursor += 1
++                            self.variants[new_idx] = []
+                         variant_idx = len(self.variants[new_idx])
+                         self.variants[new_idx].append({
+                             attr_type: old_attrs[attr_type][idx]

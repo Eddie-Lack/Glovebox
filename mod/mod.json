@@ -1,0 +1,155 @@
+{
+ "about": "Expansion Pak game mod: rotation and scale for every 3D object, a larger heap, models from other banks, the matrix guard, extra level slots. Built by tools/build_mod.py from mod/.",
+ "mod_rom": "0xC00000",
+ "mod_ram": "0x807E0000",
+ "mod_bytes": 13512,
+ "heap_end": "0x807E0000",
+ "heap_extra_bytes": 4063232,
+ "mod_sha1": "d1291f07b849a87887967b0f50d379b2ae11469d",
+ "mod_size": 13520,
+ "mod_end": "0x807E71AE",
+ "extra_banks": {
+  "offset": 12736,
+  "size": 256
+ },
+ "custom": {
+  "offset": 12992,
+  "size": 168
+ },
+ "slots": {
+  "offset": 13168,
+  "size": 344
+ },
+ "hw_symbols": {
+  "levelHeader": "0x807E34D0"
+ },
+ "symbols": {
+  "modHeapGen": "0x807E34E0",
+  "modPeakMatrices": "0x807E6E88",
+  "modSkippedDraws": "0x807E6E8C",
+  "modSlotsActive": "0x807E7178"
+ },
+ "regions": [
+  {
+   "ram": "0x80181B50",
+   "rom": "0x82B50",
+   "why": "loader (over ScreenShot)",
+   "old_sha1": "2320589b9626b299843f123e663b74b960fd1d17",
+   "new": "27bdffe8afbf00102482ff6d3042ffff2c4200021040000a008038213c0280188c421db814400026000724008ca30000240200012463000c08060706aca300002482ff6f3042ffff2c42000200041c000003340338c300bc2c6300010043102510400005240200013c018018ac221db8080607040007240038c300a02c63000138c200622c420001006218251460000938c3005d2c63000138c200832c42000100621825146000032402008754c20004000724003c018018ac201db8000724000c060d7d000424038fbf001027bd001803e000080000000027bdffd83c0380008c6303183c02007f3442ffffafbf0024afb40020afb3001cafb20018afb100140043102b1040000dafb000103c04807e3c0500c03c0600c00c05077634c634d03c04807e0c071ccc240534d00c1f80000000000008060743000000003c138018367322e03c02801824421b5000021100000211823c030c00004390253c10801826101d4000008821261400788e030000147300030000000008060738ac7200003c018018003108218c221d44ac6200008e040000240500040c07191c263100088e040000240500040c071ccc261000080214102a1440ffed000000000c04e710000000008fbf00248fb400208fb3001c8fb200188fb100148fb0001027bd002803e00008000000000000000000000000801822e00c060d7d8011c9740c0608248014342c0c050df9801434800c050df9801434e00c050df9801435a80c050df9801436000c050df9801436a80c050df9801437580c050df98014d40c0c050df98014d4740c050df98017e6e00c0645e58010eebc0c04ff0e8011ccb40c04ff0e8011d8400c04ff0e00000001"
+  }
+ ],
+ "hooks": [
+  {
+   "ram": "0x801822E0",
+   "rom": "0x832E0",
+   "why": "ParseLandscapeFile -> ParseTokenGeneric",
+   "old": "0c060d7d",
+   "new": "0c1f8148"
+  },
+  {
+   "ram": "0x8011C974",
+   "rom": "0x1D974",
+   "why": "ParseLandscapeFile",
+   "old": "0c060824",
+   "new": "0c1f8223"
+  },
+  {
+   "ram": "0x8014342C",
+   "rom": "0x4442C",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x80143480",
+   "rom": "0x44480",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x801434E0",
+   "rom": "0x444E0",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x801435A8",
+   "rom": "0x445A8",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x80143600",
+   "rom": "0x44600",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x801436A8",
+   "rom": "0x446A8",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x80143758",
+   "rom": "0x44758",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x8014D40C",
+   "rom": "0x4E40C",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x8014D474",
+   "rom": "0x4E474",
+   "why": "DrawActor",
+   "old": "0c050df9",
+   "new": "0c1f8259"
+  },
+  {
+   "ram": "0x8017E6E0",
+   "rom": "0x7F6E0",
+   "why": "RestartEnemy (respawn)",
+   "old": "0c0645e5",
+   "new": "0c1f823f"
+  },
+  {
+   "ram": "0x8010EEBC",
+   "rom": "0xFEBC",
+   "why": "JallocInit (heap end at MOD_RAM)",
+   "old": "0c04ff0e",
+   "new": "0c1f8021"
+  },
+  {
+   "ram": "0x8011CCB4",
+   "rom": "0x1DCB4",
+   "why": "JallocInit (heap end at MOD_RAM)",
+   "old": "0c04ff0e",
+   "new": "0c1f8021"
+  },
+  {
+   "ram": "0x8011D840",
+   "rom": "0x1E840",
+   "why": "JallocInit (heap end at MOD_RAM)",
+   "old": "0c04ff0e",
+   "new": "0c1f8021"
+  },
+  {
+   "ram": "0x8013F264",
+   "rom": "0x40264",
+   "why": "MainProc -> InitCRCTable (loader)",
+   "old": "0c04e710",
+   "new": "0c06070a"
+  }
+ ]
+}

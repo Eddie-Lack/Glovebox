@@ -1,0 +1,4 @@
+# libgarib's own requirements are installed from vendor/libgarib/requirements.txt by setup.sh
+PySide6-Essentials  # the desktop editor's window (desktop/)
+PyOpenGL            # the desktop editor's 3D view
+packaging       # libgarib's parsers compare versions with it (patches/libgarib-packaging-version.patch)

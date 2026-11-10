@@ -1,0 +1,2 @@
+levelInfo = 0x801E6910;
+worldInfo = 0x801E7390;
