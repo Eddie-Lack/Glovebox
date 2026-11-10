@@ -1,0 +1,10 @@
+[package]
+name = "glovebox-editor"
+description = "The editor's state and every edit, without a window"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+glovebox-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true

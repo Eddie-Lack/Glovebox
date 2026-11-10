@@ -1,0 +1,541 @@
+{
+ "enemyObjects": [
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 0,
+   "comment": "X"
+  },
+  {
+   "value": 590429702,
+   "comment": "bovva.ndo"
+  },
+  {
+   "value": 1447463112,
+   "comment": "cannon.ndo"
+  },
+  {
+   "value": 1081043443,
+   "comment": "samtex.ndo"
+  },
+  {
+   "value": 3644572721,
+   "comment": "mallet.ndo"
+  },
+  {
+   "value": 3787292102,
+   "comment": "generalw.ndo"
+  },
+  {
+   "value": 1366771092,
+   "comment": "lionfish.ndo"
+  },
+  {
+   "value": 2199443696,
+   "comment": "chester.ndo"
+  },
+  {
+   "value": 3951085505,
+   "comment": "keg.ndo"
+  },
+  {
+   "value": 1339612836,
+   "comment": "reggie.ndo"
+  },
+  {
+   "value": 2992776369,
+   "comment": "swish.ndo"
+  },
+  {
+   "value": 1608478116,
+   "comment": "thrice.ndo"
+  },
+  {
+   "value": 1852535629,
+   "comment": "robes.ndo"
+  },
+  {
+   "value": 299048339,
+   "comment": "fumble.ndo"
+  },
+  {
+   "value": 1618937121,
+   "comment": "mike.ndo"
+  },
+  {
+   "value": 3031414808,
+   "comment": "raptor.ndo"
+  },
+  {
+   "value": 2300402924,
+   "comment": "crumpet.ndo"
+  },
+  {
+   "value": 1032515839,
+   "comment": "tracey.ndo"
+  },
+  {
+   "value": 1665681209,
+   "comment": "yoofow.ndo"
+  },
+  {
+   "value": 1014911175,
+   "comment": "opec.ndo"
+  },
+  {
+   "value": 729632804,
+   "comment": "cymon.ndo"
+  },
+  {
+   "value": 977254060,
+   "comment": "sucker.ndo"
+  },
+  {
+   "value": 1034312254,
+   "comment": "bugle.ndo"
+  },
+  {
+   "value": 3968172657,
+   "comment": "dennis.ndo"
+  },
+  {
+   "value": 2488671521,
+   "comment": "chuck.ndo"
+  },
+  {
+   "value": 2211959158,
+   "comment": "hubchicken1.ndo"
+  },
+  {
+   "value": 1479376744,
+   "comment": "frankie2.ndo"
+  },
+  {
+   "value": 4292143388,
+   "comment": "kloset.ndo"
+  },
+  {
+   "value": 1103051250,
+   "comment": "willy.ndo"
+  },
+  {
+   "value": 875993342,
+   "comment": "joff.ndo"
+  },
+  {
+   "value": 1584127349,
+   "comment": "cancer.ndo"
+  },
+  {
+   "value": 978597178,
+   "comment": "kirk.ndo"
+  },
+  {
+   "value": 2056792425,
+   "comment": "robot.ndo"
+  },
+  {
+   "value": 4168847885,
+   "comment": "evilrobot.ndo"
+  },
+  {
+   "value": 2220975470,
+   "comment": "spank.ndo"
+  },
+  {
+   "value": 2164913449,
+   "comment": "babyspk2.ndo"
+  },
+  {
+   "value": 2157552291,
+   "comment": "evilglove.ndo"
+  },
+  {
+   "value": 2936291868,
+   "comment": "dibber.ndo"
+  },
+  {
+   "value": 1259010906,
+   "comment": "brundle.ndo"
+  },
+  {
+   "value": 641836448,
+   "comment": "malcom.ndo"
+  },
+  {
+   "value": 4178428190,
+   "comment": "spotty.ndo"
+  },
+  {
+   "value": 146819227,
+   "comment": "gordon.ndo"
+  },
+  {
+   "value": 65556663,
+   "comment": "sidney.ndo"
+  },
+  {
+   "value": 3523904243,
+   "comment": "weevil.ndo"
+  },
+  {
+   "value": 3469996620,
+   "comment": "chopstik.ndo"
+  },
+  {
+   "value": 2187744427,
+   "comment": "butterfly.ndo"
+  },
+  {
+   "value": 4125985031,
+   "comment": "spider.ndo"
+  },
+  {
+   "value": 3817555789,
+   "comment": "bat.ndo"
+  },
+  {
+   "value": 3793318818,
+   "comment": "frog.ndo"
+  },
+  {
+   "value": 2032869267,
+   "comment": "dragfly.ndo"
+  },
+  {
+   "value": 518028869,
+   "comment": "boxthing.ndo"
+  },
+  {
+   "value": 1638866433,
+   "comment": "bug.ndo"
+  },
+  {
+   "value": 4144034018,
+   "comment": "nmefrog.ndo"
+  }
+ ],
+ "enemyScales": [
+  {
+   "value": 0.0,
+   "comment": ""
+  },
+  {
+   "value": 0.05,
+   "comment": ""
+  },
+  {
+   "value": 0.05,
+   "comment": ""
+  },
+  {
+   "value": 0.0,
+   "comment": ""
+  },
+  {
+   "value": 0.0,
+   "comment": ""
+  },
+  {
+   "value": 0.0,
+   "comment": ""
+  },
+  {
+   "value": 0.05,
+   "comment": ""
+  },
+  {
+   "value": 0.05,
+   "comment": "bovva.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "cannon.ndo"
+  },
+  {
+   "value": 0.065,
+   "comment": "samtex.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "mallet.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "generalw.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "lionfish.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "chester.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "keg.ndo"
+  },
+  {
+   "value": 0.07,
+   "comment": "reggie.ndo"
+  },
+  {
+   "value": 0.1,
+   "comment": "swish.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "thrice.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "robes.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "fumble.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "mike.ndo"
+  },
+  {
+   "value": 0.075,
+   "comment": "raptor.ndo"
+  },
+  {
+   "value": 0.1,
+   "comment": "crumpet.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "tracey.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "yoofow.ndo"
+  },
+  {
+   "value": 0.075,
+   "comment": "opec.ndo"
+  },
+  {
+   "value": 0.065,
+   "comment": "cymon.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "sucker.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "bugle.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "dennis.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "chuck.ndo"
+  },
+  {
+   "value": 0.15,
+   "comment": "hubchicken1.ndo"
+  },
+  {
+   "value": 0.065,
+   "comment": "frankie2.ndo"
+  },
+  {
+   "value": 0.06,
+   "comment": "kloset.ndo"
+  },
+  {
+   "value": 0.375,
+   "comment": "willy.ndo"
+  },
+  {
+   "value": 0.075,
+   "comment": "joff.ndo"
+  },
+  {
+   "value": 0.075,
+   "comment": "cancer.ndo"
+  },
+  {
+   "value": 0.075,
+   "comment": "kirk.ndo"
+  },
+  {
+   "value": 0.5,
+   "comment": "robot.ndo"
+  },
+  {
+   "value": 0.5,
+   "comment": "evilrobot.ndo"
+  },
+  {
+   "value": 0.08,
+   "comment": "spank.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "babyspk2.ndo"
+  },
+  {
+   "value": 0.07,
+   "comment": "evilglove.ndo"
+  },
+  {
+   "value": 0.125,
+   "comment": "dibber.ndo"
+  },
+  {
+   "value": 0.1,
+   "comment": "brundle.ndo"
+  },
+  {
+   "value": 0.065,
+   "comment": "malcom.ndo"
+  },
+  {
+   "value": 0.09,
+   "comment": "spotty.ndo"
+  },
+  {
+   "value": 0.08,
+   "comment": "gordon.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "sidney.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "weevil.ndo"
+  },
+  {
+   "value": 0.08,
+   "comment": "chopstik.ndo"
+  },
+  {
+   "value": 0.1,
+   "comment": "butterfly.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "spider.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "bat.ndo"
+  },
+  {
+   "value": 0.1,
+   "comment": "frog.ndo"
+  },
+  {
+   "value": 0.05,
+   "comment": "dragfly.ndo"
+  },
+  {
+   "value": 0.075,
+   "comment": "boxthing.ndo"
+  },
+  {
+   "value": 0.065,
+   "comment": "bug.ndo"
+  },
+  {
+   "value": 0.15,
+   "comment": "nmefrog.ndo"
+  }
+ ],
+ "powerupObjects": [
+  {
+   "value": 66360211,
+   "comment": "rblades.ndo"
+  },
+  {
+   "value": 1440486625,
+   "comment": "death.ndo"
+  },
+  {
+   "value": 1589877325,
+   "comment": "frogspell.ndo"
+  },
+  {
+   "value": 3246909639,
+   "comment": "sticky.ndo"
+  },
+  {
+   "value": 3200413438,
+   "comment": "hercules.ndo"
+  },
+  {
+   "value": 2398490321,
+   "comment": "fast.ndo"
+  },
+  {
+   "value": 2495147954,
+   "comment": "blades.ndo"
+  },
+  {
+   "value": 249754850,
+   "comment": "bowling.ndo"
+  },
+  {
+   "value": 1461682069,
+   "comment": "power.ndo"
+  },
+  {
+   "value": 2232855654,
+   "comment": "bearing.ndo"
+  },
+  {
+   "value": 2277784196,
+   "comment": "beach.ndo"
+  },
+  {
+   "value": 0,
+   "comment": "unused"
+  },
+  {
+   "value": 0,
+   "comment": "unused"
+  },
+  {
+   "value": 4203901664,
+   "comment": "boomer.ndo"
+  },
+  {
+   "value": 2873009371,
+   "comment": "vanish.ndo"
+  }
+ ],
+ "ballObject": 2387467849
+}

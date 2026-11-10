@@ -20,3 +20,5 @@
 /vendor/
 /.venv/
 __pycache__/
+/target/
+/target-*/

@@ -1,0 +1,9 @@
+[package]
+name = "glovebox"
+description = "Glovebox, a level editor for Glover (N64)"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+glovebox-core = { path = "../core" }
+glovebox-editor = { path = "../editor" }
