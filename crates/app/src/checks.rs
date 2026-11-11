@@ -40,14 +40,16 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 /// A bar that fills with the share of the free memory the imports take.
 fn budget(ui: &mut egui::Ui, text: &str, ratio: f64, small: &str, over: Option<bool>) {
     let over = over.unwrap_or(ratio > 1.0);
-    egui::Frame::new().fill(style::PANEL).corner_radius(6).inner_margin(egui::Margin::symmetric(8, 6)).show(ui, |ui| {
+    egui::Frame::new().fill(style::PANEL).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(8, 6)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.label(text);
-        let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 6.0), egui::Sense::hover());
-        ui.painter().rect_filled(rect, 3.0, style::INPUT);
-        let mut fill = rect;
-        fill.set_width(rect.width() * ratio.clamp(0.0, 1.0) as f32);
-        ui.painter().rect_filled(fill, 3.0, if over { style::ERR } else { style::GOLD });
+        // A sunken grey trough that fills with blocks, as the progress bar of the patcher page
+        let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 10.0), egui::Sense::hover());
+        ui.painter().rect_filled(rect, 0.0, style::GREY);
+        let mut fill = rect.shrink(2.0);
+        fill.set_width(fill.width() * ratio.clamp(0.0, 1.0) as f32);
+        ui.painter().rect_filled(fill, 0.0, if over { style::RED } else { style::NAVY });
+        style::bevel(ui.painter(), rect, false);
         style::src(ui, small);
     });
 }
@@ -79,7 +81,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
     if ids.iter().any(|i| ed.catalog.get(i).is_none_or(|c| c.custom.is_none())) {
         let mut on = ed.copy_imports;
         let tip = "Works without the Expansion Pak, but patches then contain game data";
-        if ui.checkbox(&mut on, "Copy the models into the ROM instead").on_hover_text(tip).changed() {
+        if style::checkbox(ui, &mut on, "Copy the models into the ROM instead").on_hover_text(tip).changed() {
             w.acts.push(Box::new(move |w: &mut Window| {
                 w.ed.copy_imports = on;
                 w.checks = w.ed.checks();

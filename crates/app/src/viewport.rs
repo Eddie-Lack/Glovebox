@@ -313,7 +313,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     }
     if let Some((x0, y0, x1, y1)) = w.ed.box_rect() {
         let r = egui::Rect::from_min_max(rect.min + egui::vec2(x0 as f32, y0 as f32), rect.min + egui::vec2(x1 as f32, y1 as f32));
-        painter.rect_filled(r, 0.0, egui::Color32::from_rgba_unmultiplied(242, 193, 78, 30));
+        painter.rect_filled(r, 0.0, egui::Color32::from_rgba_unmultiplied(255, 255, 0, 30));
         painter.rect_stroke(r, 0.0, egui::Stroke::new(1.0, style::GOLD), egui::StrokeKind::Inside);
     }
     if resp.contains_pointer() && (w.ed.box_mode || w.ed.path.on) {
@@ -325,29 +325,32 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 /// The level's name, the autosave chip, the hint line and the loading note.
 fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
     let inner = rect.shrink2(egui::vec2(10.0, 8.0));
+    // The chips are navy boxes, a little see-through, with the page's black edge
+    let chip = egui::Color32::from_rgba_unmultiplied(0, 0, 0x60, 225);
     let mut top = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::top_down(egui::Align::Min)));
     top.spacing_mut().item_spacing.y = 3.0;
     if !w.hud_level.is_empty() {
-        let frame = egui::Frame::new().fill(egui::Color32::from_rgba_unmultiplied(21, 22, 27, 150)).corner_radius(4).inner_margin(egui::Margin::symmetric(5, 1));
-        frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).strong().color(style::TEXT)));
+        let frame = egui::Frame::new().fill(chip).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(6, 1));
+        frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).font(egui::FontId::new(13.0, style::bold())).color(style::YELLOW)));
     }
     if w.ed.has_level {
         let (text, tip, edited) = w.chip();
-        let (fg, border) = if edited { (style::GOLD, style::GOLD_DIM) } else { (style::TEXT, style::BORDER) };
-        let frame = egui::Frame::new().fill(egui::Color32::from_rgba_unmultiplied(37, 40, 50, 200)).stroke(egui::Stroke::new(1.0, border)).corner_radius(9).inner_margin(egui::Margin::symmetric(8, 1));
+        let (fg, border) = if edited { (style::YELLOW, style::YELLOW) } else { (style::TEXT, style::BLACK) };
+        let frame = egui::Frame::new().fill(chip).stroke(egui::Stroke::new(1.0, border)).inner_margin(egui::Margin::symmetric(6, 1));
         frame.show(&mut top, |ui| ui.label(egui::RichText::new(text).size(12.0).color(fg))).response.on_hover_text(tip);
     }
     let hint = if w.view.fly.on { HINT_FLY } else { HINT_ORBIT };
     let mut bottom = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::bottom_up(egui::Align::Min)));
-    let hint_frame = egui::Frame::new().fill(egui::Color32::from_rgba_unmultiplied(21, 22, 27, 150)).corner_radius(4).inner_margin(egui::Margin::symmetric(5, 2));
-    hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(egui::Color32::from_rgb(0xc4, 0xc8, 0xd2))));
+    let hint_frame = egui::Frame::new().fill(chip).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(6, 2));
+    hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(style::TEXT)));
 
     let note = w.view.error.as_deref().unwrap_or(&w.loading);
     if !note.is_empty() {
         let galley = ui.painter().layout(note.to_string(), egui::FontId::proportional(13.0), style::TEXT, (rect.width() - 80.0).max(100.0));
         let size = egui::vec2((galley.size().x + 40.0).max(260.0), galley.size().y.max(16.0) + 30.0);
         let r = egui::Rect::from_center_size(rect.center(), size);
-        ui.painter().rect(r, 8.0, egui::Color32::from_rgba_unmultiplied(21, 22, 27, 220), egui::Stroke::new(1.0, style::BORDER), egui::StrokeKind::Inside);
+        ui.painter().rect_filled(r, 0.0, style::NAVY);
+        style::ridge(ui.painter(), r.expand(style::RIDGE));
         let mut child = ui.new_child(egui::UiBuilder::new().max_rect(r).layout(egui::Layout::centered_and_justified(egui::Direction::TopDown)));
         child.label(note);
     }

@@ -812,6 +812,27 @@ pub fn faces(single: &[u8]) -> u32 {
         .map_or(0, |d| u16_at(d, 0) as u32)
 }
 
+/// The vertices that the faces of the root mesh use, in the model's own units. The root mesh is the first mesh of
+/// the bank's first object, the one the game calls `obj->mesh`. The vertices are the mesh's own: the game puts no
+/// key frame of the mesh on them when it builds a platform's collision (`InitPlatformInfo`). A vertex that several
+/// faces use is given once. None when the bank cannot be read. Empty when the root mesh has no faces.
+pub fn root_face_vertices(single: &[u8]) -> Option<Vec<[f32; 3]>> {
+    let bank = Bank::parse(single).ok()?;
+    let root = bank.objects.first()?.root()?;
+    let Some(geo) = &root.geometry else { return Some(Vec::new()) };
+    if geo.num_faces == 0 {
+        return Some(Vec::new());
+    }
+    let (faces, vertices) = (geo.faces?, geo.vertices?);
+    let mut used = vec![false; geo.num_vertices as usize];
+    for f in 0..geo.num_faces as usize * 3 {
+        let v = faces.get(f * 2..f * 2 + 2).map(|d| u16_at(d, 0) as usize)?;
+        *used.get_mut(v)? = true;
+    }
+    let vertex = |v: usize| vertices.get(v * VERTEX..(v + 1) * VERTEX).map(|d| [0, 4, 8].map(|k| f32_at(d, k)));
+    (0..used.len()).filter(|v| used[*v]).map(vertex).collect()
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // The model
 
@@ -1420,6 +1441,10 @@ mod tests {
         assert_eq!(faces(&split(&data).unwrap()[0].bytes), 0);
         assert_eq!(faces(&[]), 0);
         assert_eq!(faces(&[0, 0, 0, 1, 0xFF, 0xFF, 0xFF, 0xF0]), 0);
+        // Both faces use vertex 0 and vertex 2: each is given once
+        assert_eq!(root_face_vertices(&geo).unwrap(), [[0.0, 0.0, 0.0], [1.5, 0.0, 0.0], [0.0, 1.5, 0.0], [0.0, 0.0, 1.5]]);
+        assert_eq!(root_face_vertices(&split(&data).unwrap()[0].bytes), Some(Vec::new()));
+        assert_eq!(root_face_vertices(&[]), None);
     }
 
     #[test]

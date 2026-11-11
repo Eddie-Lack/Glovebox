@@ -451,6 +451,11 @@ impl GameData {
         self.model_bank(id).map_or(0, objbank::faces)
     }
 
+    /// The vertices the faces of a catalog model's root mesh use (`objbank::root_face_vertices`), or none.
+    pub fn root_vertices(&self, id: u32) -> Option<Vec<[f32; 3]>> {
+        self.model_bank(id).and_then(objbank::root_face_vertices)
+    }
+
     /// The objects the game is sure to have loaded for a level: those of the banks that both the game and noclip
     /// list.
     pub fn loaded_ids(&self, sid: &str) -> Result<BTreeSet<u32>, GameError> {

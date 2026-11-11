@@ -4,6 +4,7 @@ use crate::app::{Act, Window};
 use crate::style;
 use egui::RichText;
 use glovebox_editor::entities::{EntId, KINDS};
+use glovebox_editor::exits;
 use std::collections::BTreeMap;
 
 #[derive(Default)]
@@ -36,7 +37,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
-    ui.checkbox(&mut ed.include_land, RichText::new("box select includes landscape").color(style::MUTED));
+    style::checkbox(ui, &mut ed.include_land, RichText::new("box select includes landscape").color(style::MUTED));
     if !ed.has_level {
         return;
     }
@@ -55,18 +56,20 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 continue;
             }
             let mut on = !ed.hidden.contains(k);
-            ui.scope(|ui| {
-                let c = style::hex(color);
-                ui.visuals_mut().selection.bg_fill = c;
-                ui.visuals_mut().widgets.inactive.fg_stroke.color = c;
-                ui.visuals_mut().widgets.hovered.fg_stroke.color = c;
-                if ui.checkbox(&mut on, RichText::new(format!("{name} {n}")).color(style::TEXT)).changed() {
-                    acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(k, on)));
-                }
-            });
+            if style::tick_box(ui, &mut on, RichText::new(format!("{name} {n}")).color(style::TEXT).into(), style::hex(color)).changed() {
+                acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(k, on)));
+            }
             col += 1;
             if col % 2 == 0 {
                 ui.end_row();
+            }
+        }
+        // The exit triggers are no entities of their own: the layer shows the spheres of the platforms with an exit
+        let n = ed.exits().len();
+        if n > 0 {
+            let mut on = !ed.hidden.contains(exits::LAYER);
+            if style::tick_box(ui, &mut on, RichText::new(format!("Exit triggers {n}")).color(style::TEXT).into(), style::hex(exits::COLOR)).changed() {
+                acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(exits::LAYER, on)));
             }
         }
     });
@@ -146,7 +149,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                     let e = &ed.entities[*i];
                     let on = selected.contains(i) || owners.contains(i);
                     let color = if on {
-                        style::GOLD
+                        style::NAVY
                     } else if st.bad.get(*i).copied().unwrap_or(false) {
                         style::ERR
                     } else {
@@ -155,13 +158,20 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                     let tag = if e.tag == "GaribGroup" { "" } else { e.tag.as_str() };
                     ui.allocate_ui_with_layout(egui::vec2(ui.available_width(), row_height), egui::Layout::left_to_right(egui::Align::Center), |ui| {
                         ui.add_space(14.0);
-                        let mut text = RichText::new(format!("{}   {}", e.label, tag)).color(color);
-                        if on {
-                            text = text.strong();
-                        }
+                        // The chosen rows are navy on white, as in a list of the time. The band is put in under the
+                        // text once the text's place is known.
+                        let band = ui.painter().add(egui::Shape::Noop);
+                        let text = RichText::new(format!("{}   {}", e.label, tag)).color(color);
                         let mut r = ui.add(egui::Label::new(text).truncate().sense(egui::Sense::click()));
-                        if r.hovered() {
-                            ui.painter().rect_filled(r.rect.expand2(egui::vec2(3.0, 1.0)), 3.0, egui::Color32::from_white_alpha(10));
+                        let fill = if on {
+                            Some(style::WHITE)
+                        } else if r.hovered() {
+                            Some(style::HILITE)
+                        } else {
+                            None
+                        };
+                        if let Some(fill) = fill {
+                            ui.painter().set(band, egui::Shape::rect_filled(r.rect.expand2(egui::vec2(3.0, 1.0)), 0.0, fill));
                         }
                         if e.imported {
                             r = r.on_hover_text("Imported at ROM build");

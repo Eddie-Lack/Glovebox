@@ -9,37 +9,120 @@
 <meta name="referrer" content="no-referrer">
 <title>Glover Level Patcher</title>
 <style>
-  :root { --bg: #15161b; --panel: #1d1f26; --panel-2: #252832; --line: #323642; --text: #e6e7ec; --muted: #9aa0ae;
-          --accent: #f2c14e; --ok: #6bd88a; --danger: #ff6b6b; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f4f4f6; --panel: #ffffff; --panel-2: #eef0f4; --line: #d8dbe3; --text: #1b1d24; --muted: #5d6372; --accent: #a87400; --ok: #1d7a3d; --danger: #b3261e; } }
+  /* Styled after a 1998 game web site, like the Glover Practice Rom's patch page: a tiled star background, a
+     ridge-framed table in the middle, a WordArt-style logo, red title bars, grey bevelled boxes and buttons,
+     pixel bullets and system fonts only. Everything is drawn here with CSS and SVG; nothing comes from the ROM. */
+  :root {
+    --navy: #000080; --deep: #000040; --grey: #c0c0c0; --grey-light: #ffffff; --grey-dark: #808080;
+    --red: #cc0000; --yellow: #ffff00; --good: #00c000; --bad: #ff3030; --soft: #c0c0ff;
+    color-scheme: dark;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 720px; margin: 0 auto; padding: 28px 16px 48px; }
-  h1 { font-size: 22px; margin: 0 0 4px; } h1 span { color: var(--accent); }
-  .lede { color: var(--muted); margin: 0 0 20px; }
-  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
-  .step h2 { font-size: 14px; margin: 0 0 8px; display: flex; gap: 8px; align-items: center; }
-  .step h2 b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--panel-2); font-size: 12px; }
-  .step.done h2 b { background: var(--ok); color: #fff; }
-  .drop { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .drop.over { border-color: var(--accent); background: var(--panel-2); }
-  button { font: inherit; color: inherit; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #231a00); font-weight: 600; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --on-accent: #ffffff; } }
-  button:disabled { opacity: .45; cursor: default; }
-  .info { margin-top: 8px; font-size: 13px; }
+  html, body { margin: 0; }
+  body {
+    color: #ffffff; font: 13px/1.5 Verdana, Tahoma, Arial, Helvetica, sans-serif;
+    padding: 20px 12px 40px;
+    background-color: #0000a8;
+    /* A tiled background of little yellow stars, as many 1998 sites had. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72' shape-rendering='crispEdges'%3E%3Crect width='72' height='72' fill='%230000a8'/%3E%3Cpath d='M18 6l3 7h7l-6 4 2 8-6-5-6 5 2-8-6-4h7z' fill='%23ffff00' stroke='%23c08000'/%3E%3Cpath d='M54 42l2 5h5l-4 3 2 6-5-4-5 4 2-6-4-3h5z' fill='%23ffffff' opacity='.55'/%3E%3Crect x='44' y='12' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='10' y='52' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='64' y='26' width='2' height='2' fill='%23ffff80'/%3E%3C/svg%3E");
+  }
+  main {
+    max-width: 620px; margin: 0 auto; background: var(--navy);
+    border: 6px ridge var(--grey); padding: 0 0 14px;
+  }
+  /* The logo: thick yellow letters with a red and black hard shadow, as from a 1998 paint program. */
+  h1 {
+    margin: 0; padding: 16px 8px 12px; text-align: center; background: var(--deep);
+    font: italic 900 clamp(26px, 7vw, 44px)/1 "Arial Black", "Arial Bold", Gadget, Impact, sans-serif;
+    color: var(--yellow); letter-spacing: 1px; text-transform: uppercase;
+    text-shadow: 2px 2px 0 var(--red), 4px 4px 0 #000000, -1px -1px 0 #ff8000;
+  }
+  h1 .glove { display: inline-block; width: 40px; height: 32px; vertical-align: -4px; margin: 0 8px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16' shape-rendering='crispEdges'%3E%3Cpath d='M1 5h4V4h2V3h4v2h8v3h-8v2h-1v2h-1v2H4v-2H3v-2H1z' fill='%23ffffff' stroke='%23000000' stroke-width='1'/%3E%3C/svg%3E") no-repeat center / contain; }
+  h1 .glove.right { transform: scaleX(-1); }
+  /* The subtitle under the logo: smaller white letters with the same hard shadow. */
+  h1 .sub { display: block; margin-top: 10px; font-size: clamp(13px, 3.4vw, 19px); color: #ffffff;
+    text-shadow: 1px 1px 0 var(--red), 2px 2px 0 #000000; }
+  /* A rainbow divider, a classic of the time. */
+  .rainbow { height: 6px; border: 0; margin: 0;
+    background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00c000, #0080ff, #8000ff, #ff00ff); }
+  p { margin: 0; }
+  .lede { margin: 14px 14px 0; text-align: center; }
+  a { color: var(--yellow); text-decoration: underline; }
+  a:visited { color: #ff99ff; }
+  a:hover { color: #ffffff; }
+  a:focus-visible { outline: 2px dotted var(--yellow); outline-offset: 2px; }
+
+  /* Each step is a box with a red title bar. */
+  .step { margin: 14px 14px 0; border: 2px solid #000000; background: #000060; padding: 0 12px 10px; }
+  .step h2 {
+    margin: 0 -12px 10px; padding: 3px 8px; background: var(--red); border-top: 2px solid #ff6060; border-bottom: 2px solid #800000;
+    font: bold 15px/1.3 Arial, Helvetica, sans-serif; color: var(--yellow); text-transform: uppercase; letter-spacing: 1px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  /* The step's number sits on a pixel bullet: a grey block, green with a tick once the step is done. */
+  .step h2 b { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; background: var(--grey); color: #000000;
+    border: 2px outset var(--grey); font: bold 12px/1 Arial, Helvetica, sans-serif; letter-spacing: 0; }
+  .step.done h2 b { background: var(--good); border-color: #80ff80 #006000 #006000 #80ff80; border-style: solid; font-size: 0; }
+  .step.done h2 b::after { content: ""; display: block; width: 5px; height: 9px; margin-top: -2px; border: solid #000000; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+  /* The drop box: grey and sunken, like a 1998 form. */
+  .drop { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px; background: var(--grey); color: #000000;
+    border: 3px inset var(--grey); }
+  .drop.over { background: #d8d8d8; border-style: outset; }
+  .drop .muted { color: #000000; font-size: 12px; }
+
+  /* A Windows 98 style push button. */
+  button {
+    font: bold 13px Arial, Helvetica, sans-serif; color: #000000; background: var(--grey); cursor: pointer;
+    border: 2px solid; border-color: var(--grey-light) #404040 #404040 var(--grey-light);
+    box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf; padding: 6px 14px;
+  }
+  button.primary { display: block; margin: 2px auto 0; padding: 6px 22px; max-width: 100%; }
+  button:active:not(:disabled) { border-color: #404040 var(--grey-light) var(--grey-light) #404040; box-shadow: inset 1px 1px 0 var(--grey-dark); }
+  button:disabled { color: #4c4c4c; text-shadow: 1px 1px 0 var(--grey-light); cursor: default; }
+  button:focus-visible { outline: 1px dotted #000000; outline-offset: -5px; box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf, 0 0 0 2px var(--yellow); }
+
+  .info { margin-top: 8px; font-size: 12px; }
+  .info > div { font-weight: bold; }
   .info dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0 0; }
-  .info dt { color: var(--muted); } .info dd { margin: 0; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
-  .ok { color: var(--ok); } .err { color: var(--danger); } .muted { color: var(--muted); font-size: 13px; }
-  .bar { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .1s; }
-  footer { color: var(--muted); font-size: 12px; margin-top: 18px; }
+  .info dt { color: var(--soft); }
+  .info dd { margin: 0; font: 12px/1.4 "Courier New", Courier, monospace; overflow-wrap: anywhere; min-width: 0; }
+  .ok { color: var(--good); } .err { color: var(--bad); }
+  .muted { color: var(--soft); font-size: 12px; }
+  .info > div.muted { font-weight: normal; }
+  #result { text-align: center; } #result dl { text-align: left; }
+
+  /* The progress bar: a sunken grey trough that fills with navy blocks. */
+  .bar { height: 18px; background: var(--grey); border: 2px inset var(--grey); overflow: hidden; margin-top: 10px; display: none; }
+  .bar i { display: block; height: 100%; width: 0; transition: width .1s;
+    background: repeating-linear-gradient(90deg, var(--navy) 0 10px, var(--grey) 10px 12px); }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+
+  footer { margin: 12px 14px 0; text-align: center; color: var(--soft); font-size: 12px; }
   input[type=file] { display: none; }
+
+  /* Very narrow windows, such as a phone at 200% zoom: less padding, and each value goes under its label. */
+  @media (max-width: 340px) {
+    body { padding: 8px 4px 24px; }
+    main { border-width: 4px; }
+    h1 { font-size: min(26px, 10vw); letter-spacing: 0; overflow-wrap: anywhere; }
+    h1 .glove { display: none; }
+    .lede, footer { margin-left: 6px; margin-right: 6px; }
+    .step { margin: 10px 6px 0; padding: 0 6px 8px; }
+    .step h2 { margin: 0 -6px 8px; font-size: 13px; letter-spacing: 0; }
+    .drop { padding: 8px; }
+    button, button.primary { padding: 6px 8px; }
+    .info dl { grid-template-columns: 1fr; }
+    .info dd { margin-bottom: 4px; }
+  }
 </style>
 </head>
 <body>
 <main>
-  <h1>Glover <span>Level Patcher</span></h1>
+  <h1><span class="glove left" aria-hidden="true"></span>Glovebox<span class="glove right" aria-hidden="true"></span>
+    <span class="sub">Glover Level Patcher</span></h1>
+  <hr class="rainbow">
   <p class="lede">Play a level made with Glovebox on your own copy of Glover (N64, USA).
     Your ROM never leaves this page. Your browser reads, patches and saves it.</p>
 

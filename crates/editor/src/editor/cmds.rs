@@ -4,6 +4,7 @@
 use super::{format_of, look_name, Editor, Event, GROUPS, LOOK_KEEP, MOD_NOTE};
 use crate::commands::{self, missing_need, platform_rules, refusal, PLATFORMS};
 use crate::entities::{camera_zone, set_camera_zone, Zone, MOD_PARENTS};
+use crate::exits;
 use crate::puzzles;
 use crate::scripts;
 use crate::vec::V3;
@@ -466,16 +467,20 @@ impl Editor {
     // Layers
 
     /// Shows or hides a kind of entity in the view. Hidden entities can't be picked, and leave the selection.
+    /// "exit" is the layer of the exit triggers: the spheres round the platforms with a SetExit.
     pub fn set_layer(&mut self, kind: &str, on: bool) {
         if on {
             self.hidden.remove(kind);
         } else {
             self.hidden.insert(kind.to_string());
         }
-        if kind == "trigger" {
-            if let Some(s) = self.settings.as_mut() {
-                s.set_value("triggers", if on { "on" } else { "off" });
-            }
+        let setting = match kind {
+            "trigger" => Some("triggers"),
+            exits::LAYER => Some(exits::SETTING),
+            _ => None,
+        };
+        if let (Some(key), Some(s)) = (setting, self.settings.as_mut()) {
+            s.set_value(key, if on { "on" } else { "off" });
         }
         if !on && self.selection.iter().any(|&i| self.entities[i].kind == kind) {
             let sel = self.selection.iter().copied().filter(|&i| self.entities[i].kind != kind).collect();

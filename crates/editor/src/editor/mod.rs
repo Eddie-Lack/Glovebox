@@ -15,12 +15,14 @@
 mod checks;
 mod cmds;
 mod edit;
+mod exits;
 mod load;
 mod nodes;
 mod path;
 mod select;
 mod transform;
 
+pub use exits::ExitTrigger;
 pub use checks::{Budget, BudgetRow, Check, Click, DrawLoad, SceneryBudget, Violation};
 pub use load::{fetch_level, BuildJob, BuildOutput, LevelData, LevelJob, PlanJob, PlanResult};
 pub use nodes::EntNodes;
@@ -135,7 +137,7 @@ pub enum Event {
     ModeChanged,
 }
 
-/// The app's settings store (Python's QSettings). The editor uses the keys "scene" and "triggers". The window
+/// The app's settings store (Python's QSettings). The editor uses the keys "scene", "triggers" and "exits". The window
 /// also keeps "fog", "saveDir" and "emulator" there.
 pub trait Settings {
     fn value(&self, key: &str) -> Option<String>;
@@ -325,9 +327,13 @@ pub struct Editor {
     /// The box-select setting "include the landscape".
     pub include_land: bool,
     pub(crate) model_cache: HashMap<ModelRef, Option<Arc<Prefab>>>,
+    /// The root mesh vertices of the models of exit platforms, by object id (`root_vertices`).
+    pub(crate) exit_verts: std::cell::RefCell<HashMap<String, Option<Arc<Vec<[f32; 3]>>>>>,
     pub(crate) icon_cache: HashMap<(String, String), Arc<Texture>>,
     pub(crate) shapes: HashMap<&'static str, Arc<Geometry>>,
     pub(crate) drag: Option<Drag>,
+    /// The level's XML when a number field's drag began. While it is set, edits add no undo step.
+    pub(crate) scrub: Option<String>,
     pub(crate) events: Vec<Event>,
     pub(crate) draft_pending: Option<(String, String)>,
     pub(crate) draft_due: Option<f64>,
@@ -397,9 +403,11 @@ impl Editor {
             last_status: (String::new(), String::new()),
             include_land: false,
             model_cache: HashMap::new(),
+            exit_verts: Default::default(),
             icon_cache: HashMap::new(),
             shapes: HashMap::new(),
             drag: None,
+            scrub: None,
             events: Vec::new(),
             draft_pending: None,
             draft_due: None,
@@ -462,6 +470,7 @@ impl Editor {
     /// Replaces the catalog (after the back end loaded it, or an imported model came or went).
     pub fn set_catalog(&mut self, catalog: BTreeMap<String, CatalogEntry>) {
         self.catalog = Arc::new(catalog);
+        self.exit_verts.borrow_mut().clear();
     }
 
     /// The open level's id, or "".

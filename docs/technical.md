@@ -82,6 +82,7 @@ nothing else. The program never runs them.
 |---|---|
 | `editor` | The state and every edit: loading (`load`), selection (`select`), the transform engine (`transform`), undo and adding and removing (`edit`), commands, scripts, puzzles and camera zones (`cmds`), the checks, draw load, imports and the budget (`checks`), the path tool (`path`), the entities' scene nodes (`nodes`). A queue of events tells the window what changed. |
 | `entities` | Entities from the level XML (`build`), bindings, attached points, trigger volumes, camera zones. |
+| `exits` | Exit triggers: the radius the game gives a platform (`radius`) and who must come within it (`rule`). |
 | `scene`, `camera`, `gizmo` | The 3D view's data: a small scene graph with picking, orbit and fly cameras, the gizmo. |
 | `commands`, `puzzles`, `scripts`, `presets` | The level format's order and rules, puzzles, enemy scripts, platform presets ("Commands, puzzles, enemy scripts, extra levels", below). |
 | `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, three.js maths (Euler `'YZX'`). |
@@ -96,7 +97,8 @@ nothing else. The program never runs them.
 | `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
 | `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
 | `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
-| `settings`, `style`, `icon` | `settings.ini`, the dark look, the app's icon. |
+| `settings`, `style`, `icon` | `settings.ini`, the look (the palette, the shapes of the widgets, the fonts), the app's icon. |
+| `numfield` | Number fields that change by dragging. |
 
 - A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
   `Backend::texture` give the model and the pixels.
@@ -114,6 +116,37 @@ nothing else. The program never runs them.
   a dialog.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
   (`render/icons.rs`), not with a system font. They look the same on every computer.
+- The look follows the patcher page (`web/patcher.html`), which follows the practice ROM's patch page: a 1998 game
+  web site. All of it is in `style.rs`.
+  - The palette is the page's: navy `#000080` for panels, `#000060` for boxes, `#000040` for the toolbar, the status
+    bar and pop-ups, grey `#c0c0c0` for buttons, red `#cc0000` with yellow `#ffff00` capitals for title bars.
+    Texts are white on navy, and black on the grey buttons and the white fields.
+  - egui's buttons, text boxes and separators get their shapes from widget themes (`Look`, registered with
+    `replace_widget_theme`; this needs egui's `experimental` feature). A button is a grey bevel. It is sunken while
+    it is held. A toolbar switch that is on is sunken and yellow. The main action (Build ROM) is red with yellow
+    letters. An entry of a list or a menu is flat, and the chosen one is navy on white.
+  - An egui frame has one stroke, so a themed bevel is a light stroke and a dark hard shadow of one pixel. Shapes the
+    app draws itself (checkboxes, picture wells, the ridge frame) have a true two-tone bevel (`style::bevel`).
+  - Title bars (`title_bar`, `h4`, the head of a `card`) show their text in capitals. The accessible name keeps the
+    text as written. A card whose title is a command's tag (`FogConfiguration`) keeps its letters.
+  - Checkboxes are drawn by `style::checkbox`: a bevelled box, green with a tick when on. A layer's box takes the
+    layer's colour.
+  - The setup screen and the dialogs are the page's framed table: `style::framed` (the ridge frame), `style::logo`
+    and `style::rainbow`. `style::stars` tiles the page's star background behind the setup screen.
+  - Fonts: Verdana, then Tahoma, when the computer has them, DejaVu Sans on Linux, then the fonts compiled in. A bold
+    face of the same family is the `bold` family, and Arial Black is the logo's. Without them the text font stands
+    in. No font file is in the repository.
+  - The 3D view keeps its dark grey background for a level without fog.
+- Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
+  takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
+  for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
+  box the focus. A text box with the focus is egui's own, and a drag in it selects text.
+  - The step is 1 for positions, angles and whole numbers, 0.01 for scales, and 1, 0.1 or 0.01 for other floats by
+    the decimals they show. A field of the level format keeps the limits of its type (`u1` is 0 to 255).
+  - A dragged value is handed to the same code as a typed one, on every frame it changes.
+  - The fields leave signals for the window. It calls `Editor::begin_scrub` before the frame's edits and
+    `end_scrub` after the last: the drag is one undo step. Esc calls `cancel_scrub`, which restores the XML from
+    before the drag. While a drag is open, the editor's keyboard shortcuts are off.
 
 ## Sharing levels: patches and the patcher
 
@@ -135,6 +168,9 @@ nothing else. The program never runs them.
   "Create patched ROM". Everything happens in the page:
   - Its Content-Security-Policy has `connect-src 'none'`: the browser itself blocks any network request.
     The script is pinned by hash (`tools/build_patcher.py`; run it after editing the script).
+  - Its look follows the practice ROM's patch page (glover.love): a 1998 game web site, with a star background,
+    a ridge-framed column, red title bars and grey bevelled buttons. It is all inline CSS and `data:` SVG.
+    Nothing in it comes from the ROM. A change to the style or the markup needs no new hash.
   - Every read and copy in the decoder is bounds-checked.
   - A wrong ROM, damaged patch or malformed patch is refused with a plain explanation; nothing is saved.
   - Patch metadata is shown as text only.
@@ -306,6 +342,22 @@ nothing else. The program never runs them.
 - **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It is the same switch as the
   "Puzzle triggers" layer. The setting is remembered between sessions. Hidden volumes can't be picked, and the
   level keeps them.
+- **Exit triggers** are drawn as a green translucent sphere with three rings round each platform whose
+  `SetExit` the game tests (an exit type other than 0). The centre is the platform's position, for a moving
+  platform its start. The radius is the one the game gives the platform ("Facts from the decomp", exits):
+  `exits::radius` walks the platform's commands in the level file's order, on the vertices the faces of the
+  model's root mesh use (`Backend::root_vertices`, read from the object bank with
+  `objbank::root_face_vertices`). The sphere is a node of its own in the world (`EntNodes::exit`). A click
+  goes through it, and it is in no selection box. The rings are drawn a second time, faint and without the
+  depth test: the hub's entrances sit inside their doors. It follows the platform when the platform moves, when its
+  scale changes and when its commands change. A radius of 0 draws nothing, and so do a model the editor
+  cannot read and an exit of type 3 (it tests no distance). The inspector's "Exit trigger" block gives the exit type, the radius, who must come within it
+  and the other conditions of `CheckForExit` for that type and level (`exits::rule`). The editor draws the
+  exit post's model at a scale of 1.5 on every axis; the game uses 1.5, 2, 1.5, and the radius is computed
+  with the game's.
+- **exits** (toolbar checkbox) shows or hides the exit triggers. It is the same switch as the "Exit triggers"
+  layer, which counts the platforms with an exit. The layer's key in `Editor::hidden` is `exit`; no entity has
+  that kind. The setting is remembered between sessions as `exits`. Hiding the platforms hides their spheres.
 - **fog** (toolbar checkbox) shows or hides the level's fog in the editor view. The setting is remembered
   between sessions. It doesn't change the level: in-game fog is the `FogConfiguration` command's
   `fog_enabled` field, which you can edit in the inspector.
@@ -501,6 +553,41 @@ offer **Platform** for them, and the checks flag one that is.
   corner plus a size, `l, w, h` → `size.x, y, z`, tested by `IsPointWithinBox`. Ranges (36, 38, 40) are
   `distance² < radius²`. Id 41 is a cylinder: `pos` holds (x, z, radius) and `size` holds (max_y, min_y).
   Id 34 (`PuzzleCond0x22`, `CONDITION_HAND_CROSSES_LINE`) always returns true.
+- Exits (parse.c `TOKEN_EXITDOOR`, `TOKEN_PLATFORM`, `TOKEN_POS`, `TOKEN_SCALE`; platform.c `InitPlatformInfo`;
+  game.c `CheckForExit`):
+  - An exit is a platform with a `SetExit`. `behavior` is the game's `exitType`. `UpdatePlatform` calls
+    `CheckForExit` for every platform whose `exitType` is not 0. `type` 0 (`loading_zone`) sets `alpha = 0` and
+    `flags |= 4`, and frees the collision faces.
+  - The test is `DistanceBetweenPoints(pos, &platform->actor.pos) < platform->actor.radius`: a sphere round the
+    platform's position. `pos` is the hand for exit types 6 to 12 and 21, for type 13 outside the Assault
+    Course, and in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1. Otherwise it is the ball.
+  - Exit type 3 tests no distance: the ball must be on the platform (`ball.obj->platform`) while Glover holds it.
+  - In the Wayroom, the Castle Cave, Atlantis 3 and Carnival 1, and for types 6 to 12, the distance is the
+    whole test. Atlantis 3 and Carnival 1 then end 50 frames later (`newLevExitTimer`).
+  - Everywhere else the game also asks: nothing for type 21 and in the Atlantis bonus; for type 13 that
+    `hubLevel` equals `hubTarget` or `ballStatic` is set; for every other type that Glover holds the ball.
+    Type 1, and every type in the Assault Course, then plays the goal animation (not in the first Space
+    boss). In the Assault Course that needs the ball held.
+  - In the hub stages (levels 0 to 7) an exit other than 12 and 21 does nothing while `ballStatic` is 0,
+    `hubTarget` differs from `hubLevel` and `worldComplete[exitType - 5]` is 0.
+  - For types 6 to 12 a ball that Glover does not hold is popped when it comes within the radius
+    (`ballLeftBehind`).
+  - `actor.radius` starts at 0 and only grows. `exitpost.ndo` (`0x7FDADB91`) starts at 20, with a scale of
+    1.5, 2, 1.5. `InitPlatformInfo` grows the radius to the longest vertex of the faces of `obj->mesh` (the
+    object's root mesh, its own vertices without any key frame), each axis multiplied by `actor.scale`. It
+    returns at once when `flags & 0x84`: a `NullPlatform` has 0x80, and a loading-zone `SetExit`, a
+    `PlatNoClip` or a `PlatSpike` already read has set 4.
+  - `InitPlatformInfo` runs from `SetPlatformPos`: when the parser reads `PlatSetInitialPos` and the first
+    `PlatPathPoint` (an orbiting platform takes no path point). It also runs for the pieces of a rope bridge.
+    `actor.scale` is what `PlatScale` set before that moment (`PlatScale` is not read after the first path
+    point), or the game mod's `SetActorScale` (mod/transforms.c). A scale that comes after the position is
+    drawn and does not change the radius.
+  - So a loading-zone `SetExit` before the position leaves the radius at 0, and the exit can never fire. The
+    check "The exit can never fire" reports it. The 48 shipped
+    levels have 126 platforms with an exit, and none has a radius of 0. The exit posts of the levels have 20,
+    their start value. The hub's entrances are `ballbit` models of 18.0 to 57.4,
+    the Wayroom's doors 87.6, the Castle Cave's 131.4. The end of Carnival 1 is a `ballbit` at scale 10
+    (437.8), and the end of Atlantis 3 a `hoop` at scale 10 (800.0).
 - Camera zones (docs/technical.md, "Level tools"): a puzzle with one `PuzzleCondGloverWithinVolume` and only actions 70
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is
@@ -642,7 +729,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 

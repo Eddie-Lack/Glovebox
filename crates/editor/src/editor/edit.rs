@@ -72,6 +72,9 @@ impl Editor {
     // Undo
 
     pub fn push_undo(&mut self, before: String) {
+        if self.scrub.is_some() {
+            return;
+        }
         self.undo_stack.push(before);
         if self.undo_stack.len() > 200 {
             self.undo_stack.remove(0);
@@ -146,7 +149,40 @@ impl Editor {
         self.schedule_draft_save();
     }
 
+    /// A number field's drag began: every edit until `end_scrub` belongs to one undo step.
+    pub fn begin_scrub(&mut self) {
+        if self.scrub.is_none() && self.has_level {
+            self.scrub = Some(self.serialize());
+        }
+    }
+
+    /// True while a number field is being dragged.
+    pub fn scrubbing(&self) -> bool {
+        self.scrub.is_some()
+    }
+
+    /// The drag ended: one undo step when it changed the level.
+    pub fn end_scrub(&mut self) {
+        let Some(before) = self.scrub.take() else { return };
+        if before != self.serialize() {
+            self.push_undo(before);
+            self.emit(Event::Edited);
+        }
+    }
+
+    /// The drag was cancelled: the level is as it was before, with no undo step.
+    pub fn cancel_scrub(&mut self) {
+        let Some(before) = self.scrub.take() else { return };
+        if before == self.serialize() {
+            return;
+        }
+        let keys = self.selection_keys();
+        self.restore_keeping_puzzle(&before);
+        self.finish_edit(keys, None, true);
+    }
+
     pub fn undo(&mut self) {
+        self.end_scrub();
         let Some(xml) = self.undo_stack.pop() else { return };
         self.redo_stack.push(self.serialize());
         let keys = self.selection_keys();
@@ -155,6 +191,7 @@ impl Editor {
     }
 
     pub fn redo(&mut self) {
+        self.end_scrub();
         let Some(xml) = self.redo_stack.pop() else { return };
         self.undo_stack.push(self.serialize());
         let keys = self.selection_keys();
