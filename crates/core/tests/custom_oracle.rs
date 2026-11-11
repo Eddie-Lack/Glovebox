@@ -137,19 +137,12 @@ fn sets_match_python() {
             println!("{name}: identical ({} pieces, {} textures)", set.pieces.len(), set.textures.len());
         } else {
             println!("{name}: {}", problems.join("; "));
-            if !KNOWN_TEXTURE_DIFFERENCES.contains(&name.as_str())
-                || problems.iter().any(|p| !p.starts_with("texture pixels differ"))
-            {
-                failures.push(format!("{name}: {}", problems.join("; ")));
-            }
+            failures.push(format!("{name}: {}", problems.join("; ")));
         }
     }
     println!("{identical} of {} sets are byte-identical", cases.len());
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
-
-/// Sets whose textures come from JPEG files. The JPEG decoder is not Pillow's, so pixels can differ by a little.
-const KNOWN_TEXTURE_DIFFERENCES: [&str; 0] = [];
 
 #[test]
 fn errors_match_python() {
@@ -409,4 +402,77 @@ fn damaged_files_do_not_panic() {
         }
     }
     println!("{tried} damaged files: {failed} refused, {} read", tried - failed);
+}
+
+/// A made-up model, without the reference sets: two triangles with a colour, as `.gltf` text with a data URI and
+/// as `.glb`. Both convert, load back, and differ only in what comes from the hash of the file.
+#[test]
+fn made_up_model_converts() {
+    let mut bin = Vec::new();
+    for v in [[0.0f32, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 10.0], [0.0, 0.0, 10.0]] {
+        bin.extend(v.iter().flat_map(|c| c.to_le_bytes()));
+    }
+    bin.extend([0u16, 2, 1, 0, 3, 2].iter().flat_map(|i| i.to_le_bytes()));
+    const B64: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut uri = String::from("data:application/octet-stream;base64,");
+    for c in bin.chunks(3) {
+        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
+        for k in 0..4 {
+            uri.push(if k <= c.len() { B64[(n >> (18 - 6 * k)) as usize & 63] as char } else { '=' });
+        }
+    }
+    let doc = |buffer: Value| {
+        serde_json::json!({
+            "asset": {"version": "2.0"}, "scene": 0, "scenes": [{"nodes": [0]}],
+            "nodes": [{"mesh": 0, "translation": [5.0, 1.0, 0.0]}],
+            "meshes": [{"primitives": [{"attributes": {"POSITION": 0}, "indices": 1, "material": 0}]}],
+            "materials": [{"pbrMetallicRoughness": {"baseColorFactor": [1.0, 0.5, 0.25, 1.0]}}],
+            "accessors": [
+                {"bufferView": 0, "componentType": 5126, "count": 4, "type": "VEC3"},
+                {"bufferView": 1, "componentType": 5123, "count": 6, "type": "SCALAR"},
+            ],
+            "bufferViews": [{"buffer": 0, "byteLength": 48}, {"buffer": 0, "byteOffset": 48, "byteLength": 12}],
+            "buffers": [buffer],
+        })
+        .to_string()
+    };
+    let text = doc(serde_json::json!({"byteLength": 60, "uri": uri}));
+    let mut json = doc(serde_json::json!({"byteLength": 60})).into_bytes();
+    json.resize(json.len().next_multiple_of(4), b' ');
+    let mut glb = b"glTF".to_vec();
+    glb.extend(2u32.to_le_bytes());
+    glb.extend((12 + 8 + json.len() as u32 + 8 + 60).to_le_bytes());
+    glb.extend((json.len() as u32).to_le_bytes());
+    glb.extend(b"JSON");
+    glb.extend(&json);
+    glb.extend(60u32.to_le_bytes());
+    glb.extend(b"BIN\0");
+    glb.extend(&bin);
+
+    let none = HashSet::new();
+    let a = custom::convert(text.as_bytes(), "Flat tile!", 2.0, &none, &none).unwrap();
+    let b = custom::convert(&glb, "Flat tile!", 2.0, &none, &none).unwrap();
+    for set in [&a, &b] {
+        loads_back(set);
+        assert_eq!(set.triangles, 2);
+        assert_eq!(set.size, [20.0, 0.0, 20.0]);
+        assert_eq!(set.pieces.len(), 1);
+        assert_eq!(set.pieces[0].name, "Flattile");
+        assert_eq!(set.pieces[0].offset, [20.0, 2.0, 10.0]);
+        // The colour becomes an 8 by 8 texture of 16-bit pixels
+        assert_eq!(set.textures.len(), 1);
+        assert_eq!(set.textures[0].1, texbank::HEADER + 8 * 8 * 2);
+        let bank = texbank::TexBank::parse(&set.texture_bank).unwrap();
+        assert_eq!(&bank.textures[0].data[..2], &(31u16 << 11 | 15 << 6 | 7 << 1 | 1).to_be_bytes());
+    }
+    assert_eq!(a.pieces[0].bank.len(), b.pieces[0].bank.len());
+    assert_ne!(a.pieces[0].id, b.pieces[0].id);
+    // An ID that is taken is stepped over
+    let taken: HashSet<u32> = [a.pieces[0].id].into();
+    let taken_tex: HashSet<u32> = [a.textures[0].0].into();
+    let c = custom::convert(text.as_bytes(), "Flat tile!", 2.0, &taken, &taken_tex).unwrap();
+    assert_ne!(c.pieces[0].id, a.pieces[0].id);
+    assert_eq!(c.textures[0].0, a.textures[0].0 + 1);
+    assert_eq!(custom::convert(text.as_bytes(), "x", 0.0, &none, &none).unwrap_err().0, "The scale must be a positive number");
+    assert_eq!(custom::set_id(b"abc", 1.0).len(), 10);
 }
