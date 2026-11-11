@@ -1,6 +1,7 @@
 //! The path tool's panel: what to place along the path, scattering the selection beside it, and camera zones over
 //! it.
 
+use crate::numfield::{self, Spec};
 use crate::app::Window;
 use crate::style::{self, card, fieldname, muted, note};
 use glovebox_core::pyfmt::parse_float;
@@ -83,7 +84,7 @@ fn pick(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize, items: &[
 /// `pick` with a tooltip for each entry.
 fn pick_with_tips(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize, items: &[&str], tips: &[&str]) -> bool {
     let mut changed = false;
-    let r = egui::ComboBox::from_id_salt(id).selected_text(items.get(*current).copied().unwrap_or("")).width(ui.available_width().clamp(60.0, 190.0)).truncate().show_ui(ui, |ui| {
+    let r = egui::ComboBox::from_id_salt(id).icon(style::combo_icon).selected_text(items.get(*current).copied().unwrap_or("")).width(ui.available_width().clamp(60.0, 190.0)).truncate().show_ui(ui, |ui| {
         for (i, text) in items.iter().enumerate() {
             let mut r = ui.selectable_label(*current == i, *text);
             if let Some(tip) = tips.get(i) {
@@ -100,8 +101,10 @@ fn pick_with_tips(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize,
     changed
 }
 
+/// A number box. A drag changes it by 1, or by 0.01 for a scale.
 fn text(ui: &mut egui::Ui, value: &mut String, label: &str, width: f32) {
-    let r = ui.add(egui::TextEdit::singleline(value).desired_width(width));
+    let spec = Spec::float(if label.starts_with("scale") { 0.01 } else { 1.0 });
+    let (r, _) = numfield::bound(ui, egui::Id::unique(("path panel", label)), value, spec, |t| t.desired_width(width));
     style::name(&r, label);
 }
 
@@ -141,7 +144,7 @@ fn body(w: &mut Window, ui: &mut egui::Ui) {
     row(ui, "to the side", |ui| text(ui, &mut st.off, "to the side", 80.0));
     row(ui, "over the ground", |ui| text(ui, &mut st.up, "over the ground", 80.0));
     row(ui, "random turn", |ui| {
-        ui.checkbox(&mut st.turn, "one selected model, about y");
+        style::checkbox(ui, &mut st.turn, "one selected model, about y");
     });
     note(ui, "Click the ground to add points. Backspace takes the last one off. Each copy is dropped onto the ground under it.");
     ui.horizontal(|ui| {
@@ -187,14 +190,15 @@ fn scatter_box(w: &mut Window, ui: &mut egui::Ui) {
             pick(ui, "sc turn", "facing", &mut st.sc_turn, &SC_TURNS.map(|x| x.1));
         });
         row(ui, "", |ui| {
-            ui.checkbox(&mut st.sc_tilt, "tilt a little");
+            style::checkbox(ui, &mut st.sc_tilt, "tilt a little");
         });
         row(ui, "", |ui| {
-            ui.checkbox(&mut st.sc_solid, "solid (LandActor)");
+            style::checkbox(ui, &mut st.sc_solid, "solid (LandActor)");
         });
         row(ui, "seed", |ui| {
-            let r = ui.add(egui::DragValue::new(&mut st.sc_seed).range(0..=99999).speed(0.1));
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "scatter seed"));
+            if let Some(v) = numfield::int(ui, egui::Id::unique("scatter seed"), st.sc_seed, 0..=99999, 70.0, "scatter seed") {
+                st.sc_seed = v;
+            }
         });
         note(ui, "Select one or more landscape pieces or kit models; each copy picks one of them at random. Every copy takes heap memory: the status line says how much.");
         ui.horizontal(|ui| {

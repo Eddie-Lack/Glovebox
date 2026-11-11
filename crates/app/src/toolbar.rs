@@ -15,7 +15,7 @@ fn sep(ui: &mut egui::Ui) {
 }
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
-    let frame = egui::Frame::new().fill(style::BG).inner_margin(egui::Margin::symmetric(6, 4));
+    let frame = egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(6, 4));
     egui::Panel::top("toolbar").frame(frame).show(ui, |ui| {
         ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
         ui.horizontal_wrapped(|ui| edit_row(w, ui));
@@ -24,22 +24,18 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 }
 
 fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
-    let mut brand = egui::text::LayoutJob::default();
-    let font = egui::FontId::proportional(14.0);
-    brand.append("Glove", 0.0, egui::TextFormat { font_id: font.clone(), color: style::GOLD, ..Default::default() });
-    brand.append("box", 0.0, egui::TextFormat { font_id: font, color: style::TEXT, ..Default::default() });
-    ui.label(brand);
-    ui.add_space(6.0);
+    style::logo(ui, "Glovebox", 16.0);
+    ui.add_space(4.0);
 
     // The level list
     let current = w.ed.scene.as_ref().map(|x| w.scene_label(x).trim_start().to_string()).unwrap_or_else(|| "Loading level list…".to_string());
     let mut pick = None;
-    let combo = egui::ComboBox::from_id_salt("level").selected_text(current).width(250.0).height(520.0).show_ui(ui, |ui| {
+    let combo = egui::ComboBox::from_id_salt("level").icon(style::combo_icon).selected_text(current).width(250.0).height(520.0).show_ui(ui, |ui| {
         let mut group = "";
         for sc in &w.ed.scenes {
             if s(sc, "group") != group {
                 group = s(sc, "group");
-                ui.add_enabled(false, egui::Label::new(RichText::new(group).color(style::MUTED)));
+                ui.label(RichText::new(group).size(11.0).color(style::MUTED));
             }
             let on = s(sc, "id") == w.ed.scene_id();
             if ui.selectable_label(on, w.scene_label(sc)).clicked() {
@@ -77,7 +73,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     ui.label(RichText::new(" Pivot").color(style::MUTED));
     let pivots = [("group", "group centre"), ("individual", "each origin")];
     let shown = pivots.iter().find(|p| p.0 == w.ed.pivot_mode).map_or("each origin", |p| p.1);
-    let r = egui::ComboBox::from_id_salt("pivot").selected_text(shown).show_ui(ui, |ui| {
+    let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).show_ui(ui, |ui| {
         for (v, text) in pivots {
             if ui.selectable_label(w.ed.pivot_mode == v, text).clicked() {
                 w.ed.pivot_mode = v.to_string();
@@ -89,7 +85,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     ui.label(RichText::new(" Snap").color(style::MUTED));
     let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
     let shown = snaps.iter().find(|x| x.1 == w.ed.snap).map_or("off", |x| x.0);
-    let r = egui::ComboBox::from_id_salt("snap").selected_text(shown).width(48.0).show_ui(ui, |ui| {
+    let r = egui::ComboBox::from_id_salt("snap").icon(style::combo_icon).selected_text(shown).width(48.0).show_ui(ui, |ui| {
         for (text, v) in snaps {
             if ui.selectable_label(w.ed.snap == v, text).clicked() {
                 w.ed.snap = v;
@@ -148,7 +144,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if ui.button(".lev").on_hover_text("Assemble with libgarib level-tool and save the .lev").clicked() {
             w.export("lev", None);
         }
-        ui.checkbox(&mut w.quickboot, "boot here").on_hover_text("Build ROM: the ROM boots straight into this level (libgarib's copyskip and quickboot patches)");
+        style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Build ROM: the ROM boots straight into this level (libgarib's copyskip and quickboot patches)");
         if ui.button("Export patch").on_hover_text("Export a BPS patch: share it, and players apply it to their own ROM with the patcher").clicked() {
             crate::dialogs::open_patch_dialog(w);
         }

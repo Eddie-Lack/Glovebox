@@ -10,6 +10,7 @@ pub mod dialogs;
 pub mod icon;
 pub mod inspector;
 pub mod jobs;
+pub mod numfield;
 pub mod outliner;
 pub mod palette;
 pub mod path_panel;

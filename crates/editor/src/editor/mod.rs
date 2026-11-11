@@ -332,6 +332,8 @@ pub struct Editor {
     pub(crate) icon_cache: HashMap<(String, String), Arc<Texture>>,
     pub(crate) shapes: HashMap<&'static str, Arc<Geometry>>,
     pub(crate) drag: Option<Drag>,
+    /// The level's XML when a number field's drag began. While it is set, edits add no undo step.
+    pub(crate) scrub: Option<String>,
     pub(crate) events: Vec<Event>,
     pub(crate) draft_pending: Option<(String, String)>,
     pub(crate) draft_due: Option<f64>,
@@ -405,6 +407,7 @@ impl Editor {
             icon_cache: HashMap::new(),
             shapes: HashMap::new(),
             drag: None,
+            scrub: None,
             events: Vec::new(),
             draft_pending: None,
             draft_due: None,

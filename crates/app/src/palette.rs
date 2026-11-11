@@ -91,9 +91,10 @@ fn work(w: &mut Window, ctx: &egui::Context) {
 fn thumb_box(ui: &mut egui::Ui, texture: Option<&egui::TextureHandle>) -> egui::Rect {
     let (rect, _) = ui.allocate_exact_size(egui::vec2(64.0, 64.0), egui::Sense::hover());
     if ui.is_rect_visible(rect) {
-        ui.painter().rect(rect, 6.0, style::INPUT, egui::Stroke::new(1.0, style::BORDER), egui::StrokeKind::Inside);
+        ui.painter().rect_filled(rect, 0.0, style::INPUT);
+        style::bevel(ui.painter(), rect, false);
         if let Some(t) = texture {
-            ui.painter().image(t.id(), rect.shrink(1.0), egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
+            ui.painter().image(t.id(), rect.shrink(2.0), egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
         }
     }
     rect
@@ -166,10 +167,9 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     }
     let ctx = ui.ctx().clone();
     ui.horizontal_wrapped(|ui| {
-        ui.spacing_mut().item_spacing = egui::vec2(2.0, 2.0);
+        ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
         for (i, name) in TABS.iter().enumerate() {
-            let on = w.palette.tab == i;
-            if ui.add(egui::Button::selectable(on, RichText::new(*name).color(if on { style::GOLD } else { style::TEXT }))).clicked() {
+            if style::tab(ui, w.palette.tab == i, name).clicked() {
                 w.palette.tab = i;
             }
         }
@@ -374,7 +374,7 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
         }
         .to_string();
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let r = egui::ComboBox::from_id_salt("bank").selected_text(shown).width(120.0).truncate().height(400.0).show_ui(ui, |ui| {
+            let r = egui::ComboBox::from_id_salt("bank").icon(style::combo_icon).selected_text(shown).width(120.0).truncate().height(400.0).show_ui(ui, |ui| {
                 let mut pick = None;
                 for (v, text) in [("", "All banks"), ("@level", "This level’s banks")].into_iter().chain(banks.iter().map(|b| (*b, *b))) {
                     if ui.selectable_label(st.bank == v, text).clicked() {
@@ -526,7 +526,7 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
                                 if st(p, "kind") == "choice" {
                                     let labels: Vec<String> = p.get("extra").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default();
                                     let cur = vals.get(&pkey).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).and_then(|v| v.parse::<usize>().ok()).unwrap_or(1);
-                                    let r = egui::ComboBox::from_id_salt(&pkey).selected_text(labels.get(cur.saturating_sub(1)).cloned().unwrap_or_default()).width(130.0).show_ui(ui, |ui| {
+                                    let r = egui::ComboBox::from_id_salt(&pkey).icon(style::combo_icon).selected_text(labels.get(cur.saturating_sub(1)).cloned().unwrap_or_default()).width(130.0).show_ui(ui, |ui| {
                                         for (i, l) in labels.iter().enumerate() {
                                             if ui.selectable_label(cur == i + 1, l).clicked() {
                                                 vals.insert(pkey.clone(), Value::String((i + 1).to_string()));
@@ -538,13 +538,21 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
                                     r.response.widget_info(move || egui::WidgetInfo::labeled(egui::Role::ComboBox, true, &label));
                                 } else {
                                     let mut text = vals.get(&pkey).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default();
-                                    let mut r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(130.0));
+                                    // A number changes by dragging too. A text is typed only.
+                                    let (r, edited) = if st(p, "kind") == "number" {
+                                        let spec = crate::numfield::Spec::for_text(&text);
+                                        crate::numfield::bound(ui, ui.scope_id().with(&pkey), &mut text, spec, |t| t.desired_width(130.0))
+                                    } else {
+                                        let r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(130.0));
+                                        let edited = r.changed();
+                                        (r, edited)
+                                    };
                                     style::name(&r, &label);
                                     let hint = st(p, "extra");
                                     if !hint.is_empty() {
-                                        r = r.on_hover_text(hint);
+                                        r.on_hover_text(hint);
                                     }
-                                    if r.changed() {
+                                    if edited {
                                         vals.insert(pkey.clone(), Value::String(text));
                                         changed = true;
                                     }

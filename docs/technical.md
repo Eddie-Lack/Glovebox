@@ -97,7 +97,8 @@ nothing else. The program never runs them.
 | `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
 | `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
 | `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
-| `settings`, `style`, `icon` | `settings.ini`, the dark look, the app's icon. |
+| `settings`, `style`, `icon` | `settings.ini`, the look (the palette, the shapes of the widgets, the fonts), the app's icon. |
+| `numfield` | Number fields that change by dragging. |
 
 - A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
   `Backend::texture` give the model and the pixels.
@@ -115,6 +116,37 @@ nothing else. The program never runs them.
   a dialog.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
   (`render/icons.rs`), not with a system font. They look the same on every computer.
+- The look follows the patcher page (`web/patcher.html`), which follows the practice ROM's patch page: a 1998 game
+  web site. All of it is in `style.rs`.
+  - The palette is the page's: navy `#000080` for panels, `#000060` for boxes, `#000040` for the toolbar, the status
+    bar and pop-ups, grey `#c0c0c0` for buttons, red `#cc0000` with yellow `#ffff00` capitals for title bars.
+    Texts are white on navy, and black on the grey buttons and the white fields.
+  - egui's buttons, text boxes and separators get their shapes from widget themes (`Look`, registered with
+    `replace_widget_theme`; this needs egui's `experimental` feature). A button is a grey bevel. It is sunken while
+    it is held. A toolbar switch that is on is sunken and yellow. The main action (Build ROM) is red with yellow
+    letters. An entry of a list or a menu is flat, and the chosen one is navy on white.
+  - An egui frame has one stroke, so a themed bevel is a light stroke and a dark hard shadow of one pixel. Shapes the
+    app draws itself (checkboxes, picture wells, the ridge frame) have a true two-tone bevel (`style::bevel`).
+  - Title bars (`title_bar`, `h4`, the head of a `card`) show their text in capitals. The accessible name keeps the
+    text as written. A card whose title is a command's tag (`FogConfiguration`) keeps its letters.
+  - Checkboxes are drawn by `style::checkbox`: a bevelled box, green with a tick when on. A layer's box takes the
+    layer's colour.
+  - The setup screen and the dialogs are the page's framed table: `style::framed` (the ridge frame), `style::logo`
+    and `style::rainbow`. `style::stars` tiles the page's star background behind the setup screen.
+  - Fonts: Verdana, then Tahoma, when the computer has them, DejaVu Sans on Linux, then the fonts compiled in. A bold
+    face of the same family is the `bold` family, and Arial Black is the logo's. Without them the text font stands
+    in. No font file is in the repository.
+  - The 3D view keeps its dark grey background for a level without fog.
+- Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
+  takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
+  for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
+  box the focus. A text box with the focus is egui's own, and a drag in it selects text.
+  - The step is 1 for positions, angles and whole numbers, 0.01 for scales, and 1, 0.1 or 0.01 for other floats by
+    the decimals they show. A field of the level format keeps the limits of its type (`u1` is 0 to 255).
+  - A dragged value is handed to the same code as a typed one, on every frame it changes.
+  - The fields leave signals for the window. It calls `Editor::begin_scrub` before the frame's edits and
+    `end_scrub` after the last: the drag is one undo step. Esc calls `cancel_scrub`, which restores the XML from
+    before the drag. While a drag is open, the editor's keyboard shortcuts are off.
 
 ## Sharing levels: patches and the patcher
 

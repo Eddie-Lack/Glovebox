@@ -2,7 +2,8 @@
 //! puzzle's conditions and actions, a camera zone's settings, and the level's settings when nothing is selected.
 
 use crate::app::{with_format, Act, Window};
-use crate::style::{self, card, check_line, commit_text, fieldname, h2, h3, h4, mini, mini_menu, muted, note, num_input};
+use crate::numfield::{self, Spec};
+use crate::style::{self, card, check_line, commit_text, fieldname, h2, h4, mini, mini_menu, muted, note, num_input};
 use egui::RichText;
 use glovebox_core::pyfmt;
 use glovebox_core::xml::NodeId;
@@ -14,6 +15,9 @@ use glovebox_editor::puzzles;
 use glovebox_editor::scripts;
 use glovebox_editor::xmlutil::{body, float_bits, float_from_bits, hex_id, inum};
 
+/// The drag steps of the number fields: one unit or one degree, and a hundredth for a scale.
+const UNIT: Spec = Spec::float(1.0);
+const FINE: Spec = Spec::float(0.01);
 const DEG: f64 = 180.0 / std::f64::consts::PI;
 const WORLDS: [&str; 7] = ["ATLANTIS", "CARNIVAL", "PIRATES", "PREHISTORIC", "FORTRESS", "OOTW", "HUB"];
 
@@ -135,7 +139,7 @@ fn combo<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash + std
     let shown = items.iter().find(|i| i.0 == *current).map(|i| i.1.clone()).unwrap_or_default();
     let mut pick = None;
     let width = ui.available_width().clamp(60.0, 240.0);
-    let r = egui::ComboBox::from_id_salt(id).selected_text(shown).width(width).truncate().height(360.0).show_ui(ui, |ui| {
+    let r = egui::ComboBox::from_id_salt(id).icon(style::combo_icon).selected_text(shown).width(width).truncate().height(360.0).show_ui(ui, |ui| {
         for (v, text) in items {
             if ui.selectable_label(v == current, text).clicked() {
                 pick = Some(v.clone());
@@ -149,23 +153,9 @@ fn combo<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash + std
     pick
 }
 
-/// A whole-number box that gives its value when the player is done with it.
+/// A whole-number box that gives its value when the player is done with it, or drags on it.
 fn spin(ui: &mut egui::Ui, id: egui::Id, value: i64, range: std::ops::RangeInclusive<i64>, label: &str) -> Option<i64> {
-    let mut v = ui.data(|d| d.get_temp::<i64>(id)).unwrap_or(value);
-    let r = ui.add(egui::DragValue::new(&mut v).range(range).speed(0.2));
-    if !label.is_empty() {
-        let label = label.to_string();
-        r.widget_info(move || egui::WidgetInfo::labeled(egui::Role::SpinButton, true, &label));
-    }
-    let done = r.drag_stopped() || r.lost_focus() || (r.changed() && !r.dragged() && !r.has_focus());
-    if done {
-        ui.data_mut(|d| d.remove::<i64>(id));
-        return (v != value).then_some(v);
-    }
-    if r.dragged() || r.has_focus() {
-        ui.data_mut(|d| d.insert_temp(id, v));
-    }
-    None
+    numfield::int(ui, id, value, range, 70.0, label)
 }
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
@@ -377,7 +367,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
         note(ui, "The game's level table, written into the ROM at build. The title shows in the level select. At 0 the clock says TIME UP and sends the player to the way room, as in a bonus level.");
         if ed.can_be_extra() {
             let mut on = info.extra;
-            if ui.checkbox(&mut on, "Extra level (Expansion Pak)").changed() {
+            if style::checkbox(ui, &mut on, "Extra level (Expansion Pak)").changed() {
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.extra = on));
             }
             note(ui, "An extra level is stored behind the game mod. The shipped level stays in its slot. Players reach the extra levels through an Extra levels entry zone in a hub (Add, Presets), then the Space way room. Progress in them is kept apart from the shipped Space levels.");
@@ -399,15 +389,16 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
         egui::Grid::new("worlds").num_columns(2).show(ui, |ui| {
             for (i, world) in WORLDS.iter().enumerate() {
                 let name = if *world == "OOTW" { "Space".to_string() } else { crate::app::title_case(world) };
-                ui.add_enabled(own.as_deref() != Some(*world), egui::Checkbox::new(&mut ticks[i], name));
+                ui.add_enabled_ui(own.as_deref() != Some(*world), |ui| style::checkbox(ui, &mut ticks[i], name));
                 if i % 2 == 1 {
                     ui.end_row();
                 }
             }
         });
         row(ui, "seed", |ui| {
-            let r = ui.add(egui::DragValue::new(&mut cx.st.reskin_seed).range(0..=99999).speed(0.1));
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "seed"));
+            if let Some(v) = spin(ui, egui::Id::unique("reskin seed"), cx.st.reskin_seed, 0..=99999, "seed") {
+                cx.st.reskin_seed = v;
+            }
         });
         let ticks = *ticks;
         let go = |cx: &mut Cx, next: bool| {
@@ -486,7 +477,7 @@ fn enemy_panel(cx: &mut Cx, ui: &mut egui::Ui, enemy: NodeId) {
                     });
                 });
                 ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    h3(ui, &format!("{}  {}/{}", scripts::kind_name(kind), items.len(), scripts::limit(kind)));
+                    h4(ui, &format!("{}  {}/{}", scripts::kind_name(kind), items.len(), scripts::limit(kind)));
                 });
             });
         });
@@ -578,7 +569,7 @@ fn puzzle_list(cx: &mut Cx, ui: &mut egui::Ui) {
     note(ui, "A puzzle runs its actions when its conditions hold. The game tests every puzzle each frame.");
     for (i, p) in ps.into_iter().enumerate() {
         let text = format!("{}. {}", i + 1, puzzles::summary(&ed.doc, p));
-        let r = ui.add(egui::Label::new(text).sense(egui::Sense::click())).on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(format!("Open puzzle {}", i + 1));
+        let r = ui.add(egui::Label::new(RichText::new(text).color(style::TEXT)).sense(egui::Sense::click())).on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(format!("Open puzzle {}", i + 1));
         if r.clicked() {
             cx.ed_act(move |ed| ed.open_puzzle(Some(p)));
         }
@@ -725,13 +716,15 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
 // One object
 
 /// Three number boxes in a row. Gives the index and value of the one that changed.
-fn trio(ui: &mut egui::Ui, id: egui::Id, values: &[f64], names: &[&str], enabled: bool) -> Option<(usize, f64)> {
+/// A drag on a box changes its number by `specs[i]`, or by the last of `specs`.
+fn trio(ui: &mut egui::Ui, id: egui::Id, values: &[f64], names: &[&str], enabled: bool, specs: &[Spec]) -> Option<(usize, f64)> {
     let mut out = None;
     ui.add_enabled_ui(enabled, |ui| {
         ui.spacing_mut().item_spacing.x = 4.0;
         let width = ((ui.available_width() - 4.0 * (values.len() as f32 - 1.0)) / values.len().max(1) as f32 - 10.0).clamp(36.0, 70.0);
         for (i, v) in values.iter().enumerate() {
-            if let Some(n) = num_input(ui, id.with(i), *v, width, names.get(i).copied().unwrap_or("")) {
+            let spec = specs.get(i).or(specs.last()).copied().unwrap_or(UNIT);
+            if let Some(n) = num_input(ui, id.with(i), *v, width, names.get(i).copied().unwrap_or(""), spec) {
                 out = Some((i, n));
             }
         }
@@ -747,7 +740,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
     card(ui, "Transform", None, |_| {}, |ui| {
         let id = egui::Id::unique(("transform", ed.doc.path_of(ent.sub.unwrap_or(ent.node)), ent.is_handle.then(|| ent.label.clone())));
         let p = bind.get(&ed.doc, &ed.entities);
-        if let Some((k, v)) = row(ui, "position", |ui| trio(ui, id.with("p"), &p, &["position x", "position y", "position z"], true)) {
+        if let Some((k, v)) = row(ui, "position", |ui| trio(ui, id.with("p"), &p, &["position x", "position y", "position z"], true, &[UNIT])) {
             let points = ent.points.clone();
             cx.ed_act(move |ed| {
                 ed.edit(|ed| {
@@ -766,7 +759,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
             (Some("xyz"), Some(q)) => {
                 let e = entities::euler_of(q);
                 let deg = [e[0] * DEG, e[1] * DEG, e[2] * DEG];
-                if let Some((k, v)) = row(ui, "rotation °", |ui| trio(ui, id.with("r"), &deg, &["rotation x", "rotation y", "rotation z"], true)) {
+                if let Some((k, v)) = row(ui, "rotation °", |ui| trio(ui, id.with("r"), &deg, &["rotation x", "rotation y", "rotation z"], true, &[UNIT])) {
                     cx.ed_act(move |ed| {
                         ed.edit(|ed| {
                             let Some(q) = ed.entities.get(i).and_then(|e| e.get_quat(&ed.doc)) else { return };
@@ -786,7 +779,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         }
         match (ent.scl, ent.get_scale(&ed.doc), &ent.volume) {
             (Some("xyz"), Some(s), _) => {
-                if let Some((k, v)) = row(ui, "scale", |ui| trio(ui, id.with("s"), &s, &["scale x", "scale y", "scale z"], true)) {
+                if let Some((k, v)) = row(ui, "scale", |ui| trio(ui, id.with("s"), &s, &["scale x", "scale y", "scale z"], true, &[FINE])) {
                     cx.ed_act(move |ed| {
                         ed.edit(|ed| {
                             let Some(mut s) = ed.entities.get(i).and_then(|e| e.get_scale(&ed.doc)) else { return };
@@ -806,7 +799,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
             (Some("box"), _, Some(vol)) => {
                 let names = vol.size_fields();
                 let values: Vec<f64> = (0..names.len()).map(|k| vol.size_get(&ed.doc, k)).collect();
-                if let Some((k, v)) = row(ui, "size", |ui| trio(ui, id.with("b"), &values, &names, true)) {
+                if let Some((k, v)) = row(ui, "size", |ui| trio(ui, id.with("b"), &values, &names, true, &[UNIT])) {
                     let vol = vol.clone();
                     cx.ed_act(move |ed| {
                         ed.edit(|ed| vol.size_set(&mut ed.doc, k, v));
@@ -881,7 +874,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         });
         row(ui, "player walks °", |ui| {
             if let Some(f) = cx.st.facing.as_mut() {
-                let r = ui.add(egui::TextEdit::singleline(f).desired_width(60.0));
+                let (r, _) = numfield::bound(ui, egui::Id::unique("zone facing"), f, UNIT, |t| t.desired_width(60.0));
                 style::name(&r, "player walks");
             }
         });
@@ -892,7 +885,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         // look
         let mut on = z.look.is_some();
         ui.horizontal(|ui| {
-            if ui.checkbox(&mut on, "look °").changed() {
+            if style::checkbox(ui, &mut on, "look °").changed() {
                 cx.ed_act(move |ed| {
                     ed.write_zone(puzzle, |cur| {
                         if on {
@@ -904,7 +897,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 });
             }
             let vals = [z.look.unwrap_or(0.0) * DEG, z.speed.unwrap_or(2.0)];
-            if let Some((k, v)) = trio(ui, egui::Id::unique("zone look"), &vals, &["look", "look speed"], z.look.is_some()) {
+            if let Some((k, v)) = trio(ui, egui::Id::unique("zone look"), &vals, &["look", "look speed"], z.look.is_some(), &[UNIT, Spec::float(0.1)]) {
                 cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| if k == 0 { cur.look = Some(v / DEG) } else { cur.speed = Some(v) }));
             }
         });
@@ -917,10 +910,10 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
             let mut on = value.is_some();
             ui.horizontal(|ui| {
                 let set = move |cur: &mut entities::Zone, v: Option<f64>| if which == 0 { cur.distance = v } else { cur.height = v };
-                if ui.checkbox(&mut on, name).changed() {
+                if style::checkbox(ui, &mut on, name).changed() {
                     cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| set(cur, on.then_some(start))));
                 }
-                if let Some((_, v)) = trio(ui, egui::Id::unique(("zone", name)), &[value.unwrap_or(0.0)], &[name], value.is_some()) {
+                if let Some((_, v)) = trio(ui, egui::Id::unique(("zone", name)), &[value.unwrap_or(0.0)], &[name], value.is_some(), &[UNIT]) {
                     cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| set(cur, Some(v))));
                 }
             });
@@ -929,7 +922,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         // fly to
         let mut on = z.fly.is_some();
         ui.horizontal(|ui| {
-            if ui.checkbox(&mut on, "fly to").changed() {
+            if style::checkbox(ui, &mut on, "fly to").changed() {
                 cx.ed_act(move |ed| {
                     ed.edit(|ed| {
                         let Some(mut cur) = camera_zone(&ed.doc, puzzle) else { return };
@@ -945,7 +938,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 });
             }
             let fly = z.fly.unwrap_or([0.0; 3]);
-            if let Some((k, v)) = trio(ui, egui::Id::unique("zone fly"), &fly, &["fly to x", "fly to y", "fly to z"], z.fly.is_some()) {
+            if let Some((k, v)) = trio(ui, egui::Id::unique("zone fly"), &fly, &["fly to x", "fly to y", "fly to z"], z.fly.is_some(), &[UNIT]) {
                 cx.ed_act(move |ed| {
                     ed.write_zone(puzzle, |cur| {
                         if let Some(f) = cur.fly.as_mut() {
@@ -1059,7 +1052,7 @@ fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
         return;
     }
     let st = |v: &serde_json::Value, k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or("").to_string();
-    egui::Frame::new().fill(style::BG).corner_radius(6).inner_margin(egui::Margin::symmetric(6, 4)).show(ui, |ui| {
+    egui::Frame::new().fill(style::DEEP).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(6, 4)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.spacing_mut().item_spacing.y = 2.0;
         if let Some(c) = c {
@@ -1185,7 +1178,8 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                         } else if is_bits {
                             // A float the game reads from a field libgarib names u4: show the number, write its bits
                             let shown = pyfmt::fmt(float_from_bits(Some(value)));
-                            let (text, r) = commit_text(ui, id, &shown, |t| t.desired_width(f32::INFINITY));
+                            let spec = if name.contains("scale") { FINE } else { Spec::for_text(&shown) };
+                            let (text, r) = style::commit_number(ui, id, &shown, Some(spec), |t| t.desired_width(f32::INFINITY));
                             style::name(&r, &label);
                             if let Some(text) = text.filter(|t| t.trim() != shown) {
                                 let (name, value) = (name.clone(), value.clone());
@@ -1196,7 +1190,11 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                                 });
                             }
                         } else {
-                            let (text, r) = commit_text(ui, id, value, |t| t.desired_width(f32::INFINITY));
+                            // A drag changes whole numbers and floats, inside the limits of the field's type. Names,
+                            // free text and ids written in hex are typed only.
+                            let plain = looks_like_number(value) && !value.to_ascii_lowercase().contains("0x");
+                            let spec = ty.as_deref().filter(|_| plain).and_then(|t| Spec::for_type(t, name, value));
+                            let (text, r) = style::commit_number(ui, id, value, spec, |t| t.desired_width(f32::INFINITY));
                             style::name(&r, &label);
                             if let Some(text) = text {
                                 let v = text.trim().to_string();
@@ -1272,7 +1270,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
         let mut go: Option<Act> = None;
         row(ui, "move by", |ui| {
             for (k, name) in ["move by x", "move by y", "move by z"].iter().enumerate() {
-                let r = ui.add(egui::TextEdit::singleline(&mut st.mv[k]).desired_width(40.0));
+                let (r, _) = numfield::bound(ui, egui::Id::unique(("move by", k)), &mut st.mv[k], UNIT, |t| t.desired_width(40.0));
                 style::name(&r, name);
             }
             let r = ui.button("Apply");
@@ -1287,7 +1285,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             if let Some(a) = combo(ui, "axis", "axis", &st.axis, &items) {
                 st.axis = a;
             }
-            let r = ui.add(egui::TextEdit::singleline(&mut st.deg).desired_width(40.0));
+            let (r, _) = numfield::bound(ui, egui::Id::unique("rotate by"), &mut st.deg, UNIT, |t| t.desired_width(40.0));
             style::name(&r, "rotate by");
             let r = ui.button("Apply");
             r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Apply rotation"));
@@ -1297,7 +1295,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             }
         });
         row(ui, "scale by", |ui| {
-            let r = ui.add(egui::TextEdit::singleline(&mut st.sc).desired_width(40.0));
+            let (r, _) = numfield::bound(ui, egui::Id::unique("scale by"), &mut st.sc, FINE, |t| t.desired_width(40.0));
             style::name(&r, "scale by");
             let r = ui.button("Apply");
             r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Apply scale"));

@@ -663,6 +663,10 @@ impl Window {
             self.view.fly_keys.clear();
             return;
         }
+        if self.ed.scrubbing() {
+            // A number field is being dragged: Esc belongs to it, and no shortcut edits the level meanwhile
+            return;
+        }
         let events = ctx.input(|i| i.events.clone());
         for e in events {
             let egui::Event::Key { key, pressed, repeat, modifiers, .. } = e else { continue };
@@ -768,7 +772,7 @@ impl Window {
         }
 
         crate::toolbar::ui(self, ui);
-        egui::Panel::bottom("status").frame(egui::Frame::new().fill(style::BG).inner_margin(egui::Margin::symmetric(8, 4))).show(ui, |ui| {
+        egui::Panel::bottom("status").frame(egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(8, 4))).show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if !self.status_size.is_empty() {
@@ -829,10 +833,20 @@ impl Window {
         });
         crate::dialogs::ui(self, &ctx);
 
+        // A drag on a number field is one undo step: it opens before the frame's edits and closes after them
+        let signals = crate::numfield::take_signals(&ctx);
+        if signals.contains(&crate::numfield::Signal::Begin) {
+            self.ed.begin_scrub();
+        }
         let acts = std::mem::take(&mut self.acts);
-        let ran = !acts.is_empty();
+        let ran = !acts.is_empty() || !signals.is_empty();
         for a in acts {
             a(self);
+        }
+        if signals.contains(&crate::numfield::Signal::Cancel) {
+            self.ed.cancel_scrub();
+        } else if signals.contains(&crate::numfield::Signal::End) {
+            self.ed.end_scrub();
         }
         self.pump();
         if ran {
@@ -864,13 +878,11 @@ fn side_tabs(w: &mut Window, ui: &mut egui::Ui, with_inspector: bool) {
     if !tabs.iter().any(|t| t.0 == w.palette.side_tab) {
         w.palette.side_tab = tabs.last().map_or(0, |t| t.0);
     }
-    egui::Frame::new().fill(style::PANEL).inner_margin(egui::Margin::symmetric(6, 3)).show(ui, |ui| {
+    egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(6, 3)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.horizontal(|ui| {
             for (id, name) in tabs {
-                let on = w.palette.side_tab == id;
-                let text = egui::RichText::new(name).color(if on { style::GOLD } else { style::TEXT });
-                if ui.add(egui::Button::selectable(on, text)).clicked() {
+                if style::tab(ui, w.palette.side_tab == id, name).clicked() {
                     w.palette.side_tab = id;
                 }
             }
@@ -879,10 +891,7 @@ fn side_tabs(w: &mut Window, ui: &mut egui::Ui, with_inspector: bool) {
 }
 
 fn panel_title(ui: &mut egui::Ui, title: &str) {
-    egui::Frame::new().fill(style::PANEL).inner_margin(egui::Margin::symmetric(8, 4)).show(ui, |ui| {
-        ui.set_width(ui.available_width());
-        ui.label(title);
-    });
+    style::title_bar(ui, title);
 }
 
 /// "level is 1234 bytes" in a build's message.

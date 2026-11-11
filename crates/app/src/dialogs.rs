@@ -290,6 +290,15 @@ fn thousands(n: usize) -> String {
     out
 }
 
+/// A dialog's title: the red bar and the rainbow divider.
+fn title_bar(ui: &mut egui::Ui, title: &str) {
+    ui.spacing_mut().item_spacing.y = 0.0;
+    style::title_bar(ui, title);
+    style::rainbow(ui);
+    ui.spacing_mut().item_spacing.y = 6.0;
+    ui.add_space(6.0);
+}
+
 fn buttons(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
     ui.add_space(6.0);
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), add);
@@ -302,12 +311,16 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
     let mut then: Option<Act> = None;
     // A question takes Enter for Yes and Esc for No. A note takes either for OK.
     let (enter, esc) = ctx.input(|i| (i.key_pressed(egui::Key::Enter), i.key_pressed(egui::Key::Escape)));
-    let modal = egui::Modal::new(egui::Id::unique("dialog")).show(ctx, |ui| {
+    // The dialog is the framed table of the pages: a ridge frame, a red title bar and the rainbow under it
+    let backdrop = egui::Color32::from_rgba_unmultiplied(0, 0, 0x30, 190);
+    let modal = egui::Modal::new(egui::Id::unique("dialog")).frame(egui::Frame::NONE).backdrop_color(backdrop).show(ctx, |ui| {
+        style::framed(ui, |ui| {
+        egui::Frame::new().inner_margin(egui::Margin::same(12)).show(ui, |ui| {
         ui.set_width(520.0f32.min(ctx.content_rect().width() - 60.0));
         ui.spacing_mut().item_spacing.y = 6.0;
         match &mut dialog {
             Dialog::Message { title, text, then: after } => {
-                style::h2(ui, title);
+                title_bar(ui, title);
                 ui.label(text.as_str());
                 buttons(ui, |ui| {
                     if ui.add(style::primary("OK")).clicked() || enter || esc {
@@ -317,7 +330,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
             }
             Dialog::Confirm { title, text, yes } => {
-                style::h2(ui, title);
+                title_bar(ui, title);
                 ui.label(text.as_str());
                 buttons(ui, |ui| {
                     if ui.add(style::primary("Yes")).clicked() || enter {
@@ -330,7 +343,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
             }
             Dialog::ImportXml(d) => {
-                style::h2(ui, "Import level XML");
+                title_bar(ui, "Import level XML");
                 muted(ui, "The editor reads and checks the file. It must be libgarib level XML. Anything unknown is refused.");
                 let mut chosen = None;
                 ui.horizontal(|ui| {
@@ -352,7 +365,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 ui.horizontal(|ui| {
                     ui.label("Import into");
                     let shown = d.targets.get(d.target).map(|t| t.1.clone()).unwrap_or_default();
-                    let r = egui::ComboBox::from_id_salt("import target").selected_text(shown).width(360.0).truncate().show_ui(ui, |ui| {
+                    let r = egui::ComboBox::from_id_salt("import target").icon(style::combo_icon).selected_text(shown).width(360.0).truncate().show_ui(ui, |ui| {
                         for (i, t) in d.targets.iter().enumerate() {
                             if ui.selectable_label(d.target == i, &t.1).clicked() {
                                 d.target = i;
@@ -382,12 +395,12 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
             }
             Dialog::Patch { lines, quickboot } => {
-                style::h2(ui, "Export patch");
+                title_bar(ui, "Export patch");
                 muted(ui, "A BPS patch for other players. They apply it to their own Glover (USA) ROM with patcher.html. Share the .bps and patcher.html (one file, works offline).");
                 for (level, text) in lines.iter() {
                     check_line(ui, level, text, false, None, None, None);
                 }
-                ui.checkbox(quickboot, "Patched ROM boots straight into this level (skips the title screens, for testing)");
+                style::checkbox(ui, quickboot, "Patched ROM boots straight into this level (skips the title screens, for testing)");
                 buttons(ui, |ui| {
                     if ui.add(style::primary("Export .bps")).clicked() {
                         keep = false;
@@ -400,7 +413,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
             }
             Dialog::BuildAll { levels, boot } => {
-                style::h2(ui, "Build all edited levels");
+                title_bar(ui, "Build all edited levels");
                 if levels.is_empty() {
                     muted(ui, "No level has edits yet.");
                     if ui.button("Close").clicked() {
@@ -411,13 +424,13 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 muted(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
                 egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
                     for (_, _, label, on) in levels.iter_mut() {
-                        ui.checkbox(on, label.as_str());
+                        style::checkbox(ui, on, label.as_str());
                     }
                 });
                 ui.horizontal(|ui| {
                     ui.label("Boot into");
                     let shown = boot.and_then(|i| levels.get(i)).map_or("the title screen (normal start)".to_string(), |l| l.1.clone());
-                    let r = egui::ComboBox::from_id_salt("boot into").selected_text(shown).width(320.0).show_ui(ui, |ui| {
+                    let r = egui::ComboBox::from_id_salt("boot into").icon(style::combo_icon).selected_text(shown).width(320.0).show_ui(ui, |ui| {
                         if ui.selectable_label(boot.is_none(), "the title screen (normal start)").clicked() {
                             *boot = None;
                         }
@@ -449,7 +462,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 }
             }
             Dialog::ImportModel(d) => {
-                style::h2(ui, "Import model");
+                title_bar(ui, "Import model");
                 muted(ui, "One .glb file (binary glTF) with its textures inside. Blender and most model rippers export these. The editor turns it into Glover models. Textures shrink to N64 textures of at most 2,048 pixels. A big model, like a map, is cut into solid pieces of at most 1,500 triangles.");
                 let mut chosen = None;
                 ui.horizontal(|ui| {
@@ -469,7 +482,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
                 ui.horizontal(|ui| {
                     ui.label("Scale");
-                    let r = ui.add(egui::TextEdit::singleline(&mut d.scale).desired_width(f32::INFINITY));
+                    let (r, _) = crate::numfield::bound(ui, egui::Id::unique("import model scale"), &mut d.scale, crate::numfield::Spec::float(0.01).at_least(0.0), |t| t.desired_width(f32::INFINITY));
                     style::name(&r, "Scale");
                 });
                 let sc = glovebox_core::pyfmt::parse_float(d.scale.trim()).filter(|v| v.is_finite()).unwrap_or(0.0);
@@ -506,6 +519,8 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
             }
         }
+        });
+        });
     });
     if modal.should_close() && !matches!(dialog, Dialog::Message { .. } | Dialog::Confirm { .. }) {
         keep = false;

@@ -25,6 +25,8 @@ Note: while you fly, those keys move the camera. Use the toolbar for Move and + 
 - `Ctrl+A` selects everything visible except landscape
 - `W` `E` `R` switch the gizmo between move, rotate and scale
 - The inspector has number fields. With several objects it has "move / rotate / scale by"
+- Drag left or right on a number field to change it. Hold `Shift` for finer steps, `Ctrl` for bigger ones. `Esc` puts the old number back
+- Click a number field to type in it
 - `Pivot` is the group's centre or each object's own origin
 - Shift+click the ground to drop a garib
 - Undo, redo, duplicate and delete work on the whole selection

@@ -332,6 +332,52 @@ impl T {
         self.settle();
     }
 
+    /// The middle of the text box with this label, in the window.
+    fn field_at(&mut self, label: &str) -> Option<egui::Pos2> {
+        let role = egui::accesskit::Role::TextInput;
+        if let Some(node) = self.find(label, true).into_iter().find(|n| n.accesskit_node().role() == role) {
+            node.scroll_to_me();
+        }
+        for _ in 0..4 {
+            self.h.step();
+        }
+        self.find(label, true).into_iter().find(|n| n.accesskit_node().role() == role).map(|n| n.rect().center())
+    }
+
+    /// Presses on a text box and moves the pointer `dx` points to the side, in steps. The button stays down.
+    fn field_press_and_move(&mut self, label: &str, dx: f32, modifiers: Modifiers) -> Option<egui::Pos2> {
+        let from = self.field_at(label)?;
+        self.h.event(egui::Event::PointerMoved(from));
+        self.h.step();
+        self.h.event(egui::Event::ModifiersChanged(modifiers));
+        self.h.event(egui::Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers });
+        self.h.step();
+        let steps = (dx.abs() / 5.0).ceil().clamp(1.0, 12.0) as usize;
+        for k in 1..=steps {
+            self.h.event(egui::Event::PointerMoved(from + egui::vec2(dx * k as f32 / steps as f32, 0.0)));
+            self.h.step();
+        }
+        self.h.step();
+        Some(from + egui::vec2(dx, 0.0))
+    }
+
+    fn release(&mut self, at: egui::Pos2) {
+        self.h.event(egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed: false, modifiers: Modifiers::default() });
+        self.h.event(egui::Event::ModifiersChanged(Modifiers::default()));
+        self.settle();
+    }
+
+    /// A whole drag on a text box: press, move `dx` points, release.
+    fn field_drag(&mut self, label: &str, dx: f32, modifiers: Modifiers) -> bool {
+        match self.field_press_and_move(label, dx, modifiers) {
+            Some(at) => {
+                self.release(at);
+                true
+            }
+            None => false,
+        }
+    }
+
     fn undo_to(&mut self, mark: usize) {
         while self.ed().undo_stack.len() > mark {
             self.ed().undo();
@@ -1783,6 +1829,159 @@ fn exit_triggers() {
     t.click("Exit triggers 1");
     let on = !t.ed().hidden.contains(LAYER);
     t.check("click: the Exit triggers layer's checkbox", label && off && on);
+    t.finish();
+}
+
+/// Number fields change by dragging: a press that moves to the side changes the value, as one undo step.
+#[test]
+fn number_fields_drag() {
+    let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
+    let mut t = T::new("numfield", Some(backend), [1500.0, 950.0]);
+    let none = Modifiers::default();
+    t.idle();
+    let ed = t.ed();
+    let enemy = ent(ed, |e| e.kind == "enemy").unwrap();
+    ed.select(Some(enemy), false);
+    t.settle();
+    let x = |t: &mut T| {
+        let ed = t.ed();
+        let i = ed.selection[0];
+        let bind = ed.entities[i].bind.clone().unwrap();
+        bind.get(&ed.doc, &ed.entities)[0]
+    };
+    let (x0, mark, xml0) = (x(&mut t), t.ed().undo_stack.len(), t.ed().serialize());
+
+    // A drag to the right: one unit for each point, live, and one undo step
+    let at = t.field_press_and_move("position x", 25.0, none);
+    let live = x(&mut t);
+    let held = t.ed().undo_stack.len();
+    t.detail("drag: the value follows the pointer while the button is down", at.is_some() && (live - x0.round() - 25.0).abs() < 1e-6 && held == mark, format!("{x0} {live} {held}"));
+    t.shot("60-field-drag");
+    t.release(at.unwrap());
+    let (x1, steps) = (x(&mut t), t.ed().undo_stack.len());
+    let moved = t.ed().serialize() != xml0 && !t.h.ctx.egui_wants_keyboard_input();
+    t.detail("drag: 25 points to the right add 25 to position x, as one undo step", (x1 - x0.round() - 25.0).abs() < 1e-6 && steps == mark + 1 && moved, format!("{x0} {x1} {steps} {mark}"));
+    t.ed().undo();
+    t.settle();
+    let back = t.ed().serialize() == xml0;
+    t.check("drag: one undo puts the level back", back);
+
+    // To the left
+    t.field_drag("position x", -12.0, none);
+    let x1 = x(&mut t);
+    t.detail("drag: to the left the value goes down", (x1 - x0.round() + 12.0).abs() < 1e-6, format!("{x0} {x1}"));
+    t.undo_to(mark);
+
+    // Shift is ten times finer, Ctrl ten times coarser
+    t.field_drag("position x", 30.0, Modifiers::SHIFT);
+    let x1 = x(&mut t);
+    let steps = t.ed().undo_stack.len();
+    t.detail("drag: with Shift, 30 points add 3", (x1 - x0 - 3.0).abs() < 0.051 && steps == mark + 1, format!("{x0} {x1}"));
+    t.undo_to(mark);
+    t.field_drag("position x", 20.0, Modifiers::CTRL);
+    let x1 = x(&mut t);
+    t.detail("drag: with Ctrl, 20 points add 200", (x1 - x0).abs() > 190.0 && (x1 - x0).abs() < 210.0 && (x1 / 10.0).fract() == 0.0, format!("{x0} {x1}"));
+    t.undo_to(mark);
+
+    // Esc during the drag
+    let at = t.field_press_and_move("position x", 40.0, none);
+    let live = x(&mut t);
+    t.h.key_press(Key::Escape);
+    t.settle();
+    let after_esc = x(&mut t);
+    let at = at.unwrap();
+    t.h.event(egui::Event::PointerMoved(at + egui::vec2(15.0, 0.0)));
+    t.h.step();
+    t.release(at + egui::vec2(15.0, 0.0));
+    let ed = t.ed();
+    let same = ed.serialize() == xml0 && ed.undo_stack.len() == mark && ed.selection.len() == 1;
+    t.detail("drag: Esc puts the old value back and adds no undo step", live != x0 && after_esc == x0 && same, format!("{x0} {live} {after_esc}"));
+
+    // A plain click still puts the caret in the field, and a typed number is written
+    let at = t.field_at("position x").unwrap();
+    t.h.event(egui::Event::PointerMoved(at));
+    t.h.step();
+    t.h.event(egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed: true, modifiers: none });
+    t.h.step();
+    t.release(at);
+    let focused = t.h.ctx.egui_wants_keyboard_input() && t.ed().serialize() == xml0;
+    t.check("click: a press without movement gives the field the keyboard", focused);
+    // With the keyboard in the field, a drag selects text and changes nothing
+    let at = t.field_press_and_move("position x", 20.0, none).unwrap();
+    t.release(at);
+    let still = t.ed().serialize() == xml0 && t.h.ctx.egui_wants_keyboard_input();
+    t.check("drag: in a field that has the keyboard, a drag does not change the number", still);
+    t.key(Key::Enter);
+    t.h.event(egui::Event::PointerMoved(egui::pos2(700.0, 500.0)));
+    t.settle();
+    let typed = t.fill("position x", "123.5");
+    let x1 = x(&mut t);
+    let steps = t.ed().undo_stack.len();
+    t.detail("typing a number into the field still works", typed && x1 == 123.5 && steps == mark + 1, format!("{x1}"));
+    t.undo_to(mark);
+
+    // A scale steps by a hundredth
+    let ed = t.ed();
+    let s0 = ed.entities[ed.selection[0]].get_scale(&ed.doc);
+    if let Some(s0) = s0 {
+        t.field_drag("scale x", 20.0, none);
+        let ed = t.ed();
+        let s1 = ed.entities[ed.selection[0]].get_scale(&ed.doc).unwrap();
+        t.detail("drag: a scale changes by 0.01 for each point", (s1[0] - s0[0] - 0.2).abs() < 0.006, format!("{s0:?} {s1:?}"));
+        t.undo_to(mark);
+    }
+
+    // A whole-number command field keeps the limits of its type
+    t.ed().select(None, false);
+    t.settle();
+    let found = [("  u1", "255", "0", none), ("  u2", "65535", "0", Modifiers::CTRL), ("  s2", "32767", "-32768", Modifiers::CTRL)].into_iter().find_map(|(ty, max, min, mods)| {
+        let label = [None, Some(enemy)].into_iter().find_map(|sel| {
+            t.ed().select(sel, false);
+            t.settle();
+            t.find(ty, false).iter().filter(|n| n.accesskit_node().role() == egui::accesskit::Role::TextInput).find_map(|n| n.accesskit_node().label())
+        })?;
+        Some((label, max, min, mods))
+    });
+    t.detail("the fixture shows a whole-number field", found.is_some(), format!("{found:?}"));
+    if let Some((label, max, min, mods)) = found {
+        let before = t.ed().serialize();
+        t.field_drag(&label, 7000.0, mods);
+        let up = t.ed().serialize();
+        t.field_drag(&label, -14000.0, mods);
+        let down = t.ed().serialize();
+        // The attribute that changed, in the two documents
+        let changed = |a: &str, b: &str| -> Option<String> {
+            let at = a.bytes().zip(b.bytes()).position(|(x, y)| x != y)?;
+            let from = b[..at].rfind('"')? + 1;
+            let to = from + b[from..].find('"')?;
+            Some(b[from..to].to_string())
+        };
+        let (hi, lo) = (changed(&before, &up), changed(&up, &down));
+        t.detail(&format!("drag: the field {label} stops at {max} and at {min}"), hi.as_deref() == Some(max) && lo.as_deref() == Some(min), format!("{hi:?} {lo:?}"));
+        let steps = t.ed().undo_stack.len();
+        t.check("drag: each drag on the whole-number field is one undo step", steps == mark + 2);
+        t.undo_to(mark);
+    }
+
+    // A text field does not change on a drag
+    t.ed().select(None, false);
+    t.settle();
+    let ed = t.ed();
+    let name = ed.doc.attr(ed.doc.root(), "name").to_string();
+    let dragged = t.field_drag("File name", 40.0, none);
+    let ed = t.ed();
+    let same = ed.doc.attr(ed.doc.root(), "name") == name && ed.undo_stack.len() == mark;
+    t.check("drag: a text field does not change", dragged && same);
+
+    // Pictures of a list and of a menu, for the look
+    if t.shots.is_some() {
+        t.click("Level");
+        t.shot("61-level-list");
+        t.key(Key::Escape);
+        t.click("+ Add level setting");
+        t.shot("62-menu");
+        t.key(Key::Escape);
+    }
     t.finish();
 }
 
