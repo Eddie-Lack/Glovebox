@@ -14,7 +14,7 @@
      pixel bullets and system fonts only. Everything is drawn here with CSS and SVG; nothing comes from the ROM. */
   :root {
     --navy: #000080; --deep: #000040; --grey: #c0c0c0; --grey-light: #ffffff; --grey-dark: #808080;
-    --red: #cc0000; --yellow: #ffff00; --good: #00c000; --bad: #ff3030; --soft: #c0c0ff;
+    --red: #cc0000; --yellow: #ffff00; --good: #00c000; --bad: #ff5050; --soft: #c0c0ff;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
@@ -46,44 +46,53 @@
   /* A rainbow divider, a classic of the time. */
   .rainbow { height: 6px; border: 0; margin: 0;
     background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00c000, #0080ff, #8000ff, #ff00ff); }
-  p { margin: 0; }
-  .lede { margin: 14px 14px 0; text-align: center; }
   a { color: var(--yellow); text-decoration: underline; }
   a:visited { color: #ff99ff; }
   a:hover { color: #ffffff; }
   a:focus-visible { outline: 2px dotted var(--yellow); outline-offset: 2px; }
 
-  /* Each step is a box with a red title bar. */
-  .step { margin: 14px 14px 0; border: 2px solid #000000; background: #000060; padding: 0 12px 10px; }
-  .step h2 {
-    margin: 0 -12px 10px; padding: 3px 8px; background: var(--red); border-top: 2px solid #ff6060; border-bottom: 2px solid #800000;
-    font: bold 15px/1.3 Arial, Helvetica, sans-serif; color: var(--yellow); text-transform: uppercase; letter-spacing: 1px;
-    display: flex; gap: 8px; align-items: center;
+  .step { margin: 14px 14px 0; }
+  /* The drop box: grey and sunken, like a 1998 form. All of it is one button that opens the file chooser. */
+  .drop button {
+    display: block; width: 100%; padding: 18px 12px; text-align: center; cursor: pointer;
+    background: var(--grey); color: #000000; border: 3px inset var(--grey);
+    font: 12px/1.5 Verdana, Tahoma, Arial, Helvetica, sans-serif;
   }
-  /* The step's number sits on a pixel bullet: a grey block, green with a tick once the step is done. */
-  .step h2 b { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; background: var(--grey); color: #000000;
-    border: 2px outset var(--grey); font: bold 12px/1 Arial, Helvetica, sans-serif; letter-spacing: 0; }
-  .step.done h2 b { background: var(--good); border-color: #80ff80 #006000 #006000 #80ff80; border-style: solid; font-size: 0; }
-  .step.done h2 b::after { content: ""; display: block; width: 5px; height: 9px; margin-top: -2px; border: solid #000000; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .drop strong { display: block; font: bold clamp(15px, 4.6vw, 20px)/1.3 Arial, Helvetica, sans-serif; color: var(--navy); text-transform: uppercase; }
+  .drop.over button, .drop button:hover { background: #d8d8d8; }
+  .drop.over button { border-style: outset; }
+  .drop button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  /* A green pixel tick before the words once the file is accepted. */
+  .step.done .drop strong::before { content: ""; display: inline-block; width: 7px; height: 13px; margin: 0 12px 2px 0;
+    border: solid #007000; border-width: 0 4px 4px 0; transform: rotate(45deg); }
 
-  /* The drop box: grey and sunken, like a 1998 form. */
-  .drop { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px; background: var(--grey); color: #000000;
-    border: 3px inset var(--grey); }
-  .drop.over { background: #d8d8d8; border-style: outset; }
-  .drop .muted { color: #000000; font-size: 12px; }
+  /* A box with a red title bar. */
+  .box { border: 2px solid #000000; background: #000060; }
+  .box h2 {
+    margin: 0; padding: 3px 8px; background: var(--red); border-top: 2px solid #ff6060; border-bottom: 2px solid #800000;
+    font: bold 15px/1.3 Arial, Helvetica, sans-serif; color: var(--yellow); text-transform: uppercase; letter-spacing: 1px;
+  }
+  .box .inner { padding: 12px; }
+  .know { margin: 0; padding: 0; list-style: none; }
+  .know li { padding-left: 18px; margin-top: 4px; position: relative; }
+  .know li:first-child { margin-top: 0; }
+  /* A pixel bullet: a small yellow star. */
+  .know li::before { content: ""; position: absolute; left: 0; top: 5px; width: 9px; height: 9px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath d='M4 0h1v3h4v1H6v1h1v4H6V7H3v2H2V5h1V4H0V3h4z' fill='%23ffff00'/%3E%3C/svg%3E") no-repeat center / contain; }
 
   /* A Windows 98 style push button. */
-  button {
+  button.primary {
     font: bold 13px Arial, Helvetica, sans-serif; color: #000000; background: var(--grey); cursor: pointer;
     border: 2px solid; border-color: var(--grey-light) #404040 #404040 var(--grey-light);
-    box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf; padding: 6px 14px;
+    box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf;
+    display: block; margin: 0 auto; padding: 6px 22px; max-width: 100%;
   }
-  button.primary { display: block; margin: 2px auto 0; padding: 6px 22px; max-width: 100%; }
-  button:active:not(:disabled) { border-color: #404040 var(--grey-light) var(--grey-light) #404040; box-shadow: inset 1px 1px 0 var(--grey-dark); }
-  button:disabled { color: #4c4c4c; text-shadow: 1px 1px 0 var(--grey-light); cursor: default; }
-  button:focus-visible { outline: 1px dotted #000000; outline-offset: -5px; box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf, 0 0 0 2px var(--yellow); }
+  button.primary:active:not(:disabled) { border-color: #404040 var(--grey-light) var(--grey-light) #404040; box-shadow: inset 1px 1px 0 var(--grey-dark); }
+  button.primary:disabled { color: #4c4c4c; text-shadow: 1px 1px 0 var(--grey-light); cursor: default; }
+  button.primary:focus-visible { outline: 1px dotted #000000; outline-offset: -5px; box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf, 0 0 0 2px var(--yellow); }
 
   .info { margin-top: 8px; font-size: 12px; }
+  .info:empty { display: none; }
   .info > div { font-weight: bold; }
   .info dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0 0; }
   .info dt { color: var(--soft); }
@@ -99,7 +108,6 @@
     background: repeating-linear-gradient(90deg, var(--navy) 0 10px, var(--grey) 10px 12px); }
   @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 
-  footer { margin: 12px 14px 0; text-align: center; color: var(--soft); font-size: 12px; }
   input[type=file] { display: none; }
 
   /* Very narrow windows, such as a phone at 200% zoom: less padding, and each value goes under its label. */
@@ -108,11 +116,12 @@
     main { border-width: 4px; }
     h1 { font-size: min(26px, 10vw); letter-spacing: 0; overflow-wrap: anywhere; }
     h1 .glove { display: none; }
-    .lede, footer { margin-left: 6px; margin-right: 6px; }
-    .step { margin: 10px 6px 0; padding: 0 6px 8px; }
-    .step h2 { margin: 0 -6px 8px; font-size: 13px; letter-spacing: 0; }
-    .drop { padding: 8px; }
-    button, button.primary { padding: 6px 8px; }
+    .step { margin: 10px 6px 0; }
+    .box h2 { font-size: 13px; letter-spacing: 0; }
+    .box .inner { padding: 8px 6px; }
+    .drop button { padding: 10px 6px; }
+    .drop strong { font-size: 15px; overflow-wrap: anywhere; }
+    button.primary { padding: 6px 8px; }
     .info dl { grid-template-columns: 1fr; }
     .info dd { margin-bottom: 4px; }
   }
@@ -123,33 +132,39 @@
   <h1><span class="glove left" aria-hidden="true"></span>Glovebox<span class="glove right" aria-hidden="true"></span>
     <span class="sub">Glover Level Patcher</span></h1>
   <hr class="rainbow">
-  <p class="lede">Play a level made with Glovebox on your own copy of Glover (N64, USA).
-    Your ROM never leaves this page. Your browser reads, patches and saves it.</p>
 
-  <section class="step" id="step-rom">
-    <h2><b>1</b> Your Glover ROM</h2>
-    <div class="drop" id="drop-rom"><button id="pick-rom">Choose ROM…</button><span class="muted">.z64, .v64 or .n64; or drop it here</span></div>
-    <input type="file" id="file-rom" accept=".z64,.v64,.n64,.rom,.bin">
-    <div class="info" id="rom-info"></div>
+  <section class="step" id="step-rom" aria-label="The Glover ROM">
+    <div class="drop" id="drop-rom"><button id="pick-rom"><strong>Drop the Glover ROM here</strong>
+      or click to choose a file: .z64, .v64 or .n64</button></div>
+    <input type="file" id="file-rom" accept=".z64,.v64,.n64,.rom,.bin" aria-label="The Glover ROM">
+    <div class="info" id="rom-info" role="status"></div>
   </section>
 
-  <section class="step" id="step-patch">
-    <h2><b>2</b> The level patch</h2>
-    <div class="drop" id="drop-patch"><button id="pick-patch">Choose patch…</button><span class="muted">.bps from the editor’s “Export patch”; or drop it here</span></div>
-    <input type="file" id="file-patch" accept=".bps">
-    <div class="info" id="patch-info"></div>
+  <section class="step" id="step-patch" aria-label="The level patch">
+    <div class="drop" id="drop-patch"><button id="pick-patch"><strong>Drop the level patch here</strong>
+      or click to choose a file: .bps</button></div>
+    <input type="file" id="file-patch" accept=".bps" aria-label="The level patch">
+    <div class="info" id="patch-info" role="status"></div>
   </section>
 
-  <section class="step" id="step-go">
-    <h2><b>3</b> Patch and save</h2>
-    <button class="primary" id="go" disabled>Create patched ROM</button>
-    <div class="bar" id="bar"><i></i></div>
-    <div class="info" id="result"></div>
+  <section class="step box" id="step-go" aria-labelledby="go-h">
+    <h2 id="go-h">Patch</h2>
+    <div class="inner">
+      <button class="primary" id="go" disabled>Create patched ROM</button>
+      <div class="bar" id="bar"><i></i></div>
+      <div class="info" id="result" role="status"></div>
+    </div>
   </section>
 
-  <footer>A BPS patch holds only what the edit changes.
-    The page refuses a wrong ROM or a damaged patch.
-    It works offline and makes no network requests.</footer>
+  <section class="step box" aria-labelledby="know-h">
+    <h2 id="know-h">Good to know</h2>
+    <div class="inner">
+      <ul class="know">
+        <li>Your ROM stays on your computer</li>
+        <li>The ROM has to be Glover (USA)</li>
+      </ul>
+    </div>
+  </section>
 </main>
 <script>
 "use strict";
