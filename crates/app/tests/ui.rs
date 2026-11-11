@@ -1713,17 +1713,21 @@ fn exit_triggers() {
     t.idle();
     let ed = t.ed();
     let goal = ent(ed, |e| e.label == "goal").unwrap();
+    ed.focus_on(goal);
     let trigger = ed.exit_trigger(goal).unwrap();
     let r = trigger.radius.unwrap();
     let sphere = ed.nodes[goal].exit.unwrap();
     let shown = ed.graph[sphere].visible && r > 20.0;
     t.detail("an exit platform has a sphere of the game's radius", shown, format!("{r}"));
     // A garib inside the sphere, on one side of the block. A spot on the sphere on the other side.
+    let ed = t.ed();
     let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
     let side = vec::scale(across, (r - 4.0) / vec::norm(across));
     let inside = vec::sub(trigger.centre, side);
     ed.add_garib(inside, "garib");
     ed.select(None, false);
+    let goal = ent(ed, |e| e.label == "goal").unwrap();
+    let sphere = ed.nodes[goal].exit.unwrap();
     t.settle();
     let spot = px(t.ed(), vec::add(trigger.centre, side));
     let pixel = |t: &mut T| {
@@ -1731,7 +1735,6 @@ fn exit_triggers() {
         t.settle();
         t.h.render().ok().map(|img| img.get_pixel(at.x as u32, at.y as u32).0)
     };
-    let with = pixel(&mut t);
     t.shot("50-exits-on");
 
     // A click on the sphere goes through it
@@ -1743,14 +1746,17 @@ fn exit_triggers() {
     let ed = t.ed();
     let picked = ed.selection.first().map(|&i| ed.entities[i].kind);
     t.detail("a click on a sphere selects what is inside it", picked == Some("garib"), format!("{picked:?}"));
+    t.ed().select(None, false);
     let at = px(t.ed(), trigger.centre);
     t.view_click(at, none);
     let sel = t.ed().selection.clone();
-    t.detail("a click on the platform selects it", sel == vec![goal], format!("{sel:?}"));
+    let what: Vec<String> = sel.iter().map(|&i| t.ed().entities[i].label.clone()).collect();
+    t.detail("a click on the platform selects it", sel == vec![goal], format!("{sel:?} {what:?} {goal}"));
     let block = t.has("Exit trigger") && t.has("the ball (its centre)") && t.has("Glover must hold the ball.") && t.has(&format!("{r:.1}"));
     t.check("the inspector shows the exit trigger", block);
     t.shot("51-exits-inspector");
     t.ed().select(None, false);
+    let with = pixel(&mut t);
 
     // The toolbar's switch
     t.click("Exits");
@@ -1767,7 +1773,7 @@ fn exit_triggers() {
     let saved = t.w().settings.get("exits");
     t.check("click: Exits shows them again", on && saved.as_deref() == Some("on"));
     let back = pixel(&mut t);
-    t.check("the sphere is drawn again", back == with);
+    t.detail("the sphere is drawn again", back == with, format!("{back:?} {with:?}"));
 
     // The layer's checkbox is the same switch
     let label = t.has("Exit triggers 1");
@@ -1904,18 +1910,26 @@ fn the_rom() {
             }
         }
         fired.extend(ed.violations.iter().filter(|v| v.key.ends_with(":exit")).map(|v| format!("{sid}: {}", v.msg)));
-        // A picture of a hub's world entrance and of the ends of Atlantis 3 and Carnival 1
-        let shown = list.iter().copied().find(|&i| sid != "00" || (6..=11).contains(&ed.exit_trigger(i).unwrap().exit_type));
+        // A picture of a world entrance of hub 1 (the Fortress of Fear's, type 10) and of the ends of Atlantis 3
+        // and Carnival 1
+        let shown = list.iter().copied().find(|&i| sid != "00" || ed.exit_trigger(i).unwrap().exit_type == 10);
         if let (true, Some(i)) = (matches!(sid.as_str(), "00" | "0c" | "0f"), shown) {
             let x = ed.exit_trigger(i).unwrap();
             let r = x.radius.unwrap_or(0.0).max(40.0);
-            let away = vec::sub(ed.camera.pos, ed.orbit.target);
+            // From the side Glover starts on, a little above
+            let start = ent(ed, |e| e.kind == "spawn").map_or(ed.camera.pos, |s| ed.obj_pos(s));
+            let flat = [start[0] - x.centre[0], 0.0, start[2] - x.centre[2]];
+            let n = vec::norm(flat).max(1e-6);
+            let away = [flat[0] / n, 0.45, flat[2] / n];
             ed.orbit.target = x.centre;
-            ed.camera.pos = vec::add(x.centre, vec::scale(away, 4.5 * r / vec::norm(away)));
+            ed.camera.pos = vec::add(x.centre, vec::scale(away, 4.0 * r / vec::norm(away)));
             ed.camera.look_at(x.centre);
             ed.select(Some(i), false);
+            let fog = ed.show_fog;
+            ed.show_fog = false;
             t.w().view.dirty = true;
             t.shot(&format!("exit-{sid}"));
+            t.ed().show_fog = fog;
             t.ed().select(None, false);
         }
     }

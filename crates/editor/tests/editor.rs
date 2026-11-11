@@ -692,6 +692,11 @@ fn exit_triggers_on_the_fixture() {
     ed.undo();
     let goal = ent(&ed, |e| e.label == "goal").unwrap();
     assert!(ed.graph[ed.nodes[goal].exit.unwrap()].visible && !has_check(&mut ed, None, "can never fire"));
+    // Exit type 3 tests no distance: no sphere, and no check
+    let exit = ed.doc.first(ed.entities[goal].node, "SetExit").unwrap();
+    ed.set_attr(exit, "behavior", "3");
+    let goal = ent(&ed, |e| e.label == "goal").unwrap();
+    assert!(ed.exits() == [goal] && !ed.graph[ed.nodes[goal].exit.unwrap()].visible && !ed.nodes[goal].exit_on);
     // Exit type 0 is no exit to the game
     let exit = ed.doc.first(ed.entities[goal].node, "SetExit").unwrap();
     ed.set_attr(exit, "behavior", "0");

@@ -316,9 +316,10 @@ nothing else. The program never runs them.
   `exits::radius` walks the platform's commands in the level file's order, on the vertices the faces of the
   model's root mesh use (`Backend::root_vertices`, read from the object bank with
   `objbank::root_face_vertices`). The sphere is a node of its own in the world (`EntNodes::exit`). A click
-  goes through it, and it is in no selection box. It follows the platform when the platform moves, when its
-  scale changes and when its commands change. A radius of 0 draws nothing, and so does a model the editor
-  cannot read. The inspector's "Exit trigger" block gives the exit type, the radius, who must come within it
+  goes through it, and it is in no selection box. The rings are drawn a second time, faint and without the
+  depth test: the hub's entrances sit inside their doors. It follows the platform when the platform moves, when its
+  scale changes and when its commands change. A radius of 0 draws nothing, and so do a model the editor
+  cannot read and an exit of type 3 (it tests no distance). The inspector's "Exit trigger" block gives the exit type, the radius, who must come within it
   and the other conditions of `CheckForExit` for that type and level (`exits::rule`). The editor draws the
   exit post's model at a scale of 1.5 on every axis; the game uses 1.5, 2, 1.5, and the radius is computed
   with the game's.
@@ -550,7 +551,11 @@ offer **Platform** for them, and the checks flag one that is.
     point), or the game mod's `SetActorScale` (mod/transforms.c). A scale that comes after the position is
     drawn and does not change the radius.
   - So a loading-zone `SetExit` before the position leaves the radius at 0, and the exit can never fire. The
-    check "The exit can never fire" reports it. EXIT_FACTS
+    check "The exit can never fire" reports it. The 48 shipped
+    levels have 126 platforms with an exit, and none has a radius of 0. The exit posts of the levels have 20,
+    their start value. The hub's entrances are `ballbit` models of 18.0 to 57.4,
+    the Wayroom's doors 87.6, the Castle Cave's 131.4. The end of Carnival 1 is a `ballbit` at scale 10
+    (437.8), and the end of Atlantis 3 a `hoop` at scale 10 (800.0).
 - Camera zones (docs/technical.md, "Level tools"): a puzzle with one `PuzzleCondGloverWithinVolume` and only actions 70
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is

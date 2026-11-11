@@ -261,12 +261,19 @@ impl Editor {
         out
     }
 
-    /// The sphere of an exit trigger: a faint fill and three rings, with a radius of 1.
+    /// The sphere of an exit trigger: a faint fill and three rings, with a radius of 1. The rings are drawn a
+    /// second time, faint and through everything: many exits of the game sit inside a wall or a door.
     fn exit_nodes(&mut self) -> NodeId {
         let group = self.graph.node("");
         let rgb = entities::hex_rgb(exits::COLOR);
         for ax in ['x', 'y', 'z'] {
-            let l = self.lines(&ring_points(ax, 0.0, 48), rgb, LineMode::Loop, None);
+            let points = ring_points(ax, 0.0, 48);
+            let l = self.lines(&points, rgb, LineMode::Loop, None);
+            self.graph.add(group, l);
+            let mut through = Lines::from_f64(&points, rgb, LineMode::Loop);
+            through.depth_test = false;
+            through.opacity = 0.35;
+            let l = self.graph.lines_node(through);
             self.graph.add(group, l);
         }
         let g = self.shape("sphere");
@@ -278,10 +285,11 @@ impl Editor {
     }
 
     /// Puts an exit's sphere where the game tests it, at the radius the game gives it. Returns whether there is a
-    /// sphere to draw: a radius of 0, or a model the editor cannot measure, draws nothing.
+    /// sphere to draw: a radius of 0, a model the editor cannot measure, and an exit that tests no distance (type
+    /// 3) draw nothing.
     fn place_exit(&mut self, i: EntId, n: &EntNodes) -> bool {
         let Some(node) = n.exit else { return false };
-        let t = self.exit_trigger(i);
+        let t = self.exit_trigger(i).filter(|t| t.rule.who != exits::Who::OnPlatform);
         let r = t.as_ref().and_then(|t| t.radius).filter(|r| *r > 0.0);
         let shown = !self.hidden.contains(exits::LAYER) && !self.hidden.contains("platform");
         let g = &mut self.graph[node];

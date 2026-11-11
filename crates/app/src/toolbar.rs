@@ -132,9 +132,9 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
     if style::toggle(ui, triggers, "Triggers", "Show the puzzle trigger volumes (the areas a puzzle condition tests). Hiding them only affects the editor view; the level keeps them.").clicked() {
         w.ed.set_layer("trigger", !triggers);
     }
-    let exits = !w.ed.hidden.contains(exits::LAYER);
-    if style::toggle(ui, exits, "Exits", "Show the exit triggers: the sphere round each platform with an exit, at the size the game tests. Glover or the ball must come inside it. Hiding them only affects the editor view.").clicked() {
-        w.ed.set_layer(exits::LAYER, !exits);
+    let shown = !w.ed.hidden.contains(exits::LAYER);
+    if style::toggle(ui, shown, "Exits", "Show the exit triggers: the sphere round each platform with an exit, at the size the game tests. Glover or the ball must come inside it. Hiding them only affects the editor view.").clicked() {
+        w.ed.set_layer(exits::LAYER, !shown);
     }
     sep(ui);
     let ready = w.ed.has_level && !w.busy;

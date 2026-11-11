@@ -185,7 +185,7 @@ The `Triggers` button shows or hides them. The `Fog` button shows or hides the l
 
 Every exit is a platform with an `Exit` command. The game doesn't care what the model looks like: it tests a sphere round the platform's position
 
-The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model, so the sphere is the only way to see how big they are
+The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model. The sphere is how you see their real size
 
 The `Exits` button in the toolbar shows or hides the spheres. The `Exit triggers` layer in the list on the left is the same switch
 
@@ -195,7 +195,9 @@ Who has to get inside the sphere:
 | --- | --- |
 | A level's goal (type 1) | The ball, while Glover holds it |
 | World entrances in the hub (types 6 to 11) | Glover |
-| The hub's own doors (types 12, 13, 21) | Glover |
+| The doors to the Castle Cave and the Assault Course (types 12 and 21) | Glover |
+| The way back to the hub (type 13) | Glover. In the Assault Course, the ball |
+| A boss's lift (type 3) | The ball, resting on the lift while Glover holds it. No sphere is tested |
 | Anything in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1 | Glover |
 | Everything else | The ball |
 
@@ -203,11 +205,12 @@ It's the centre of Glover or the ball that counts, not the edge
 
 Select the platform and the inspector's `Exit trigger` block tells you the radius, who has to touch it and what else the game wants for that exit type
 
-- The size comes from the platform's model and its scale, so scale the platform to make the trigger bigger or smaller
-- Clicks go through the sphere, so you can still select what's inside it
+- The size comes from the platform's model and its scale. Scale the platform and the trigger scales with it
+- Clicks go through the sphere. You can still select what's inside it
+- The outline shows faintly through walls. The hub's entrances sit inside their doors
 - A moving platform's sphere is drawn where the platform starts. In the game it moves with the platform
 
-### An exit with no sphere can never fire!
+### An exit with a radius of 0 can never fire!
 
 The game measures the platform when it reads its position. An `Exit` of type `loading_zone` that comes before the position stops that, and the radius stays 0
 

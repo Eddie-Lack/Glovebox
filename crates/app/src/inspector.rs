@@ -838,7 +838,9 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         });
         row(ui, "who", |ui| ui.label(who));
         match (t.rule.who, t.radius) {
-            (Who::OnPlatform, _) => {}
+            (Who::OnPlatform, _) => {
+                note(ui, "The game tests no distance for this exit type. The view draws no sphere.");
+            }
             (_, None) => {
                 note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
             }

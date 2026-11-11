@@ -11,7 +11,7 @@ use glovebox_core::xml::{Doc, NodeId};
 /// The object id of `exitpost.ndo`. The game starts this model with a radius of 20 and a scale of 1.5, 2, 1.5.
 pub const EXITPOST: &str = "0x7FDADB91";
 /// The colour of the spheres in the view.
-pub const COLOR: &str = "#5fe08a";
+pub const COLOR: &str = "#9dff3c";
 /// The key of the layer in `Editor::hidden`, and its name in the settings.
 pub const LAYER: &str = "exit";
 pub const SETTING: &str = "exits";
