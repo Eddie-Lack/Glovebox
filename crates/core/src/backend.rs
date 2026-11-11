@@ -128,6 +128,9 @@ pub trait Backend: Send + Sync {
     fn backdrops(&self, sid: &str) -> Result<Vec<String>>;
     /// The number of collision faces of a model, or 0.
     fn faces(&self, oid: &str) -> u32;
+    /// The vertices that the faces of a model's root mesh use, in the model's own units. The game measures a
+    /// platform's radius on them. None when the back end cannot tell.
+    fn root_vertices(&self, oid: &str) -> Option<Vec<[f32; 3]>>;
     fn models(&self, sid: &str) -> Result<SceneModels>;
     /// The size of a shipped level's file.
     fn orig_lev_size(&self, sid: &str) -> Option<usize>;
@@ -281,6 +284,13 @@ impl Backend for GameBackend {
         match self.customs().get(oid) {
             Some(c) => objbank::faces(&c.bank),
             None => parse_id(oid).map_or(0, |id| self.game.faces(id)),
+        }
+    }
+
+    fn root_vertices(&self, oid: &str) -> Option<Vec<[f32; 3]>> {
+        match self.customs().get(oid) {
+            Some(c) => objbank::root_face_vertices(&c.bank),
+            None => parse_id(oid).and_then(|id| self.game.root_vertices(id)),
         }
     }
 

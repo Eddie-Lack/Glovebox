@@ -298,6 +298,7 @@ impl Editor {
             }
         }
         self.model_cache = data.prefabs;
+        self.exit_verts.borrow_mut().clear();
         self.build_entities();
         self.frame_level();
         if let Some(st) = self.settings.as_mut() {

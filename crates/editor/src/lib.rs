@@ -5,6 +5,7 @@ pub mod commands;
 pub mod drafts;
 pub mod editor;
 pub mod entities;
+pub mod exits;
 pub mod fixture;
 pub mod gizmo;
 pub mod presets;

@@ -385,6 +385,15 @@ impl Backend for FixtureBackend {
         0
     }
 
+    /// The first mesh of the made-up model, at the size its node gives it.
+    fn root_vertices(&self, oid: &str) -> Option<Vec<[f32; 3]>> {
+        let made = self.models.get(oid).cloned().or_else(|| self.customs().get(oid).map(|c| c.1.clone()))?;
+        let node = made.model.nodes.iter().find(|n| n.mesh.is_some())?;
+        let mesh = made.model.meshes.get(node.mesh? as usize)?;
+        let at = |p: &[f32; 3]| [0, 1, 2].map(|k| (f64::from(p[k]) * node.scale[k]) as f32);
+        Some(mesh.primitives.iter().flat_map(|p| p.positions.iter().map(at)).collect())
+    }
+
     fn models(&self, _sid: &str) -> Result<SceneModels> {
         let mut loaded = self.level_ids();
         loaded.sort();

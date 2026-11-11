@@ -5,9 +5,13 @@
 //!
 //! One thing differs from Python on purpose. Python made the faint fill of a trigger volume and never added it to
 //! the world, so it was not drawn. Here it is in the world. It is not pickable and changes no box.
+//!
+//! A platform with a SetExit also gets the sphere the game tests for the exit (`exit_nodes`). Like a trigger's fill
+//! it is in the world next to the entity's node: a click goes through it, and it is in no box.
 
 use super::{Editor, Event};
 use crate::entities::{self, camera_zone, water_volume, zone_camera, Binding, EntId, Look, Xform, Zone};
+use crate::exits;
 use crate::gizmo::cone;
 use crate::scene::{
     box_edges, box_geometry, cylinder_geometry, octahedron_geometry, ring_points, sphere_geometry, Geometry, Item, LineMode, Lines,
@@ -28,6 +32,9 @@ pub struct EntNodes {
     /// A camera zone's line to where its camera stands, and whether the zone has one.
     pub marks: Option<NodeId>,
     pub marks_on: bool,
+    /// The sphere of a platform's exit trigger, and whether its radius is above 0.
+    pub exit: Option<NodeId>,
+    pub exit_on: bool,
     /// The object nodes the game draws for the model. None without a model.
     pub draw_nodes: Option<usize>,
     line_group: Option<NodeId>,
@@ -38,7 +45,7 @@ pub struct EntNodes {
 
 impl EntNodes {
     fn new(obj: NodeId) -> EntNodes {
-        EntNodes { obj, extra: None, marks: None, marks_on: false, draw_nodes: None, line_group: None, mark_line: None, mark_eye: None, zone: None }
+        EntNodes { obj, extra: None, marks: None, marks_on: false, exit: None, exit_on: false, draw_nodes: None, line_group: None, mark_line: None, mark_eye: None, zone: None }
     }
 }
 
@@ -151,6 +158,9 @@ impl Editor {
             if let Some(x) = n.extra {
                 self.graph[x].entity = Some(i as u64);
             }
+            if let Some(x) = n.exit {
+                self.graph[x].entity = Some(i as u64);
+            }
         }
     }
 
@@ -244,7 +254,43 @@ impl Editor {
         if let Some(on) = self.nodes_place(i, &out) {
             out.marks_on = on;
         }
+        if self.exit_trigger(i).is_some() {
+            out.exit = Some(self.exit_nodes());
+            out.exit_on = self.place_exit(i, &out);
+        }
         out
+    }
+
+    /// The sphere of an exit trigger: a faint fill and three rings, with a radius of 1.
+    fn exit_nodes(&mut self) -> NodeId {
+        let group = self.graph.node("");
+        let rgb = entities::hex_rgb(exits::COLOR);
+        for ax in ['x', 'y', 'z'] {
+            let l = self.lines(&ring_points(ax, 0.0, 48), rgb, LineMode::Loop, None);
+            self.graph.add(group, l);
+        }
+        let g = self.shape("sphere");
+        let fill = self.fill(g, exits::COLOR, 0.1);
+        self.graph.add(group, fill);
+        let world = self.world;
+        self.graph.add(world, group);
+        group
+    }
+
+    /// Puts an exit's sphere where the game tests it, at the radius the game gives it. Returns whether there is a
+    /// sphere to draw: a radius of 0, or a model the editor cannot measure, draws nothing.
+    fn place_exit(&mut self, i: EntId, n: &EntNodes) -> bool {
+        let Some(node) = n.exit else { return false };
+        let t = self.exit_trigger(i);
+        let r = t.as_ref().and_then(|t| t.radius).filter(|r| *r > 0.0);
+        let shown = !self.hidden.contains(exits::LAYER) && !self.hidden.contains("platform");
+        let g = &mut self.graph[node];
+        g.visible = r.is_some() && shown;
+        if let (Some(t), Some(r)) = (t, r) {
+            g.pos = t.centre;
+            g.scale = [r; 3];
+        }
+        r.is_some()
     }
 
     /// A platform's path line and the sprites on it.
@@ -419,6 +465,9 @@ impl Editor {
         if let Some(on) = self.nodes_place(i, &n) {
             self.nodes[i].marks_on = on;
         }
+        if n.exit.is_some() {
+            self.nodes[i].exit_on = self.place_exit(i, &n);
+        }
     }
 
     /// Puts every entity back where the XML has it (after the motion preview).
@@ -489,6 +538,9 @@ impl Editor {
             }
             if let Some(m) = n.marks {
                 self.graph[m].visible = v && n.marks_on;
+            }
+            if let Some(x) = n.exit {
+                self.graph[x].visible = v && n.exit_on && !self.hidden.contains(exits::LAYER);
             }
         }
         self.emit(Event::ViewChanged);
