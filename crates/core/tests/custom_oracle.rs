@@ -190,7 +190,7 @@ fn images_match_pillow() {
                 im["mode"].as_str().unwrap(),
                 differ as f64 * 100.0 / rgba.px.len() as f64
             );
-            if worst != 0 && im["format"] != "JPEG" {
+            if worst != 0 {
                 failures.push(format!("{name}: decoding differs"));
             }
         }
@@ -206,4 +206,207 @@ fn images_match_pillow() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+fn temp_home(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("glovebox-custom-{}-{name}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+/// `import_custom` stores what `convert` makes, under the set name the Python app gives, and the sets the Python
+/// converter wrote load through `custom_sets` and `custom_catalog`.
+#[test]
+fn storage_matches_python() {
+    let Some(dir) = oracle("storage_matches_python") else { return };
+    let home = temp_home("storage");
+    let case = dir.join("testmodel");
+    let data = std::fs::read(case.join("input.glb")).unwrap();
+    let none = HashSet::new();
+    let set = custom::import_custom(&home, &data, "model", 1.0, &none, &none).unwrap();
+    // sha1(data + repr(1.0))[:10], from Python
+    let expect = std::process::Command::new("python3")
+        .arg("-c")
+        .arg("import hashlib,sys; print(hashlib.sha1(open(sys.argv[1],'rb').read() + repr(1.0).encode()).hexdigest()[:10])")
+        .arg(case.join("input.glb"))
+        .output()
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .filter(|s| s.len() == 10);
+    if let Some(expect) = expect {
+        assert_eq!(set, expect);
+    }
+    let stored = home.join("custom").join(&set);
+    let out = case.join("out");
+    let mut names: Vec<String> = std::fs::read_dir(&stored).unwrap().flatten().map(|e| e.file_name().into_string().unwrap()).collect();
+    names.sort();
+    let theirs = json(&out.join("meta.json"));
+    let mut expect: Vec<String> = theirs["pieces"].as_array().unwrap().iter().map(|p| format!("{}.obj.bin", p["id"].as_str().unwrap())).collect();
+    expect.extend(["meta.json".to_string(), "textures.tex.bin".to_string()]);
+    expect.sort();
+    assert_eq!(names, expect);
+    for name in names.iter().filter(|n| n.ends_with(".bin")) {
+        assert!(std::fs::read(stored.join(name)).unwrap() == std::fs::read(out.join(name)).unwrap(), "{name}");
+    }
+    // The text of meta.json is Python's, but for the preview's file name and the PNG sizes
+    let ours = std::fs::read_to_string(stored.join("meta.json")).unwrap();
+    let mut theirs_same = theirs.clone();
+    for p in theirs_same["pieces"].as_array_mut().unwrap() {
+        p["preview"] = "".into();
+    }
+    theirs_same["textures"] = json(&stored.join("meta.json"))["textures"].clone();
+    assert_eq!(ours, custom::py_json(&theirs_same));
+    // py_json writes Python's own file back byte for byte
+    assert_eq!(custom::py_json(&theirs), std::fs::read_to_string(out.join("meta.json")).unwrap());
+    // A second import of the same file gives the same set and writes nothing
+    let before = std::fs::metadata(stored.join("meta.json")).unwrap().modified().unwrap();
+    assert_eq!(custom::import_custom(&home, &data, "other name", 1.0, &none, &none).unwrap(), set);
+    assert_eq!(std::fs::metadata(stored.join("meta.json")).unwrap().modified().unwrap(), before);
+    // The same file at another scale is another set, and its IDs avoid the first set's
+    let second = custom::import_custom(&home, &data, "model", 2.0, &none, &none).unwrap();
+    assert_ne!(second, set);
+    let catalog = custom::custom_catalog(&home);
+    let ids: HashSet<&str> = catalog.iter().map(|c| c.id.as_str()).collect();
+    assert_eq!(ids.len(), catalog.len());
+    assert_eq!(catalog.len(), 8);
+    assert!(!home.join("custom").join(format!("{set}.tmp")).exists());
+
+    // A set the Python converter wrote, copied in as the Python app stores it
+    let python_set = home.join("custom").join("0123456789");
+    std::fs::create_dir_all(&python_set).unwrap();
+    for entry in std::fs::read_dir(dir.join("big").join("out")).unwrap().flatten() {
+        if entry.path().is_file() {
+            std::fs::copy(entry.path(), python_set.join(entry.file_name())).unwrap();
+        }
+    }
+    let sets = custom::custom_sets(&home);
+    assert_eq!(sets.len(), 3);
+    assert_eq!(sets["0123456789"]["name"], "big sphere");
+    let catalog = custom::custom_catalog(&home);
+    let big: Vec<_> = catalog.iter().filter(|c| c.custom == "0123456789").collect();
+    assert_eq!(big.len(), 8);
+    assert_eq!(big[2].name, "big sphere 3/8");
+    assert_eq!(big[2].bank, "Custom: big sphere");
+    assert_eq!(big[2].tex_bank, "custom:0123456789");
+    assert_eq!(big[2].bytes, std::fs::metadata(&big[2].path).unwrap().len());
+    assert!(custom::delete_custom(&home, "0123456789"));
+    assert!(!custom::delete_custom(&home, "../escape"));
+    assert_eq!(custom::custom_sets(&home).len(), 2);
+    let _ = std::fs::remove_dir_all(&home);
+}
+
+/// `reskin` against `core.reskin`: the same set, new ID, bank, texture bank and `meta.json`.
+#[test]
+fn reskin_matches_python() {
+    let Some(dir) = oracle("reskin_matches_python") else { return };
+    let dir = dir.join("reskin");
+    let cases = json(&dir.join("index.json"));
+    assert!(cases.as_array().unwrap().len() >= 3);
+    for case in cases.as_array().unwrap() {
+        let d = dir.join(case.as_str().unwrap());
+        let c = json(&d.join("case.json"));
+        let strings = |v: &Value| v.as_array().unwrap().iter().map(|s| s.as_str().unwrap().to_string()).collect::<Vec<_>>();
+        let bank = std::fs::read(d.join("bank.bin")).unwrap();
+        let (textures, pool, taken) = (strings(&c["textures"]), strings(&c["pool"]), ids(&c["taken"]));
+        let model = custom::Reskin {
+            oid: c["oid"].as_str().unwrap(),
+            name: c["name"].as_str().unwrap(),
+            world: c["world"].as_str().unwrap(),
+            bank: &bank,
+            textures: &textures,
+            pool: &pool,
+            taken_ids: &taken,
+        };
+        let worlds = strings(&c["worlds"]);
+        let worlds: Vec<&str> = worlds.iter().map(String::as_str).collect();
+        let record = |t: &str| {
+            let hex = c["records"][t].as_str()?;
+            Some((0..hex.len() / 2).map(|i| u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16).unwrap()).collect::<Vec<u8>>())
+        };
+        let home = temp_home(&format!("reskin{}", case.as_str().unwrap()));
+        let set = custom::reskin(&home, &model, &worlds, c["seed"].as_i64().unwrap(), &record).unwrap();
+        assert_eq!(set, c["set"].as_str().unwrap());
+        let (ours, theirs) = (home.join("custom").join(&set), d.join("custom").join(&set));
+        let mut meta = json(&theirs.join("meta.json"));
+        meta["pieces"][0]["preview"] = "".into();
+        assert_eq!(std::fs::read_to_string(ours.join("meta.json")).unwrap(), custom::py_json(&meta));
+        let id = meta["pieces"][0]["id"].as_str().unwrap();
+        for name in [format!("{id}.obj.bin"), "textures.tex.bin".to_string()] {
+            assert!(std::fs::read(ours.join(&name)).unwrap() == std::fs::read(theirs.join(&name)).unwrap(), "{name}");
+        }
+        // The copy loads back, with the new textures
+        let data = std::fs::read(ours.join(format!("{id}.obj.bin"))).unwrap();
+        let parsed = objbank::Bank::parse(&data).unwrap();
+        assert_eq!(format!("0x{:08X}", parsed.objects[0].id), id);
+        let tex = std::fs::read(ours.join("textures.tex.bin")).unwrap();
+        assert_eq!(texbank::TexBank::parse(&tex).unwrap().textures.len(), meta["textures"].as_object().unwrap().len());
+        assert_eq!(custom::reskin(&home, &model, &worlds, c["seed"].as_i64().unwrap(), &record).unwrap(), set);
+        let _ = std::fs::remove_dir_all(&home);
+    }
+}
+
+/// Damaged files give an error or a model, and never a panic. Each reference model and picture is cut short and
+/// has bytes changed, by a fixed rule.
+#[test]
+fn damaged_files_do_not_panic() {
+    let Some(dir) = oracle("damaged_files_do_not_panic") else { return };
+    let none = HashSet::new();
+    let mut state = 0x2545F491u32;
+    let mut next = move || {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        state
+    };
+    let (mut tried, mut failed) = (0, 0);
+    for case in ["testmodel_small", "formats", "jpeg", "variants", "kit_sign"] {
+        let data = std::fs::read(dir.join(case).join("input.glb")).unwrap();
+        // The JSON chunk starts at byte 20: damage there, and anywhere
+        let json_len = u32::from_le_bytes(data[12..16].try_into().unwrap()) as usize;
+        for round in 0..300 {
+            let mut d = data.clone();
+            match round % 4 {
+                0 => d.truncate(next() as usize % d.len()),
+                1 => {
+                    for _ in 0..1 + next() % 4 {
+                        let at = 20 + next() as usize % json_len;
+                        d[at] = b"0123456789-,:[]{}\"e."[next() as usize % 20];
+                    }
+                }
+                _ => {
+                    for _ in 0..1 + next() % 8 {
+                        let at = next() as usize % d.len();
+                        d[at] = next() as u8;
+                    }
+                }
+            }
+            tried += 1;
+            match custom::convert(&d, "damaged", 1.0, &none, &none) {
+                Ok(set) => loads_back(&set),
+                Err(_) => failed += 1,
+            }
+        }
+    }
+    let images = dir.join("images");
+    for im in json(&images.join("index.json")).as_array().unwrap() {
+        if im["format"].is_null() {
+            continue;
+        }
+        let data = std::fs::read(images.join(format!("{}.src", im["name"].as_str().unwrap()))).unwrap();
+        for round in 0..60 {
+            let mut d = data.clone();
+            if round % 3 == 0 {
+                d.truncate(next() as usize % d.len());
+            } else {
+                for _ in 0..1 + next() % 6 {
+                    let at = next() as usize % d.len();
+                    d[at] = next() as u8;
+                }
+            }
+            tried += 1;
+            failed += custom::image::decode(&d).is_err() as usize;
+        }
+    }
+    println!("{tried} damaged files: {failed} refused, {} read", tried - failed);
 }

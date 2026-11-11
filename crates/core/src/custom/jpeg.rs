@@ -93,7 +93,8 @@ impl Bits<'_> {
         for len in 1..=16 {
             code = (code << 1) | self.bit() as i32;
             if code <= h.maxcode[len] {
-                return match h.vals.get(h.valptr[len] + (code - h.mincode[len]) as usize) {
+                let at = usize::try_from(code - h.mincode[len]).ok().and_then(|n| h.vals.get(h.valptr[len] + n));
+                return match at {
                     Some(v) => Ok(*v),
                     None => bad("a Huffman code has no value"),
                 };
@@ -495,7 +496,7 @@ fn ac_first(bits: &mut Bits, block: &mut [i16], ac: &Huffman, scan: &Scan, eobru
 
 fn ac_refine(bits: &mut Bits, block: &mut [i16], ac: &Huffman, scan: &Scan, eobrun: &mut u32) -> Res<()> {
     let (p1, m1) = (1i16 << scan.al, -1i16 << scan.al);
-    let mut refine = |bits: &mut Bits, c: &mut i16| {
+    let refine = |bits: &mut Bits, c: &mut i16| {
         if bits.bit() != 0 && *c & p1 == 0 {
             *c = c.wrapping_add(if *c >= 0 { p1 } else { m1 });
         }

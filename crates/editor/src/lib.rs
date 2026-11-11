@@ -4,6 +4,7 @@ pub mod camera;
 pub mod commands;
 pub mod drafts;
 pub mod entities;
+pub mod gizmo;
 pub mod presets;
 pub mod puzzles;
 pub mod sanitize;
