@@ -1,0 +1,27 @@
+[package]
+name = "glovebox"
+description = "Glovebox, a level editor for Glover (N64)"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+glovebox-core = { path = "../core" }
+glovebox-editor = { path = "../editor" }
+eframe = { version = "0.37", default-features = false, features = ["wgpu", "default_fonts", "x11", "wayland"] }
+egui = "0.37"
+egui-wgpu = "0.37"
+serde_json.workspace = true
+png = "0.18"
+pollster = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
+
+[dev-dependencies]
+egui_kittest = { version = "0.37", features = ["wgpu", "snapshot", "eframe"] }
+pollster = "0.4"
+png = "0.18"
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+
+[build-dependencies]
+winresource = "0.1"
+png = "0.18"

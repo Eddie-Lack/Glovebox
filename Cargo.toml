@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/editor", "crates/app"]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2021"
+license-file = "THIRD_PARTY_NOTICES.md"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
+crc32fast = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true
+panic = "abort"
+
+# The tests decompress and repack game data; unoptimised code makes them take minutes.
+[profile.dev]
+opt-level = 1
+[profile.dev.package."*"]
+opt-level = 3

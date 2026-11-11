@@ -1,0 +1,16 @@
+[package]
+name = "glovebox-core"
+description = "Glover's file formats, ROM building and the game data the editor reads"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+crc32fast.workspace = true
+png = "0.18"
+sha2 = "0.10"
+
+[dev-dependencies]
+png = "0.18"

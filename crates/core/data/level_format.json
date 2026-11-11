@@ -1,0 +1,8208 @@
+{
+ "comment": "Made by tools/gen_formats.py from formats/glover.lev.ksy. Do not edit.",
+ "ksy_sha1": "5c127a211c8d8a7e60daf345002b3b2cdd8b7cd0",
+ "libgarib_version": "unknown+gcf87929",
+ "data_format_version": "87197ff",
+ "hex_cutoff": 10000,
+ "opcodes": [
+  [
+   189,
+   "ambient_sound"
+  ],
+  [
+   190,
+   "ambient_sound_at_point"
+  ],
+  [
+   169,
+   "set_gravity"
+  ],
+  [
+   187,
+   "mr_tip"
+  ],
+  [
+   151,
+   "diffuse_light"
+  ],
+  [
+   152,
+   "ambient_light"
+  ],
+  [
+   1,
+   "glover_spawn_point"
+  ],
+  [
+   2,
+   "ball_spawn_point"
+  ],
+  [
+   3,
+   "camera_spawn_point"
+  ],
+  [
+   165,
+   "fog_configuration"
+  ],
+  [
+   191,
+   "actor_0xbf"
+  ],
+  [
+   188,
+   "animated_background_actor"
+  ],
+  [
+   145,
+   "background_actor"
+  ],
+  [
+   146,
+   "land_actor"
+  ],
+  [
+   147,
+   "set_actor_rotation"
+  ],
+  [
+   148,
+   "set_actor_scale"
+  ],
+  [
+   140,
+   "wind"
+  ],
+  [
+   160,
+   "water"
+  ],
+  [
+   153,
+   "backdrop"
+  ],
+  [
+   170,
+   "cameo"
+  ],
+  [
+   171,
+   "cameo_inst"
+  ],
+  [
+   4,
+   "puzzle"
+  ],
+  [
+   5,
+   "puzzle_and"
+  ],
+  [
+   6,
+   "puzzle_or"
+  ],
+  [
+   7,
+   "puzzle_numtimes"
+  ],
+  [
+   8,
+   "puzzle_any"
+  ],
+  [
+   149,
+   "puzzle_cond"
+  ],
+  [
+   150,
+   "puzzle_action"
+  ],
+  [
+   133,
+   "garib_group"
+  ],
+  [
+   134,
+   "garib"
+  ],
+  [
+   135,
+   "powerup"
+  ],
+  [
+   88,
+   "plat_mvspn_0x58"
+  ],
+  [
+   89,
+   "plat_mvspn_0x59"
+  ],
+  [
+   90,
+   "plat_mvspn_0x5a"
+  ],
+  [
+   113,
+   "plat_set_parent"
+  ],
+  [
+   115,
+   "plat_mvspn_0x73"
+  ],
+  [
+   116,
+   "plat_mvspn_0x74"
+  ],
+  [
+   123,
+   "plat_copy_spin_from_parent"
+  ],
+  [
+   184,
+   "plat_collision_0xb8_todo"
+  ],
+  [
+   179,
+   "plat_actor_enable_water_animation"
+  ],
+  [
+   183,
+   "plat_set_collision_y_offset"
+  ],
+  [
+   181,
+   "buzzer"
+  ],
+  [
+   182,
+   "buzzer_duty_cycle"
+  ],
+  [
+   180,
+   "set_object_sparkle"
+  ],
+  [
+   185,
+   "plat_special_0xb9"
+  ],
+  [
+   168,
+   "set_exit"
+  ],
+  [
+   105,
+   "plat_cat_0x69"
+  ],
+  [
+   104,
+   "platform_conveyor"
+  ],
+  [
+   158,
+   "plat_special_0x9e"
+  ],
+  [
+   137,
+   "set_teleport"
+  ],
+  [
+   138,
+   "plat_fan_0x8a"
+  ],
+  [
+   139,
+   "plat_magnet_0x8b"
+  ],
+  [
+   99,
+   "plat_checkpoint"
+  ],
+  [
+   103,
+   "plat_crumb_0x67"
+  ],
+  [
+   199,
+   "plat_special_0xc7"
+  ],
+  [
+   110,
+   "plat_special_0x6e"
+  ],
+  [
+   142,
+   "plat_cause_damage"
+  ],
+  [
+   91,
+   "plat_push_0x5b"
+  ],
+  [
+   114,
+   "plat_conf_boundary_volume"
+  ],
+  [
+   196,
+   "plat_orbit_sound_0xc4"
+  ],
+  [
+   198,
+   "plat_0xc6"
+  ],
+  [
+   117,
+   "plat_orbit_around_point"
+  ],
+  [
+   118,
+   "plat_orbit_pause"
+  ],
+  [
+   119,
+   "plat_orbit_flip_0x77"
+  ],
+  [
+   195,
+   "plat_0xc3"
+  ],
+  [
+   197,
+   "plat_spin_sound_0xc5"
+  ],
+  [
+   159,
+   "plat_0x9f"
+  ],
+  [
+   124,
+   "plat_spin_pause_0x7c"
+  ],
+  [
+   125,
+   "plat_spin_flip"
+  ],
+  [
+   126,
+   "plat_0x7e"
+  ],
+  [
+   127,
+   "plat_constant_spin"
+  ],
+  [
+   128,
+   "plat_spin_0x80"
+  ],
+  [
+   129,
+   "plat_topple_0x81"
+  ],
+  [
+   96,
+   "look_at_hand_0x60"
+  ],
+  [
+   97,
+   "look_at_ball_0x61"
+  ],
+  [
+   112,
+   "plat_rocking"
+  ],
+  [
+   120,
+   "plat_0x78"
+  ],
+  [
+   193,
+   "plat_movement_sound"
+  ],
+  [
+   194,
+   "plat_path_sound_at_point_hit"
+  ],
+  [
+   94,
+   "plat_turn_towards_path_point"
+  ],
+  [
+   95,
+   "plat_go_forwards_0x5f"
+  ],
+  [
+   107,
+   "plat_path_point"
+  ],
+  [
+   108,
+   "plat_max_velocity"
+  ],
+  [
+   109,
+   "plat_path_acceleration"
+  ],
+  [
+   167,
+   "plat_path_set_starting_point"
+  ],
+  [
+   166,
+   "plat_set_initial_pos"
+  ],
+  [
+   192,
+   "plat_play_object_animation"
+  ],
+  [
+   164,
+   "plat_interacts_with_water"
+  ],
+  [
+   92,
+   "plat_vent_advance_frames"
+  ],
+  [
+   100,
+   "plat_no_clip"
+  ],
+  [
+   101,
+   "plat_destructible"
+  ],
+  [
+   200,
+   "plat_destructible_sound"
+  ],
+  [
+   157,
+   "plat_has_physics"
+  ],
+  [
+   102,
+   "plat_reverse_at_ends_of_path"
+  ],
+  [
+   106,
+   "plat_actor_surface_type"
+  ],
+  [
+   111,
+   "plat_set_tag"
+  ],
+  [
+   130,
+   "plat_spike"
+  ],
+  [
+   121,
+   "plat_scale"
+  ],
+  [
+   122,
+   "plat_strobe"
+  ],
+  [
+   141,
+   "rope"
+  ],
+  [
+   144,
+   "plat_sine"
+  ],
+  [
+   143,
+   "plat_orbit"
+  ],
+  [
+   162,
+   "vent"
+  ],
+  [
+   163,
+   "vent_duty_cycle"
+  ],
+  [
+   98,
+   "platform"
+  ],
+  [
+   93,
+   "null_platform"
+  ],
+  [
+   131,
+   "enemy"
+  ],
+  [
+   161,
+   "enemy_set_attention_bbox"
+  ],
+  [
+   186,
+   "enemy_0xba"
+  ],
+  [
+   132,
+   "enemy_finalize"
+  ],
+  [
+   154,
+   "enemy_normal_instruction"
+  ],
+  [
+   155,
+   "enemy_conditional_instruction"
+  ],
+  [
+   156,
+   "enemy_attack_instruction"
+  ],
+  [
+   32000,
+   "end_level_data"
+  ],
+  [
+   0,
+   "noop"
+  ]
+ ],
+ "enums": {
+  "puzzle_cond_platform_touching_conf_boundary_edge::edge_type": [
+   [
+    "x",
+    0
+   ],
+   [
+    "y",
+    1
+   ],
+   [
+    "z",
+    2
+   ],
+   [
+    "x_plus_w",
+    3
+   ],
+   [
+    "y_plus_h",
+    4
+   ],
+   [
+    "z_plus_d",
+    5
+   ]
+  ],
+  "puzzle_cond_platform_close_to_conf_boundary_edge::edge_type": [
+   [
+    "x",
+    0
+   ],
+   [
+    "y",
+    1
+   ],
+   [
+    "z",
+    2
+   ],
+   [
+    "x_plus_w",
+    3
+   ],
+   [
+    "y_plus_h",
+    4
+   ],
+   [
+    "z_plus_d",
+    5
+   ]
+  ],
+  "puzzle_action::camera_flags": [
+   [
+    "puzzle_camera_freeze_player",
+    1
+   ],
+   [
+    "puzzle_camera_freeze_particles",
+    2
+   ],
+   [
+    "puzzle_camera_freeze_enemies",
+    4
+   ],
+   [
+    "puzzle_action_random_activation_delay",
+    512
+   ]
+  ],
+  "puzzle_action::platform_movement_flags": [
+   [
+    "puzzle_platform_halt_at_end_of_first_segment_only",
+    1
+   ],
+   [
+    "puzzle_platform_halt_at_segment_end",
+    2
+   ],
+   [
+    "puzzle_platform_clip_current_velocity",
+    4
+   ],
+   [
+    "puzzle_action_random_activation_delay",
+    512
+   ]
+  ],
+  "puzzle_action::platform_toggle_flags": [
+   [
+    "puzzle_action_include_fans_and_magnets",
+    8
+   ],
+   [
+    "puzzle_action_include_teleports",
+    16
+   ],
+   [
+    "puzzle_action_include_catapults",
+    32
+   ],
+   [
+    "puzzle_action_include_damage_platforms",
+    64
+   ],
+   [
+    "puzzle_action_include_vents",
+    256
+   ],
+   [
+    "puzzle_action_include_buzzers",
+    1024
+   ],
+   [
+    "puzzle_action_random_activation_delay",
+    512
+   ]
+  ],
+  "puzzle_action::register_flags": [
+   [
+    "puzzle_register_indirect_argument",
+    128
+   ]
+  ],
+  "puzzle_action::generic_flags": [
+   [
+    "puzzle_action_random_activation_delay",
+    512
+   ]
+  ],
+  "garib::garib_type": [
+   [
+    "garib",
+    0
+   ],
+   [
+    "bang_500pt",
+    1
+   ],
+   [
+    "extra_life",
+    2
+   ],
+   [
+    "mad_garib",
+    3
+   ]
+  ],
+  "set_exit::exit_type": [
+   [
+    "loading_zone",
+    0
+   ],
+   [
+    "solid_platform",
+    1
+   ]
+  ],
+  "plat_constant_spin::axis": [
+   [
+    "x",
+    0
+   ],
+   [
+    "y",
+    1
+   ],
+   [
+    "z",
+    2
+   ]
+  ],
+  "plat_destructible::destructible_flags": [
+   [
+    "spawn_particles_on_destruction",
+    4
+   ]
+  ],
+  "enemy::enemy_type": [
+   [
+    "bovva",
+    7
+   ],
+   [
+    "cannon",
+    8
+   ],
+   [
+    "samtex",
+    9
+   ],
+   [
+    "mallet",
+    10
+   ],
+   [
+    "generalw",
+    11
+   ],
+   [
+    "lionfish",
+    12
+   ],
+   [
+    "chester",
+    13
+   ],
+   [
+    "keg",
+    14
+   ],
+   [
+    "reggie",
+    15
+   ],
+   [
+    "swish",
+    16
+   ],
+   [
+    "thrice",
+    17
+   ],
+   [
+    "robes",
+    18
+   ],
+   [
+    "fumble",
+    19
+   ],
+   [
+    "mike",
+    20
+   ],
+   [
+    "raptor",
+    21
+   ],
+   [
+    "crumpet",
+    22
+   ],
+   [
+    "tracey",
+    23
+   ],
+   [
+    "yoofow",
+    24
+   ],
+   [
+    "opec",
+    25
+   ],
+   [
+    "cymon",
+    26
+   ],
+   [
+    "sucker",
+    27
+   ],
+   [
+    "bugle",
+    28
+   ],
+   [
+    "dennis",
+    29
+   ],
+   [
+    "chuck",
+    30
+   ],
+   [
+    "hubchicken1",
+    31
+   ],
+   [
+    "frankie2",
+    32
+   ],
+   [
+    "kloset",
+    33
+   ],
+   [
+    "willy",
+    34
+   ],
+   [
+    "joff",
+    35
+   ],
+   [
+    "cancer",
+    36
+   ],
+   [
+    "kirk",
+    37
+   ],
+   [
+    "robot",
+    38
+   ],
+   [
+    "evilrobot",
+    39
+   ],
+   [
+    "spank",
+    40
+   ],
+   [
+    "babyspk2",
+    41
+   ],
+   [
+    "evilglove",
+    42
+   ],
+   [
+    "dibber",
+    43
+   ],
+   [
+    "brundle",
+    44
+   ],
+   [
+    "malcom",
+    45
+   ],
+   [
+    "spotty",
+    46
+   ],
+   [
+    "gordon",
+    47
+   ],
+   [
+    "sidney",
+    48
+   ],
+   [
+    "weevil",
+    49
+   ],
+   [
+    "chopstik",
+    50
+   ],
+   [
+    "butterfly",
+    51
+   ],
+   [
+    "spider",
+    52
+   ],
+   [
+    "bat",
+    53
+   ],
+   [
+    "frog",
+    54
+   ],
+   [
+    "dragfly",
+    55
+   ],
+   [
+    "boxthing",
+    56
+   ],
+   [
+    "bug",
+    57
+   ],
+   [
+    "nmefrog",
+    58
+   ]
+  ],
+  "enemy_instruction::execution_condition_type": [
+   [
+    "ball_within_range",
+    0
+   ],
+   [
+    "ball_within_ground_range",
+    1
+   ],
+   [
+    "glover_within_range",
+    2
+   ],
+   [
+    "glover_within_ground_range",
+    3
+   ],
+   [
+    "ball_or_glover_within_range",
+    4
+   ],
+   [
+    "ball_or_glover_within_ground_range",
+    5
+   ],
+   [
+    "ball_within_angle_of_view",
+    6
+   ],
+   [
+    "glover_within_angle_of_view",
+    7
+   ],
+   [
+    "ball_or_glover_within_angle_of_view",
+    8
+   ],
+   [
+    "periodic",
+    9
+   ],
+   [
+    "roll_angle_within_range_and_periodic",
+    10
+   ],
+   [
+    "glover_holding_ball",
+    11
+   ],
+   [
+    "glover_not_holding_ball",
+    12
+   ],
+   [
+    "enemy_holding_ball",
+    13
+   ],
+   [
+    "enemy_not_holding_ball",
+    14
+   ],
+   [
+    "glover_holding_enemy",
+    15
+   ],
+   [
+    "glover_not_holding_enemy",
+    16
+   ],
+   [
+    "on_ball",
+    17
+   ],
+   [
+    "on_glover",
+    18
+   ],
+   [
+    "enemy_within_attention_bbox",
+    19
+   ],
+   [
+    "always",
+    20
+   ],
+   [
+    "never",
+    21
+   ],
+   [
+    "random_chance_param_a_over_1000",
+    22
+   ]
+  ],
+  "enemy_instruction::instruction_flags": [
+   [
+    "modulate_velocity_with_turns",
+    1
+   ],
+   [
+    "modulate_acceleration",
+    2
+   ],
+   [
+    "slow_down_close_to_destination",
+    4
+   ],
+   [
+    "pitch",
+    8
+   ],
+   [
+    "yaw",
+    16
+   ],
+   [
+    "roll",
+    32
+   ],
+   [
+    "proximity_of_player",
+    64
+   ],
+   [
+    "proximity_of_ball",
+    128
+   ],
+   [
+    "proximity_of_closer_of_player_or_ball",
+    256
+   ],
+   [
+    "mirror_angle",
+    1024
+   ],
+   [
+    "prevent_conditinoal_transition",
+    2048
+   ],
+   [
+    "dont_turn_towards_movement_direction",
+    4096
+   ],
+   [
+    "movement_roll_into_turn",
+    8192
+   ],
+   [
+    "dont_animate",
+    16384
+   ],
+   [
+    "dont_interrupt_animation",
+    65536
+   ],
+   [
+    "anim_switch_todo_0x40000",
+    262144
+   ],
+   [
+    "face_player",
+    1048576
+   ],
+   [
+    "face_ball",
+    2097152
+   ],
+   [
+    "face_closer_of_player_or_ball",
+    4194304
+   ],
+   [
+    "slow_down_towards_target",
+    8388608
+   ]
+  ],
+  "enemy_impulse_forward::animation_behavior_flags": [
+   [
+    "force_animation",
+    0
+   ],
+   [
+    "do_not_force_animation",
+    16384
+   ]
+  ]
+ },
+ "types": [
+  {
+   "id": "cmd",
+   "tag": "Cmd",
+   "fields": [
+    {
+     "id": "type_code",
+     "type": "u2"
+    },
+    {
+     "id": "params",
+     "type": "switch",
+     "on": "type_code",
+     "cases": [
+      [
+       189,
+       "ambient_sound"
+      ],
+      [
+       190,
+       "ambient_sound_at_point"
+      ],
+      [
+       169,
+       "set_gravity"
+      ],
+      [
+       187,
+       "mr_tip"
+      ],
+      [
+       151,
+       "diffuse_light"
+      ],
+      [
+       152,
+       "ambient_light"
+      ],
+      [
+       1,
+       "glover_spawn_point"
+      ],
+      [
+       2,
+       "ball_spawn_point"
+      ],
+      [
+       3,
+       "camera_spawn_point"
+      ],
+      [
+       165,
+       "fog_configuration"
+      ],
+      [
+       191,
+       "actor_0xbf"
+      ],
+      [
+       188,
+       "animated_background_actor"
+      ],
+      [
+       145,
+       "background_actor"
+      ],
+      [
+       146,
+       "land_actor"
+      ],
+      [
+       147,
+       "set_actor_rotation"
+      ],
+      [
+       148,
+       "set_actor_scale"
+      ],
+      [
+       140,
+       "wind"
+      ],
+      [
+       160,
+       "water"
+      ],
+      [
+       153,
+       "backdrop"
+      ],
+      [
+       170,
+       "cameo"
+      ],
+      [
+       171,
+       "cameo_inst"
+      ],
+      [
+       4,
+       "puzzle"
+      ],
+      [
+       5,
+       "puzzle_and"
+      ],
+      [
+       6,
+       "puzzle_or"
+      ],
+      [
+       7,
+       "puzzle_numtimes"
+      ],
+      [
+       8,
+       "puzzle_any"
+      ],
+      [
+       149,
+       "puzzle_cond"
+      ],
+      [
+       150,
+       "puzzle_action"
+      ],
+      [
+       133,
+       "garib_group"
+      ],
+      [
+       134,
+       "garib"
+      ],
+      [
+       135,
+       "powerup"
+      ],
+      [
+       88,
+       "plat_mvspn_0x58"
+      ],
+      [
+       89,
+       "plat_mvspn_0x59"
+      ],
+      [
+       90,
+       "plat_mvspn_0x5a"
+      ],
+      [
+       113,
+       "plat_set_parent"
+      ],
+      [
+       115,
+       "plat_mvspn_0x73"
+      ],
+      [
+       116,
+       "plat_mvspn_0x74"
+      ],
+      [
+       123,
+       "plat_copy_spin_from_parent"
+      ],
+      [
+       184,
+       "plat_collision_0xb8_todo"
+      ],
+      [
+       179,
+       "plat_actor_enable_water_animation"
+      ],
+      [
+       183,
+       "plat_set_collision_y_offset"
+      ],
+      [
+       181,
+       "buzzer"
+      ],
+      [
+       182,
+       "buzzer_duty_cycle"
+      ],
+      [
+       180,
+       "set_object_sparkle"
+      ],
+      [
+       185,
+       "plat_special_0xb9"
+      ],
+      [
+       168,
+       "set_exit"
+      ],
+      [
+       105,
+       "plat_cat_0x69"
+      ],
+      [
+       104,
+       "platform_conveyor"
+      ],
+      [
+       158,
+       "plat_special_0x9e"
+      ],
+      [
+       137,
+       "set_teleport"
+      ],
+      [
+       138,
+       "plat_fan_0x8a"
+      ],
+      [
+       139,
+       "plat_magnet_0x8b"
+      ],
+      [
+       99,
+       "plat_checkpoint"
+      ],
+      [
+       103,
+       "plat_crumb_0x67"
+      ],
+      [
+       199,
+       "plat_special_0xc7"
+      ],
+      [
+       110,
+       "plat_special_0x6e"
+      ],
+      [
+       142,
+       "plat_cause_damage"
+      ],
+      [
+       91,
+       "plat_push_0x5b"
+      ],
+      [
+       114,
+       "plat_conf_boundary_volume"
+      ],
+      [
+       196,
+       "plat_orbit_sound_0xc4"
+      ],
+      [
+       198,
+       "plat_0xc6"
+      ],
+      [
+       117,
+       "plat_orbit_around_point"
+      ],
+      [
+       118,
+       "plat_orbit_pause"
+      ],
+      [
+       119,
+       "plat_orbit_flip_0x77"
+      ],
+      [
+       195,
+       "plat_0xc3"
+      ],
+      [
+       197,
+       "plat_spin_sound_0xc5"
+      ],
+      [
+       159,
+       "plat_0x9f"
+      ],
+      [
+       124,
+       "plat_spin_pause_0x7c"
+      ],
+      [
+       125,
+       "plat_spin_flip"
+      ],
+      [
+       126,
+       "plat_0x7e"
+      ],
+      [
+       127,
+       "plat_constant_spin"
+      ],
+      [
+       128,
+       "plat_spin_0x80"
+      ],
+      [
+       129,
+       "plat_topple_0x81"
+      ],
+      [
+       96,
+       "look_at_hand_0x60"
+      ],
+      [
+       97,
+       "look_at_ball_0x61"
+      ],
+      [
+       112,
+       "plat_rocking"
+      ],
+      [
+       120,
+       "plat_0x78"
+      ],
+      [
+       193,
+       "plat_movement_sound"
+      ],
+      [
+       194,
+       "plat_path_sound_at_point_hit"
+      ],
+      [
+       94,
+       "plat_turn_towards_path_point"
+      ],
+      [
+       95,
+       "plat_go_forwards_0x5f"
+      ],
+      [
+       107,
+       "plat_path_point"
+      ],
+      [
+       108,
+       "plat_max_velocity"
+      ],
+      [
+       109,
+       "plat_path_acceleration"
+      ],
+      [
+       167,
+       "plat_path_set_starting_point"
+      ],
+      [
+       166,
+       "plat_set_initial_pos"
+      ],
+      [
+       192,
+       "plat_play_object_animation"
+      ],
+      [
+       164,
+       "plat_interacts_with_water"
+      ],
+      [
+       92,
+       "plat_vent_advance_frames"
+      ],
+      [
+       100,
+       "plat_no_clip"
+      ],
+      [
+       101,
+       "plat_destructible"
+      ],
+      [
+       200,
+       "plat_destructible_sound"
+      ],
+      [
+       157,
+       "plat_has_physics"
+      ],
+      [
+       102,
+       "plat_reverse_at_ends_of_path"
+      ],
+      [
+       106,
+       "plat_actor_surface_type"
+      ],
+      [
+       111,
+       "plat_set_tag"
+      ],
+      [
+       130,
+       "plat_spike"
+      ],
+      [
+       121,
+       "plat_scale"
+      ],
+      [
+       122,
+       "plat_strobe"
+      ],
+      [
+       141,
+       "rope"
+      ],
+      [
+       144,
+       "plat_sine"
+      ],
+      [
+       143,
+       "plat_orbit"
+      ],
+      [
+       162,
+       "vent"
+      ],
+      [
+       163,
+       "vent_duty_cycle"
+      ],
+      [
+       98,
+       "platform"
+      ],
+      [
+       93,
+       "null_platform"
+      ],
+      [
+       131,
+       "enemy"
+      ],
+      [
+       161,
+       "enemy_set_attention_bbox"
+      ],
+      [
+       186,
+       "enemy_0xba"
+      ],
+      [
+       132,
+       "enemy_finalize"
+      ],
+      [
+       154,
+       "enemy_normal_instruction"
+      ],
+      [
+       155,
+       "enemy_conditional_instruction"
+      ],
+      [
+       156,
+       "enemy_attack_instruction"
+      ],
+      [
+       32000,
+       "end_level_data"
+      ],
+      [
+       0,
+       "noop"
+      ]
+     ],
+     "default": "unknown"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "ambient_sound",
+   "tag": "AmbientSound",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "ambient_sound_at_point",
+   "tag": "AmbientSoundAtPoint",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u2"
+    },
+    {
+     "id": "h_0x06",
+     "type": "u2"
+    },
+    {
+     "id": "h_0x08",
+     "type": "u2"
+    },
+    {
+     "id": "h_0x0a",
+     "type": "u2"
+    },
+    {
+     "id": "platform_tag",
+     "type": "u2"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "radius",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "set_gravity",
+   "tag": "SetGravity",
+   "fields": [
+    {
+     "id": "strength",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "mr_tip",
+   "tag": "MrTip",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "message_id",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "diffuse_light",
+   "tag": "DiffuseLight",
+   "fields": [
+    {
+     "id": "r",
+     "type": "u2"
+    },
+    {
+     "id": "g",
+     "type": "u2"
+    },
+    {
+     "id": "b",
+     "type": "u2"
+    },
+    {
+     "id": "theta_x",
+     "type": "f4"
+    },
+    {
+     "id": "theta_y",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "ambient_light",
+   "tag": "AmbientLight",
+   "fields": [
+    {
+     "id": "r",
+     "type": "u2"
+    },
+    {
+     "id": "g",
+     "type": "u2"
+    },
+    {
+     "id": "b",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "glover_spawn_point",
+   "tag": "GloverSpawnPoint",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "ball_spawn_point",
+   "tag": "BallSpawnPoint",
+   "fields": [
+    {
+     "id": "type",
+     "type": "u2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "camera_spawn_point",
+   "tag": "CameraSpawnPoint",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "pitch",
+     "type": "f4"
+    },
+    {
+     "id": "yaw",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "fog_configuration",
+   "tag": "FogConfiguration",
+   "fields": [
+    {
+     "id": "fog_enabled",
+     "type": "u1"
+    },
+    {
+     "id": "r",
+     "type": "u1"
+    },
+    {
+     "id": "g",
+     "type": "u1"
+    },
+    {
+     "id": "b",
+     "type": "u1"
+    },
+    {
+     "id": "fog_distance",
+     "type": "u2"
+    },
+    {
+     "id": "near_clip",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "actor_0xbf",
+   "tag": "Actor0xbf",
+   "fields": [
+    {
+     "id": "mode",
+     "type": "u2"
+    },
+    {
+     "id": "child_mesh_id",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ]
+  },
+  {
+   "id": "animated_background_actor",
+   "tag": "AnimatedBackgroundActor",
+   "fields": [
+    {
+     "id": "object_id",
+     "type": "u4",
+     "hash_namespace": "object"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": "ANIMATED_BG_ACTOR",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "ANIMATED_BG_ACTOR",
+   "disasm_modifies": []
+  },
+  {
+   "id": "background_actor",
+   "tag": "BackgroundActor",
+   "fields": [
+    {
+     "id": "object_id",
+     "type": "u4",
+     "hash_namespace": "object"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": "BG_ACTOR",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "BG_ACTOR",
+   "disasm_modifies": []
+  },
+  {
+   "id": "land_actor",
+   "tag": "LandActor",
+   "fields": [
+    {
+     "id": "object_id",
+     "type": "u4",
+     "hash_namespace": "object"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": "LAND_ACTOR",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "LAND_ACTOR",
+   "disasm_modifies": []
+  },
+  {
+   "id": "set_actor_rotation",
+   "tag": "SetActorRotation",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR",
+    "PLATFORM",
+    "ENEMY",
+    "POWERUP",
+    "WATER"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ]
+  },
+  {
+   "id": "set_actor_scale",
+   "tag": "SetActorScale",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR",
+    "PLATFORM",
+    "ENEMY",
+    "POWERUP",
+    "WATER"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ]
+  },
+  {
+   "id": "wind",
+   "tag": "Wind",
+   "fields": [
+    {
+     "id": "left",
+     "type": "f4"
+    },
+    {
+     "id": "top",
+     "type": "f4"
+    },
+    {
+     "id": "front",
+     "type": "f4"
+    },
+    {
+     "id": "width",
+     "type": "f4"
+    },
+    {
+     "id": "height",
+     "type": "f4"
+    },
+    {
+     "id": "depth",
+     "type": "f4"
+    },
+    {
+     "id": "vel_x",
+     "type": "f4"
+    },
+    {
+     "id": "vel_y",
+     "type": "f4"
+    },
+    {
+     "id": "vel_z",
+     "type": "f4"
+    },
+    {
+     "id": "turbulence",
+     "type": "f4"
+    },
+    {
+     "id": "unknown_0x2c",
+     "type": "u4"
+    },
+    {
+     "id": "active",
+     "type": "u4"
+    },
+    {
+     "id": "tag",
+     "type": "u4",
+     "tag_namespace": "wind"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "water",
+   "tag": "Water",
+   "fields": [
+    {
+     "id": "left",
+     "type": "f4"
+    },
+    {
+     "id": "top",
+     "type": "f4"
+    },
+    {
+     "id": "front",
+     "type": "f4"
+    },
+    {
+     "id": "width",
+     "type": "f4"
+    },
+    {
+     "id": "bottom",
+     "type": "f4"
+    },
+    {
+     "id": "depth",
+     "type": "f4"
+    },
+    {
+     "id": "surface_y",
+     "type": "f4"
+    },
+    {
+     "id": "current_x",
+     "type": "f4"
+    },
+    {
+     "id": "current_z",
+     "type": "f4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2",
+     "tag_namespace": "water"
+    },
+    {
+     "id": "object_id",
+     "type": "u4",
+     "hash_namespace": "object"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": "WATER",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "backdrop",
+   "tag": "Backdrop",
+   "fields": [
+    {
+     "id": "texture_id",
+     "type": "u4",
+     "hash_namespace": "texture"
+    },
+    {
+     "id": "decal_pos_x",
+     "type": "u2"
+    },
+    {
+     "id": "decal_pos_y",
+     "type": "u2"
+    },
+    {
+     "id": "sort_key",
+     "type": "u2"
+    },
+    {
+     "id": "offset_y",
+     "type": "s2"
+    },
+    {
+     "id": "scale_x",
+     "type": "u2"
+    },
+    {
+     "id": "scale_y",
+     "type": "u2"
+    },
+    {
+     "id": "flip_x",
+     "type": "u2"
+    },
+    {
+     "id": "flip_y",
+     "type": "u2"
+    },
+    {
+     "id": "scroll_speed_x",
+     "type": "u2"
+    },
+    {
+     "id": "unused",
+     "type": "u2"
+    },
+    {
+     "id": "decal_parent_idx",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo",
+   "tag": "Cameo",
+   "fields": [],
+   "declares": "CAMEO",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "CAMEO",
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_inst",
+   "tag": "CameoInst",
+   "fields": [
+    {
+     "id": "inst_type",
+     "type": "u2"
+    },
+    {
+     "id": "body",
+     "type": "switch",
+     "on": "inst_type",
+     "cases": [
+      [
+       0,
+       "cameo_play_animation"
+      ],
+      [
+       1,
+       "cameo_set_camera_attention"
+      ],
+      [
+       2,
+       "cameo_inst_2"
+      ],
+      [
+       3,
+       "cameo_spin"
+      ],
+      [
+       4,
+       "cameo_grab_todo"
+      ],
+      [
+       5,
+       "cameo_set_enemy_flag_todo"
+      ],
+      [
+       6,
+       "cameo_lightning_flash"
+      ]
+     ],
+     "default": "cameo_inst_default"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "CAMEO"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "CAMEO"
+   ]
+  },
+  {
+   "id": "cameo_play_animation",
+   "tag": "CameoPlayAnimation",
+   "fields": [
+    {
+     "id": "enemy_idx",
+     "type": "u2"
+    },
+    {
+     "id": "anim_idx",
+     "type": "u2"
+    },
+    {
+     "id": "start_playing",
+     "type": "u2"
+    },
+    {
+     "id": "playback_speed",
+     "type": "f4"
+    },
+    {
+     "id": "frame_count",
+     "type": "s2"
+    },
+    {
+     "id": "preceding_instr_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_set_camera_attention",
+   "tag": "CameoSetCameraAttention",
+   "fields": [
+    {
+     "id": "enemy_idx",
+     "type": "u2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "frame_count",
+     "type": "s2"
+    },
+    {
+     "id": "preceding_instr_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_inst_2",
+   "tag": "CameoInst2",
+   "fields": [
+    {
+     "id": "subcommand",
+     "type": "s2"
+    },
+    {
+     "id": "i_0x02",
+     "type": "f4"
+    },
+    {
+     "id": "i_0x06",
+     "type": "f4"
+    },
+    {
+     "id": "i_0x0a",
+     "type": "f4"
+    },
+    {
+     "id": "i_0x0e",
+     "type": "u4"
+    },
+    {
+     "id": "frame_count",
+     "type": "s2"
+    },
+    {
+     "id": "preceding_instr_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_spin",
+   "tag": "CameoSpin",
+   "fields": [
+    {
+     "id": "enemy_idx",
+     "type": "u2"
+    },
+    {
+     "id": "speed",
+     "type": "f4"
+    },
+    {
+     "id": "frame_count",
+     "type": "s2"
+    },
+    {
+     "id": "preceding_instr_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_grab_todo",
+   "tag": "CameoGrabTodo",
+   "fields": [
+    {
+     "id": "grabbing_enemy_idx",
+     "type": "u2"
+    },
+    {
+     "id": "grabbed_enemy_idx",
+     "type": "u2"
+    },
+    {
+     "id": "linkage_point_idx",
+     "type": "u2"
+    },
+    {
+     "id": "frame_count",
+     "type": "s2"
+    },
+    {
+     "id": "preceding_instr_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_set_enemy_flag_todo",
+   "tag": "CameoSetEnemyFlagTodo",
+   "fields": [
+    {
+     "id": "enemy_idx",
+     "type": "u2"
+    },
+    {
+     "id": "frame_count",
+     "type": "s2"
+    },
+    {
+     "id": "preceding_instr_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_lightning_flash",
+   "tag": "CameoLightningFlash",
+   "fields": [
+    {
+     "id": "reserved",
+     "type": "u2"
+    },
+    {
+     "id": "duration_min",
+     "type": "u2"
+    },
+    {
+     "id": "duration_range",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "cameo_inst_default",
+   "tag": "CameoInstDefault",
+   "fields": [
+    {
+     "id": "h_0x00",
+     "type": "u2"
+    },
+    {
+     "id": "h_0x02",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle",
+   "tag": "Puzzle",
+   "fields": [],
+   "declares": "PUZZLE",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "PUZZLE",
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_and",
+   "tag": "PuzzleAnd",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PUZZLE"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PUZZLE"
+   ]
+  },
+  {
+   "id": "puzzle_or",
+   "tag": "PuzzleOr",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PUZZLE"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PUZZLE"
+   ]
+  },
+  {
+   "id": "puzzle_numtimes",
+   "tag": "PuzzleNumtimes",
+   "fields": [
+    {
+     "id": "n",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PUZZLE"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PUZZLE"
+   ]
+  },
+  {
+   "id": "puzzle_any",
+   "tag": "PuzzleAny",
+   "fields": [
+    {
+     "id": "op",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PUZZLE"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PUZZLE"
+   ]
+  },
+  {
+   "id": "puzzle_cond",
+   "tag": "PuzzleCond",
+   "fields": [
+    {
+     "id": "cond_type",
+     "type": "u2"
+    },
+    {
+     "id": "body",
+     "type": "switch",
+     "on": "cond_type",
+     "cases": [
+      [
+       9,
+       "puzzle_cond_platform_path_at_point_at_rest"
+      ],
+      [
+       10,
+       "puzzle_cond_platform_spin_todo"
+      ],
+      [
+       11,
+       "puzzle_cond_platform_orbit_todo"
+      ],
+      [
+       12,
+       "puzzle_cond_platform_path_at_point_2"
+      ],
+      [
+       13,
+       "puzzle_cond_platform_spin_2_todo"
+      ],
+      [
+       14,
+       "puzzle_cond_platform_orbit_2_todo"
+      ],
+      [
+       15,
+       "puzzle_cond_glover_standing_on_platform"
+      ],
+      [
+       16,
+       "puzzle_cond_glover_changed_standing_on_platform"
+      ],
+      [
+       17,
+       "puzzle_cond_ball_standing_on_platform"
+      ],
+      [
+       18,
+       "puzzle_cond_ball_changed_standing_on_platform"
+      ],
+      [
+       19,
+       "puzzle_cond_enemy_standing_on_platform"
+      ],
+      [
+       20,
+       "puzzle_cond_enemy_changed_standing_on_platform"
+      ],
+      [
+       21,
+       "puzzle_cond_glover_is_touching_platform"
+      ],
+      [
+       22,
+       "puzzle_cond_glover_changed_touching_platform"
+      ],
+      [
+       23,
+       "puzzle_cond_ball_is_touching_platform"
+      ],
+      [
+       24,
+       "puzzle_cond_ball_changed_touching_platform"
+      ],
+      [
+       25,
+       "puzzle_cond_enemy_is_touching_platform"
+      ],
+      [
+       26,
+       "puzzle_cond_enemy_changed_touching_platform"
+      ],
+      [
+       27,
+       "puzzle_cond_reg_eq"
+      ],
+      [
+       28,
+       "puzzle_cond_reg_ne"
+      ],
+      [
+       29,
+       "puzzle_cond_reg_gt"
+      ],
+      [
+       30,
+       "puzzle_cond_reg_lt"
+      ],
+      [
+       31,
+       "puzzle_cond_platform_touching_conf_boundary_edge"
+      ],
+      [
+       32,
+       "puzzle_cond_platform_close_to_conf_boundary_edge"
+      ],
+      [
+       33,
+       "puzzle_cond_specific_enemy_exists"
+      ],
+      [
+       34,
+       "puzzle_cond_0x22"
+      ],
+      [
+       35,
+       "puzzle_cond_glover_within_volume"
+      ],
+      [
+       36,
+       "puzzle_cond_glover_within_range_of_point"
+      ],
+      [
+       37,
+       "puzzle_cond_ball_within_volume"
+      ],
+      [
+       38,
+       "puzzle_cond_ball_within_range_of_point"
+      ],
+      [
+       39,
+       "puzzle_cond_camera_within_volume"
+      ],
+      [
+       40,
+       "puzzle_cond_camera_within_range_of_point"
+      ],
+      [
+       41,
+       "puzzle_cond_glover_within_range_of_point_2"
+      ],
+      [
+       42,
+       "puzzle_cond_platform_doesnt_exist"
+      ]
+     ],
+     "default": "puzzle_cond_default"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PUZZLE"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PUZZLE"
+   ]
+  },
+  {
+   "id": "puzzle_cond_platform_path_at_point_at_rest",
+   "tag": "PuzzleCondPlatformPathAtPointAtRest",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "path_point_idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_spin_todo",
+   "tag": "PuzzleCondPlatformSpinTodo",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_orbit_todo",
+   "tag": "PuzzleCondPlatformOrbitTodo",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "idx",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_path_at_point_2",
+   "tag": "PuzzleCondPlatformPathAtPoint2",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "arg2",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_spin_2_todo",
+   "tag": "PuzzleCondPlatformSpin2Todo",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "arg2",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_orbit_2_todo",
+   "tag": "PuzzleCondPlatformOrbit2Todo",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "arg2",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_standing_on_platform",
+   "tag": "PuzzleCondGloverStandingOnPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_changed_standing_on_platform",
+   "tag": "PuzzleCondGloverChangedStandingOnPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_ball_standing_on_platform",
+   "tag": "PuzzleCondBallStandingOnPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_ball_changed_standing_on_platform",
+   "tag": "PuzzleCondBallChangedStandingOnPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_enemy_standing_on_platform",
+   "tag": "PuzzleCondEnemyStandingOnPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_enemy_changed_standing_on_platform",
+   "tag": "PuzzleCondEnemyChangedStandingOnPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_is_touching_platform",
+   "tag": "PuzzleCondGloverIsTouchingPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_changed_touching_platform",
+   "tag": "PuzzleCondGloverChangedTouchingPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "started_or_stopped",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_ball_is_touching_platform",
+   "tag": "PuzzleCondBallIsTouchingPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_ball_changed_touching_platform",
+   "tag": "PuzzleCondBallChangedTouchingPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "started_or_stopped",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_enemy_is_touching_platform",
+   "tag": "PuzzleCondEnemyIsTouchingPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_enemy_changed_touching_platform",
+   "tag": "PuzzleCondEnemyChangedTouchingPlatform",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "started_or_stopped",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_touching_conf_boundary_edge",
+   "tag": "PuzzleCondPlatformTouchingConfBoundaryEdge",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "edge",
+     "type": "u2",
+     "enum": "puzzle_cond_platform_touching_conf_boundary_edge::edge_type"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_close_to_conf_boundary_edge",
+   "tag": "PuzzleCondPlatformCloseToConfBoundaryEdge",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "edge",
+     "type": "u2",
+     "enum": "puzzle_cond_platform_close_to_conf_boundary_edge::edge_type"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_specific_enemy_exists",
+   "tag": "PuzzleCondSpecificEnemyExists",
+   "fields": [
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "invert_result",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_reg_eq",
+   "tag": "PuzzleCondRegEq",
+   "fields": [
+    {
+     "id": "reg_a",
+     "type": "s2"
+    },
+    {
+     "id": "imm_or_reg_b",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_reg_ne",
+   "tag": "PuzzleCondRegNe",
+   "fields": [
+    {
+     "id": "reg_a",
+     "type": "s2"
+    },
+    {
+     "id": "imm_or_reg_b",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_reg_gt",
+   "tag": "PuzzleCondRegGt",
+   "fields": [
+    {
+     "id": "reg_a",
+     "type": "s2"
+    },
+    {
+     "id": "imm_or_reg_b",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_reg_lt",
+   "tag": "PuzzleCondRegLt",
+   "fields": [
+    {
+     "id": "reg_a",
+     "type": "s2"
+    },
+    {
+     "id": "imm_or_reg_b",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_default",
+   "tag": "PuzzleCondDefault",
+   "fields": [
+    {
+     "id": "u32_0x24",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x0a",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_0x22",
+   "tag": "PuzzleCond0x22",
+   "fields": [
+    {
+     "id": "i_0x00",
+     "type": "u4"
+    },
+    {
+     "id": "i_0x04",
+     "type": "u4"
+    },
+    {
+     "id": "i_0x08",
+     "type": "u4"
+    },
+    {
+     "id": "i_0x0c",
+     "type": "u4"
+    },
+    {
+     "id": "i_0x10",
+     "type": "u4"
+    },
+    {
+     "id": "i_0x14",
+     "type": "u4"
+    },
+    {
+     "id": "i_0x18",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_within_volume",
+   "tag": "PuzzleCondGloverWithinVolume",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "l",
+     "type": "f4"
+    },
+    {
+     "id": "w",
+     "type": "f4"
+    },
+    {
+     "id": "h",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_ball_within_volume",
+   "tag": "PuzzleCondBallWithinVolume",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "l",
+     "type": "f4"
+    },
+    {
+     "id": "w",
+     "type": "f4"
+    },
+    {
+     "id": "h",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_camera_within_volume",
+   "tag": "PuzzleCondCameraWithinVolume",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "l",
+     "type": "f4"
+    },
+    {
+     "id": "w",
+     "type": "f4"
+    },
+    {
+     "id": "h",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_within_range_of_point",
+   "tag": "PuzzleCondGloverWithinRangeOfPoint",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "range",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_ball_within_range_of_point",
+   "tag": "PuzzleCondBallWithinRangeOfPoint",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "range",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_camera_within_range_of_point",
+   "tag": "PuzzleCondCameraWithinRangeOfPoint",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "range",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_glover_within_range_of_point_2",
+   "tag": "PuzzleCondGloverWithinRangeOfPoint2",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "range",
+     "type": "f4"
+    },
+    {
+     "id": "max_y",
+     "type": "f4"
+    },
+    {
+     "id": "min_y",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_cond_platform_doesnt_exist",
+   "tag": "PuzzleCondPlatformDoesntExist",
+   "fields": [
+    {
+     "id": "plat_tag",
+     "type": "u2"
+    },
+    {
+     "id": "reserved",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action",
+   "tag": "PuzzleAction",
+   "fields": [
+    {
+     "id": "action_type",
+     "type": "u2"
+    },
+    {
+     "id": "body",
+     "type": "switch",
+     "on": "action_type",
+     "cases": [
+      [
+       45,
+       "puzzle_action_platform_nudge"
+      ],
+      [
+       46,
+       "puzzle_action_platform_config_spin"
+      ],
+      [
+       47,
+       "puzzle_action_platform_config_orbit"
+      ],
+      [
+       48,
+       "puzzle_action_platform_move_to_point_idx_minus_one"
+      ],
+      [
+       51,
+       "puzzle_action_platform_spin_along_axis"
+      ],
+      [
+       52,
+       "puzzle_action_control_active_elements"
+      ],
+      [
+       53,
+       "puzzle_action_set_conveyor"
+      ],
+      [
+       54,
+       "puzzle_action_hide_platform"
+      ],
+      [
+       55,
+       "puzzle_action_toggle_platform_physics"
+      ],
+      [
+       56,
+       "puzzle_action_reg_set"
+      ],
+      [
+       57,
+       "puzzle_action_reg_add"
+      ],
+      [
+       58,
+       "puzzle_action_reg_sub"
+      ],
+      [
+       59,
+       "puzzle_action_spawn_powerup"
+      ],
+      [
+       60,
+       "puzzle_action_spawn_enemy"
+      ],
+      [
+       61,
+       "puzzle_action_set_platform_velocity"
+      ],
+      [
+       62,
+       "puzzle_action_camera_look_at_platform"
+      ],
+      [
+       63,
+       "puzzle_action_camera_look_at_point_2"
+      ],
+      [
+       64,
+       "puzzle_action_camera_look_at_point_1"
+      ],
+      [
+       65,
+       "puzzle_action_camera_set_distance"
+      ],
+      [
+       66,
+       "puzzle_action_camera_y_adjustment"
+      ],
+      [
+       67,
+       "puzzle_action_enemy_set_ai_instruction"
+      ],
+      [
+       68,
+       "puzzle_action_toggle_wind"
+      ],
+      [
+       69,
+       "puzzle_action_spawn_garib_group"
+      ],
+      [
+       70,
+       "puzzle_action_camera_tween_y_adjust"
+      ],
+      [
+       71,
+       "puzzle_action_camera_tween_distance"
+      ],
+      [
+       72,
+       "puzzle_action_camera_turn_towards_focus"
+      ],
+      [
+       73,
+       "puzzle_action_camera_fly_towards_point"
+      ],
+      [
+       74,
+       "puzzle_action_camera_look_at_glover"
+      ],
+      [
+       75,
+       "puzzle_action_0x4b_0x4c"
+      ],
+      [
+       76,
+       "puzzle_action_0x4b_0x4c"
+      ],
+      [
+       77,
+       "puzzle_action_camera_fly_towards_point_relative_to_glover"
+      ],
+      [
+       78,
+       "puzzle_action_change_water_height"
+      ],
+      [
+       79,
+       "puzzle_action_0x4f"
+      ],
+      [
+       80,
+       "puzzle_action_set_gravity"
+      ],
+      [
+       81,
+       "puzzle_action_start_cameo"
+      ],
+      [
+       82,
+       "puzzle_action_set_platform_path_direction"
+      ],
+      [
+       83,
+       "puzzle_action_make_ball_interactive"
+      ],
+      [
+       84,
+       "puzzle_action_sound_control"
+      ],
+      [
+       85,
+       "puzzle_action_set_background"
+      ],
+      [
+       86,
+       "puzzle_action_set_fog"
+      ]
+     ],
+     "default": "puzzle_action_default"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PUZZLE"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PUZZLE"
+   ]
+  },
+  {
+   "id": "puzzle_action_reg_set",
+   "tag": "PuzzleActionRegSet",
+   "fields": [
+    {
+     "id": "imm_val_or_src_reg",
+     "type": "f4"
+    },
+    {
+     "id": "dst_reg",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::register_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_reg_add",
+   "tag": "PuzzleActionRegAdd",
+   "fields": [
+    {
+     "id": "imm_val_or_src_reg",
+     "type": "f4"
+    },
+    {
+     "id": "dst_reg",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::register_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_reg_sub",
+   "tag": "PuzzleActionRegSub",
+   "fields": [
+    {
+     "id": "imm_val_or_src_reg",
+     "type": "f4"
+    },
+    {
+     "id": "dst_reg",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::register_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_0x4f",
+   "tag": "PuzzleAction0x4f",
+   "fields": [
+    {
+     "id": "u32_0x14",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x18",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x10",
+     "type": "u4"
+    },
+    {
+     "id": "u16_0x0e",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x0a",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x20",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_spawn_powerup",
+   "tag": "PuzzleActionSpawnPowerup",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x10",
+     "type": "f4"
+    },
+    {
+     "id": "type",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x20",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_spawn_enemy",
+   "tag": "PuzzleActionSpawnEnemy",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_look_at_platform",
+   "tag": "PuzzleActionCameraLookAtPlatform",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "duration",
+     "type": "f4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::camera_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_look_at_point_1",
+   "tag": "PuzzleActionCameraLookAtPoint1",
+   "fields": [
+    {
+     "id": "cam_x",
+     "type": "f4"
+    },
+    {
+     "id": "cam_y",
+     "type": "f4"
+    },
+    {
+     "id": "cam_z",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u4"
+    },
+    {
+     "id": "reserved_2",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::camera_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_look_at_point_2",
+   "tag": "PuzzleActionCameraLookAtPoint2",
+   "fields": [
+    {
+     "id": "lookat_x",
+     "type": "f4"
+    },
+    {
+     "id": "lookat_y",
+     "type": "f4"
+    },
+    {
+     "id": "lookat_z",
+     "type": "f4"
+    },
+    {
+     "id": "duration",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::camera_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_set_conveyor",
+   "tag": "PuzzleActionSetConveyor",
+   "fields": [
+    {
+     "id": "vel_x",
+     "type": "f4"
+    },
+    {
+     "id": "vel_y",
+     "type": "f4"
+    },
+    {
+     "id": "vel_z",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::camera_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_set_platform_velocity",
+   "tag": "PuzzleActionSetPlatformVelocity",
+   "fields": [
+    {
+     "id": "vel_x",
+     "type": "f4"
+    },
+    {
+     "id": "vel_y",
+     "type": "f4"
+    },
+    {
+     "id": "vel_z",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::platform_movement_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_set_platform_path_direction",
+   "tag": "PuzzleActionSetPlatformPathDirection",
+   "fields": [
+    {
+     "id": "direction",
+     "type": "u4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::platform_movement_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_control_active_elements",
+   "tag": "PuzzleActionControlActiveElements",
+   "fields": [
+    {
+     "id": "value",
+     "type": "f4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::platform_toggle_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_platform_nudge",
+   "tag": "PuzzleActionPlatformNudge",
+   "fields": [
+    {
+     "id": "velocity",
+     "type": "f4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::platform_movement_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_platform_config_spin",
+   "tag": "PuzzleActionPlatformConfigSpin",
+   "fields": [
+    {
+     "id": "velocity",
+     "type": "f4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::platform_movement_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_platform_config_orbit",
+   "tag": "PuzzleActionPlatformConfigOrbit",
+   "fields": [
+    {
+     "id": "velocity",
+     "type": "f4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::platform_movement_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_hide_platform",
+   "tag": "PuzzleActionHidePlatform",
+   "fields": [
+    {
+     "id": "hide_enabled",
+     "type": "u4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_toggle_platform_physics",
+   "tag": "PuzzleActionTogglePlatformPhysics",
+   "fields": [
+    {
+     "id": "physics_enabled",
+     "type": "u4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_platform_move_to_point_idx_minus_one",
+   "tag": "PuzzleActionPlatformMoveToPointIdxMinusOne",
+   "fields": [
+    {
+     "id": "point_idx",
+     "type": "u4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_platform_spin_along_axis",
+   "tag": "PuzzleActionPlatformSpinAlongAxis",
+   "fields": [
+    {
+     "id": "axis_idx",
+     "type": "u4"
+    },
+    {
+     "id": "platform_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_enemy_set_ai_instruction",
+   "tag": "PuzzleActionEnemySetAiInstruction",
+   "fields": [
+    {
+     "id": "instruction_idx",
+     "type": "u4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_toggle_wind",
+   "tag": "PuzzleActionToggleWind",
+   "fields": [
+    {
+     "id": "enabled",
+     "type": "u4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_spawn_garib_group",
+   "tag": "PuzzleActionSpawnGaribGroup",
+   "fields": [
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "group_id",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "num_spawns",
+     "type": "s4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_set_distance",
+   "tag": "PuzzleActionCameraSetDistance",
+   "fields": [
+    {
+     "id": "distance",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::camera_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_change_water_height",
+   "tag": "PuzzleActionChangeWaterHeight",
+   "fields": [
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_set_gravity",
+   "tag": "PuzzleActionSetGravity",
+   "fields": [
+    {
+     "id": "value",
+     "type": "f4"
+    },
+    {
+     "id": "reserved",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_start_cameo",
+   "tag": "PuzzleActionStartCameo",
+   "fields": [
+    {
+     "id": "reserved",
+     "type": "u4"
+    },
+    {
+     "id": "cameo_idx",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_make_ball_interactive",
+   "tag": "PuzzleActionMakeBallInteractive",
+   "fields": [
+    {
+     "id": "reserved",
+     "type": "u4"
+    },
+    {
+     "id": "reserved_2",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_y_adjustment",
+   "tag": "PuzzleActionCameraYAdjustment",
+   "fields": [
+    {
+     "id": "field_0",
+     "type": "f4"
+    },
+    {
+     "id": "field_1",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_default",
+   "tag": "PuzzleActionDefault",
+   "fields": [
+    {
+     "id": "field_0",
+     "type": "u4"
+    },
+    {
+     "id": "field_1",
+     "type": "s2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "puzzle_action::generic_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_tween_y_adjust",
+   "tag": "PuzzleActionCameraTweenYAdjust",
+   "fields": [
+    {
+     "id": "y_adjust",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_tween_distance",
+   "tag": "PuzzleActionCameraTweenDistance",
+   "fields": [
+    {
+     "id": "distance",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_turn_towards_focus",
+   "tag": "PuzzleActionCameraTurnTowardsFocus",
+   "fields": [
+    {
+     "id": "reserved",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_fly_towards_point",
+   "tag": "PuzzleActionCameraFlyTowardsPoint",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_fly_towards_point_relative_to_glover",
+   "tag": "PuzzleActionCameraFlyTowardsPointRelativeToGlover",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "distance",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_camera_look_at_glover",
+   "tag": "PuzzleActionCameraLookAtGlover",
+   "fields": [
+    {
+     "id": "angle",
+     "type": "f4"
+    },
+    {
+     "id": "distance",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_sound_control",
+   "tag": "PuzzleActionSoundControl",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "s2"
+    },
+    {
+     "id": "u32_0x18",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x1a",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x1e",
+     "type": "u2"
+    },
+    {
+     "id": "platform_tag",
+     "type": "u2"
+    },
+    {
+     "id": "sound_tag",
+     "type": "u2"
+    },
+    {
+     "id": "pos_x",
+     "type": "f4"
+    },
+    {
+     "id": "pos_y",
+     "type": "f4"
+    },
+    {
+     "id": "pos_z",
+     "type": "f4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_set_background",
+   "tag": "PuzzleActionSetBackground",
+   "fields": [
+    {
+     "id": "texture_id",
+     "type": "u4"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_set_fog",
+   "tag": "PuzzleActionSetFog",
+   "fields": [
+    {
+     "id": "r",
+     "type": "u2"
+    },
+    {
+     "id": "g",
+     "type": "u2"
+    },
+    {
+     "id": "b",
+     "type": "u2"
+    },
+    {
+     "id": "min_z",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x1c",
+     "type": "u2"
+    },
+    {
+     "id": "activation_delay",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "puzzle_action_0x4b_0x4c",
+   "tag": "PuzzleAction0x4b0x4c",
+   "fields": [
+    {
+     "id": "u16_0x0a",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "garib_group",
+   "tag": "GaribGroup",
+   "fields": [
+    {
+     "id": "group_id",
+     "type": "u2"
+    },
+    {
+     "id": "initial_state",
+     "type": "s2"
+    }
+   ],
+   "declares": "GARIB_GROUP",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "GARIB_GROUP",
+   "disasm_modifies": []
+  },
+  {
+   "id": "garib",
+   "tag": "Garib",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "type",
+     "type": "u2",
+     "enum": "garib::garib_type"
+    },
+    {
+     "id": "dynamic_shadow",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "GARIB_GROUP"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "GARIB_GROUP"
+   ]
+  },
+  {
+   "id": "powerup",
+   "tag": "Powerup",
+   "fields": [
+    {
+     "id": "type",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x02",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x04",
+     "type": "u2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": "POWERUP",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "plat_mvspn_0x58",
+   "tag": "PlatMvspn0x58",
+   "fields": [
+    {
+     "id": "u16_0x14",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x10",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_mvspn_0x59",
+   "tag": "PlatMvspn0x59",
+   "fields": [
+    {
+     "id": "u16_0x24",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x20",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x28",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x2c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x30",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_mvspn_0x5a",
+   "tag": "PlatMvspn0x5a",
+   "fields": [
+    {
+     "id": "u16_0x1c",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x18",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_set_parent",
+   "tag": "PlatSetParent",
+   "fields": [
+    {
+     "id": "tag",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_mvspn_0x73",
+   "tag": "PlatMvspn0x73",
+   "fields": [
+    {
+     "id": "u16_0x0c",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x34",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x38",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x3c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_mvspn_0x74",
+   "tag": "PlatMvspn0x74",
+   "fields": [
+    {
+     "id": "u32_0x34",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x38",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x3c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_copy_spin_from_parent",
+   "tag": "PlatCopySpinFromParent",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_collision_0xb8_todo",
+   "tag": "PlatCollision0xb8Todo",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_actor_enable_water_animation",
+   "tag": "PlatActorEnableWaterAnimation",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM",
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM",
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ]
+  },
+  {
+   "id": "plat_set_collision_y_offset",
+   "tag": "PlatSetCollisionYOffset",
+   "fields": [
+    {
+     "id": "y_offset",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "buzzer",
+   "tag": "Buzzer",
+   "fields": [
+    {
+     "id": "tag",
+     "type": "u2"
+    },
+    {
+     "id": "platform_1_tag",
+     "type": "u2"
+    },
+    {
+     "id": "platform_2_tag",
+     "type": "u2"
+    },
+    {
+     "id": "draw_flags",
+     "type": "u2"
+    },
+    {
+     "id": "r",
+     "type": "u2"
+    },
+    {
+     "id": "g",
+     "type": "u2"
+    },
+    {
+     "id": "b",
+     "type": "u2"
+    },
+    {
+     "id": "color_jitter",
+     "type": "u2"
+    },
+    {
+     "id": "end_1_x",
+     "type": "f4"
+    },
+    {
+     "id": "end_1_y",
+     "type": "f4"
+    },
+    {
+     "id": "end_1_z",
+     "type": "f4"
+    },
+    {
+     "id": "end_2_x",
+     "type": "f4"
+    },
+    {
+     "id": "end_2_y",
+     "type": "f4"
+    },
+    {
+     "id": "end_2_z",
+     "type": "f4"
+    },
+    {
+     "id": "draw_diameter",
+     "type": "f4"
+    },
+    {
+     "id": "draw_thickness",
+     "type": "f4"
+    }
+   ],
+   "declares": "BUZZER",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "BUZZER",
+   "disasm_modifies": []
+  },
+  {
+   "id": "buzzer_duty_cycle",
+   "tag": "BuzzerDutyCycle",
+   "fields": [
+    {
+     "id": "frames_off",
+     "type": "u2"
+    },
+    {
+     "id": "frames_on",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "BUZZER"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "BUZZER"
+   ]
+  },
+  {
+   "id": "set_object_sparkle",
+   "tag": "SetObjectSparkle",
+   "fields": [
+    {
+     "id": "period",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM",
+    "LAND_ACTOR"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM",
+    "LAND_ACTOR"
+   ]
+  },
+  {
+   "id": "plat_special_0xb9",
+   "tag": "PlatSpecial0xb9",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM",
+    "LAND_ACTOR"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM",
+    "LAND_ACTOR"
+   ]
+  },
+  {
+   "id": "set_exit",
+   "tag": "SetExit",
+   "fields": [
+    {
+     "id": "behavior",
+     "type": "u2"
+    },
+    {
+     "id": "type",
+     "type": "s2",
+     "enum": "set_exit::exit_type"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_cat_0x69",
+   "tag": "PlatCat0x69",
+   "fields": [
+    {
+     "id": "u16_0x20",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x00",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x04",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x08",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x0c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x10",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "platform_conveyor",
+   "tag": "PlatformConveyor",
+   "fields": [
+    {
+     "id": "vel_x",
+     "type": "f4"
+    },
+    {
+     "id": "vel_y",
+     "type": "f4"
+    },
+    {
+     "id": "vel_z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_special_0x9e",
+   "tag": "PlatSpecial0x9e",
+   "fields": [
+    {
+     "id": "u32_0x5c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x60",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x65",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x68",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "set_teleport",
+   "tag": "SetTeleport",
+   "fields": [
+    {
+     "id": "target_tag",
+     "type": "u2"
+    },
+    {
+     "id": "out_framecount",
+     "type": "u2"
+    },
+    {
+     "id": "in_framecount",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x12",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x00",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x04",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x08",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_fan_0x8a",
+   "tag": "PlatFan0x8a",
+   "fields": [
+    {
+     "id": "enabled",
+     "type": "u2"
+    },
+    {
+     "id": "force_vector_x",
+     "type": "f4"
+    },
+    {
+     "id": "force_vector_y",
+     "type": "f4"
+    },
+    {
+     "id": "force_vector_z",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x10",
+     "type": "u4"
+    },
+    {
+     "id": "force_min_threshold",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x18",
+     "type": "u4"
+    },
+    {
+     "id": "force_vector_magnitude",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_magnet_0x8b",
+   "tag": "PlatMagnet0x8b",
+   "fields": [
+    {
+     "id": "u16_0x0c",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x48",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x4c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x50",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x10",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x14",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x18",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_checkpoint",
+   "tag": "PlatCheckpoint",
+   "fields": [
+    {
+     "id": "u16_0x17",
+     "type": "u2"
+    },
+    {
+     "id": "theta",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_crumb_0x67",
+   "tag": "PlatCrumb0x67",
+   "fields": [
+    {
+     "id": "u16_0x02",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x04",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x08",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_special_0xc7",
+   "tag": "PlatSpecial0xc7",
+   "fields": [
+    {
+     "id": "u16_0x2a",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x1c_and_0x24",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x28",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_special_0x6e",
+   "tag": "PlatSpecial0x6e",
+   "fields": [
+    {
+     "id": "flags",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x70",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_cause_damage",
+   "tag": "PlatCauseDamage",
+   "fields": [
+    {
+     "id": "enable",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_push_0x5b",
+   "tag": "PlatPush0x5b",
+   "fields": [
+    {
+     "id": "flags",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x04",
+     "type": "u4"
+    },
+    {
+     "id": "actor_f_0x70",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_conf_boundary_volume",
+   "tag": "PlatConfBoundaryVolume",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "w",
+     "type": "f4"
+    },
+    {
+     "id": "h",
+     "type": "f4"
+    },
+    {
+     "id": "d",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_orbit_sound_0xc4",
+   "tag": "PlatOrbitSound0xc4",
+   "fields": [
+    {
+     "id": "u16_0x3a",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x2c_and_0x34",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x38",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_0xc6",
+   "tag": "Plat0xc6",
+   "fields": [
+    {
+     "id": "u16_0x4a",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x44",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x48",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_orbit_around_point",
+   "tag": "PlatOrbitAroundPoint",
+   "fields": [
+    {
+     "id": "axis",
+     "type": "u2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "speed",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_orbit_pause",
+   "tag": "PlatOrbitPause",
+   "fields": [
+    {
+     "id": "num_frames",
+     "type": "u2"
+    },
+    {
+     "id": "num_pauses",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_orbit_flip_0x77",
+   "tag": "PlatOrbitFlip0x77",
+   "fields": [
+    {
+     "id": "u16_0x08",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x10",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_0xc3",
+   "tag": "Plat0xc3",
+   "fields": [
+    {
+     "id": "u16_0x86",
+     "type": "u2"
+    },
+    {
+     "id": "u32_0x78_0x80",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x84",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_spin_sound_0xc5",
+   "tag": "PlatSpinSound0xc5",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "u2"
+    },
+    {
+     "id": "pitch",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_0x9f",
+   "tag": "Plat0x9f",
+   "fields": [
+    {
+     "id": "u32_0x6c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x70",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x28",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_spin_pause_0x7c",
+   "tag": "PlatSpinPause0x7c",
+   "fields": [
+    {
+     "id": "u16_0x0c",
+     "type": "u2"
+    },
+    {
+     "id": "u16_0x0a",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_spin_flip",
+   "tag": "PlatSpinFlip",
+   "fields": [
+    {
+     "id": "cooldown_timer",
+     "type": "u2"
+    },
+    {
+     "id": "theta",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_0x7e",
+   "tag": "Plat0x7e",
+   "fields": [
+    {
+     "id": "u32_0x28",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_constant_spin",
+   "tag": "PlatConstantSpin",
+   "fields": [
+    {
+     "id": "axis",
+     "type": "u2",
+     "enum": "plat_constant_spin::axis"
+    },
+    {
+     "id": "initial_theta",
+     "type": "f4"
+    },
+    {
+     "id": "speed",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_spin_0x80",
+   "tag": "PlatSpin0x80",
+   "fields": [
+    {
+     "id": "idx",
+     "type": "u2"
+    },
+    {
+     "id": "f_0x1c",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x28",
+     "type": "u4"
+    },
+    {
+     "id": "u32_ustack56",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x2c",
+     "type": "u4"
+    },
+    {
+     "id": "f_0x6c",
+     "type": "f4"
+    },
+    {
+     "id": "f_0x70",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_topple_0x81",
+   "tag": "PlatTopple0x81",
+   "fields": [
+    {
+     "id": "idx",
+     "type": "u2"
+    },
+    {
+     "id": "f_0x1c",
+     "type": "f4"
+    },
+    {
+     "id": "f_0x28",
+     "type": "f4"
+    },
+    {
+     "id": "f_0x24",
+     "type": "f4"
+    },
+    {
+     "id": "f_0x2c",
+     "type": "f4"
+    },
+    {
+     "id": "f_0x6c",
+     "type": "f4"
+    },
+    {
+     "id": "f_0x70_pivot_height",
+     "type": "f4"
+    },
+    {
+     "id": "u16_0x10",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "look_at_hand_0x60",
+   "tag": "LookAtHand0x60",
+   "fields": [
+    {
+     "id": "u32_0x6c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "look_at_ball_0x61",
+   "tag": "LookAtBall0x61",
+   "fields": [
+    {
+     "id": "u32_0x6c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x1c",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_rocking",
+   "tag": "PlatRocking",
+   "fields": [
+    {
+     "id": "axis",
+     "type": "u2"
+    },
+    {
+     "id": "theta",
+     "type": "f4"
+    },
+    {
+     "id": "deceleration",
+     "type": "f4"
+    },
+    {
+     "id": "blur_height",
+     "type": "f4"
+    },
+    {
+     "id": "frame_advance",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_0x78",
+   "tag": "Plat0x78",
+   "fields": [
+    {
+     "id": "u16_0x08",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_movement_sound",
+   "tag": "PlatMovementSound",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "u2"
+    },
+    {
+     "id": "pitch",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_path_sound_at_point_hit",
+   "tag": "PlatPathSoundAtPointHit",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "u2"
+    },
+    {
+     "id": "pitch",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_turn_towards_path_point",
+   "tag": "PlatTurnTowardsPathPoint",
+   "fields": [
+    {
+     "id": "input_1",
+     "type": "u4"
+    },
+    {
+     "id": "input_2",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_go_forwards_0x5f",
+   "tag": "PlatGoForwards0x5f",
+   "fields": [
+    {
+     "id": "u32_0x2c_0x6c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x2c_0x1c",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0xf0",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x2c_0x34",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_path_point",
+   "tag": "PlatPathPoint",
+   "fields": [
+    {
+     "id": "duration",
+     "type": "s2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_max_velocity",
+   "tag": "PlatMaxVelocity",
+   "fields": [
+    {
+     "id": "velocity",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_path_acceleration",
+   "tag": "PlatPathAcceleration",
+   "fields": [
+    {
+     "id": "acceleration",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_path_set_starting_point",
+   "tag": "PlatPathSetStartingPoint",
+   "fields": [
+    {
+     "id": "point_idx",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_set_initial_pos",
+   "tag": "PlatSetInitialPos",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_play_object_animation",
+   "tag": "PlatPlayObjectAnimation",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_interacts_with_water",
+   "tag": "PlatInteractsWithWater",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_vent_advance_frames",
+   "tag": "PlatVentAdvanceFrames",
+   "fields": [
+    {
+     "id": "num_frames",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM",
+    "VENT"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM",
+    "VENT"
+   ]
+  },
+  {
+   "id": "plat_no_clip",
+   "tag": "PlatNoClip",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_destructible",
+   "tag": "PlatDestructible",
+   "fields": [
+    {
+     "id": "flags",
+     "type": "u2",
+     "enum": "plat_destructible::destructible_flags"
+    },
+    {
+     "id": "num_fragments",
+     "type": "u4"
+    },
+    {
+     "id": "fragment_object_id",
+     "type": "u4",
+     "hash_namespace": "object"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_destructible_sound",
+   "tag": "PlatDestructibleSound",
+   "fields": [
+    {
+     "id": "sound_id",
+     "type": "u2"
+    },
+    {
+     "id": "volume",
+     "type": "u2"
+    },
+    {
+     "id": "pitch",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_has_physics",
+   "tag": "PlatHasPhysics",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_reverse_at_ends_of_path",
+   "tag": "PlatReverseAtEndsOfPath",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_actor_surface_type",
+   "tag": "PlatActorSurfaceType",
+   "fields": [
+    {
+     "id": "value",
+     "type": "u2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM",
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM",
+    "LAND_ACTOR",
+    "BG_ACTOR",
+    "ANIMATED_BG_ACTOR"
+   ]
+  },
+  {
+   "id": "plat_set_tag",
+   "tag": "PlatSetTag",
+   "fields": [
+    {
+     "id": "tag",
+     "type": "u2",
+     "tag_namespace": "platform"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_spike",
+   "tag": "PlatSpike",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_scale",
+   "tag": "PlatScale",
+   "fields": [
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "PLATFORM"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "PLATFORM"
+   ]
+  },
+  {
+   "id": "plat_strobe",
+   "tag": "PlatStrobe",
+   "fields": [
+    {
+     "id": "scale_x",
+     "type": "f4"
+    },
+    {
+     "id": "scale_y",
+     "type": "f4"
+    },
+    {
+     "id": "scale_z",
+     "type": "f4"
+    },
+    {
+     "id": "tween_factor",
+     "type": "s2"
+    },
+    {
+     "id": "pause_frames",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "rope",
+   "tag": "Rope",
+   "fields": [
+    {
+     "id": "num_components",
+     "type": "u4"
+    },
+    {
+     "id": "wiggle_axis",
+     "type": "u2"
+    },
+    {
+     "id": "component_obj_id",
+     "type": "u4"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "puzzle_unknown_1",
+     "type": "f4"
+    },
+    {
+     "id": "sway_unknown_1",
+     "type": "f4"
+    },
+    {
+     "id": "sway_unknown_2",
+     "type": "f4"
+    },
+    {
+     "id": "sway_unknown_3",
+     "type": "f4"
+    },
+    {
+     "id": "sway_rocking_theta",
+     "type": "u4"
+    },
+    {
+     "id": "sway_unknown_4",
+     "type": "u4"
+    },
+    {
+     "id": "sway_unknown_5",
+     "type": "f4"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "component_w",
+     "type": "f4"
+    },
+    {
+     "id": "component_h",
+     "type": "f4"
+    },
+    {
+     "id": "component_d",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "plat_sine",
+   "tag": "PlatSine",
+   "fields": [
+    {
+     "id": "u32_count",
+     "type": "u4"
+    },
+    {
+     "id": "u32_116",
+     "type": "u4"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "f_108",
+     "type": "f4"
+    },
+    {
+     "id": "f_104",
+     "type": "f4"
+    },
+    {
+     "id": "f_100",
+     "type": "f4"
+    },
+    {
+     "id": "f_96",
+     "type": "f4"
+    },
+    {
+     "id": "f_92",
+     "type": "f4"
+    },
+    {
+     "id": "f_88",
+     "type": "f4"
+    },
+    {
+     "id": "f_84",
+     "type": "f4"
+    },
+    {
+     "id": "f_80",
+     "type": "f4"
+    },
+    {
+     "id": "u32_176",
+     "type": "u4"
+    },
+    {
+     "id": "u32_172",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "plat_orbit",
+   "tag": "PlatOrbit",
+   "fields": [
+    {
+     "id": "u16_120",
+     "type": "u2"
+    },
+    {
+     "id": "u16_136",
+     "type": "u2"
+    },
+    {
+     "id": "u16_134",
+     "type": "u2"
+    },
+    {
+     "id": "u16_132",
+     "type": "u2"
+    },
+    {
+     "id": "u32_116",
+     "type": "u4"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    },
+    {
+     "id": "f_112",
+     "type": "f4"
+    },
+    {
+     "id": "f_108",
+     "type": "f4"
+    },
+    {
+     "id": "f_104",
+     "type": "f4"
+    },
+    {
+     "id": "f_100",
+     "type": "f4"
+    },
+    {
+     "id": "f_96",
+     "type": "f4"
+    },
+    {
+     "id": "f_92",
+     "type": "f4"
+    },
+    {
+     "id": "f_88",
+     "type": "f4"
+    },
+    {
+     "id": "f_84",
+     "type": "f4"
+    },
+    {
+     "id": "f_80",
+     "type": "f4"
+    },
+    {
+     "id": "u32_176",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "vent",
+   "tag": "Vent",
+   "fields": [
+    {
+     "id": "type",
+     "type": "u2"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "parent_tag",
+     "type": "u2"
+    },
+    {
+     "id": "origin_x",
+     "type": "f4"
+    },
+    {
+     "id": "origin_y",
+     "type": "f4"
+    },
+    {
+     "id": "origin_z",
+     "type": "f4"
+    },
+    {
+     "id": "particle_velocity_x",
+     "type": "f4"
+    },
+    {
+     "id": "particle_velocity_y",
+     "type": "f4"
+    },
+    {
+     "id": "particle_velocity_z",
+     "type": "f4"
+    }
+   ],
+   "declares": "VENT",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "VENT",
+   "disasm_modifies": []
+  },
+  {
+   "id": "vent_duty_cycle",
+   "tag": "VentDutyCycle",
+   "fields": [
+    {
+     "id": "frames_off",
+     "type": "s2"
+    },
+    {
+     "id": "frames_on",
+     "type": "s2"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "VENT"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "VENT"
+   ]
+  },
+  {
+   "id": "platform",
+   "tag": "Platform",
+   "fields": [
+    {
+     "id": "object_id",
+     "type": "u4",
+     "hash_namespace": "object"
+    },
+    {
+     "id": "name",
+     "type": "str",
+     "size": 8
+    }
+   ],
+   "declares": "PLATFORM",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "PLATFORM",
+   "disasm_modifies": []
+  },
+  {
+   "id": "null_platform",
+   "tag": "NullPlatform",
+   "fields": [],
+   "declares": "PLATFORM",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "PLATFORM",
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy",
+   "tag": "Enemy",
+   "fields": [
+    {
+     "id": "type",
+     "type": "u2",
+     "enum": "enemy::enemy_type"
+    },
+    {
+     "id": "puzzle_tag",
+     "type": "u2"
+    },
+    {
+     "id": "x",
+     "type": "f4"
+    },
+    {
+     "id": "y",
+     "type": "f4"
+    },
+    {
+     "id": "z",
+     "type": "f4"
+    },
+    {
+     "id": "y_rotation",
+     "type": "f4"
+    }
+   ],
+   "declares": "ENEMY",
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": "ENEMY",
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_set_attention_bbox",
+   "tag": "EnemySetAttentionBbox",
+   "fields": [
+    {
+     "id": "left",
+     "type": "f4"
+    },
+    {
+     "id": "top",
+     "type": "f4"
+    },
+    {
+     "id": "front",
+     "type": "f4"
+    },
+    {
+     "id": "width",
+     "type": "f4"
+    },
+    {
+     "id": "height",
+     "type": "f4"
+    },
+    {
+     "id": "depth",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "ENEMY"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "ENEMY"
+   ]
+  },
+  {
+   "id": "enemy_0xba",
+   "tag": "Enemy0xba",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "ENEMY"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "ENEMY"
+   ]
+  },
+  {
+   "id": "enemy_finalize",
+   "tag": "EnemyFinalize",
+   "fields": [],
+   "declares": null,
+   "modifies": [
+    "ENEMY"
+   ],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "ENEMY"
+   ]
+  },
+  {
+   "id": "enemy_normal_instruction",
+   "tag": "EnemyNormalInstruction",
+   "fields": [
+    {
+     "id": "instr",
+     "type": "struct",
+     "struct": "enemy_instruction"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "ENEMY"
+   ],
+   "groups_into": "normal_instructions",
+   "group_tag": "NormalInstructions",
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "ENEMY"
+   ]
+  },
+  {
+   "id": "enemy_conditional_instruction",
+   "tag": "EnemyConditionalInstruction",
+   "fields": [
+    {
+     "id": "instr",
+     "type": "struct",
+     "struct": "enemy_instruction"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "ENEMY"
+   ],
+   "groups_into": "conditional_instructions",
+   "group_tag": "ConditionalInstructions",
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "ENEMY"
+   ]
+  },
+  {
+   "id": "enemy_attack_instruction",
+   "tag": "EnemyAttackInstruction",
+   "fields": [
+    {
+     "id": "instr",
+     "type": "struct",
+     "struct": "enemy_instruction"
+    }
+   ],
+   "declares": null,
+   "modifies": [
+    "ENEMY"
+   ],
+   "groups_into": "attack_instructions",
+   "group_tag": "AttackInstructions",
+   "disasm_declares": null,
+   "disasm_modifies": [
+    "ENEMY"
+   ]
+  },
+  {
+   "id": "enemy_instruction",
+   "tag": "EnemyInstruction",
+   "fields": [
+    {
+     "id": "instr_type",
+     "type": "u2"
+    },
+    {
+     "id": "lifetime",
+     "type": "s2"
+    },
+    {
+     "id": "params",
+     "type": "switch",
+     "on": "instr_type",
+     "cases": [
+      [
+       0,
+       "enemy_instruction_move"
+      ],
+      [
+       1,
+       "enemy_instruction_dash"
+      ],
+      [
+       2,
+       "enemy_instruction_turn"
+      ],
+      [
+       3,
+       "enemy_instruction_random_walk"
+      ],
+      [
+       4,
+       "enemy_instruction_rest"
+      ],
+      [
+       5,
+       "enemy_instruction_bullet_0x5"
+      ],
+      [
+       6,
+       "enemy_instruction_bullet_0x6"
+      ],
+      [
+       7,
+       "enemy_instruction_play_animation"
+      ],
+      [
+       8,
+       "enemy_instruction_face_player"
+      ],
+      [
+       9,
+       "enemy_instruction_follow_player"
+      ],
+      [
+       10,
+       "enemy_instruction_glom"
+      ],
+      [
+       11,
+       "enemy_instruction_catapult"
+      ],
+      [
+       12,
+       "enemy_instruction_flee_player"
+      ],
+      [
+       13,
+       "enemy_instruction_steer"
+      ],
+      [
+       14,
+       "enemy_instruction_set_timer"
+      ],
+      [
+       15,
+       "enemy_instruction_attack"
+      ],
+      [
+       16,
+       "enemy_instruction_c"
+      ],
+      [
+       17,
+       "enemy_instruction_c"
+      ],
+      [
+       18,
+       "enemy_instruction_goto"
+      ],
+      [
+       19,
+       "enemy_instruction_noop"
+      ],
+      [
+       20,
+       "enemy_instruction_c"
+      ],
+      [
+       21,
+       "enemy_instruction_c"
+      ],
+      [
+       22,
+       "enemy_instruction_a"
+      ],
+      [
+       23,
+       "enemy_impulse_forward"
+      ],
+      [
+       24,
+       "enemy_kill"
+      ]
+     ],
+     "default": "enemy_instruction_error"
+    },
+    {
+     "id": "execution_condition_param_a",
+     "type": "f4"
+    },
+    {
+     "id": "execution_condition_param_b",
+     "type": "f4"
+    },
+    {
+     "id": "flags",
+     "type": "u4",
+     "enum": "enemy_instruction::instruction_flags"
+    },
+    {
+     "id": "execution_condition",
+     "type": "u2",
+     "enum": "enemy_instruction::execution_condition_type"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_a",
+   "tag": "EnemyInstructionA",
+   "fields": [
+    {
+     "id": "u32_0x02",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x06",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x0a",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x0e",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_impulse_forward",
+   "tag": "EnemyImpulseForward",
+   "fields": [
+    {
+     "id": "unused",
+     "type": "f4"
+    },
+    {
+     "id": "vel_y",
+     "type": "f4"
+    },
+    {
+     "id": "vel_forward",
+     "type": "f4"
+    },
+    {
+     "id": "animation_behavior",
+     "type": "u4",
+     "enum": "enemy_impulse_forward::animation_behavior_flags"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_steer",
+   "tag": "EnemyInstructionSteer",
+   "fields": [
+    {
+     "id": "dst_x",
+     "type": "f4"
+    },
+    {
+     "id": "dst_y",
+     "type": "f4"
+    },
+    {
+     "id": "dst_z",
+     "type": "f4"
+    },
+    {
+     "id": "turn_damping",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_catapult",
+   "tag": "EnemyInstructionCatapult",
+   "fields": [
+    {
+     "id": "vel_x",
+     "type": "f4"
+    },
+    {
+     "id": "vel_y",
+     "type": "f4"
+    },
+    {
+     "id": "vel_z",
+     "type": "f4"
+    },
+    {
+     "id": "unused",
+     "type": "s4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_glom",
+   "tag": "EnemyInstructionGlom",
+   "fields": [
+    {
+     "id": "u32_0x02",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x06",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x0a",
+     "type": "f4"
+    },
+    {
+     "id": "u32_0x0e",
+     "type": "s4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_follow_player",
+   "tag": "EnemyInstructionFollowPlayer",
+   "fields": [
+    {
+     "id": "offset_x",
+     "type": "f4"
+    },
+    {
+     "id": "offset_y",
+     "type": "f4"
+    },
+    {
+     "id": "offset_z",
+     "type": "f4"
+    },
+    {
+     "id": "vel_magnitude",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_dash",
+   "tag": "EnemyInstructionDash",
+   "fields": [
+    {
+     "id": "destination_x",
+     "type": "f4"
+    },
+    {
+     "id": "destination_y",
+     "type": "f4"
+    },
+    {
+     "id": "destination_z",
+     "type": "f4"
+    },
+    {
+     "id": "vel_magnitude",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_move",
+   "tag": "EnemyInstructionMove",
+   "fields": [
+    {
+     "id": "destination_x",
+     "type": "f4"
+    },
+    {
+     "id": "destination_y",
+     "type": "f4"
+    },
+    {
+     "id": "destination_z",
+     "type": "f4"
+    },
+    {
+     "id": "vel_magnitude",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_turn",
+   "tag": "EnemyInstructionTurn",
+   "fields": [
+    {
+     "id": "lookat_x",
+     "type": "f4"
+    },
+    {
+     "id": "lookat_y",
+     "type": "f4"
+    },
+    {
+     "id": "lookat_z",
+     "type": "f4"
+    },
+    {
+     "id": "choose_random_direction",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_goto",
+   "tag": "EnemyInstructionGoto",
+   "fields": [
+    {
+     "id": "instr_idx",
+     "type": "u4"
+    },
+    {
+     "id": "unused",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_random_walk",
+   "tag": "EnemyInstructionRandomWalk",
+   "fields": [
+    {
+     "id": "home_x",
+     "type": "f4"
+    },
+    {
+     "id": "home_y",
+     "type": "f4"
+    },
+    {
+     "id": "home_z",
+     "type": "f4"
+    },
+    {
+     "id": "extent_x",
+     "type": "f4"
+    },
+    {
+     "id": "extent_y",
+     "type": "f4"
+    },
+    {
+     "id": "extent_z",
+     "type": "f4"
+    },
+    {
+     "id": "min_travel_distance",
+     "type": "f4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_play_animation",
+   "tag": "EnemyInstructionPlayAnimation",
+   "fields": [
+    {
+     "id": "anim_idx_1",
+     "type": "s4"
+    },
+    {
+     "id": "anim_idx_2",
+     "type": "s4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_rest",
+   "tag": "EnemyInstructionRest",
+   "fields": [
+    {
+     "id": "flags",
+     "type": "u4"
+    },
+    {
+     "id": "anim_start_playing",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_attack",
+   "tag": "EnemyInstructionAttack",
+   "fields": [
+    {
+     "id": "unused_1",
+     "type": "u4"
+    },
+    {
+     "id": "unused_2",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_bullet_0x5",
+   "tag": "EnemyInstructionBullet0x5",
+   "fields": [
+    {
+     "id": "unused_1",
+     "type": "u4"
+    },
+    {
+     "id": "unused_2",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_bullet_0x6",
+   "tag": "EnemyInstructionBullet0x6",
+   "fields": [
+    {
+     "id": "unused_1",
+     "type": "u4"
+    },
+    {
+     "id": "unused_2",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_face_player",
+   "tag": "EnemyInstructionFacePlayer",
+   "fields": [
+    {
+     "id": "randomize",
+     "type": "u4"
+    },
+    {
+     "id": "unused",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_flee_player",
+   "tag": "EnemyInstructionFleePlayer",
+   "fields": [
+    {
+     "id": "panic_radius",
+     "type": "f4"
+    },
+    {
+     "id": "unused",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_set_timer",
+   "tag": "EnemyInstructionSetTimer",
+   "fields": [
+    {
+     "id": "value",
+     "type": "s4"
+    },
+    {
+     "id": "unused",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_kill",
+   "tag": "EnemyKill",
+   "fields": [
+    {
+     "id": "unused_1",
+     "type": "u4"
+    },
+    {
+     "id": "unused_2",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_noop",
+   "tag": "EnemyInstructionNoop",
+   "fields": [
+    {
+     "id": "unused_1",
+     "type": "u4"
+    },
+    {
+     "id": "unused_2",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_c",
+   "tag": "EnemyInstructionC",
+   "fields": [
+    {
+     "id": "u32_0x02",
+     "type": "u4"
+    },
+    {
+     "id": "u32_0x0e",
+     "type": "u4"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "enemy_instruction_error",
+   "tag": "EnemyInstructionError",
+   "fields": [],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "end_level_data",
+   "tag": "EndLevelData",
+   "fields": [],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "noop",
+   "tag": "Noop",
+   "fields": [],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  },
+  {
+   "id": "unknown",
+   "tag": "Unknown",
+   "fields": [
+    {
+     "id": "body",
+     "type": "bytes_eos"
+    }
+   ],
+   "declares": null,
+   "modifies": [],
+   "groups_into": null,
+   "group_tag": null,
+   "disasm_declares": null,
+   "disasm_modifies": []
+  }
+ ]
+}

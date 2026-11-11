@@ -1,0 +1,49 @@
+# Builds and tests the native app (the Rust crates in crates/) on Windows and Linux. The tests use made-up data: the
+# ones that need the ROM skip themselves here.
+name: Native app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/native.yml", "Cargo.toml", "Cargo.lock", "crates/**", "mod/**"]
+  pull_request:
+    paths: [".github/workflows/native.yml", "Cargo.toml", "Cargo.lock", "crates/**", "mod/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test-windows:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v7
+      - run: rustup toolchain install stable --profile minimal
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: native-windows-${{ hashFiles('Cargo.lock') }}
+      - run: cargo test --workspace --locked
+
+  test-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup toolchain install stable --profile minimal
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y mesa-vulkan-drivers libxkbcommon-dev libwayland-dev
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: native-linux-${{ hashFiles('Cargo.lock') }}
+      - run: cargo test --workspace --locked

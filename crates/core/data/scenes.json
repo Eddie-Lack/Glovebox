@@ -1,0 +1,1731 @@
+[
+ {
+  "id": "00",
+  "index": 0,
+  "name": "Hub 1",
+  "group": "Hub world",
+  "landscape": "00.HUB1ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART1.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART1"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART1.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART1",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "01",
+  "index": 1,
+  "name": "Hub 2",
+  "group": "Hub world",
+  "landscape": "01.HUB2ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART2.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART2"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART2.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART2",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "02",
+  "index": 2,
+  "name": "Hub 3",
+  "group": "Hub world",
+  "landscape": "02.HUB3ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART3.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART3"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART3.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART3",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "03",
+  "index": 3,
+  "name": "Hub 4",
+  "group": "Hub world",
+  "landscape": "03.HUB4ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART4.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART4"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART4.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART4",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "04",
+  "index": 4,
+  "name": "Hub 5",
+  "group": "Hub world",
+  "landscape": "04.HUB5ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART5.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART5"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART5.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART5",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "05",
+  "index": 5,
+  "name": "Hub 6",
+  "group": "Hub world",
+  "landscape": "05.HUB6ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART6.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART6"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART6.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART6",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "06",
+  "index": 6,
+  "name": "Hub 7",
+  "group": "Hub world",
+  "landscape": "06.HUB7ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART7.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART7"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART7.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART7",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "07",
+  "index": 7,
+  "name": "Hub 8",
+  "group": "Hub world",
+  "landscape": "07.HUB8ln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART8.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART8"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART8.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART8",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "08",
+  "index": 8,
+  "name": "Castle Cave",
+  "group": "Hub world",
+  "landscape": "08.CAVEln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "CAVE.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "CAVE"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "CAVE.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "CAVE",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "09",
+  "index": 9,
+  "name": "Assault Course",
+  "group": "Hub world",
+  "landscape": "09.ACOURSE.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "ASSAULT COURSE.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "ASSAULT COURSE"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "ASSAULT COURSE.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "ASSAULT COURSE",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "2a",
+  "index": 42,
+  "name": "Wayroom",
+  "group": "Hub world",
+  "landscape": "42.WAYROOM.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "WAYROOM.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "WAYROOM"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "WAYROOM.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "WAYROOM",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "0a",
+  "index": 10,
+  "name": "Atlantis Level 1",
+  "group": "Atlantis",
+  "landscape": "10.AT1lnd.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_L1.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "ATLANTIS_SHARED",
+   "GENERIC",
+   "ATLANTIS_L1"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "ATLANTIS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_L1.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "ATLANTIS_L1",
+  "importTextureBank": "ATLANTIS_TEX_BANK"
+ },
+ {
+  "id": "0b",
+  "index": 11,
+  "name": "Atlantis Level 2",
+  "group": "Atlantis",
+  "landscape": "11.AT2lnd.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_L2.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "ATLANTIS_SHARED",
+   "GENERIC",
+   "ATLANTIS_L2"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "ATLANTIS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_L2.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "ATLANTIS_L2",
+  "importTextureBank": "ATLANTIS_TEX_BANK"
+ },
+ {
+  "id": "0c",
+  "index": 12,
+  "name": "Atlantis Level 3",
+  "group": "Atlantis",
+  "landscape": "12.AT3Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_L3A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "ATLANTIS_SHARED",
+   "GENERIC",
+   "ATLANTIS_L3A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "ATLANTIS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_L3A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "ATLANTIS_L3A",
+  "importTextureBank": "ATLANTIS_TEX_BANK"
+ },
+ {
+  "id": "0d",
+  "index": 13,
+  "name": "Atlantis Boss",
+  "group": "Atlantis",
+  "landscape": "13.ATBOSS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_BOSS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "ATLANTIS_SHARED",
+   "GENERIC",
+   "ATLANTIS_BOSS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "ATLANTIS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_BOSS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "ATLANTIS_BOSS",
+  "importTextureBank": "ATLANTIS_TEX_BANK"
+ },
+ {
+  "id": "0e",
+  "index": 14,
+  "name": "Atlantis Bonus",
+  "group": "Atlantis",
+  "landscape": "14.ATBONUS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_BONUS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "ATLANTIS_SHARED",
+   "GENERIC",
+   "ATLANTIS_BONUS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "ATLANTIS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "ATLANTIS_SHARED.obj.fla",
+   "ATLANTIS_BONUS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "ATLANTIS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "ATLANTIS_BONUS",
+  "importTextureBank": "ATLANTIS_TEX_BANK"
+ },
+ {
+  "id": "0f",
+  "index": 15,
+  "name": "Carnival Level 1",
+  "group": "Carnival",
+  "landscape": "15.CK1lnd.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_L1.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "CARNIVAL_SHARED",
+   "GENERIC",
+   "CARNIVAL_L1"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CARNIVAL_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_L1.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "CARNIVAL_L1",
+  "importTextureBank": "CARNIVAL_TEX_BANK"
+ },
+ {
+  "id": "10",
+  "index": 16,
+  "name": "Carnival Level 2",
+  "group": "Carnival",
+  "landscape": "16.CK2Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_L2A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "CARNIVAL_SHARED",
+   "GENERIC",
+   "CARNIVAL_L2A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CARNIVAL_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_L2A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "CARNIVAL_L2A",
+  "importTextureBank": "CARNIVAL_TEX_BANK"
+ },
+ {
+  "id": "11",
+  "index": 17,
+  "name": "Carnival Level 3",
+  "group": "Carnival",
+  "landscape": "17.CK3Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_L3A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "CARNIVAL_SHARED",
+   "GENERIC",
+   "CARNIVAL_L3A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CARNIVAL_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_L3A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "CARNIVAL_L3A",
+  "importTextureBank": "CARNIVAL_TEX_BANK"
+ },
+ {
+  "id": "12",
+  "index": 18,
+  "name": "Carnival Boss",
+  "group": "Carnival",
+  "landscape": "18.CKBOSS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_BOSS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "CARNIVAL_SHARED",
+   "GENERIC",
+   "CARNIVAL_BOSS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CARNIVAL_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_BOSS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "CARNIVAL_BOSS",
+  "importTextureBank": "CARNIVAL_TEX_BANK"
+ },
+ {
+  "id": "13",
+  "index": 19,
+  "name": "Carnival Bonus",
+  "group": "Carnival",
+  "landscape": "19.CKBONUS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_BONUS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla",
+   "CKBONUS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "CARNIVAL_SHARED",
+   "GENERIC",
+   "CARNIVAL_BONUS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CARNIVAL_TEX_BANK",
+   "CKBONUS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "CARNIVAL_SHARED.obj.fla",
+   "CARNIVAL_BONUS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CARNIVAL_TEX_BANK.tex.fla",
+   "CKBONUS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "CARNIVAL_BONUS",
+  "importTextureBank": "CKBONUS_TEX_BANK"
+ },
+ {
+  "id": "14",
+  "index": 20,
+  "name": "Pirate's Cove Level 1",
+  "group": "Pirate's Cove",
+  "landscape": "20.PC1lnd.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_L1.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PIRATES_SHARED",
+   "GENERIC",
+   "PIRATES_L1"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PIRATES_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_L1.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PIRATES_L1",
+  "importTextureBank": "PIRATES_TEX_BANK"
+ },
+ {
+  "id": "15",
+  "index": 21,
+  "name": "Pirate's Cove Level 2",
+  "group": "Pirate's Cove",
+  "landscape": "21.PC2Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_L2A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PIRATES_SHARED",
+   "GENERIC",
+   "PIRATES_L2A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PIRATES_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_L2A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PIRATES_L2A",
+  "importTextureBank": "PIRATES_TEX_BANK"
+ },
+ {
+  "id": "16",
+  "index": 22,
+  "name": "Pirate's Cove Level 3",
+  "group": "Pirate's Cove",
+  "landscape": "22.PC3Bln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_L3B.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PIRATES_SHARED",
+   "GENERIC",
+   "PIRATES_L3B"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PIRATES_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_L3B.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PIRATES_L3B",
+  "importTextureBank": "PIRATES_TEX_BANK"
+ },
+ {
+  "id": "17",
+  "index": 23,
+  "name": "Pirate's Cove Boss",
+  "group": "Pirate's Cove",
+  "landscape": "23.PCBOSS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_BOSS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PIRATES_SHARED",
+   "GENERIC",
+   "PIRATES_BOSS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PIRATES_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_BOSS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PIRATES_BOSS",
+  "importTextureBank": "PIRATES_TEX_BANK"
+ },
+ {
+  "id": "18",
+  "index": 24,
+  "name": "Pirate's Cove Bonus",
+  "group": "Pirate's Cove",
+  "landscape": "24.PCBONUS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_BONUS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PIRATES_SHARED",
+   "GENERIC",
+   "PIRATES_BONUS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PIRATES_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PIRATES_SHARED.obj.fla",
+   "PIRATES_BONUS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PIRATES_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PIRATES_BONUS",
+  "importTextureBank": "PIRATES_TEX_BANK"
+ },
+ {
+  "id": "19",
+  "index": 25,
+  "name": "Prehistoric Level 1",
+  "group": "Prehistoric",
+  "landscape": "25.PH1Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_L1A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PREHISTORIC_SHARED",
+   "GENERIC",
+   "PREHISTORIC_L1A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PREHISTORIC_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_L1A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PREHISTORIC_L1A",
+  "importTextureBank": "PREHISTORIC_TEX_BANK"
+ },
+ {
+  "id": "1a",
+  "index": 26,
+  "name": "Prehistoric Level 2",
+  "group": "Prehistoric",
+  "landscape": "26.PH2Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_L2A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PREHISTORIC_SHARED",
+   "GENERIC",
+   "PREHISTORIC_L2A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PREHISTORIC_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_L2A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PREHISTORIC_L2A",
+  "importTextureBank": "PREHISTORIC_TEX_BANK"
+ },
+ {
+  "id": "1b",
+  "index": 27,
+  "name": "Prehistoric Level 3",
+  "group": "Prehistoric",
+  "landscape": "27.PH3Bln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_L3B.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PREHISTORIC_SHARED",
+   "GENERIC",
+   "PREHISTORIC_L3B"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PREHISTORIC_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_L3B.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PREHISTORIC_L3B",
+  "importTextureBank": "PREHISTORIC_TEX_BANK"
+ },
+ {
+  "id": "1c",
+  "index": 28,
+  "name": "Prehistoric Boss",
+  "group": "Prehistoric",
+  "landscape": "28.PHBOSS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_BOSS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PREHISTORIC_SHARED",
+   "GENERIC",
+   "PREHISTORIC_BOSS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PREHISTORIC_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_BOSS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PREHISTORIC_BOSS",
+  "importTextureBank": "PREHISTORIC_TEX_BANK"
+ },
+ {
+  "id": "1d",
+  "index": 29,
+  "name": "Prehistoric Bonus",
+  "group": "Prehistoric",
+  "landscape": "29.PHBONUS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_BONUS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "PREHISTORIC_SHARED",
+   "GENERIC",
+   "PREHISTORIC_BONUS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PREHISTORIC_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PREHISTORIC_SHARED.obj.fla",
+   "PREHISTORIC_BONUS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PREHISTORIC_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PREHISTORIC_BONUS",
+  "importTextureBank": "PREHISTORIC_TEX_BANK"
+ },
+ {
+  "id": "1e",
+  "index": 30,
+  "name": "Fortress of Fear Level 1",
+  "group": "Fortress of Fear",
+  "landscape": "30.FF1Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_L1A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "FORTRESS_SHARED",
+   "GENERIC",
+   "FORTRESS_L1A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "FORTRESS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_L1A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "FORTRESS_L1A",
+  "importTextureBank": "FORTRESS_TEX_BANK"
+ },
+ {
+  "id": "1f",
+  "index": 31,
+  "name": "Fortress of Fear Level 2",
+  "group": "Fortress of Fear",
+  "landscape": "31.FF2Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_L2A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "FORTRESS_SHARED",
+   "GENERIC",
+   "FORTRESS_L2A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "FORTRESS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_L2A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "FORTRESS_L2A",
+  "importTextureBank": "FORTRESS_TEX_BANK"
+ },
+ {
+  "id": "20",
+  "index": 32,
+  "name": "Fortress of Fear Level 3",
+  "group": "Fortress of Fear",
+  "landscape": "32.FF3Bln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_L3B.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "FORTRESS_SHARED",
+   "GENERIC",
+   "FORTRESS_L3B"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "FORTRESS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_L3B.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "FORTRESS_L3B",
+  "importTextureBank": "FORTRESS_TEX_BANK"
+ },
+ {
+  "id": "21",
+  "index": 33,
+  "name": "Fortress of Fear Boss",
+  "group": "Fortress of Fear",
+  "landscape": "33.FFBOSS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_BOSS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "FORTRESS_SHARED",
+   "GENERIC",
+   "FORTRESS_BOSS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "FORTRESS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_BOSS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "FORTRESS_BOSS",
+  "importTextureBank": "FORTRESS_TEX_BANK"
+ },
+ {
+  "id": "22",
+  "index": 34,
+  "name": "Fortress of Fear Bonus",
+  "group": "Fortress of Fear",
+  "landscape": "34.FFBONUS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_BONUS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "FORTRESS_SHARED",
+   "GENERIC",
+   "FORTRESS_BONUS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "FORTRESS_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "FORTRESS_SHARED.obj.fla",
+   "FORTRESS_BONUS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FORTRESS_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "FORTRESS_BONUS",
+  "importTextureBank": "FORTRESS_TEX_BANK"
+ },
+ {
+  "id": "23",
+  "index": 35,
+  "name": "Out Of This World Level 1",
+  "group": "Out Of This World",
+  "landscape": "35.OW2Aln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_L2A.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "OOTW_L2A"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_L2A.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OOTW_L2A",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "24",
+  "index": 36,
+  "name": "Out Of This World Level 2",
+  "group": "Out Of This World",
+  "landscape": "36.OW2Bln.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_L2B.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "OOTW_L2B"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_L2B.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OOTW_L2B",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "25",
+  "index": 37,
+  "name": "Out Of This World Level 3",
+  "group": "Out Of This World",
+  "landscape": "37.OW3lnd.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_L3.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "OOTW_L3"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_L3.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OOTW_L3",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "26",
+  "index": 38,
+  "name": "Out Of This World Boss (phase 1)",
+  "group": "Out Of This World",
+  "landscape": "38.OWBOSS1.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_BOSS1.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "OOTW_BOSS1"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_BOSS1.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OOTW_BOSS1",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "27",
+  "index": 39,
+  "name": "Out Of This World Boss (phase 2)",
+  "group": "Out Of This World",
+  "landscape": "39.TWEENl.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "TWEEN.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "TWEEN"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "TWEEN.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "TWEEN",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "28",
+  "index": 40,
+  "name": "Out Of This World Boss (phase 3)",
+  "group": "Out Of This World",
+  "landscape": "40.OWBOSS3.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_BOSS1.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "OOTW_BOSS1"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_BOSS1.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OOTW_BOSS1",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "29",
+  "index": 41,
+  "name": "Out Of This World Bonus",
+  "group": "Out Of This World",
+  "landscape": "41.OWBONUS.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_BONUS.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "OOTW_BONUS"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "OOTW_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OOTW_SHARED.obj.fla",
+   "OOTW_BONUS.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "OOTW_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OOTW_BONUS",
+  "importTextureBank": "OOTW_TEX_BANK"
+ },
+ {
+  "id": "2c",
+  "index": 44,
+  "name": "Flythru (title)",
+  "group": "System",
+  "landscape": "44.FLYTHRU.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FLYTHRU.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART8.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FLYTHRU_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla",
+   "CAMEO_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "FLYTHRU",
+   "HUB_PART8"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK",
+   "FLYTHRU_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "FLYTHRU.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART8.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FLYTHRU_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART8",
+  "importTextureBank": "FLYTHRU_TEX_BANK"
+ },
+ {
+  "id": "2d",
+  "index": 45,
+  "name": "Flythru (credits)",
+  "group": "System",
+  "landscape": "45.FLYTHRU.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "FLYTHRU.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART8.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "FLYTHRU_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla",
+   "CAMEO_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "HUB_SHARED",
+   "GENERIC",
+   "HUB_PART8"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "HUB_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "HUB_SHARED.obj.fla",
+   "HUB_PART8.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "HUB_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "HUB_PART8",
+  "importTextureBank": "HUB_TEX_BANK"
+ },
+ {
+  "id": "2e",
+  "index": 46,
+  "name": "Intro cutscene",
+  "group": "System",
+  "landscape": "46.INTROl.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "INTRO.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CAMEO_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "GENERIC",
+   "INTRO"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CAMEO_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "INTRO.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CAMEO_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "INTRO",
+  "importTextureBank": "CAMEO_TEX_BANK"
+ },
+ {
+  "id": "2f",
+  "index": 47,
+  "name": "Outro cutscene",
+  "group": "System",
+  "landscape": "47.OUTROl.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "OUTRO.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CAMEO_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "GENERIC",
+   "OUTRO"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "CAMEO_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "OUTRO.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "CAMEO_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "OUTRO",
+  "importTextureBank": "CAMEO_TEX_BANK"
+ },
+ {
+  "id": "2b",
+  "index": 43,
+  "name": "Presentation (studio logos)",
+  "group": "System",
+  "landscape": "43.PRESENT.n64.lev",
+  "objectBanks": [
+   "GENERIC.obj.fla",
+   "PRESENTATION.obj.fla"
+  ],
+  "textureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PRESENT_TEX_BANK.tex.fla"
+  ],
+  "gameObjectBanks": [
+   "OOTW_SHARED",
+   "GENERIC",
+   "PRESENTATION"
+  ],
+  "gameTextureBanks": [
+   "GENERIC_TEX_BANK",
+   "PRESENT_TEX_BANK"
+  ],
+  "sureObjectBanks": [
+   "GENERIC.obj.fla",
+   "PRESENTATION.obj.fla"
+  ],
+  "sureTextureBanks": [
+   "GENERIC_TEX_BANK.tex.fla",
+   "PRESENT_TEX_BANK.tex.fla"
+  ],
+  "importObjectBank": "PRESENTATION",
+  "importTextureBank": "PRESENT_TEX_BANK"
+ }
+]
