@@ -1703,6 +1703,84 @@ fn review_fixes(t: &mut T) {
 }
 
 /// The window at 1280 by 720 and at a display scale of 1.5: nothing panics and the panels stay inside.
+/// The exit triggers: the toolbar's Exits switch, the layer's checkbox, the spheres and the inspector's block.
+#[test]
+fn exit_triggers() {
+    use glovebox_editor::exits::LAYER;
+    let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
+    let mut t = T::new("exits", Some(backend), [1500.0, 950.0]);
+    let none = Modifiers::default();
+    t.idle();
+    let ed = t.ed();
+    let goal = ent(ed, |e| e.label == "goal").unwrap();
+    let trigger = ed.exit_trigger(goal).unwrap();
+    let r = trigger.radius.unwrap();
+    let sphere = ed.nodes[goal].exit.unwrap();
+    let shown = ed.graph[sphere].visible && r > 20.0;
+    t.detail("an exit platform has a sphere of the game's radius", shown, format!("{r}"));
+    // A garib inside the sphere, above the block
+    let inside = [trigger.centre[0], trigger.centre[1] + r - 6.0, trigger.centre[2]];
+    ed.add_garib(inside, "garib");
+    ed.select(None, false);
+    t.settle();
+    // A spot on the sphere that is beside the block and the garib
+    let across = vec::cross(t.ed().camera.forward(), [0.0, 1.0, 0.0]);
+    let side = vec::scale(across, (r - 4.0) / vec::norm(across));
+    let spot = px(t.ed(), vec::add(trigger.centre, side));
+    let pixel = |t: &mut T| {
+        let at = t.at(spot);
+        t.settle();
+        t.h.render().ok().map(|img| img.get_pixel(at.x as u32, at.y as u32).0)
+    };
+    let with = pixel(&mut t);
+    t.shot("50-exits-on");
+
+    // A click on the sphere goes through it
+    t.view_click(spot, none);
+    let sel = t.ed().selection.clone();
+    t.detail("a click on a sphere does not select its platform", !sel.contains(&goal), format!("{sel:?}"));
+    let at = px(t.ed(), inside);
+    t.view_click(at, none);
+    let ed = t.ed();
+    let picked = ed.selection.first().map(|&i| ed.entities[i].kind);
+    t.detail("a click on a sphere selects what is inside it", picked == Some("garib"), format!("{picked:?}"));
+    let at = px(t.ed(), trigger.centre);
+    t.view_click(at, none);
+    let sel = t.ed().selection.clone();
+    t.detail("a click on the platform selects it", sel == vec![goal], format!("{sel:?}"));
+    let block = t.has("Exit trigger") && t.has("the ball (its centre)") && t.has("Glover must hold the ball.") && t.has(&format!("{r:.1}"));
+    t.check("the inspector shows the exit trigger", block);
+    t.shot("51-exits-inspector");
+    t.ed().select(None, false);
+
+    // The toolbar's switch
+    t.click("Exits");
+    let ed = t.ed();
+    let off = ed.hidden.contains(LAYER) && !ed.graph[sphere].visible && ed.graph[ed.nodes[goal].obj].visible;
+    let saved = t.w().settings.get("exits");
+    t.detail("click: Exits hides the spheres and keeps the platforms", off && saved.as_deref() == Some("off"), format!("{saved:?}"));
+    let without = pixel(&mut t);
+    t.detail("the view draws the sphere only when the layer is on", with.is_some() && with != without, format!("{with:?} {without:?}"));
+    t.shot("52-exits-off");
+    t.click("Exits");
+    let ed = t.ed();
+    let on = !ed.hidden.contains(LAYER) && ed.graph[sphere].visible;
+    let saved = t.w().settings.get("exits");
+    t.check("click: Exits shows them again", on && saved.as_deref() == Some("on"));
+    let back = pixel(&mut t);
+    t.check("the sphere is drawn again", back == with);
+
+    // The layer's checkbox is the same switch
+    let label = t.has("Exit triggers 1");
+    t.click("Exit triggers 1");
+    let ed = t.ed();
+    let off = ed.hidden.contains(LAYER) && !ed.graph[sphere].visible;
+    t.click("Exit triggers 1");
+    let on = !t.ed().hidden.contains(LAYER);
+    t.check("click: the Exit triggers layer's checkbox", label && off && on);
+    t.finish();
+}
+
 #[test]
 fn small_and_scaled_windows() {
     for (name, size, scale) in [("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5), ("1920x1080", [1920.0, 1080.0], 1.0)] {

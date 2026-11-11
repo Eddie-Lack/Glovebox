@@ -9,6 +9,7 @@ use glovebox_core::xml::NodeId;
 use glovebox_editor::commands::{refusal, PLATFORMS};
 use glovebox_editor::editor::{look_name, Editor, GITHUB, LOOK, LOOKS};
 use glovebox_editor::entities::{self, camera_zone, preset_zone, set_camera_zone, zone_camera, zone_centre, EntId, CAM_PRESETS, KINDS};
+use glovebox_editor::exits::Who;
 use glovebox_editor::puzzles;
 use glovebox_editor::scripts;
 use glovebox_editor::xmlutil::{body, float_bits, float_from_bits, hex_id, inum};
@@ -223,6 +224,7 @@ fn fill(cx: &mut Cx, ui: &mut egui::Ui) {
     if ent.zone {
         camera_zone_panel(cx, ui, i);
     }
+    exit_panel(cx, ui, i);
     if ent.kind == "trigger" {
         let node = ent.node;
         if ui.button("Edit its puzzle (conditions and actions)").clicked() {
@@ -816,6 +818,40 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 fieldname(ui, "scale");
                 note(ui, ent.why_scl.unwrap_or(entities::WHY_NO_SCALE));
             }
+        }
+    });
+}
+
+/// A platform's exit as the game tests it: the radius, who must come within it and what else the game asks.
+fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
+    let Some(t) = cx.ed.exit_trigger(i) else { return };
+    card(ui, "Exit trigger", None, |_| {}, |ui| {
+        let who = match t.rule.who {
+            Who::Glover => "Glover (the hand\u{2019}s centre)",
+            Who::Ball => "the ball (its centre)",
+            Who::OnPlatform => "the ball, resting on the platform",
+        };
+        row(ui, "exit type", |ui| ui.label(t.exit_type.to_string()));
+        row(ui, "radius", |ui| match t.radius {
+            Some(r) => ui.label(format!("{r:.1}")),
+            None => ui.label("unknown"),
+        });
+        row(ui, "who", |ui| ui.label(who));
+        match (t.rule.who, t.radius) {
+            (Who::OnPlatform, _) => {}
+            (_, None) => {
+                note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
+            }
+            (_, Some(r)) if r > 0.0 => {
+                note(ui, "The exit fires when the centre comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
+            }
+            _ => {
+                let why = t.zero.as_ref().map(|z| z.text()).unwrap_or_default();
+                check_line(ui, "err", &format!("The radius is 0. This exit can never fire. {why}"), false, None, None, None);
+            }
+        }
+        for n in &t.rule.notes {
+            note(ui, n);
         }
     });
 }

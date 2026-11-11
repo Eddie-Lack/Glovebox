@@ -5,7 +5,7 @@
 //! its position (`InitPlatformInfo`, src/platform.c). It depends on the order of the platform's commands, which
 //! `radius` follows. See docs/technical.md, "Exits".
 
-use crate::xmlutil::num;
+use crate::xmlutil::{hex_id, num};
 use glovebox_core::xml::{Doc, NodeId};
 
 /// The object id of `exitpost.ndo`. The game starts this model with a radius of 20 and a scale of 1.5, 2, 1.5.
@@ -88,7 +88,7 @@ pub fn radius(doc: &Doc, node: NodeId, verts: &[[f32; 3]]) -> (f64, Option<Zero>
     if doc.tag(node) == "NullPlatform" {
         return (0.0, Some(Zero::Null));
     }
-    let exitpost = doc.get(node, "object_id").is_some_and(|o| o.eq_ignore_ascii_case(EXITPOST));
+    let exitpost = hex_id(doc.get(node, "object_id")).as_deref() == Some(EXITPOST);
     let (mut r, mut scale) = if exitpost { (20.0f32, [1.5f32, 2.0, 1.5]) } else { (0.0, [1.0; 3]) };
     let xyz = |c: NodeId| ["x", "y", "z"].map(|a| num(doc, Some(c), a, 0.0) as f32);
     let (mut points, mut orbit, mut measured) = (0, false, false);

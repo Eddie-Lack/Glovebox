@@ -7,6 +7,7 @@ use super::{
     LOAD_CAM_UP, LOAD_KINDS, LOAD_SLOW, LOAD_STOP, MATRICES, MOD_NOTE, TRIO,
 };
 use crate::commands::{self, platform_rules};
+use crate::exits;
 use crate::entities::{trigger_spec, uses_mod, EntId, MOD_PARENTS, WHY_CUSTOM_PLATFORM};
 use crate::puzzles;
 use crate::scene::{self, LineMode, Lines, RayOptions};
@@ -164,6 +165,18 @@ impl Editor {
                 "Platform" | "NullPlatform" => {
                     plat_index += 1;
                     let pid = format!("platform {}", plat_index);
+                    // CheckForExit: the distance must be below the platform's radius. A radius of 0 never is.
+                    // Exit type 3 tests no distance.
+                    if let Some(t) = exits::exit_type(doc, node).filter(|t| *t != 3) {
+                        let verts = match tag {
+                            "NullPlatform" => Some(Default::default()),
+                            _ => hex_id(doc.get(node, "object_id")).and_then(|o| self.root_vertices(&o)),
+                        };
+                        if let Some((_, Some(why))) = verts.map(|v| exits::radius(doc, node, &v)) {
+                            let msg = format!("The exit (type {t}) can never fire: the game gives this platform a radius of 0. {}", why.text());
+                            add(node, format!("{}:exit", pid), msg, None, None, "err");
+                        }
+                    }
                     if let Some(par) = doc.first(node, "PlatSetParent") {
                         let v = num0(doc, par, "tag");
                         if unknown(&tags_so_far, v) {

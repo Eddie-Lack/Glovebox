@@ -140,6 +140,7 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - `PlatScale` and `PlatSetParent` come before the first path point
 - Enemy scripts: more than 30 normal, 10 conditional or 30 attack instructions crash the game
 - Trigger volumes that are flat or empty
+- Exits that can never fire
 - A checkpoint or start with no solid ground under it
 - `fog_distance` of 1000 or more
 - Platforms made from your own models _(a console stops on them)_
@@ -179,6 +180,38 @@ Duplicate and delete take the whole puzzle when it has only that one volume. A v
 The `Triggers` button shows or hides them. The `Fog` button shows or hides the level's fog in the editor only (to change the game's fog, edit `FogConfiguration` in the inspector)
 
 `Motion` spins the spinning platforms
+
+## Exit triggers
+
+Every exit is a platform with an `Exit` command. The game doesn't care what the model looks like: it tests a sphere round the platform's position
+
+The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model, so the sphere is the only way to see how big they are
+
+The `Exits` button in the toolbar shows or hides the spheres. The `Exit triggers` layer in the list on the left is the same switch
+
+Who has to get inside the sphere:
+
+| Exit | Who |
+| --- | --- |
+| A level's goal (type 1) | The ball, while Glover holds it |
+| World entrances in the hub (types 6 to 11) | Glover |
+| The hub's own doors (types 12, 13, 21) | Glover |
+| Anything in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1 | Glover |
+| Everything else | The ball |
+
+It's the centre of Glover or the ball that counts, not the edge
+
+Select the platform and the inspector's `Exit trigger` block tells you the radius, who has to touch it and what else the game wants for that exit type
+
+- The size comes from the platform's model and its scale, so scale the platform to make the trigger bigger or smaller
+- Clicks go through the sphere, so you can still select what's inside it
+- A moving platform's sphere is drawn where the platform starts. In the game it moves with the platform
+
+### An exit with no sphere can never fire!
+
+The game measures the platform when it reads its position. An `Exit` of type `loading_zone` that comes before the position stops that, and the radius stays 0
+
+The editor always adds the `Exit` after the position. `Checks` warns you when an imported level has it the other way round
 
 ## Camera zones
 

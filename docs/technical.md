@@ -82,6 +82,7 @@ nothing else. The program never runs them.
 |---|---|
 | `editor` | The state and every edit: loading (`load`), selection (`select`), the transform engine (`transform`), undo and adding and removing (`edit`), commands, scripts, puzzles and camera zones (`cmds`), the checks, draw load, imports and the budget (`checks`), the path tool (`path`), the entities' scene nodes (`nodes`). A queue of events tells the window what changed. |
 | `entities` | Entities from the level XML (`build`), bindings, attached points, trigger volumes, camera zones. |
+| `exits` | Exit triggers: the radius the game gives a platform (`radius`) and who must come within it (`rule`). |
 | `scene`, `camera`, `gizmo` | The 3D view's data: a small scene graph with picking, orbit and fly cameras, the gizmo. |
 | `commands`, `puzzles`, `scripts`, `presets` | The level format's order and rules, puzzles, enemy scripts, platform presets ("Commands, puzzles, enemy scripts, extra levels", below). |
 | `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, three.js maths (Euler `'YZX'`). |
@@ -306,6 +307,21 @@ nothing else. The program never runs them.
 - **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It is the same switch as the
   "Puzzle triggers" layer. The setting is remembered between sessions. Hidden volumes can't be picked, and the
   level keeps them.
+- **Exit triggers** are drawn as a green translucent sphere with three rings round each platform whose
+  `SetExit` the game tests (an exit type other than 0). The centre is the platform's position, for a moving
+  platform its start. The radius is the one the game gives the platform ("Facts from the decomp", exits):
+  `exits::radius` walks the platform's commands in the level file's order, on the vertices the faces of the
+  model's root mesh use (`Backend::root_vertices`, read from the object bank with
+  `objbank::root_face_vertices`). The sphere is a node of its own in the world (`EntNodes::exit`). A click
+  goes through it, and it is in no selection box. It follows the platform when the platform moves, when its
+  scale changes and when its commands change. A radius of 0 draws nothing, and so does a model the editor
+  cannot read. The inspector's "Exit trigger" block gives the exit type, the radius, who must come within it
+  and the other conditions of `CheckForExit` for that type and level (`exits::rule`). The editor draws the
+  exit post's model at a scale of 1.5 on every axis; the game uses 1.5, 2, 1.5, and the radius is computed
+  with the game's.
+- **exits** (toolbar checkbox) shows or hides the exit triggers. It is the same switch as the "Exit triggers"
+  layer, which counts the platforms with an exit. The layer's key in `Editor::hidden` is `exit`; no entity has
+  that kind. The setting is remembered between sessions as `exits`. Hiding the platforms hides their spheres.
 - **fog** (toolbar checkbox) shows or hides the level's fog in the editor view. The setting is remembered
   between sessions. It doesn't change the level: in-game fog is the `FogConfiguration` command's
   `fog_enabled` field, which you can edit in the inspector.
@@ -501,6 +517,37 @@ offer **Platform** for them, and the checks flag one that is.
   corner plus a size, `l, w, h` → `size.x, y, z`, tested by `IsPointWithinBox`. Ranges (36, 38, 40) are
   `distance² < radius²`. Id 41 is a cylinder: `pos` holds (x, z, radius) and `size` holds (max_y, min_y).
   Id 34 (`PuzzleCond0x22`, `CONDITION_HAND_CROSSES_LINE`) always returns true.
+- Exits (parse.c `TOKEN_EXITDOOR`, `TOKEN_PLATFORM`, `TOKEN_POS`, `TOKEN_SCALE`; platform.c `InitPlatformInfo`;
+  game.c `CheckForExit`):
+  - An exit is a platform with a `SetExit`. `behavior` is the game's `exitType`. `UpdatePlatform` calls
+    `CheckForExit` for every platform whose `exitType` is not 0. `type` 0 (`loading_zone`) sets `alpha = 0` and
+    `flags |= 4`, and frees the collision faces.
+  - The test is `DistanceBetweenPoints(pos, &platform->actor.pos) < platform->actor.radius`: a sphere round the
+    platform's position. `pos` is the hand for exit types 6 to 12 and 21, for type 13 outside the Assault
+    Course, and in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1. Otherwise it is the ball.
+  - Exit type 3 tests no distance: the ball must be on the platform (`ball.obj->platform`) while Glover holds it.
+  - In the Wayroom, the Castle Cave, Atlantis 3 and Carnival 1, and for types 6 to 12, the distance is the
+    whole test. Atlantis 3 and Carnival 1 then end 50 frames later (`newLevExitTimer`).
+  - Everywhere else the game also asks: nothing for type 21 and in the Atlantis bonus; for type 13 that
+    `hubLevel` equals `hubTarget` or `ballStatic` is set; for every other type that Glover holds the ball.
+    Type 1, and every type in the Assault Course, then plays the goal animation (not in the first Space
+    boss). In the Assault Course that needs the ball held.
+  - In the hub stages (levels 0 to 7) an exit other than 12 and 21 does nothing while `ballStatic` is 0,
+    `hubTarget` differs from `hubLevel` and `worldComplete[exitType - 5]` is 0.
+  - For types 6 to 12 a ball that Glover does not hold is popped when it comes within the radius
+    (`ballLeftBehind`).
+  - `actor.radius` starts at 0 and only grows. `exitpost.ndo` (`0x7FDADB91`) starts at 20, with a scale of
+    1.5, 2, 1.5. `InitPlatformInfo` grows the radius to the longest vertex of the faces of `obj->mesh` (the
+    object's root mesh, its own vertices without any key frame), each axis multiplied by `actor.scale`. It
+    returns at once when `flags & 0x84`: a `NullPlatform` has 0x80, and a loading-zone `SetExit`, a
+    `PlatNoClip` or a `PlatSpike` already read has set 4.
+  - `InitPlatformInfo` runs from `SetPlatformPos`: when the parser reads `PlatSetInitialPos` and the first
+    `PlatPathPoint` (an orbiting platform takes no path point). It also runs for the pieces of a rope bridge.
+    `actor.scale` is what `PlatScale` set before that moment (`PlatScale` is not read after the first path
+    point), or the game mod's `SetActorScale` (mod/transforms.c). A scale that comes after the position is
+    drawn and does not change the radius.
+  - So a loading-zone `SetExit` before the position leaves the radius at 0, and the exit can never fire. The
+    check "The exit can never fire" reports it. EXIT_FACTS
 - Camera zones (docs/technical.md, "Level tools"): a puzzle with one `PuzzleCondGloverWithinVolume` and only actions 70
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is
@@ -642,7 +689,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 

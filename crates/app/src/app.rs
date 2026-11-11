@@ -11,6 +11,7 @@ use glovebox_core::xml::NodeId;
 use glovebox_editor::commands::Format;
 use glovebox_editor::drafts::Drafts;
 use glovebox_editor::editor::{BuildJob, BuildOutput, Check, Delays, Editor, Event};
+use glovebox_editor::exits;
 use glovebox_editor::gizmo::Mode;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -178,6 +179,9 @@ impl Window {
         ed.show_fog = settings.get("fog").as_deref() != Some("off");
         if settings.get("triggers").as_deref() == Some("off") {
             ed.hidden.insert("trigger".to_string());
+        }
+        if settings.get(exits::SETTING).as_deref() == Some("off") {
+            ed.hidden.insert(exits::LAYER.to_string());
         }
         let view = viewport::View::new(rs, &mut ed);
         let mut w = Window {

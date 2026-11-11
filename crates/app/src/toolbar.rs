@@ -3,6 +3,7 @@
 use crate::app::Window;
 use crate::style;
 use egui::RichText;
+use glovebox_editor::exits;
 use glovebox_editor::gizmo::Mode;
 
 fn s<'a>(v: &'a serde_json::Value, key: &str) -> &'a str {
@@ -130,6 +131,10 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
     let triggers = !w.ed.hidden.contains("trigger");
     if style::toggle(ui, triggers, "Triggers", "Show the puzzle trigger volumes (the areas a puzzle condition tests). Hiding them only affects the editor view; the level keeps them.").clicked() {
         w.ed.set_layer("trigger", !triggers);
+    }
+    let exits = !w.ed.hidden.contains(exits::LAYER);
+    if style::toggle(ui, exits, "Exits", "Show the exit triggers: the sphere round each platform with an exit, at the size the game tests. Glover or the ball must come inside it. Hiding them only affects the editor view.").clicked() {
+        w.ed.set_layer(exits::LAYER, !exits);
     }
     sep(ui);
     let ready = w.ed.has_level && !w.busy;

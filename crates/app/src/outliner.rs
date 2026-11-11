@@ -4,6 +4,7 @@ use crate::app::{Act, Window};
 use crate::style;
 use egui::RichText;
 use glovebox_editor::entities::{EntId, KINDS};
+use glovebox_editor::exits;
 use std::collections::BTreeMap;
 
 #[derive(Default)]
@@ -68,6 +69,20 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             if col % 2 == 0 {
                 ui.end_row();
             }
+        }
+        // The exit triggers are no entities of their own: the layer shows the spheres of the platforms with an exit
+        let n = ed.exits().len();
+        if n > 0 {
+            let mut on = !ed.hidden.contains(exits::LAYER);
+            ui.scope(|ui| {
+                let c = style::hex(exits::COLOR);
+                ui.visuals_mut().selection.bg_fill = c;
+                ui.visuals_mut().widgets.inactive.fg_stroke.color = c;
+                ui.visuals_mut().widgets.hovered.fg_stroke.color = c;
+                if ui.checkbox(&mut on, RichText::new(format!("Exit triggers {n}")).color(style::TEXT)).changed() {
+                    acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(exits::LAYER, on)));
+                }
+            });
         }
     });
     ui.add_space(2.0);

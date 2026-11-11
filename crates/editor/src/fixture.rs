@@ -62,6 +62,11 @@ pub fn level_1() -> String {
     <PlatScale x="0.3" y="0.05" z="0.3"/>
     <PlatConstantSpin axis="y" initial_theta="0.0" speed="0.05"/>
   </Platform>
+  <Platform object_id="{block}" name="goal">
+    <PlatScale x="0.3" y="0.3" z="0.3"/>
+    <PlatSetInitialPos x="380.0" y="120.0" z="-60.0"/>
+    <SetExit behavior="1" type="loading_zone"/>
+  </Platform>
   <GaribGroup group_id="0" initial_state="1">
     <Garib x="0.0" y="80.0" z="0.0" type="garib" dynamic_shadow="0"/>
     <Garib x="60.0" y="80.0" z="0.0" type="garib" dynamic_shadow="0"/>

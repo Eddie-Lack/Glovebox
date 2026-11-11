@@ -614,3 +614,86 @@ fn timers_and_jobs() {
     assert!(out.message.starts_with("Built 10.FIX10lnd.n64.lev"));
     let _ = std::fs::remove_dir_all(&home);
 }
+
+/// The exit triggers on the fixture: the sphere of the platform "goal", the layer and the check.
+#[test]
+fn exit_triggers_on_the_fixture() {
+    use glovebox_editor::exits::{Who, Zero, LAYER};
+    let home = std::env::temp_dir().join(format!("glovebox-exit-test-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&home);
+    let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
+    let mut ed = Editor::new(backend.clone(), Drafts::new(home.join("drafts")), Some(Box::new(MemorySettings::default())));
+    ed.start();
+    ed.set_catalog(backend.catalog().unwrap());
+    ed.set_view_size(1100.0, 800.0);
+    ed.load_scene("10").unwrap();
+    let goal = ent(&ed, |e| e.label == "goal").unwrap();
+    assert_eq!(ed.exits(), [goal]);
+    // The block is a cube of 100. At a scale of 0.3 its corners are 15 * sqrt(3) from the middle.
+    let t = ed.exit_trigger(goal).unwrap();
+    let corner = f64::from((3.0f32 * 15.0 * 15.0).sqrt());
+    assert_eq!((t.exit_type, t.centre, t.rule.who, t.zero.clone()), (1, [380.0, 120.0, -60.0], Who::Ball, None));
+    assert!((t.radius.unwrap() - corner).abs() < 1e-4, "{:?}", t.radius);
+    assert!(!t.dead() && !has_check(&mut ed, None, "can never fire"));
+    // The other platforms have no exit and no sphere
+    let lift = ent(&ed, |e| e.label == "lift").unwrap();
+    assert!(ed.exit_trigger(lift).is_none() && ed.nodes[lift].exit.is_none());
+
+    // The sphere: in the world at the platform, as large as the radius, outside the entity's box
+    let sphere = ed.nodes[goal].exit.unwrap();
+    let node = &ed.graph[sphere];
+    assert!(node.visible && node.pos == t.centre && (node.scale[0] - corner).abs() < 1e-4);
+    let (obj_box, sphere_box) = (ed.obj_box(goal), ed.graph.bounds(sphere));
+    assert!(sphere_box.max[0] - sphere_box.min[0] > obj_box.max[0] - obj_box.min[0] + 10.0);
+    // A click on the sphere, beside the block, selects what is behind it: nothing here, or the ground
+    let none = Mods::default();
+    let beside = px(&ed, [t.centre[0], t.centre[1] + corner - 3.0, t.centre[2]]);
+    click(&mut ed, beside, none);
+    assert!(!ed.selection.contains(&goal), "{:?}", ed.selection);
+    let on = px(&ed, t.centre);
+    click(&mut ed, on, none);
+    assert_eq!(ed.selection, [goal]);
+
+    // It follows a move and a scale
+    ed.apply_transform(Some([20.0, 0.0, 0.0]), None, 0, None);
+    assert_eq!(ed.graph[ed.nodes[goal].exit.unwrap()].pos, [400.0, 120.0, -60.0]);
+    ed.apply_transform(None, None, 0, Some(2.0));
+    let goal = ed.selection[0];
+    let big = ed.exit_trigger(goal).unwrap().radius.unwrap();
+    assert!((big - 2.0 * corner).abs() < 1e-3 && (ed.graph[ed.nodes[goal].exit.unwrap()].scale[1] - big).abs() < 1e-9);
+
+    // The layer hides the sphere and keeps the platform. The setting is remembered.
+    ed.set_layer(LAYER, false);
+    let n = &ed.nodes[goal];
+    assert!(!ed.graph[n.exit.unwrap()].visible && ed.graph[n.obj].visible && ed.selection == [goal]);
+    assert_eq!(ed.settings.as_ref().unwrap().value("exits").as_deref(), Some("off"));
+    ed.set_layer(LAYER, true);
+    assert!(ed.graph[ed.nodes[goal].exit.unwrap()].visible);
+    assert_eq!(ed.settings.as_ref().unwrap().value("exits").as_deref(), Some("on"));
+    // Hiding the platforms hides their spheres too
+    ed.set_layer("platform", false);
+    assert!(!ed.graph[ed.nodes[goal].exit.unwrap()].visible);
+    ed.set_layer("platform", true);
+
+    // The loading-zone SetExit before the position: the game never measures the platform
+    let node = ed.entities[goal].node;
+    ed.edit(|ed| {
+        let exit = ed.doc.first(node, "SetExit").unwrap();
+        ed.doc.detach(exit);
+        ed.doc.insert(node, 0, exit);
+    });
+    let goal = ent(&ed, |e| e.label == "goal").unwrap();
+    let t = ed.exit_trigger(goal).unwrap();
+    assert_eq!((t.radius, t.zero.clone()), (Some(0.0), Some(Zero::Before("The loading-zone SetExit"))));
+    assert!(t.dead() && !ed.graph[ed.nodes[goal].exit.unwrap()].visible);
+    assert!(has_check(&mut ed, Some("err"), "can never fire"));
+    assert!(ed.issues_for(goal).iter().any(|l| l.0 == "err" && l.1.contains("can never fire")));
+    ed.undo();
+    let goal = ent(&ed, |e| e.label == "goal").unwrap();
+    assert!(ed.graph[ed.nodes[goal].exit.unwrap()].visible && !has_check(&mut ed, None, "can never fire"));
+    // Exit type 0 is no exit to the game
+    let exit = ed.doc.first(ed.entities[goal].node, "SetExit").unwrap();
+    ed.set_attr(exit, "behavior", "0");
+    assert!(ed.exits().is_empty() && ed.nodes.iter().all(|n| n.exit.is_none()));
+    let _ = std::fs::remove_dir_all(&home);
+}
