@@ -223,7 +223,8 @@ mod tests {
         }
         let hit = c.segment_hit(&[([-10.0, 0.0, 0.0], [10.0, 0.0, 0.0]), ([500.0, 0.0, 0.0], [600.0, 0.0, 0.0])], o, d, 4.0);
         let (dist, w) = hit.unwrap();
-        assert!(vec::norm(w) < 1e-6 && (dist - vec::norm(c.pos)).abs() < 1e-6);
+        // The middle is found in pixels: perspective moves it a little along the segment
+        assert!(vec::norm(w) < 0.5 && (dist - vec::norm(c.pos)).abs() < 0.5);
     }
 
     #[test]

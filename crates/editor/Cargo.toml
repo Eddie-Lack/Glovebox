@@ -8,3 +8,7 @@ edition.workspace = true
 glovebox-core = { path = "../core" }
 serde.workspace = true
 serde_json.workspace = true
+
+[dev-dependencies]
+# The oracle dumps hold doubles that must read back bit for bit
+serde_json = { workspace = true, features = ["float_roundtrip"] }

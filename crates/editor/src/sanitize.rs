@@ -343,6 +343,23 @@ fn attributes(doc: &Doc, node: NodeId, scope: &Scope) -> Vec<(String, String)> {
         .collect()
 }
 
+/// The first element or attribute name whose prefix no element around it declares. An XML reader with
+/// namespaces refuses such a file.
+fn unbound_prefix(doc: &Doc, node: NodeId, outer: &Scope) -> Option<String> {
+    let scope = scope_of(doc, node, outer);
+    let bad = |name: &str| match name.split_once(':') {
+        Some((p, _)) => p != "xmlns" && uri_of(&scope, p).is_none(),
+        None => false,
+    };
+    if bad(doc.tag(node)) {
+        return Some(doc.tag(node).to_string());
+    }
+    if let Some((k, _)) = doc.attrs(node).iter().find(|(k, _)| bad(k)) {
+        return Some(k.clone());
+    }
+    doc.children(node).iter().find_map(|c| unbound_prefix(doc, *c, &scope))
+}
+
 fn clip(s: &str, n: usize) -> String {
     s.chars().take(n).collect()
 }
@@ -518,6 +535,9 @@ pub fn sanitize_level_xml(text: &str, model: &FormatModel, source: &str) -> Sani
         Err(e) => return fail(format!("Not well-formed XML: {}", clip(e.0.lines().next().unwrap_or(""), 200))),
     };
     let root = src.root();
+    if let Some(name) = unbound_prefix(&src, root, &Scope::new()) {
+        return fail(format!("Not well-formed XML: the namespace prefix of {} is not defined", clip(&name, 60)));
+    }
     let scope = scope_of(&src, root, &Scope::new());
     if src.tag(root) != "Level" || uri_of(&scope, "").is_some() {
         return fail("The root element must be <Level> (libgarib level XML).".into());
@@ -603,7 +623,13 @@ mod tests {
     fn comments_and_the_missing_end() {
         let r = run("<?xml version='1.0'?><!-- a --><Level odd=\"1\"><!-- b --><PlatNoClip/><?pi?></Level>");
         assert!(!r.ok);
-        assert_eq!(r.errors, ["Level \u{203a} PlatNoClip[1]: <PlatNoClip> belongs inside <NullPlatform> or <Platform>."]);
+        assert_eq!(
+            r.errors,
+            [
+                "Level \u{203a} PlatNoClip[1]: <PlatNoClip> belongs inside <NullPlatform> or <Platform>.",
+                "The level has no commands."
+            ]
+        );
         let r = run("<Level odd=\"1\"><!-- b --><Platform object_id=\"0x1\" name=\"a\"/><?pi?></Level>");
         assert!(r.ok, "{:?}", r.errors);
         assert_eq!(

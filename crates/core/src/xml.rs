@@ -445,12 +445,25 @@ impl<'a> Parser<'a> {
             None => self.err("the XML ends inside a comment or an instruction"),
         }
     }
+    /// Skips a comment. XML does not allow "--" inside one, and lxml refuses it.
+    fn skip_comment(&mut self) -> Result<(), XmlError> {
+        self.i += 4;
+        match self.src[self.i..].find("--") {
+            Some(p) if self.src[self.i + p..].starts_with("-->") => {
+                self.i += p + 3;
+                Ok(())
+            }
+            Some(_) => self.err("a comment may not contain --"),
+            None => self.err("the XML ends inside a comment or an instruction"),
+        }
+    }
+
     /// Skips whitespace, comments and processing instructions between elements.
     fn skip_misc(&mut self) -> Result<(), XmlError> {
         loop {
             self.skip_ws();
             if self.starts("<!--") {
-                self.skip_past("-->")?;
+                self.skip_comment()?;
             } else if self.starts("<?") {
                 self.skip_past("?>")?;
             } else {
@@ -586,8 +599,11 @@ impl<'a> Parser<'a> {
                 return self.err("the XML ends inside an element");
             }
             if self.starts("<!--") || self.starts("<?") {
-                let end = if self.starts("<?") { "?>" } else { "-->" };
-                self.skip_past(end)?;
+                if self.starts("<?") {
+                    self.skip_past("?>")?;
+                } else {
+                    self.skip_comment()?;
+                }
                 if let Some(pieces) = self.pieces.as_mut() {
                     pieces[id.0 as usize].push(Piece::Dropped);
                 }
@@ -683,6 +699,9 @@ mod tests {
         assert!(Doc::parse("<a><![CDATA[x]]></a>").is_err());
         assert!(Doc::parse("<a></b>").is_err());
         assert!(Doc::parse("<a/><b/>").is_err());
+        assert!(Doc::parse("<a><!-- b -- c --></a>").is_err());
+        assert!(Doc::parse("<!-- b ---><a/>").is_err());
+        assert!(Doc::parse("<!----><a><!-- - --></a>").is_ok());
     }
 
     #[test]

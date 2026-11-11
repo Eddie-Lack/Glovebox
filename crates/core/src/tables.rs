@@ -40,3 +40,10 @@ pub fn mod_info() -> &'static Value {
 }
 
 pub static MOD_BIN: &[u8] = include_bytes!("../../../mod/mod.bin");
+
+/// The game's bank numbers, from the switch statements of LoadObjectBank and LoadTextureBank in the decompilation:
+/// `{"obj": {name: number}, "tex": {name: number}}`. LEVELEND_TEX_BANK is 1 and 14; the table has 1.
+pub fn bank_numbers() -> &'static Value {
+    static T: OnceLock<Value> = OnceLock::new();
+    table(&T, include_str!("../data/bank_numbers.json"))
+}

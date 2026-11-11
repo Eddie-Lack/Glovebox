@@ -57,7 +57,7 @@ fn json_string(s: &str, out: &mut String) {
             '\t' => out.push_str("\\t"),
             '\u{8}' => out.push_str("\\b"),
             '\u{c}' => out.push_str("\\f"),
-            c if (c as u32) < 0x20 || (c as u32) > 0x7E && (c as u32) != 0x7F => {
+            c if (c as u32) < 0x20 || (c as u32) > 0x7E => {
                 let mut buf = [0u16; 2];
                 for u in c.encode_utf16(&mut buf) {
                     out.push_str(&format!("\\u{:04x}", u));
