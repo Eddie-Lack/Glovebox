@@ -36,9 +36,16 @@ pub struct State {
     kit_loading: HashSet<String>,
     /// When to draw a kit item again after a change to its settings.
     kit_due: HashMap<String, f64>,
+    /// The tab drawn in the last frame the palette was shown. None right after it opens.
+    pub shown_tab: Option<usize>,
 }
 
 impl State {
+    /// The settings a kit item's picture was last asked with, and whether it has a picture.
+    pub fn kit_picture(&self, item: &str) -> Option<(String, bool)> {
+        self.kit_images.get(item).map(|x| (x.0.clone(), x.1.is_some()))
+    }
+
     /// The number of model pictures drawn so far.
     pub fn thumbs_done(&self) -> usize {
         self.thumbs.values().filter(|t| t.is_some()).count()
@@ -201,6 +208,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         });
     });
     muted(ui, "New objects appear where the view’s centre meets the ground.");
+    px.w.palette.shown_tab = Some(tab);
     let acts = px.acts;
     w.acts.extend(acts);
     work(w, &ctx);
@@ -379,8 +387,19 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
             });
             r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Bank"));
             let hint = format!("Search {} models by name, ID or bank…", thousands(catalog.len()));
+            if !st.query.is_empty() {
+                let clear = style::mini(ui, "×", "Clear");
+                clear.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Clear search"));
+                if clear.clicked() {
+                    st.query.clear();
+                }
+            }
             let r = ui.add(egui::TextEdit::singleline(&mut st.query).hint_text(hint).desired_width(f32::INFINITY));
             style::name(&r, "Search models");
+            // The tab opens ready for typing
+            if st.shown_tab != Some(2) {
+                r.request_focus();
+            }
         });
     });
     let term = st.query.to_lowercase();
@@ -471,13 +490,13 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
                 pal.kit_loading.insert(id.clone());
                 let (backend, id2, vals2, key2, ctx) = (px.w.ed.backend.clone(), id.clone(), Value::Object(vals.clone()), key.clone(), ui.ctx().clone());
                 px.w.side_jobs.run(
-                    move || backend.kit_preview(&id2, &vals2).ok().and_then(|png| decode_png(&png)).map(|img| (id2, key2, img)),
-                    move |w: &mut Window, res| {
-                        if let Some((id, key, img)) = res {
-                            let t = ctx.load_texture(format!("kit {id}"), img, egui::TextureOptions::LINEAR);
-                            w.palette.kit_loading.remove(&id);
-                            w.palette.kit_images.insert(id, (key, Some(t)));
-                        }
+                    move || (backend.kit_preview(&id2, &vals2).ok().and_then(|png| decode_png(&png)), id2, key2),
+                    move |w: &mut Window, (img, id, key)| {
+                        w.palette.kit_loading.remove(&id);
+                        // A value the item can't be made with keeps the old picture. The next change draws again.
+                        let old = w.palette.kit_images.get(&id).and_then(|x| x.1.clone());
+                        let t = img.map(|img| ctx.load_texture(format!("kit {id}"), img, egui::TextureOptions::LINEAR)).or(old);
+                        w.palette.kit_images.insert(id, (key, t));
                     },
                 );
             } else {

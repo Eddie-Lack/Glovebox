@@ -354,6 +354,7 @@ impl Window {
 
     pub fn toggle_palette(&mut self, on: Option<bool>) {
         self.palette_open = on.unwrap_or(!self.palette_open);
+        self.palette.shown_tab = None;
         if self.palette_open {
             self.palette.side_tab = 1;
         }

@@ -77,10 +77,19 @@ fn row(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui)) {
 }
 
 fn pick(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize, items: &[&str]) -> bool {
+    pick_with_tips(ui, id, label, current, items, &[])
+}
+
+/// `pick` with a tooltip for each entry.
+fn pick_with_tips(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize, items: &[&str], tips: &[&str]) -> bool {
     let mut changed = false;
     let r = egui::ComboBox::from_id_salt(id).selected_text(items.get(*current).copied().unwrap_or("")).width(ui.available_width().clamp(60.0, 190.0)).truncate().show_ui(ui, |ui| {
         for (i, text) in items.iter().enumerate() {
-            if ui.selectable_label(*current == i, *text).clicked() {
+            let mut r = ui.selectable_label(*current == i, *text);
+            if let Some(tip) = tips.get(i) {
+                r = r.on_hover_text(*tip);
+            }
+            if r.clicked() {
                 *current = i;
                 changed = true;
             }
@@ -246,7 +255,7 @@ fn zone_box(w: &mut Window, ui: &mut egui::Ui) {
     let st = &mut w.path_panel;
     card(ui, "Camera zone over the path", None, |_| {}, |ui| {
         row(ui, "camera", |ui| {
-            pick(ui, "zone kind", "camera", &mut st.zn_kind, &CAM_PRESETS.map(|x| x.1));
+            pick_with_tips(ui, "zone kind", "camera", &mut st.zn_kind, &CAM_PRESETS.map(|x| x.1), &CAM_PRESETS.map(|x| x.2));
         });
         row(ui, "from, to %", |ui| two(ui, &mut st.zn_span, "zone"));
         row(ui, "boxes up to", |ui| text(ui, &mut st.zn_split, "boxes up to", 60.0));

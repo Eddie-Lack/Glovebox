@@ -24,8 +24,18 @@ enum Row {
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let Window { ed, outliner: st, acts, .. } = w;
-    let r = ui.add(egui::TextEdit::singleline(&mut ed.filter).hint_text("Filter entities…").desired_width(f32::INFINITY));
-    style::name(&r, "Filter entities");
+    ui.horizontal(|ui| {
+        let room = if ed.filter.is_empty() { 0.0 } else { 26.0 };
+        let r = ui.add(egui::TextEdit::singleline(&mut ed.filter).hint_text("Filter entities…").desired_width(ui.available_width() - room - 8.0));
+        style::name(&r, "Filter entities");
+        if !ed.filter.is_empty() {
+            let clear = style::mini(ui, "×", "Clear");
+            clear.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Clear filter"));
+            if clear.clicked() {
+                ed.filter.clear();
+            }
+        }
+    });
     ui.checkbox(&mut ed.include_land, RichText::new("box select includes landscape").color(style::MUTED));
     if !ed.has_level {
         return;

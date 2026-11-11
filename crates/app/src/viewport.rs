@@ -251,7 +251,8 @@ fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
 /// Moves the fly camera by the keys held.
 fn fly_step(w: &mut Window, ui: &egui::Ui) {
     let view = &mut w.view;
-    if !view.fly.on {
+    // Keys typed into a text box or at a dialog are not the camera's
+    if !view.fly.on || w.dialog.is_some() || ui.ctx().egui_wants_keyboard_input() {
         return;
     }
     let (shift, dt) = ui.input(|i| (i.modifiers.shift && !i.modifiers.ctrl && !i.modifiers.command, f64::from(i.unstable_dt)));
