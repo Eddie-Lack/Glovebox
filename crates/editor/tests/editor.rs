@@ -647,7 +647,8 @@ fn exit_triggers_on_the_fixture() {
     assert!(sphere_box.max[0] - sphere_box.min[0] > obj_box.max[0] - obj_box.min[0] + 10.0);
     // A click on the sphere, beside the block, selects what is behind it: nothing here, or the ground
     let none = Mods::default();
-    let beside = px(&ed, [t.centre[0], t.centre[1] + corner - 3.0, t.centre[2]]);
+    let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
+    let beside = px(&ed, vec::add(t.centre, vec::scale(across, (corner - 3.0) / vec::norm(across))));
     click(&mut ed, beside, none);
     assert!(!ed.selection.contains(&goal), "{:?}", ed.selection);
     let on = px(&ed, t.centre);

@@ -1718,14 +1718,13 @@ fn exit_triggers() {
     let sphere = ed.nodes[goal].exit.unwrap();
     let shown = ed.graph[sphere].visible && r > 20.0;
     t.detail("an exit platform has a sphere of the game's radius", shown, format!("{r}"));
-    // A garib inside the sphere, above the block
-    let inside = [trigger.centre[0], trigger.centre[1] + r - 6.0, trigger.centre[2]];
+    // A garib inside the sphere, on one side of the block. A spot on the sphere on the other side.
+    let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
+    let side = vec::scale(across, (r - 4.0) / vec::norm(across));
+    let inside = vec::sub(trigger.centre, side);
     ed.add_garib(inside, "garib");
     ed.select(None, false);
     t.settle();
-    // A spot on the sphere that is beside the block and the garib
-    let across = vec::cross(t.ed().camera.forward(), [0.0, 1.0, 0.0]);
-    let side = vec::scale(across, (r - 4.0) / vec::norm(across));
     let spot = px(t.ed(), vec::add(trigger.centre, side));
     let pixel = |t: &mut T| {
         let at = t.at(spot);
@@ -1871,6 +1870,7 @@ fn the_rom() {
     t.detail("the level list has 48 levels", scenes.len() == 48, scenes.len().to_string());
     t.shot("40-rom-first-level");
     let mut bad = Vec::new();
+    let (mut fired, mut unknown) = (Vec::new(), Vec::new());
     for (sid, name) in &scenes {
         let t0 = Instant::now();
         t.click("Level");
@@ -1890,7 +1890,37 @@ fn the_rom() {
         if matches!(sid.as_str(), "0a" | "1b" | "3c") {
             t.shot(&format!("41-rom-{sid}"));
         }
+        // The exits of the level as the game sizes them. The check on them must stay silent on a shipped level.
+        let ed = t.ed();
+        let list = ed.exits();
+        for &i in &list {
+            let x = ed.exit_trigger(i).unwrap();
+            let oid = ed.entities[i].object_id.clone().unwrap_or_default();
+            let model = ed.catalog.get(&oid).map(|c| c.name.clone()).unwrap_or_else(|| ed.entities[i].tag.clone());
+            let radius = x.radius.map_or("unknown".to_string(), |r| format!("{r:.1}"));
+            println!("      exit  {sid} {name} | {model} | type {} | radius {radius} | {:?}{}", x.exit_type, x.rule.who, if x.dead() { " | can never fire" } else { "" });
+            if x.radius.is_none() {
+                unknown.push(format!("{sid} {oid}"));
+            }
+        }
+        fired.extend(ed.violations.iter().filter(|v| v.key.ends_with(":exit")).map(|v| format!("{sid}: {}", v.msg)));
+        // A picture of a hub's world entrance and of the ends of Atlantis 3 and Carnival 1
+        let shown = list.iter().copied().find(|&i| sid != "00" || (6..=11).contains(&ed.exit_trigger(i).unwrap().exit_type));
+        if let (true, Some(i)) = (matches!(sid.as_str(), "00" | "0c" | "0f"), shown) {
+            let x = ed.exit_trigger(i).unwrap();
+            let r = x.radius.unwrap_or(0.0).max(40.0);
+            let away = vec::sub(ed.camera.pos, ed.orbit.target);
+            ed.orbit.target = x.centre;
+            ed.camera.pos = vec::add(x.centre, vec::scale(away, 4.5 * r / vec::norm(away)));
+            ed.camera.look_at(x.centre);
+            ed.select(Some(i), false);
+            t.w().view.dirty = true;
+            t.shot(&format!("exit-{sid}"));
+            t.ed().select(None, false);
+        }
     }
+    t.detail("the exit check is silent on all 48 shipped levels", fired.is_empty(), format!("{fired:?}"));
+    t.detail("the editor can measure every shipped exit", unknown.is_empty(), format!("{unknown:?}"));
     t.detail("all 48 levels open through the level list and say No new problems", bad.is_empty(), format!("{bad:?}"));
 
     // Build ROM for one level, through the button
