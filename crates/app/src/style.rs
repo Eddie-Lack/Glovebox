@@ -299,5 +299,5 @@ pub fn name(r: &Response, label: &str) {
 
 /// Python's float(): a number, or None.
 pub fn parse_f64(s: &str) -> Option<f64> {
-    glovebox_core::pyfmt::py_float(s.trim()).ok()
+    glovebox_core::pyfmt::parse_float(s.trim())
 }

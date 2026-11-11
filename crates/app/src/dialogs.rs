@@ -60,6 +60,6 @@ impl FileDialogs for Scripted {
     fn save_file(&mut self, title: &str, _folder: &Path, name: &str) -> Option<PathBuf> {
         let mut s = self.0.borrow_mut();
         s.asked.push(format!("{title}: {name}"));
-        s.save.pop_front()
+        s.save.pop_front().map(|p| if p.is_dir() { p.join(name) } else { p })
     }
 }
