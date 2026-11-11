@@ -1,4 +1,4 @@
-//! Import model against the Python converter (`tools/custom_model.py` with libgarib's tools).
+//! Import model against the Python converter (the former Python app's `custom_model.py` with libgarib's tools).
 //!
 //! The reference sets are made by `convert/make.py` in the folder `GLOVEBOX_ORACLE` names. Each has the glTF file,
 //! its name and scale, and the Python converter's `meta.json`, object banks and texture bank.
@@ -289,7 +289,7 @@ fn storage_matches_python() {
     let _ = std::fs::remove_dir_all(&home);
 }
 
-/// `reskin` against `core.reskin`: the same set, new ID, bank, texture bank and `meta.json`.
+/// `reskin` against the former Python back end's: the same set, new ID, bank, texture bank and `meta.json`.
 #[test]
 fn reskin_matches_python() {
     let Some(dir) = oracle("reskin_matches_python") else { return };

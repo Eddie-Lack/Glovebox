@@ -1185,7 +1185,7 @@ pub fn model(
     }
 }
 
-/// The ids of the textures an object's meshes and sprites use (`core.object_texture_ids`). `textures` gives the
+/// The ids of the textures an object's meshes and sprites use. `textures` gives the
 /// size of a texture that some texture bank of the game holds, or none.
 ///
 /// The set is empty when libgarib does not export the object with those textures (see `object_model`): the

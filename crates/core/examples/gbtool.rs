@@ -5,6 +5,7 @@
 //!     gbtool hwcheck ROM                          check a built ROM against the console's rules
 //!
 //! OUT gets the built ROM (or the BPS patch with --bps).
+//! `build` reads imported models from the user folder that the environment variable `GLOVEBOX_HOME` names.
 
 use glovebox_core::backend::{Backend, GameBackend};
 use glovebox_core::build::BuildRequest;

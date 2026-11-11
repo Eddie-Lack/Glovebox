@@ -1,5 +1,5 @@
-//! The editor's kit: props made by code, some with settings such as a gravestone's words. A port of tools/kit.py and
-//! the model files in kit/.
+//! The editor's kit: props made by code, some with settings such as a gravestone's words. A port of the former
+//! Python kit (`kit.py` and its model files).
 //!
 //! `items` lists the kit, `clean` checks an item's settings, `build` makes the model as a `Soup`, `Soup::glb` writes
 //! the binary glTF that goes through the same converter as an imported model, and `preview_png` draws the small

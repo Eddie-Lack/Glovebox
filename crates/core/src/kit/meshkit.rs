@@ -1,5 +1,5 @@
 //! The kit's mesh builder: a triangle soup with textures, the shapes the models are made of, noise textures, and
-//! the binary glTF writer. A port of kit/meshkit.py.
+//! the binary glTF writer. A port of the former Python kit's meshkit.py.
 //!
 //! Units are game units and y is up. The numbers must equal the Python kit's, so every sum is written in the same
 //! order. numpy's products of 3 by 3 matrices and its dot products use fused multiply-add on the machine that made

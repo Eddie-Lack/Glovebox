@@ -1,6 +1,6 @@
 //! The transform gizmo: arrows to move, rings to rotate and handles to scale an invisible pivot.
 //!
-//! A port of `desktop/gizmo.py`. It only changes the pivot (`pos`, `quat`, `scale`). The editor works out the edit
+//! A port of the former Python editor's `gizmo.py`. It only changes the pivot (`pos`, `quat`, `scale`). The editor works out the edit
 //! from the pivot's change since the drag began. Handles are picked on screen, within a few pixels. `node` builds
 //! the scene nodes the renderer draws on top of everything, at a constant size on screen.
 

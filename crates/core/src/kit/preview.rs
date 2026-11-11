@@ -1,5 +1,5 @@
 //! The small picture of a kit model for the kit list: flat shaded triangles in painter's order, coloured by the
-//! texture at each triangle's middle. A port of kit/preview.py.
+//! texture at each triangle's middle. A port of the former Python kit's preview.py.
 
 use super::image::Image;
 use super::meshkit::{cross, len, mat_mul, rows_mat_t, sub, vec_mat_t, Soup};

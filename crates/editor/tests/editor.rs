@@ -1,4 +1,4 @@
-//! The editor on the fixture, without a ROM: the checks of `tools/desktop_test.py` that need no widgets, under
+//! The editor on the fixture, without a ROM: the checks of the former Python editor's test that need no widgets, under
 //! the same names.
 
 use glovebox_core::backend::Backend;
@@ -58,7 +58,7 @@ fn undo_to(ed: &mut Editor, mark: usize) {
 }
 
 #[test]
-fn desktop_test_on_the_fixture() {
+fn editor_on_the_fixture() {
     let home = std::env::temp_dir().join(format!("glovebox-editor-test-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&home);
     let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());

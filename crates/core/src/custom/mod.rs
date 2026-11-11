@@ -1,6 +1,7 @@
 //! Import model: a player's glTF file becomes Glover objects, a texture bank and the facts in `meta.json`.
 //!
-//! This is `tools/custom_model.py` and the parts of libgarib it ran, with the storage of `core.py`
+//! It does what the former Python converter (`custom_model.py`) and the parts of libgarib it ran did, with the
+//! storage of the former Python back end
 //! (`import_custom`, `custom_sets`, `custom_catalog`, `reskin`). For the same file, name and scale it gives the
 //! same pieces, IDs and bank bytes as the Python app. See docs/technical.md, "Imported models".
 //!
@@ -604,7 +605,7 @@ pub struct CatalogEntry {
     pub reskin_from: Option<String>,
 }
 
-/// An entry for every piece of every imported model: what `core.custom_catalog` returns, without the preview's
+/// An entry for every piece of every imported model: the catalog's entries, without the preview's
 /// URL. An ID that two sets hold keeps its first place and takes the later set's entry, as a Python dict does.
 pub fn custom_catalog(home: &Path) -> Vec<CatalogEntry> {
     let mut out: Vec<CatalogEntry> = Vec::new();
@@ -727,9 +728,9 @@ pub struct Reskin<'a> {
     pub world: &'a str,
     /// The model's single-object bank
     pub bank: &'a [u8],
-    /// The IDs of the textures the model uses (`core.object_texture_ids`), as `0x%08X`
+    /// The IDs of the textures the model uses (`object_texture_ids` of the former Python back end), as `0x%08X`
     pub textures: &'a [String],
-    /// The textures to pick from (`core.reskin_pool` for the sorted worlds), as `0x%08X`
+    /// The textures to pick from (`reskin_pool` of the former Python back end for the sorted worlds), as `0x%08X`
     pub pool: &'a [String],
     /// The IDs of the game's own objects
     pub taken_ids: &'a HashSet<u32>,
@@ -750,7 +751,7 @@ fn count(data: &[u8], word: &[u8; 4]) -> usize {
 
 /// A copy of a retail model with each texture swapped for one from the chosen worlds, kept as a custom model.
 /// Returns the set. `record` gives a texture's record from the game's banks, padded as `texbank::records` pads it.
-/// This is `core.reskin`: the same model, worlds and seed give the same set and the same new ID.
+/// This is `reskin` of the former Python back end: the same model, worlds and seed give the same set and the same new ID.
 pub fn reskin(
     home: &Path,
     model: &Reskin,

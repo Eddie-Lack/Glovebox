@@ -1,5 +1,5 @@
-//! BPS patches (byuu's format, as used by Floating IPS, beat and RomPatcher.js). This is `tools/bps.py`, with the
-//! same patch bytes.
+//! BPS patches (byuu's format, as used by Floating IPS, beat and RomPatcher.js). The encoder writes
+//! the patch bytes the former Python encoder wrote.
 //!
 //! The encoder walks the target. SourceRead covers bytes unchanged at the same offset. TargetCopy covers runs of
 //! one fill byte. SourceCopy finds data that moved (relocated banks) through an index of the source. Everything
@@ -15,7 +15,7 @@ const STRIDE: usize = 8;
 /// The largest target `apply` makes unless told otherwise.
 pub const MAX_TARGET: usize = 64 << 20;
 
-/// Why a patch can't be applied. The texts are those of `tools/bps.py`.
+/// Why a patch can't be applied. The texts are those of the former Python decoder.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PatchError(pub String);
 

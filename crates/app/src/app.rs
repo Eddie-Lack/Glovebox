@@ -1,6 +1,6 @@
 //! The application: the setup screen or the editor's window, and what the window does that is not one panel's
 //! own: starting, opening levels, the editor's events, builds, Test level and the keyboard.
-//! A port of `desktop/window.py`.
+//! A port of the former Python editor's `window.py`.
 
 use crate::dialogs::{Dialog, FileDialogs};
 use crate::jobs::Jobs;

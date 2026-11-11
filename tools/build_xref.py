@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Build web/decomp.json: a cross-reference between libgarib's level format and the gloveworld decompilation.
+"""Writes crates/core/data/decomp.json: the level format joined with the gloveworld decompilation.
 
-For every level command libgarib knows (an XML element such as <PlatSetInitialPos>), this records:
-  - the opcode and the ksy type it comes from (libgarib/formats/glover.lev.ksy)
+    python3 tools/build_xref.py --gloveworld ../gloveworld
+
+For every level command of the format (an XML element such as <PlatSetInitialPos>), this records:
+  - the opcode and the type it comes from in formats/glover.lev.ksy (libgarib's description of the level file)
   - its field list and types
   - the decomp's name for the opcode (enum Token in gloveworld/include/enums.h)
   - where the game's parser handles it (file, line, function, and the C snippet)
 It also exports the decomp enums the editor uses to label numeric fields (enemy types, pickups,
 puzzle conditions/actions, enemy instructions, level IDs).
 
-    python3 tools/build_xref.py --gloveworld ../gloveworld --libgarib vendor/libgarib --out web/decomp.json
+The editor compiles the JSON in. Run the tool after a change to gloveworld's names or to the ksy file, and commit
+the result. The file records gloveworld's commit. It needs PyYAML. gloveworld does not need to be built.
 """
 import argparse, json, os, re, sys
 
@@ -78,14 +81,17 @@ def index_sources(src_dir):
     return hits
 
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gloveworld", required=True)
-    ap.add_argument("--libgarib", required=True)
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--ksy", default=os.path.join(ROOT, "formats", "glover.lev.ksy"))
+    ap.add_argument("--out", default=os.path.join(ROOT, "crates", "core", "data", "decomp.json"))
     args = ap.parse_args()
 
-    ksy = yaml.safe_load(open(os.path.join(args.libgarib, "formats", "glover.lev.ksy")))
+    ksy = yaml.safe_load(open(args.ksy))
     enums = parse_enums(os.path.join(args.gloveworld, "include", "enums.h"))
     tokens_by_val = {v: k for k, v in enums["Token"].items()}
     handlers = index_sources(os.path.join(args.gloveworld, "src"))

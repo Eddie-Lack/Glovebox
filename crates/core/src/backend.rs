@@ -1,6 +1,6 @@
 //! What the editor's window asks its back end for: the tables, the levels, the models and textures, plans and
-//! builds, and the author's imported models. `Backend` is the interface of `desktop/backend.py`'s `Backend` class.
-//! `GameBackend` answers from the player's ROM (`GameData`) and the user folder.
+//! builds, and the author's imported models. `Backend` has the methods of the former Python editor's `Backend`
+//! class. `GameBackend` answers from the player's ROM (`GameData`) and the user folder.
 //!
 //! The Python app named a model by a path and read its file with `fetch`. Here a model is named by a `ModelRef`,
 //! and `model` and `texture` give the model and the pixels.
@@ -206,7 +206,7 @@ impl GameBackend {
         imports::load_customs(&self.home)
     }
 
-    /// Converts a glTF model and returns the set's `meta.json` with its id as `set` (`core.import_custom`).
+    /// Converts a glTF model and returns the set's `meta.json` with its id as `set` (`import_custom` of the former Python back end).
     fn import(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {
         let taken_ids: HashSet<u32> = self.game.catalog().keys().copied().collect();
         let mut taken_textures: HashSet<u32> = HashSet::new();

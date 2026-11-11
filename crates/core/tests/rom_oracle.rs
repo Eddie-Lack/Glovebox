@@ -380,6 +380,8 @@ fn modded_roms_are_pythons() {
                 good += 1;
             }
             (Err(err), Some(want)) => {
+                // The Python patcher named its hardware check by its file, which is gone
+                let want = want.replace("(tools/hw_check.py)", "(hwcheck)");
                 assert_eq!(err.0, want, "{}", name);
                 bad += 1;
             }

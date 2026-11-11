@@ -1,5 +1,5 @@
 //! What is around the window: the options, the user folder with its marker, lock and log, the ROM copy, the
-//! graphics adapter and the self-test. A port of `app/launcher.py` without Python.
+//! graphics adapter and the self-test. It does what the former Python app's launcher did.
 //!
 //! The user folder holds `rom/glover.z64` (the checked copy of the player's ROM), `drafts/`, `custom/`,
 //! `settings.ini`, `test/` and `editor.log`. The app only uses a new or empty folder, or one it marked before

@@ -72,7 +72,7 @@ impl Primitive {
     }
 
     /// The normals the editor uses when the primitive has none: for each vertex, the normalised sum of the
-    /// cross products of its triangles (`desktop/gltf.py`, `vertex_normals`).
+    /// cross products of its triangles (`vertex_normals` in the former Python editor's `gltf.py`).
     pub fn computed_normals(&self) -> Vec<[f32; 3]> {
         let mut sum = vec![[0f32; 3]; self.positions.len()];
         for t in self.indices.chunks_exact(3) {
@@ -169,7 +169,7 @@ fn mul(a: &Mat4, b: &Mat4) -> Mat4 {
     m
 }
 
-/// The matrix of a translation, a quaternion and a scale (`desktop/vec.py`, `compose`).
+/// The matrix of a translation, a quaternion and a scale (`compose` in the former Python editor's `vec.py`).
 pub fn compose(pos: [f64; 3], q: [f64; 4], scale: [f64; 3]) -> Mat4 {
     let [x, y, z, w] = q;
     let (x2, y2, z2) = (x + x, y + y, z + z);
@@ -258,7 +258,7 @@ impl Model {
     }
 
     /// Each node's scale as the editor poses it. A node that does not inherit scale has its scale divided by the
-    /// scale of its parent's world matrix (`desktop/gltf.py`, `load`).
+    /// scale of its parent's world matrix (`load` in the former Python editor's `gltf.py`).
     pub fn posed_scales(&self) -> Vec<[f64; 3]> {
         let raw: Vec<[f64; 3]> = self.nodes.iter().map(|n| n.scale).collect();
         if self.nodes.iter().all(|n| n.inherit_scale || n.parent.is_none()) {

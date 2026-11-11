@@ -1,5 +1,5 @@
 //! The kit's creatures: shade, giant hand, cage, lantern, watching eye, pale face, rag-doll glove, hanging glove and
-//! gallows. A port of kit/stalker.py, watcher.py, effigy.py and glove_rope.py. Every random number is drawn in the
+//! gallows. A port of the former Python kit's stalker.py, watcher.py, effigy.py and glove_rope.py. Every random number is drawn in the
 //! same order as there.
 
 use super::image::{Image, Rgba};

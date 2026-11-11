@@ -1,4 +1,5 @@
-//! The editor's window on the fixture, without a ROM: a port of `tools/desktop_test.py` under the same check names.
+//! The editor's window on the fixture, without a ROM: a port of the former Python editor's test, under the same
+//! check names.
 //!
 //! The test drives the real window through `egui_kittest`: it clicks the widgets it finds by their labels, types
 //! into fields, presses the shortcut keys, and sends pointer events at pixel positions into the 3D view (picking,
@@ -370,7 +371,7 @@ fn tiny_glb() -> Vec<u8> {
 }
 
 #[test]
-fn desktop_test_on_the_fixture() {
+fn editor_on_the_fixture() {
     let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
     let mut t = T::new("fixture", Some(backend.clone()), [1500.0, 950.0]);
     let none = Modifiers::default();
@@ -1123,7 +1124,7 @@ fn desktop_test_on_the_fixture() {
     t.finish();
 }
 
-/// One click for each button the port of `desktop_test.py` did not click.
+/// One click for each button the former Python editor's test did not click.
 fn more_clicks(t: &mut T) {
     let none = Modifiers::default();
     // The toolbar's tools
@@ -1626,7 +1627,7 @@ fn the_fonts_have_the_symbols() {
     assert!(missing.is_empty(), "no glyph for {missing}");
 }
 
-/// The first-run screen: a wrong file is refused with the launcher's message.
+/// The first-run screen: a wrong file is refused with the first-run screen's message.
 #[test]
 fn setup_refuses_a_wrong_file() {
     let mut t = T::new("setup", None, [1280.0, 720.0]);

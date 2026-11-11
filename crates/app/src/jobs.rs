@@ -1,6 +1,6 @@
 //! Runs slow work (opening a level, ROM builds, model imports, model pictures) on worker threads. The result
 //! comes back to the window's thread as a closure, which the window runs at the start of a frame.
-//! A port of `desktop/jobs.py`.
+//! A port of the former Python editor's `jobs.py`.
 
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};

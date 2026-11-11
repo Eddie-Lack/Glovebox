@@ -1,5 +1,5 @@
-//! ROM, patch and level file builds: `core.assemble`, `core.build_levels`, `core.build_rom`, and `Backend.build` and
-//! `Backend.build_all` of `desktop/backend.py`. Errors are messages for the author.
+//! ROM, patch and level file builds: what `assemble`, `build_levels` and `build_rom` of the former Python back end
+//! and its `Backend.build` and `Backend.build_all` did. Errors are messages for the author.
 
 use crate::bps;
 use crate::gamedata::{parse_id, scene, GameData};

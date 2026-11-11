@@ -1,4 +1,4 @@
-//! The editor's dark look, close to the Qt style sheet of the Python app (`STYLE` in `desktop/window.py`), and the
+//! The editor's dark look, close to the Qt style sheet of the Python app (`STYLE` in its `window.py`), and the
 //! small widgets the panels share.
 
 use egui::{Color32, CornerRadius, FontId, Margin, Response, RichText, Stroke, Ui};

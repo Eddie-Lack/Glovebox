@@ -1,9 +1,9 @@
 //! The editor's state and every edit, without the widgets: loading a level, selection, the transform engine, undo,
 //! autosave, adding and removing things, the checks, imports and the memory budget, the path tool and building.
 //!
-//! A port of `desktop/editor.py`. Every edit is a change to the level XML with an undo snapshot. The entities and
-//! their scene nodes are then built again from the XML. The window draws this state and calls these methods.
-//!
+//! A port of the former Python editor's `editor.py`. Every edit is a change to the level XML with an undo snapshot.
+//! The entities and their scene nodes are then built again from the XML. The window draws this state and calls
+//! these methods.
 //! What replaces the Qt parts:
 //! - Signals are a queue of [`Event`]s. The window drains it each frame with [`Editor::drain_events`].
 //! - The two debounce timers (draft save, import plan) are deadlines. [`Editor::tick`] checks them. Without
@@ -50,7 +50,7 @@ pub const GITHUB: &str = "https://github.com/Eddie-Lack/gloveworld/blob/";
 // they overwrite the camera's matrices and the frame never finishes. Long before that the game slows down. The far
 // plane is FogConfiguration's near_clip (parse.c TOKEN_FOG; 1000 without one, game.c).
 pub const MATRICES: i64 = 256;
-// Measured in the emulator (tools/draw_load_check.py): the shipped hub 1 asks for 228 at its fountain, and a hub
+// Measured in the emulator: the shipped hub 1 asks for 228 at its fountain, and a hub
 // built with the editor lagged on a console at 206 to 228. The estimate was within 35 of the game's count in four
 // levels, and up to 63 over in hub 1.
 pub const LOAD_SLOW: i64 = 190;
@@ -58,7 +58,7 @@ pub const LOAD_STOP: i64 = 240;
 /// Glover, the ball, their shadows and footprints.
 pub const LOAD_BASE: i64 = 24;
 pub const LOAD_KINDS: [&str; 5] = ["land", "platform", "enemy", "pickup", "water"];
-// Measured in the emulator (tools/draw_load_check.py)
+// Measured in the emulator
 pub const LOAD_CAM_BACK: f64 = 130.0;
 pub const LOAD_CAM_UP: f64 = 50.0;
 

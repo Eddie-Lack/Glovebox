@@ -1,5 +1,5 @@
 //! Which banks an edited level needs for the models it imports, and the enlarged banks a build writes
-//! (`core.plan_imports`, `core.plan_runtime`, `core.build_import_banks`).
+//! (`plan_imports`, `plan_runtime` and `build_import_banks` of the former Python back end).
 //!
 //! Ids are text here, as the editor keeps them: `0x73DB3DE3`. A texture bank is named by its file name in noclip's
 //! data set (`HUB_TEX_BANK.tex.fla`), or `custom:<set>` for the texture bank of an imported model.
@@ -14,7 +14,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
-/// One piece of an imported model (an entry of `core.custom_catalog`).
+/// One piece of an imported model (an entry of `custom_catalog` of the former Python back end).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct CustomModel {
     /// The name the catalog shows: the model's name, with `2/3` after it when the model has several pieces
@@ -160,7 +160,7 @@ impl Plan {
     }
 }
 
-/// A texture bank's data, not compressed (`core.raw_bank`).
+/// A texture bank's data, not compressed (`raw_bank` of the former Python back end).
 fn raw_bank<'a>(gd: &'a GameData, customs: &'a Customs, bank: &str) -> Result<Cow<'a, [u8]>, String> {
     match bank.strip_prefix("custom:") {
         Some(set) => match customs.tex_banks.get(set) {
@@ -381,7 +381,7 @@ pub struct ImportBanks {
     pub tex_bytes: u64,
 }
 
-/// Builds the banks for the objects and textures to copy (`core.build_import_banks`): the target object bank with
+/// Builds the banks for the objects and textures to copy: the target object bank with
 /// each model's bank packed into it, and the target texture bank with the textures' records added.
 pub fn build_import_banks(
     gd: &GameData,

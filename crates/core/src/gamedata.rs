@@ -1,6 +1,6 @@
 //! The game's data, read from the player's ROM and kept in memory: the levels, the object and texture banks, the
-//! catalog of every model, and what each level has loaded. This is what `core.py` read from `data/` and `cache/`.
-//! Nothing here writes a file.
+//! catalog of every model, and what each level has loaded. The former Python app kept all this as files (`data/`
+//! and `cache/`). Nothing here writes a file.
 //!
 //! An object id or a texture id is a `u32`. As text it is `0x` and 8 upper-case hex digits (`hex`, `parse_id`).
 
@@ -194,7 +194,7 @@ pub struct GameData {
     rom: Rom,
     /// By name without an ending. Every bank the scene table names.
     obj: BTreeMap<String, ObjBank>,
-    /// Sorted by file name, as `core.ALL_TEX_BANKS`.
+    /// Sorted by file name, as `ALL_TEX_BANKS` of the former Python back end.
     tex: Vec<TexBankData>,
     /// The size of every texture of every bank. A later bank wins.
     all_sizes: Sizes,
@@ -344,7 +344,7 @@ impl GameData {
         level::disassemble(self.level_file(sid)?).map_err(|e| GameError(format!("level {sid}: {}", e.0)))
     }
 
-    /// A shipped level as XML text (`core.level_xml`).
+    /// A shipped level as XML text (`level_xml` of the former Python back end).
     pub fn level_xml(&self, sid: &str) -> Result<String, GameError> {
         Ok(self.level_doc(sid)?.pretty_no_newline())
     }
@@ -367,13 +367,13 @@ impl GameData {
         self.tex.iter().find(|b| b.file == file)
     }
 
-    /// The file names of every texture bank, sorted (`core.ALL_TEX_BANKS`).
+    /// The file names of every texture bank, sorted (`ALL_TEX_BANKS` of the former Python back end).
     pub fn all_texture_banks(&self) -> impl Iterator<Item = &str> {
         self.tex.iter().map(|b| b.file.as_str())
     }
 
     /// A bank's data, not compressed, by its file name in noclip's data set (`HUB_PART1.obj.fla`,
-    /// `HUB_TEX_BANK.tex.fla`). `core.raw_bank` without the `custom:` banks.
+    /// `HUB_TEX_BANK.tex.fla`). `raw_bank` of the former Python back end without the `custom:` banks.
     pub fn raw_bank(&self, file: &str) -> Result<&[u8], GameError> {
         if let Some(name) = file.strip_suffix(".tex.fla") {
             if let Some(b) = self.tex_bank(file) {
@@ -404,7 +404,7 @@ impl GameData {
         self.tex_bank(file).map_or(&NONE, |b| &b.ids)
     }
 
-    /// Texture ids from these worlds' texture banks that no other bank holds (`core.reskin_pool`). The same id can
+    /// Texture ids from these worlds' texture banks that no other bank holds. The same id can
     /// be a different picture in another world.
     pub fn reskin_pool(&self, worlds: &[&str]) -> Vec<u32> {
         let mut count: HashMap<u32, usize> = HashMap::new();
@@ -430,7 +430,7 @@ impl GameData {
     }
 
     /// The single-object banks of an object bank, by its name: each object's id, root mesh name and bank
-    /// (`core.split_bank`).
+    /// (`split_bank` of the former Python back end).
     pub fn split_bank(&self, name: &str) -> Result<&[Single], GameError> {
         Ok(&self.obj_bank(name)?.singles)
     }
@@ -440,7 +440,7 @@ impl GameData {
         b.by_id.get(&id).map(|i| &b.singles[*i])
     }
 
-    /// A catalog model's single-object bank (`core.model_bank` for the game's models).
+    /// A catalog model's single-object bank (`model_bank` of the former Python back end for the game's models).
     pub fn model_bank(&self, id: u32) -> Option<&[u8]> {
         let entry = self.catalog().get(&id)?;
         self.single(&entry.bank, id).map(|s| s.bytes.as_slice())
@@ -503,7 +503,7 @@ impl GameData {
         Ok(s.object_banks.iter().rev().find_map(|b| self.bank_model(s, stem(b), id, &sizes)))
     }
 
-    /// Every object a scene can draw, with its model (`core.model_index`).
+    /// Every object a scene can draw, with its model (`model_index` of the former Python back end).
     pub fn model_index(&self, sid: &str) -> Result<BTreeMap<u32, Arc<Model>>, GameError> {
         let s = scene(sid)?;
         let sizes = self.sizes_of(s);
@@ -521,7 +521,7 @@ impl GameData {
         Ok(index)
     }
 
-    /// A texture of a scene's texture banks. A later bank wins (`core.find_texture`).
+    /// A texture of a scene's texture banks. A later bank wins (`find_texture` of the former Python back end).
     pub fn texture(&self, sid: &str, id: u32) -> Result<Option<Image>, GameError> {
         let s = scene(sid)?;
         for file in s.texture_banks.iter().rev() {
@@ -541,7 +541,7 @@ impl GameData {
         }
     }
 
-    /// Every model of the game's banks, by object id (`core.catalog`). A model is listed with the first scene
+    /// Every model of the game's banks, by object id (`catalog` of the former Python back end). A model is listed with the first scene
     /// that loads its bank and can draw it.
     pub fn catalog(&self) -> &BTreeMap<u32, GameModel> {
         self.catalog.get_or_init(|| {
@@ -583,7 +583,7 @@ impl GameData {
     }
 
     /// The textures a catalog model uses, read from its model built with every texture bank
-    /// (`core.object_texture_ids` for the game's models). None for an object the catalog lacks.
+    /// (`object_texture_ids` of the former Python back end for the game's models). None for an object the catalog lacks.
     pub fn object_texture_ids(&self, id: u32) -> Option<Arc<BTreeSet<u32>>> {
         if let Some(ids) = self.object_textures.lock().unwrap_or_else(|e| e.into_inner()).get(&id) {
             return Some(ids.clone());
@@ -625,7 +625,7 @@ impl GameData {
         Ok(used.iter().copied().filter(have).collect())
     }
 
-    /// For each enemy type, the shortest script a shipped level gives it, as `prepare.py` wrote
+    /// For each enemy type, the shortest script a shipped level gives it, as the former Python app's `prepare.py` wrote
     /// `enemy_templates.json`. The types are in the order the levels first use them.
     pub fn enemy_templates(&self) -> &[EnemyTemplate] {
         const CUTSCENES: [&str; 5] = ["2b", "2c", "2d", "2e", "2f"];

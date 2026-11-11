@@ -4,63 +4,123 @@ _Back to the [README](../README.md)_
 
 How the editor is put together, what the game does with a level, and the rules a built ROM has to keep.
 
-The editor is a desktop level editor for Glover (N64, NGVE): a Qt window with an OpenGL view (`desktop/`), which
-calls `core.py`'s functions in its own process. It ties three projects together:
+The editor is a desktop level editor for Glover (N64, NGVE). It is one native program written in Rust: an egui window
+with a wgpu view (`crates/app`) over the editor's state (`crates/editor`) and the back end (`crates/core`), all in one
+process. Nothing is installed, unpacked or run next to it, and it needs no Python. It builds on three projects:
 
 | Source | Used for |
 |---|---|
-| **noclip.website** (`vendor/noclip`, `src/Glover`) | The data set: `rom_split.py` + `file_offsets.yaml` split the ROM into the same `data/Glover/*.lev / *.obj.fla / *.tex.fla` files noclip serves. Its scene table supplies level names and object/texture banks, and its placement logic (actor rotation order, X/Z-swapped scale, enemy and powerup model tables) is ported to the editor. |
-| **libgarib** (`vendor/libgarib`) | Every format operation: `.lev` ↔ XML (`level-tool`, byte-identical round trip), object banks → glTF (`objbank-tool`), texture banks → PNG (`texbank-tool`), RelaxNG schema validation, and ROM patching/relocation plus the `copyskip`/`quickboot` QoL patches (`rom-asset-tool`). |
+| **libgarib** (naclomi) | The formats and the ROM tools. Its descriptions of the level file and of the retail ROM's layout are in `formats/`. Its algorithms are ported to Rust in `crates/core`: `.lev` ↔ XML (byte-identical round trip), the XML's rules, object banks and their models, texture banks, FLA2, repacking and relocating the ROM's data, and the `copyskip` and `quickboot` patches. |
+| **noclip.website** | The level list. Its scene table supplies level names and the object and texture banks of each level (`crates/core/data/scenes.json`), and its enemy and powerup model tables are `noclip_tables.json`. Its placement logic (actor rotation order, X/Z-swapped scale) was the editor's starting point. The editor names a bank by the file name noclip's ROM splitter gives it (`HUB_PART1.obj.fla`). |
 | **gloveworld** decompilation (`../gloveworld`) | Meaning: the decomp names each opcode (`enum Token`) and points to the C that parses it. It gives real names for 31 opcodes that libgarib only has placeholders for (e.g. `PlatMvspn0x58` = `TOKEN_SPINTOMOVE`). It also supplies enum names for enemy types, puzzle conditions/actions and enemy instructions, plus the checks: the game's own level-parser warnings and `Crash()` limits, re-run on your edits. |
 
+The editor was first written in Python, on libgarib's own tools. The last Python version is commit `06a7cdb`. The Rust
+code gives the same bytes ("Equal to the Python app", below).
 
 ## Where things are
 
 | Path | What |
 |---|---|
-| `desktop/` | The editor: a Qt window (PySide6) with an OpenGL 3.3 view (PyOpenGL). |
-| `core.py` | The back end's functions: level XML via libgarib, glTF and texture export, the model catalog, import planning, ROM and BPS builds, hardened XML parsing. |
-| `prepare.py` | One-off: splits the ROM with noclip's tool into `data/Glover`, and writes `scenes.json` (noclip's scene table and the banks the game's `LoadLevel` loads), `noclip_tables.json`, `enemy_templates.json` and `decomp.json` (via `tools/build_xref.py`). Applies every `patches/libgarib-*.patch`. |
-| `app/` | The Windows app: `launcher.py` (the user folder, the first-run setup window, then the editor), `decomp/` (the gloveworld files the editor reads), the pinned libraries and the guide for players. `tools/build_app.py` builds it with PyInstaller. |
-| `mod/` | The Expansion Pak game mod: `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard), `slots.c` (extra levels), which run from 0x807E0000; `loader.c` (over `ScreenShot`); and the committed build outputs `mod.bin` and `mod.json`. |
+| `crates/core` | `glovebox-core`, the back end: the formats, the game data read from the player's ROM, ROM and patch builds, Import model, the kit. No window. |
+| `crates/editor` | `glovebox-editor`: the editor's state and every edit, the entities, the scene graph, the checks. No window, no drawing. |
+| `crates/app` | `glovebox`, the program: the window, the panels, the renderer, the user folder, and the click tests (`tests/ui.rs`). |
+| `crates/core/examples/gbtool.rs` | The back end on the command line: a level's XML, a ROM or patch build, the hardware check. |
+| `crates/core/data/` | The tables compiled into the program (below). None holds game data. |
+| `formats/` | libgarib's description of the level file (`glover.lev.ksy`, with one change of ours) and its map of the retail ROM. The program does not read them: `tools/gen_formats.py` and `tools/gen_rom_map.py` turn them into JSON tables. |
+| `mod/` | The Expansion Pak game mod: `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard), `slots.c` (extra levels), which run from 0x807E0000; `loader.c` (over `ScreenShot`); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
 | `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
-| `tools/mod_patch.py` | Adds the mod to a built ROM, with the extra banks each level loads and the extra levels. Also writes the level table and the ball controls. Checks each word before it replaces it. |
-| `tools/hw_check.py` | Checks a built ROM against the rules of real hardware. `mod_patch.py` runs it on every ROM it builds. `--self-test ROM` breaks a copy in each way and checks the breaks are found. |
-| `tools/bps.py`, `web/patcher.html` | The BPS encoder and decoder, and the offline patcher page for players. After editing the page's script, run `tools/build_patcher.py` to pin the new hash. |
-| `tools/game_banks.py`, `tools/build_xref.py` | Which banks the game loads per level, and the cross-reference between libgarib's format and the decomp (token names, parser locations, enums, diagnostics). |
-| `tools/custom_model.py`, `tools/kit.py`, `kit/` | Import model: a glTF into Glover objects, a texture bank and previews. The kit: models made by code. |
-| `tools/measure_heap.py`, `web/heap.json` | Free heap per level, measured in the emulator. |
-| `tools/desktop_fixture.py`, `tools/desktop_test.py` | A back end without a ROM (two made-up levels, the kit's models) and the editor's test on it. |
-| `patches/libgarib-*.patch` | Fixes to libgarib, applied in name order by `prepare.py` and `build_app.py`. |
+| `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. After editing the page's script, run `tools/build_patcher.py` to pin the new hash. |
+| `tools/licenses.py` | Collects the licences of the Rust crates and fonts in the program, for the release archive. |
+| `app/README.txt` | The guide for players that goes into the release archive. |
+| `.github/workflows/app.yml` | Tests, the Windows build, the archive and the release. |
 
-`desktop/` by file:
+The tables in `crates/core/data/` and the developer tools that write them. The tools need Python 3 with PyYAML and
+nothing else. The program never runs them.
 
-| File | What |
+| Table | What | Written by |
+|---|---|---|
+| `level_format.json` | The level file's commands, types, fields and enums, and what may sit inside what | `tools/gen_formats.py`, from `formats/glover.lev.ksy` (`--check` fails when the table is out of date) |
+| `rom_map.json` | Where the retail ROM keeps each bank, level file and pointer | `tools/gen_rom_map.py`, from `formats/map.0x8e6e01ff.0xccb4f948.yaml` |
+| `decomp.json` | The level format joined with the decomp: token names, parser locations, enums, diagnostics | `tools/build_xref.py --gloveworld DIR`, from gloveworld's sources and `formats/glover.lev.ksy` |
+| `bank_numbers.json` | The game's number for each bank | `tools/game_banks.py --gloveworld DIR --numbers`, from `LoadObjectBank` and `LoadTextureBank` in gloveworld's `src/banks.c` |
+| `heap.json` | Free heap per level | `tools/measure_heap.py --rom ROM --gloveworld DIR`, measured in the emulator |
+| `scenes.json` | The 48 levels: name, level file and banks, in noclip's scene table and in the game's `LoadLevel` | No tool. See below |
+| `noclip_tables.json` | Which model each enemy and powerup type uses | No tool. See below |
+
+- `build_xref.py` and `game_banks.py --numbers` read gloveworld's sources only. They give the committed files byte
+  for byte from gloveworld at the commit `decomp.json` records (`source.gloveworld`).
+- `scenes.json` and `noclip_tables.json` were made once, by the Python version's `prepare.py`, from noclip.website's
+  scene table and enemy tables (`src/Glover/scenes.ts`, `enemy.ts`) joined with the banks the game's `LoadLevel` loads
+  (`tools/game_banks.py` still prints those, and `--compare crates/core/data/scenes.json` compares them). They
+  describe the retail game, which does not change. They are committed data without a generator.
+
+`crates/core` by module:
+
+| Module | What |
 |---|---|
-| `editor.py` | The state and every edit: loading, selection, the transform engine, undo, autosave, adding and removing, checks, draw load, imports and the budget, the path tool, building. Signals tell the widgets what changed. |
-| `entities.py` | Entities from the level XML (`buildEntities`), bindings, attached points, trigger volumes, camera zones. |
-| `window.py`, `panels.py`, `setup.py` | The main window, toolbar, shortcuts and dialogs; the outliner, inspector, checks, palette and path panel; the first-run window. |
-| `viewport.py`, `render.py`, `scene.py`, `camera.py`, `gizmo.py`, `gltf.py` | The 3D view: a small scene graph, an OpenGL 3.3 renderer, orbit and fly cameras, the gizmo, the glTF loader. |
-| `backend.py` | `core.py`'s functions, called in the same process. `tools/desktop_fixture.py` is a stand-in with the same methods. |
-| `sanitize.py`, `drafts.py`, `xmlutil.py`, `vec.py` | Import checks, drafts as files, lxml helpers, three.js maths (Euler `'YZX'`). |
+| `xml` | The level XML as a tree (`Doc`, `NodeId`), a hardened parser (no DTD, no entities) and the writer. |
+| `pyfmt` | Numbers as the level XML writes them: floats as Python's `repr`, integers above 10000 as hex. |
+| `level` | `.lev` ↔ XML (`disassemble`, `assemble`) and the XML's rules (`validate`). |
+| `fla2` | FLA2, the compression of the game's banks. |
+| `objbank`, `model` | Object banks: a hardened parser, the linker that writes a bank, `split` into single-object banks, `pack`, and the model the editor draws for an object. |
+| `texbank` | Texture banks: records, decoding to RGBA, writing a bank. |
+| `n64`, `rom` | The byte order of a dump, the boot code and the header CRCs; the retail ROM as regions, and a rebuilt ROM with some replaced, the `copyskip` and `quickboot` patches. |
+| `gamedata` | The game's data read from the ROM and kept in memory: levels, banks, the catalog of every model, what each level has loaded. It writes no file. |
+| `imports` | Which banks an edited level needs for the models it imports (`plan_imports`, `plan_runtime`), and the enlarged banks a build writes. |
+| `build` | ROM, patch and level file builds (`assemble`, `build_rom`, `build_levels`). |
+| `modpatch` | Adds the mod to a built ROM, with the extra banks each level loads and the extra levels. Also writes the level table and the ball controls. Checks each word before it replaces it. |
+| `hwcheck` | Checks a built ROM against the rules of real hardware. `modpatch` runs it on every ROM it builds. `self_test` breaks a copy in each way and checks the breaks are found. |
+| `bps` | The BPS encoder and decoder. |
+| `custom` | Import model: `gltf` (the reader), `image` and `jpeg` (PNG and JPEG to pixels, the resize), `pack` (triangles to an object bank), and the stored sets. |
+| `kit` | The kit: models made by code, their textures and previews. |
+| `backend` | `Backend`, what the window asks the back end for. `GameBackend` answers from the ROM and the user folder. |
+| `tables` | The compiled-in tables and the mod. |
 
-- A model is named by a path (`/models/…`, `/custom/…`); `Backend.fetch` reads the file it names.
-- The level XML is an lxml tree. Undo snapshots and "is this the shipped level?" compare `xmlutil.serialize`.
+`crates/editor` by module:
+
+| Module | What |
+|---|---|
+| `editor` | The state and every edit: loading (`load`), selection (`select`), the transform engine (`transform`), undo and adding and removing (`edit`), commands, scripts, puzzles and camera zones (`cmds`), the checks, draw load, imports and the budget (`checks`), the path tool (`path`), the entities' scene nodes (`nodes`). A queue of events tells the window what changed. |
+| `entities` | Entities from the level XML (`build`), bindings, attached points, trigger volumes, camera zones. |
+| `scene`, `camera`, `gizmo` | The 3D view's data: a small scene graph with picking, orbit and fly cameras, the gizmo. |
+| `commands`, `puzzles`, `scripts`, `presets` | The level format's order and rules, puzzles, enemy scripts, platform presets ("Commands, puzzles, enemy scripts, extra levels", below). |
+| `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, three.js maths (Euler `'YZX'`). |
+| `fixture` | A back end without a ROM: two made-up levels and a few made-up models. The tests and `--fixture` use it. |
+
+`crates/app` by module:
+
+| Module | What |
+|---|---|
+| `shell`, `main.rs` | The options, the user folder with its marker, lock and log, the ROM copy, the choice of graphics adapter, the self-test. |
+| `app`, `setup` | The application: the first-run screen or the editor's window, opening levels, builds, Test level, the keyboard. |
+| `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
+| `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
+| `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
+| `settings`, `style`, `icon` | `settings.ini`, the dark look, the app's icon. |
+
+- A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
+  `Backend::texture` give the model and the pixels.
+- The level XML is a `Doc` tree. Undo snapshots and "is this the shipped level?" compare its serialized text.
 - Every edit rebuilds the entities from the XML. Models are parsed once per level.
 - Drawing: opaque meshes are merged into one world-space buffer per material after each rebuild (`make_batches`).
-  What moves without a rebuild (a gizmo drag, the motion preview) is drawn on its own. PyOpenGL's error checking is
-  off: it cost more than the drawing.
+  What moves without a rebuild (a gizmo drag, the motion preview) is drawn on its own. The renderer draws into its
+  own texture, which the window shows as an image.
 - Lighting follows three.js r160 (Lambert's albedo / π, ambient 0.8, sun 1.4, sRGB output). Sprites keep their
   world size, as three.js sprites do.
-- Picking runs on the CPU: a ray against each mesh's triangles (numpy), sprites as camera-facing squares, lines
+- Picking runs on the CPU: a ray against each mesh's triangles, sprites as camera-facing squares, lines
   within 5 pixels.
+- The panels are fixed in place: the outliner on the left, the inspector on the right, the checks under the view, and
+  the Add palette beside the inspector. Their edges can be dragged. A colour is picked in the inspector itself, not in
+  a dialog.
+- The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
+  (`render/icons.rs`), not with a system font. They look the same on every computer.
 
 ## Sharing levels: patches and the patcher
 
 - **Export patch** (toolbar) builds the ROM and diffs it against the original into a **BPS patch**
-  (`tools/bps.py`). It carries CRC32 checks of the original ROM, the result and the patch itself, plus JSON
+  (`crates/core/src/bps.rs`). It carries CRC32 checks of the original ROM, the result and the patch itself, plus JSON
   metadata: the level, whether it boots straight into it, and the SHA-1 of both ROMs.
-  - **Plain edits are true diffs.** Data libgarib only moved (relocated banks) is encoded as copies from the
+  - **Plain edits are true diffs.** Data the build only moved (relocated banks) is encoded as copies from the
     player's own ROM. The Atlantis 1 garib edit is a 1.8 KB patch.
   - **Edits with imported models are small too, with the game mod.** By default the mod loads imported models
     from the player's own ROM at run time. The patch has no game data. Players need the Expansion Pak.
@@ -86,13 +146,13 @@ calls `core.py`'s functions in its own process. It ties three projects together:
 ## Autosave, reset, import
 
 - **Autosave**: after every edit the level's XML is saved in the user folder (`drafts/<level id>.json`,
-  `desktop/drafts.py`). Reopening the level, restarting the editor or switching levels and back restores it. The HUD
+  `crates/editor/src/drafts.rs`). Reopening the level, restarting the editor or switching levels and back restores it. The HUD
   chip shows "Edited · autosaved HH:MM", and the level list marks edited levels with ●. Undo after a restore
   goes back to the shipped level.
 - **Reset level** discards a level's edits and its autosave, after a confirmation. It is undoable in the
   current session.
 - **Import XML** (or drop an .xml on the window) validates the file strictly before it can touch the level
-  (`desktop/sanitize.py`):
+  (`crates/editor/src/sanitize.rs`):
   - It refuses DOCTYPEs, entity declarations, stylesheet instructions, XInclude and CDATA before parsing,
     which rules out entity expansion and external-entity reads.
   - Every element must be a command or type from libgarib's format, in a place that format allows (a `Garib`
@@ -108,8 +168,9 @@ calls `core.py`'s functions in its own process. It ties three projects together:
   - The dialog reports problems by element path, matches the file to its level by name, and imports as an
     undoable edit.
   - Autosaved drafts go through the same validation when they're restored.
-- `core.py` repeats the safety checks for builds: no DTD, entities or network access in its XML parser, a size
-  limit, and strict validation of level IDs and import IDs.
+- The back end repeats the safety checks for builds (`level::parse_level_xml`): no DTD or entities in its XML
+  parser, a size limit, and strict validation of level IDs and import IDs. No part of the program opens a network
+  connection.
 
 ## Selecting, rotating, scaling, adding
 
@@ -158,11 +219,11 @@ calls `core.py`'s functions in its own process. It ties three projects together:
     exactly as before, without the mod.
   - **Where it lives.**
     - The mod is about 5 KB of code, built from C against the gloveworld decomp. It is stored in the ROM at 12 MiB,
-      past anything libgarib writes, and runs from Expansion Pak RAM at 0x807E0000.
+      past anything the ROM builder writes, and runs from Expansion Pak RAM at 0x807E0000.
     - A 620-byte loader replaces `ScreenShot`, a debug function the game never calls. It runs once at boot.
     - The game's own code keeps its exact layout. The ROM changes are 16 same-size `jal` changes. At boot, with
       an Expansion Pak, the mod also writes a jump over the first two instructions of `FindObject` and
-      `FindTexture` in memory. This keeps libgarib's ROM patching, which uses fixed code offsets, working.
+      `FindTexture` in memory. This keeps the ROM builder, which finds the game's pointers at fixed code offsets, working.
   - **The heap.** `MainProc` starts the heap before the loader can run (the loader needs `dmaMessageQ`, which
     is created later). Nothing is allocated in between. The mod starts the heap again with the larger size.
     The three calls that restart the heap on level changes (`game.c`, `frontend.c`) go through the mod, which
@@ -187,7 +248,7 @@ calls `core.py`'s functions in its own process. It ties three projects together:
   - Garibs and Mr. Tip are flat sprites, and the start markers are points. They have no 3D rotation or size.
   - `tools/build_mod.py` rebuilds `mod/mod.bin` and `mod/mod.json`. It needs a built gloveworld
     and its GCC 2.7.2. The outputs are committed. Building ROMs doesn't need the toolchain.
-    `tools/mod_patch.py` adds the mod to a ROM. It checks every word it replaces first.
+    `crates/core/src/modpatch.rs` adds the mod to a ROM. It checks every word it replaces first.
   - Verified in the emulator:
     - A tilted platform, and a General Wu lying on its side at twice its size, appear and play. The level stays
       in play mode.
@@ -210,7 +271,7 @@ calls `core.py`'s functions in its own process. It ties three projects together:
   loads it from the player's ROM at run time (see "Models from other banks" above). The editor picks the
   banks: each model's own bank, and the texture banks that hold the textures the level's banks lack,
   preferring the model's own world. The import panel shows their size against this level's free heap plus
-  the Expansion Pak's. With "Copy the models into the ROM instead", libgarib splits it
+  the Expansion Pak's. With "Copy the models into the ROM instead", the build splits it
   out of its bank and packs it into the bank the game loads last for this level (`levelInfo[level].objBank`
   in `LoadLevel`, e.g. `ATLANTIS_L1`); textures it needs are
   appended to the world texture bank, record by record. The game fixes up each texture record relative to
@@ -218,7 +279,7 @@ calls `core.py`'s functions in its own process. It ties three projects together:
   build time. Undo and XML export always match the build. The checks panel lists them with a memory
   budget. Every level that loads the enlarged object or texture bank pays for the growth. The budget
   is checked against the tightest of those levels, using free heap measured in the emulator
-  (`web/heap.json`, all 48 levels, `tools/measure_heap.py`). Free heap ranges from 36 KB (Carnival 1) to
+  (`crates/core/data/heap.json`, all 48 levels, `tools/measure_heap.py`). Free heap ranges from 36 KB (Carnival 1) to
   435 KB. Imports that need more add the Expansion Pak game mod, whose heap is 3,968 KB larger.
   Verified in the emulator:
   - It adds a 242 KB model from the INTRO bank to Carnival 1.
@@ -226,7 +287,7 @@ calls `core.py`'s functions in its own process. It ties three projects together:
   - With it the heap is 5.4 MB, the level plays, and 3.8 MB stays free.
   - With the Expansion Pak check forced to fail, the heap keeps its 1.3 MB and the game stops as without the mod.
 - Which banks a level loads comes from the game's own `LoadLevel` (`tools/game_banks.py` reads `levelInfo`
-  and `worldInfo` from the decomp build). It agrees with noclip's scene table for every playable level.
+  and `worldInfo` from the decomp build; the result is in `scenes.json`). It agrees with noclip's scene table for every playable level.
   Six differences remain, in the Wayroom (its shared bank depends on the world you came from), the studio
   logos and the flythrus. A model counts as "already loaded" only if it's in a bank both lists load.
 - **Puzzle trigger volumes** are drawn as translucent shapes, one per puzzle condition that tests where
@@ -306,7 +367,7 @@ Glover starts at the first checkpoint and restarts at the last one he touched. A
 
 ### The kit
 
-**+ Add → Kit** has props made by the editor's own code (`tools/kit.py`, the models in `kit/`).
+**+ Add → Kit** has props made by the editor's own code (`crates/core/src/kit/`).
 They hold no game data, so they're free to share.
 
 - Graveyard: a gravestone with your words, a signpost with your words, a pumpkin with one of eight faces,
@@ -318,6 +379,14 @@ They hold no game data, so they're free to share.
 Each row shows a preview, and the preview follows the settings. **Background** places the model without
 collision, **Scenery** as a solid `LandActor`. The editor builds the model and converts it like an imported
 model ([Import model](Import-model.md)), and it then shows with the imported models. The same settings give the same model.
+
+- The shapes and textures come from seeded random numbers (`kit/rng.rs`: the Mersenne Twister with Python's seeding).
+  On Linux the geometry is equal, bit for bit, to what the Python kit made there. Sines, cosines and `atan2` come
+  from the system's maths library: on Windows a coordinate can differ in its last bit. This was not measured.
+- The textures are drawn by `kit/image.rs`, which follows Pillow's drawing rules.
+- The words on gravestones and signs use the kit's own letter shapes (`kit/font.rs`, a stroke font on a 5 by 7 grid).
+  The Python kit drew them with Pillow's built-in font, which is not copied. A model with words has other pixels in
+  its texture than the Python kit's, and so another texture ID.
 
 ### Path
 
@@ -341,24 +410,23 @@ offer **Platform** for them, and the checks flag one that is.
 
 | File | What |
 |---|---|
-| `desktop/commands.py` | What goes inside what (from decomp.json), new-command defaults, and the order the game reads a platform in: phases for inserting, glued children (a spin pause after its spin), needs-before, one-of and exclusive rules, the NullPlatform whitelist. `tidy()` moves only what the game reads wrong. `platform_rules()` feeds the checks. |
-| `desktop/puzzles.py` | Plain names for every cond_type and action_type, canonical child order, float-in-u4 fields, puzzle checks. |
-| `desktop/scripts.py` | Enemy instruction lists (flat per kind across groups), Goto and Loop retargeting, ready-made scripts, script checks. |
-| `desktop/presets.py` | Platform presets (rings, exits, lifts, spikes, teleport, the extra-levels entry zone). |
+| `crates/editor/src/commands.rs` | What goes inside what (from decomp.json), new-command defaults, and the order the game reads a platform in: phases for inserting, glued children (a spin pause after its spin), needs-before, one-of and exclusive rules, the NullPlatform whitelist. `tidy()` moves only what the game reads wrong. `platform_rules()` feeds the checks. |
+| `crates/editor/src/puzzles.rs` | Plain names for every cond_type and action_type, canonical child order, float-in-u4 fields, puzzle checks. |
+| `crates/editor/src/scripts.rs` | Enemy instruction lists (flat per kind across groups), Goto and Loop retargeting, ready-made scripts, script checks. |
+| `crates/editor/src/presets.rs` | Platform presets (rings, exits, lifts, spikes, teleport, the extra-levels entry zone). |
 | `mod/slots.c` | Extra level slots: the loader, the levelInfo swap, the save swap and its EEPROM record, the world exit, tag 77 rings. |
 
 - The 48 shipped levels give no error from the new checks, and `tidy()` changes none of them. A rule that fires on a
   shipped level is wrong. Shipped levels put PlatScale after PlatSetInitialPos on moving or face-freed platforms,
   PlatSetCollisionYOffset after placement, a path sound anywhere after its point, and PlatVentAdvanceFrames before
   points; all of these are fine.
-- `num()` reads libgarib's hex ints (`0x4000`); it used to read them as 0.
-- Importing libgarib's objbank parser in the same process breaks its level parser (both patch one base class).
-  `Backend.faces` reads a model's root-mesh face count from the bank bytes instead.
+- `xmlutil::num` reads the XML's hex ints (`0x4000`).
+- `objbank::faces` reads a model's root-mesh face count from the bank bytes.
 - Title, music and bonus clock go into levelInfo in the ROM (0xE7910 + 0x38 × slot; name +0, song +0x35, clock
   +0x36). They are kept in `drafts/info.json`, not in the level XML. In the emulator a 45 s clock counted down and
   PrepareSong got the chosen song. Quickboot ROMs then switch to song 59 whatever the row says.
-- `core.build_levels` builds any number of levels in one ROM. Two levels can't copy models into the same bank.
-  Extra levels get no manifest line; `apply_mod(slots=…)` stores them at MOD_ROM + 0x20000, 16-byte aligned, and
+- `build::build_levels` builds any number of levels in one ROM. Two levels can't copy models into the same bank.
+  Extra levels get no manifest line; `modpatch::apply_mod` stores them at MOD_ROM + 0x20000, 16-byte aligned, and
   fills `modSlots` ('SLT1', 344 bytes). Their banks are keyed slot + 0x40.
 - Extra slots are 35, 36, 37, 38 and 41 (39 and 40 have fixed game code). The entry zone is a SetExit 11
   loading zone with tag 99 in any hub; tag 77 marks rings a rolling ball may touch. `free_tag()` skips both.
@@ -384,19 +452,18 @@ offer **Platform** for them, and the checks flag one that is.
 - Glover starts at the first `PlatCheckpoint` (restart gate) unless a `GloverSpawnPoint` exists.
 - Ball walking: `ProcessInput` (`src/controller.c`) subtracts the stick's push from the ball's velocity on Easy and
   adds it otherwise, so Medium and Hard feel inverted. The check is one `bnez` at 0x801396D0 (ROM 0x3A6D0);
-  `apply_easy_controls` in `tools/mod_patch.py` replaces it with a nop in every built ROM. GameShark equivalent:
+  `apply_easy_controls` in `crates/core/src/modpatch.rs` replaces it with a nop in every built ROM. GameShark equivalent:
   `811396D0 0000` and `811396D2 0000`. The difficulty itself is `saveSlot[currentSaveSlot].difficultyLevel`
   (0x801EAA55 + 0x1C per slot; slot 6 is the level select's).
 - A missing *vital* object makes the game set `gameInfo.mode = 13` ("LEVEL UNPLAYABLE"). Bullet models are
   non-vital.
-- Heap: about 1.3 MB (`JallocInit`). Free heap per level is in `web/heap.json` (36 KB in Carnival 1 up to
+- Heap: about 1.3 MB (`JallocInit`). Free heap per level is in `crates/core/data/heap.json` (36 KB in Carnival 1 up to
   435 KB).
-- `quickboot(level_id=N)` in libgarib assembles N as hex; the editor passes `0x..`.
-- libgarib finds every asset pointer at a fixed code offset (`map.0x8e6e01ff.0xccb4f948.yaml`, 280 `lui`/`addiu`
-  sites) and repacks all assets from offset 0, ending near 0x77DE20. So game code changes must keep the code
-  segment's layout. The mod only makes same-size `jal` changes, writes its loader over `ScreenShot` (unused),
-  and puts its code at ROM 0xC00000 (12 MiB): libgarib's output passes 8 MiB with many imports, because rebuilt
-  banks are stored uncompressed.
+- The ROM builder (`crates/core/src/rom.rs`, after libgarib) finds every asset pointer at a fixed code offset
+  (`formats/map.0x8e6e01ff.0xccb4f948.yaml`, 280 `lui`/`addiu` sites) and repacks all assets from offset 0, ending near
+  0x77DE20. So game code changes must keep the code segment's layout. The mod only makes same-size `jal` changes,
+  writes its loader over `ScreenShot` (unused), and puts its code at ROM 0xC00000 (12 MiB): the builder's output passes
+  8 MiB with many imports, because rebuilt banks are stored uncompressed.
 - Drawing load: the game slows to a crawl (and at a far plane of 6000 with a whole stage in view, stops) when it
   draws too much at once. The far plane is `FogConfiguration`'s `near_clip` (`farPlaneDist`); `fog_distance` is
   `gSPFogPosition`'s min (0-1000). The game culls by distance only: `IsActorVisible` (`object.c`) compares an actor's
@@ -418,7 +485,7 @@ offer **Platform** for them, and the checks flag one that is.
   `FindTexture` search only those slots. The font texture bank always goes to slot 0. `LoadTextureBank` adds
   animated textures to `cyclingTextures` (20 entries, no bound check). `RestoreObjectPointers` allocates each
   textured mesh's `origUV` on the heap (`OFTC%d`); `FreeOFTC` frees them. Level exit frees the 5 slots. The end-of-world and end-of-level screens restart the heap (`FreeScreen`, `FreeLevel2`); the mod forgets its extra banks then (`Mod_ForgetExtraBanks`, called from `Mod_JallocInit`). Without that, the game froze loading the hub after a boss with extra banks: it searched the old banks' memory.
-- Texture ids can clash between worlds (Atlantis and Space share four ids with different pictures). `FindTexture` takes the level's own banks first. Bit 7 of a level's number in `modExtraBanks` makes the extra banks win (`tools/mod_patch.py` takes `(tex, obj, True)`).
+- Texture ids can clash between worlds (Atlantis and Space share four ids with different pictures). `FindTexture` takes the level's own banks first. Bit 7 of a level's number in `modExtraBanks` makes the extra banks win (`modpatch::apply_mod` takes the flag with each level's banks).
 - `dmaMessageQ` is created by `CreateMessageQueues`, called in `MainProc` after `JallocInit`. Code that DMAs
   at boot must run after it; the loader hooks `InitCRCTable`, the next call.
 - All 3D objects are `Actor`s drawn by `DrawActor`, which applies `rotQuat` then the per-axis `scale` (T·R·S).
@@ -438,9 +505,9 @@ offer **Platform** for them, and the checks flag one that is.
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is
   in no zone (unless he is falling). The shipped levels hold about 170 of this shape. `camera_zone()` in
-  `desktop/entities.py` reads one, `set_camera_zone()` writes its actions.
+  `crates/editor/src/entities.rs` reads one, `set_camera_zone()` writes its actions.
 - Drawing: the game counts one object matrix per object node it draws (all nodes of the object tree, `CountNodes` in
-  `mod/guard.c`), plus shadows and footprints. In the glTF exports these are the nodes with a mesh; a node
+  `mod/guard.c`), plus shadows and footprints. In the editor's models (`crates/core/src/model.rs`) these are the nodes with a mesh; a node
   with several materials is still one. In the game the
   camera stands about 130 behind and 50 over the glove (measured in Atlantis 1).
 - Camera height: `camera.c` puts the camera `distance / 3` plus `heightOffset` over the glove, and `heightOffset` is
@@ -455,12 +522,12 @@ offer **Platform** for them, and the checks flag one that is.
 ## Real hardware
 
 mupen64plus runs what the console refuses, and most of the editor's checks ran only on mupen64plus. A ROM that works in the
-emulator can freeze on a console. The rules below come from the PI, the caches, the RDP and the boot code. `tools/hw_check.py` checks the
-ones a tool can check, for every ROM `tools/mod_patch.py` builds; `tools/build_mod.py` checks the alignment of the mod's own buffers.
+emulator can freeze on a console. The rules below come from the PI, the caches, the RDP and the boot code. `crates/core/src/hwcheck.rs` checks the
+ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tools/build_mod.py` checks the alignment of the mod's own buffers.
 
 **Boot and ROM**
 - The header holds two CRCs over the first megabyte of code (0x1000 to 0x101000, the CIC-NUS-6102 algorithm). The boot code of a console
-  does not start a ROM with wrong CRCs. `hw_check.py` has its own copy of the algorithm and compares it with the header (libgarib's).
+  does not start a ROM with wrong CRCs. `hwcheck.rs` has its own copy of the algorithm and compares it with the header (the ROM builder's).
 - The ROM is a whole number of MiB (the build pads to it) and every address the mod reads lies inside it. The ROM header is Glover's
   (`NGVE`). A flash cart that looks up the save type by the game ID finds EEPROM.
 - A warm start (an EverDrive can start a game without a power cycle) leaves RAM with the last program's data. Nothing in the mod may
@@ -472,7 +539,7 @@ ones a tool can check, for every ROM `tools/mod_patch.py` builds; `tools/build_m
   end, and an unaligned RAM address loses bytes. The game's allocator hands out 16 byte aligned blocks of a multiple of 16 bytes.
 - Use the game's own loaders (`DMAMemory`, `DMAGetSize`: they invalidate the data cache over the target first). The mod's loader uses
   `DMAMemory` too. The mod stores every custom bank padded with zeros to a multiple of 16 and reads the padded length
-  (`mod_patch.py`: `custom_table`).
+  (`modpatch.rs`: `custom_table`).
 - A ROM address that does not match a file (a zero or absurd size word) shows the game's own `LEVEL UNPLAYABLE - NO LEV FILE` screen.
 - GCC 2.7.2 keeps at most 8 bytes of an `aligned(16)` attribute, so the address of such a variable depends on the code linked before it. Data
   that needs 16 bytes has to go first in its section after an `ALIGN(16)` in the linker script (`tools/build_mod.py`), and the build should check
@@ -489,7 +556,7 @@ ones a tool can check, for every ROM `tools/mod_patch.py` builds; `tools/build_m
 
 **RDP and RSP**
 - A texture's pixels start on a 64 bit boundary. A bank's records are each a multiple of 8 bytes long (the bank's own count word makes the
-  first record start 4 bytes in, and the 0x24 byte header does the rest). libgarib's `texbank-tool pack` does not pad: `core.texbank_records`
+  first record start 4 bytes in, and the 0x24 byte header does the rest). libgarib's `texbank-tool pack` does not pad: `texbank::records`
   pads every record it reads and corrects its size field. Custom banks and every imported model use padded records.
   Before this, every second texture of a custom bank was only 4 byte aligned, and the console reads such a texture as shifted pixels.
 - Set every RDP mode a picture needs before drawing it. The game leaves its modes in many states.
@@ -525,105 +592,170 @@ ones a tool can check, for every ROM `tools/mod_patch.py` builds; `tools/build_m
   alpha 0) also needs no `PlatConstantSpin`: its rotation stays zero.
 
 **Testing**
-- mupen64plus forgives all of the above. The faults of this list were found by reading. `tools/hw_check.py` is the guard that
+- mupen64plus forgives all of the above. The faults of this list were found by reading. `crates/core/src/hwcheck.rs` is the guard that
   stays in the build. Test on the console.
 
 ## Imported models
 
-- `tools/custom_model.py` reads the glTF itself (accessors, node transforms, embedded images) and writes one
-  normalised glTF per piece for `objbank-tool pack`, then `texbank-tool pack` and `objbank-tool unpack` (the
-  previews). The editor stores each import in `GLOVEBOX_HOME/custom/<set>/` (`meta.json`, one single-object bank
-  per piece, `textures.tex.bin`, `textures/`, `preview/`). `<set>` is a hash of the file and the scale.
-- libgarib takes an object's ID from `hash_str` of the root node's name, and the mesh name from its first 8
-  characters. The converter pads the short name with NULs and appends a hash. `lg_id` metadata would be simpler,
-  but libgarib's `MetadataManager.__setitem__` fails on it (`field.validator` on the enum member).
-- libgarib takes a texture's ID from the image file name (`textures/0xIIIIIIII.png`) and its format from the
-  PNG's `Comment` JSON. Every triangle needs a texture: `deriveScaledUVs` reads its size.
-- A texture record is padded to a multiple of 8 bytes when `core.texbank_records` reads it (Real hardware, above); libgarib's packer leaves it as it is.
+- `crates/core/src/custom/` converts a model in the program itself. `gltf.rs` reads the file (a `.glb`, or a `.gltf`
+  text file whose buffers and images are data URIs): accessors, node transforms, embedded images. `mod.rs` cuts the
+  triangles into pieces and makes the textures. `pack.rs` builds one single-object bank per piece, straight from the
+  triangles. The file is untrusted: every read is checked, and a damaged file gives an error.
+- The editor stores each import in `custom/<set>/` in the user folder: `meta.json`, one single-object bank per piece
+  (`<id>.obj.bin`) and `textures.tex.bin`. `<set>` is a hash of the file and the scale. `meta.json` lists the pieces
+  and, for each texture, its ID and the length of its record. The pictures in the lists are drawn from the banks when
+  a row scrolls into view. They are not stored.
+- An object's ID is `hash_str` of the root node's name (libgarib's rule), and the mesh name is its first 8
+  characters. The converter pads the short name with NULs and appends a hash.
+- A texture is named by a hash of its pixels and its size. The same picture in two models is one texture. Every
+  triangle needs a texture: the packer reads its size to scale the texture coordinates.
+- The pixels must be the ones the Python version got from Pillow, or the IDs change. `image.rs` decodes PNG with the
+  `png` crate and resizes with Pillow's Lanczos filter (two passes with fixed point weights, in Pillow's order).
+  `jpeg.rs` is the editor's own JPEG decoder. It gives libjpeg-turbo's pixels for baseline and progressive files, and
+  refuses arithmetic-coded, lossless, CMYK and 12-bit files and fractional sampling.
+- A texture record is padded to a multiple of 8 bytes (Real hardware, above).
 - 2,048 texels is the most one `G_LOADBLOCK` loads. Texture coordinates are s10.5 in texels, so the converter
   moves repeating coordinates by whole repeats, per piece, then per triangle, then clamps.
 - IDs avoid every object and texture ID in the game's banks and in other imports.
-- Builds: `plan_imports` treats custom pieces like copied imports (`model_bank`, texture source `custom:<set>`).
-  `plan_runtime` leaves them out of the run-time banks and puts them in `plan["copy"]`, which `build_rom`
-  copies even when the mod loads the other imports. The editor's `runtime_imports` is false when every import is
-  custom.
+- Builds: `plan_imports` (`crates/core/src/imports.rs`) treats custom pieces like copied imports (texture source
+  `custom:<set>`). `plan_runtime` leaves them out of the run-time banks and puts them in the plan's `copy` list, which
+  `build_rom` copies even when the mod loads the other imports. The editor's `runtime_imports` is false when every
+  import is custom.
 - `modCustom` (`mod/banks.c`: magic `CUS1`, a count, then per key the cart addresses of a texture bank and an object bank) holds
-  generated models stored behind the mod (`tools/mod_patch.py`, `apply_mod(custom=...)`). `Mod_LoadExtraBanks` loads them with
+  generated models stored behind the mod (`modpatch::apply_mod`, its `custom` list). `Mod_LoadExtraBanks` loads them with
   `LoadCustomBanks`, a copy of the game's own bank loaders that puts the banks into the mod's extra lists. The editor doesn't use it
   yet: its imports go into the level's banks or the run-time extra banks.
 
 ## The Windows app
 
-- `core.py` and `prepare.py` keep their writable files (`config.json`, `data/`, `cache/` and the JSON in `web/`)
-  in the folder that `GLOVEBOX_HOME` names, or next to the code without it. The launcher sets `GLOVEBOX_HOME` to the user folder.
-- The executable keeps the repository's layout (`core.py`, `desktop/`, `tools/`, `vendor/`...) as plain files in its
-  unpack folder, and runs them from there. `__file__`-relative paths work unchanged there. PyInstaller adds the
-  interpreter and the libraries. `build_app.py` lists them by parsing every staged `.py` file's imports
-  (`hidden_imports`), because PyInstaller does not analyse code it only copies.
-- Frozen, `sys.executable` is the app. `tools/pycmd.py` turns `[python, script, args]` into
-  `[app, --run-script, script, args]`, and the launcher runs the script with `runpy`. Each libgarib tool still runs
-  in its own process: libgarib's parsers rebind `KaitaiStruct.getConstructType`, so two of them in one process
-  break level building. In onefile mode a child of the app reuses the parent's unpack folder.
-- `build_app.py` applies `patches/` to `vendor/libgarib` before staging, and writes libgarib's version into
-  `_static_version.py`. Without that, every `import libgarib` runs `git describe`. `prepare.py` patches only when
-  `vendor/libgarib` is a git checkout.
-- The app is made for Windows only. `build_app.py` stops on other systems; the editor still runs
-  from source anywhere (`python -m desktop`).
-- PyInstaller has no hooks for unicorn or keystone. The build adds `unicorn/lib/*` by hand and collects keystone's
-  binaries.
-- One copy of the app uses a user folder at a time (`editor.lock`, `QLockFile`). A second copy says so and exits.
-  The app opens no port.
-- The launcher hashes the code and data `prepare.py`'s output depends on (`stamp()`). When a new version changes
-  the hash, it prepares again from the ROM copy and clears the cache.
-- Preparing takes seconds. The editor's first start then takes minutes, because the catalog converts every object
-  bank (in a background thread, with a note over the view). This is the same from source.
-- The user folder must be new or empty the first time. The launcher then writes `glovebox-folder.txt`
-  into it, and later accepts it because of that file. `--reset` refuses while the editor runs.
-- `config.json` stores the gloveworld folder's path. In the app that is `app/decomp/` in the unpack folder, which
-  changes at every start. The launcher rewrites it before it imports `core.py`.
-- The .exe is windowed (`--windowed`): no console. CPython leaves `sys.stdout` and `sys.stderr` None when a process
-  has no valid standard handles (a double-click), so the launcher sends them to `editor.log` in the user folder. A
-  child started with pipes (`core.py`'s `tool()`, prepare.py in the setup window, the self-test) gets real streams
-  from them (PyInstaller's onefile parent passes its handles on), and prints into the pipes as before.
-- In a windowed build an uncaught exception opens a modal dialog and the process waits for a click: `core.py`'s
-  `tool()` would hang. `run_script` and `--self-test` catch every error and print the traceback instead.
-- `--help` and `--self-test` typed in a command prompt print nothing (a windowed program doesn't attach to it).
-  Redirect them: `Glovebox.exe --self-test > report.txt`.
-- The .exe's icon is drawn by `desktop/appicon.py` (the window uses it too). Its version details come from
-  `APP_VERSION` (the release tag; 0.0.0 without one).
-- OpenGL: `prepare_qt()` makes Qt use the graphics driver's OpenGL (`AA_UseDesktopOpenGL`). Without it Qt can switch
-  to its own software `opengl32sw.dll` on a driver it distrusts, while PyOpenGL keeps calling System32's
-  `opengl32.dll`: an empty view. Qt gives a lower version instead of failing when the driver can't do 3.3, so
-  `gl_problem()` checks the version (and compiles the shaders) before any window opens, and says what to do.
-- Windows: PyInstaller's bootloader turns on Control Flow Guard for the whole process. Unicorn jumps into the code
-  it generates, so libgarib's ROM tool died with `0xC0000409` and no output (Build ROM failed in v1.0.0).
-  `build_app.py` clears the flag (`clear_guard_cf`). `--self-test` runs all three engines in a child process
-  (`app/engine_check.py`), and a failing tool's error names its exit code.
-- CI: GitHub's Windows runner has no graphics card. The workflow installs Mesa (llvmpipe) as the system's OpenGL
-  driver (`systemwidedeploy.cmd`, the `MSOGL` key) to run `desktop_test.py`. Qt loads `opengl32.dll` from System32
-  only, so a copy next to `python.exe` would split Qt and PyOpenGL. The app never includes Mesa.
-- The build leaves out readline (GPL 3) and OpenSSL (`ssl`, `_hashlib`); hashlib then uses its own SHA-1. The
-  archive's `licenses/` folder holds each library's licence files at their path in the library. Releases carry the Unicorn and Keystone sources.
-- The first start opens the setup window (`desktop/setup.py`). The player picks the ROM; the launcher converts
-  `.v64` and `.n64` to `.z64` and checks the SHA-1 (`270be17b…`, as in gloveworld's `NGVE.sha1`).
-- `--self-test` also loads Qt with its native platform plugin listed, PyOpenGL and the editor's modules, without a
-  screen (Qt's offscreen platform).
+- The app is one program, `Glovebox.exe`. The tables, the game mod, the fonts and the icon are compiled in. It
+  installs nothing, unpacks nothing, starts no other program except the player's emulator (Test level), and opens no
+  port.
+- It reads the game's data from the ROM copy into memory at each start (`gamedata.rs`), in well under a second. No
+  split ROM, converted model or texture is kept on disk.
+- The user folder is `%LOCALAPPDATA%\Glovebox` (`shell::default_home`; on Linux `$XDG_DATA_HOME/glovebox` or
+  `~/.local/share/glovebox`). `--home DIR` names another. It holds:
+
+  | File | What |
+  |---|---|
+  | `rom/glover.z64` | The checked copy of the player's ROM |
+  | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
+  | `custom/` | Imported models and kit models |
+  | `test/` | The ROMs Test level builds |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `saveDir` and `emulator`, as `key=value` lines |
+  | `editor.log` | The app's messages, a new file at every start |
+  | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
+
+- The user folder must be new or empty the first time. The app then writes `glovebox-folder.txt` into it, and later
+  accepts it because of that file.
+- One copy of the app uses a user folder at a time: it holds a file lock on `editor.lock`. A second copy says so and
+  exits. `--reset` refuses while the editor runs.
+- A user folder of the Python version keeps working: drafts, imported models and settings have the same layout. The
+  app deletes what only that version made (`data/`, `cache/`, `web/`, `config.json`, `prepared.json`).
+- The first start shows the setup screen (`setup.rs`) in the editor's window. The player picks the ROM. The app
+  converts `.v64` and `.n64` to `.z64`, checks the SHA-1 (`270be17b…`, as in gloveworld's `NGVE.sha1`) and keeps the
+  copy. The editor then opens in the same window.
+- The release build is a windowed program: no console. `--help`, `--version` and `--self-test` typed in a command
+  prompt print nothing. Redirect them: `Glovebox.exe --self-test > report.txt`.
+- An error in the program (a panic) goes to `editor.log` and into a message box, and the app stops. Edits are
+  autosaved before that. Slow work runs on worker threads (`jobs.rs`); the window stays live.
+- `--self-test` checks the compiled-in tables and the icon, opens a graphics device without a window and draws a
+  frame of a made-up level. With a ROM in the user folder it also opens the ROM, builds a ROM with a kit model, runs
+  the hardware check on it and runs the hardware check's own test (`hwcheck::self_test`). It prints a report and
+  exits with 1 when a check failed.
+- `--fixture` opens the editor on the made-up levels of `crates/editor/src/fixture.rs`, without a ROM.
+- Graphics: the view is drawn with wgpu. On Windows the app asks for Direct3D 12 and Vulkan adapters and takes the
+  best one that can draw to the window (`shell::choose_adapter`): a real graphics card before a software adapter,
+  Direct3D 12 before Vulkan. With no usable graphics card it takes Windows' software adapter (WARP), which is slower.
+  The log names the adapter. When no window can be made, a message says what to do. On Linux it uses Vulkan or
+  OpenGL.
+- The .exe's icon is drawn by `crates/app/src/icon.rs` (the window uses it too), and `build.rs` writes it into the
+  program with the version details. The version comes from `APP_VERSION` (the release tag without its `v`), or from
+  Cargo.toml without it. `--version` prints it.
+- The release profile uses thin LTO, strips symbols and aborts on a panic. The program has no `unsafe` code of its own.
+- CI (`.github/workflows/app.yml`): GitHub's runners have no graphics card. The tests draw with Direct3D 12's WARP on
+  Windows and with Mesa's lavapipe (software Vulkan) on Linux. The click tests (`crates/app/tests/ui.rs`) drive the
+  real window through `egui_kittest`, without a screen. The Windows job then builds the release program, runs its
+  `--self-test` and packs `Glovebox-<version>-windows-x64.zip`: `Glovebox.exe`, `README.txt`,
+  `THIRD_PARTY_NOTICES.md` and `licenses/`.
+- `licenses/` is made by `tools/licenses.py`: the licence files of every crate linked into the Windows program
+  (from `cargo metadata`, without build and test dependencies) and of the fonts egui embeds.
+- The app is released for Windows. It also builds and runs on Linux from source (`cargo run -p glovebox --release`).
+
+## Equal to the Python app
+
+The editor was Python until commit `06a7cdb`: a Qt window, with libgarib's Python tools doing every format
+operation in processes of their own. The Rust code replaced it in one step, and had to give the same results. This
+was proven by tests that compare the two on the whole game, not on samples. The reference outputs ("dumps") were made
+by the Python version from the retail ROM. They hold game data and are not in the repository. The tests are
+(`GLOVEBOX_ROM`, `GLOVEBOX_ORACLE` and `GLOVEBOX_PYHOME` name the ROM, the dumps and the Python version's user folder):
+
+| Test | What was compared | On |
+|---|---|---|
+| `crates/core/tests/level_oracle.rs` | The XML text of a level file, the level file of that XML, the schema check, and what libgarib does with edited levels (accepts, refuses, the bytes) | All 48 levels and a set of edited ones |
+| `banks_oracle.rs` | Texture IDs and pixels, written texture banks, single-object banks (`split`), packed banks, each object's texture IDs, and the model against libgarib's glTF export | Every object and texture bank of the game |
+| `rom_oracle.rs` | The ROM's regions against libgarib's dump and noclip's split files, the pointer pairs, rebuilt ROMs, ROMs with the mod, the hardware check's findings, BPS patches | The retail ROM |
+| `build_oracle.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game |
+| `custom_oracle.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
+| `kit_oracle.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel | Every kit item with several settings |
+| `crates/editor/tests/logic_oracle.rs` | The vector maths, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
+| `editor_oracle.rs` | The editor's state after loading, and the XML after recorded edits | All 48 levels |
+| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level against the Python editor's | By mean colour difference: two renderers do not give equal pixels |
+
+All of them passed against the dumps of `06a7cdb` before the Python code was removed. Without the dumps they print
+that they were skipped, and pass. Anyone with the ROM can make the dumps again from that commit.
+
+What is not equal, on purpose:
+
+- A kit model with words has the kit's own letters (The kit, above).
+- The round icons, the fonts and the widgets look different: the window is egui, not Qt.
+- A `.gltf` text file with embedded data is accepted. The Python version took `.glb` only.
+- Arithmetic-coded and CMYK JPEG files are refused. Pillow read them.
+- A ROM that breaks a hardware rule is refused with the same text, except that the text names the check as
+  `hwcheck`. The Python text named the file `tools/hw_check.py`.
+- `LEVELEND_TEX_BANK` (Notes and limits, below).
+
+How the same bytes are reached where it is not obvious:
+
+- Floats in the XML are written as Python's `repr` writes a double, and read as Python's `float()` reads them
+  (`pyfmt.rs`). The XML writer gives lxml's bytes.
+- The editor's maths is in `f64` in the order the Python code computed. Where Python called numpy's dot products,
+  `vec.rs` uses fused multiply-adds (`mul_add`) in the order numpy used on the reference machine, an x86-64 with FMA.
+  The results are the same doubles.
+- Random choices (the kit, `reskin`, scatter) use the Mersenne Twister with CPython's seeding (`pyrandom.rs`,
+  `kit/rng.rs`).
 
 ## Notes and limits
 
 - Every built ROM and patch walks the ball with Easy's controls on every difficulty: on Medium and Hard the game
   otherwise pushes the ball the opposite way to the stick. Only the controls change; lives, garibs per life and the
-  bosses still follow the chosen difficulty (`tools/mod_patch.py`, `EASY_CONTROLS`).
-- `data/`, `cache/` and every built ROM come from your ROM. Keep them local.
-- Fixes to libgarib needed here (all in `patches/`): animated models crashed glTF export (missing
-  `scale_factor`); numpy scalars weren't JSON-serialisable; missing textures, zero-length normals, and mixed
-  textured/untextured meshes aborted the whole bank. A second patch lets `SetActorRotation`/`SetActorScale`
-  sit inside enemies, platforms, powerups and water (the ksy semantics and the RelaxNG schema made from them).
-  A third makes glTF packing work with NumPy 2 and with real models: vertex indices overflowed, a normal of
-  exactly 1 overflowed its byte, a mesh without vertex colours stopped the display list, and more than four
-  texture coordinates at one position stopped the import.
-- libgarib's `quickboot(level_id=N)` assembles `N` as hex. A bare `10` boots Carnival 2. The editor passes
-  `0x..` explicitly (found by checking `StartNewLevel` in the decomp).
+  bosses still follow the chosen difficulty (`crates/core/src/modpatch.rs`, `EASY_CONTROLS_ROM`).
+- A ROM without the game mod is not padded to a whole number of MiB and does not go through the hardware check: it is
+  the retail ROM with its data repacked. A ROM with the mod is padded and checked (`modpatch::apply_mod`).
+- Every built ROM comes from your ROM. Keep it local.
+- libgarib's behaviour that the Rust code reproduces on purpose:
+  - The level format follows two sets of nesting rules, because libgarib's Python tools used two.
+    `SetActorRotation` and `SetActorScale` may sit inside enemies, platforms, powerups and water in the XML's rules
+    (our change to `formats/glover.lev.ksy`). Turning a `.lev` into XML follows libgarib's own, unchanged rules:
+    there the two commands only attach to landscape and background actors. `tools/gen_formats.py` writes both sets
+    into `level_format.json`.
+  - `<Level>` carries libgarib's `libgarib-version` and `data-format-version` attributes, with the values libgarib
+    wrote.
+  - The fixes Glovebox made to libgarib are part of the port. Models: animated models, missing textures, zero-length
+    normals and meshes with and without textures in one object are handled as the fixed exporter handled them. Packing: vertex indices do not
+    overflow, a normal of exactly 1 fits its byte, a mesh without vertex colours gets a display list, and more than
+    four texture coordinates at one position are allowed.
+  - The packer's vertex cache optimiser is kept as libgarib has it. Its cache stays empty in practice: the result is
+    the best first triangle, then the others in their order.
+  - The object packer takes no wrap mode. A glTF sampler's wrap mode only tells the converter along which axes the
+    texture coordinates repeat.
+  - The `quickboot` and `copyskip` patches are the instruction words libgarib's assembler produced, written as
+    numbers (`rom.rs`). The program holds no assembler and no CPU emulator.
+- `quickboot` takes the level's number, not text. libgarib assembled a bare `10` as hex, which booted Carnival 2
+  (found by checking `StartNewLevel` in the decomp).
+- Two texture banks are named `LEVELEND_TEX_BANK`: the game's banks 1 and 14. `bank_numbers.json` has 1 for the name.
+  noclip's split file of that name is bank 14, and the catalog reads that one. A build that adds textures to the
+  bank replaces bank 1, as the Python version did.
 - Rendering is approximate: static poses, Lambert lighting, garibs/tips as icons.
 - Enemies from another world bring their own model, but projectiles come from the game's bullet table and
   are looked up as optional (non-vital `FindObject`). They may be invisible. Boss enemies are tied to their

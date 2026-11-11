@@ -13,13 +13,23 @@ The editor never includes game data. Everything it shows comes from your ROM and
 ## The desktop app
 
 1. Get the app for Windows from the _[releases page](https://github.com/Eddie-Lack/Glovebox/releases)_
-2. Start it. The editor opens in its own window
+2. Unzip it and start `Glovebox.exe`. The editor opens in its own window, in under a second
 3. The first time, it asks for your ROM
-4. Wait a few minutes. The editor converts the game's models once
+4. That's it. The first level opens right away
 
-You need 64-bit Windows 10 or 11, and a graphics card with OpenGL 3.3
+You need 64-bit Windows 10 or 11
+
+Any graphics card with Direct3D 12 or Vulkan works. Without one, the editor draws in software
 
 Note: the app isn't signed, so Windows warns you _(see [the app's guide](app/README.txt))_
+
+## Running it from source
+
+You need [Rust](https://rustup.rs)
+
+`cargo run -p glovebox --release`
+
+It runs on Linux too
 
 ## More
 

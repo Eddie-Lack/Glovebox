@@ -9,7 +9,13 @@ are in the uncompressed main code segment, whose address comes from glover.yaml 
 symbol_addrs.txt. Bank numbers are named from the LoadObjectBank/LoadTextureBank switch statements in
 src/banks.c.
 
-    python3 tools/game_banks.py --gloveworld ../gloveworld [--rom baserom.z64] [--compare web/scenes.json]
+    python3 tools/game_banks.py --gloveworld ../gloveworld --numbers
+        writes crates/core/data/bank_numbers.json: the number of every bank, by name. The editor compiles it in.
+        It reads only src/banks.c and include/enums.h: gloveworld does not need to be built.
+    python3 tools/game_banks.py --gloveworld ../gloveworld [--rom baserom.z64]
+        prints the banks the game loads for each level
+    python3 tools/game_banks.py --gloveworld ../gloveworld [--rom baserom.z64] --compare crates/core/data/scenes.json
+        compares them with the committed level table
 """
 import argparse, json, os, re, struct, subprocess
 
@@ -54,6 +60,19 @@ def bank_names(src, func, consts={}):
                 names[n] = m.group(1)
             pending = []
     return names
+
+
+def bank_numbers(gloveworld):
+    """{"obj": {name: number}, "tex": {name: number}}, from the switch statements of LoadObjectBank and
+    LoadTextureBank. LEVELEND_TEX_BANK is 1 and 14; the table keeps 1."""
+    from build_xref import parse_enums
+    src = open(gloveworld + "/src/banks.c").read()
+    consts = {k: v for e in parse_enums(gloveworld + "/include/enums.h").values() for k, v in e.items()}
+    nums = {"obj": {}, "tex": {}}
+    for kind, func in (("obj", "LoadObjectBank"), ("tex", "LoadTextureBank")):
+        for n, name in sorted(bank_names(src, func, consts).items(), reverse=True):
+            nums[kind][name] = n
+    return nums
 
 
 def level_to_world(level):
@@ -106,7 +125,12 @@ if __name__ == "__main__":
     ap.add_argument("--gloveworld", required=True)
     ap.add_argument("--rom", help="read levelInfo/worldInfo from this ROM when the decomp isn't built")
     ap.add_argument("--compare")
+    ap.add_argument("--numbers", action="store_true", help="write crates/core/data/bank_numbers.json")
     a = ap.parse_args()
+    if a.numbers:
+        out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "crates", "core", "data", "bank_numbers.json")
+        json.dump(bank_numbers(a.gloveworld), open(out, "w"), indent=1)
+        raise SystemExit(0)
     banks = game_banks(a.gloveworld, a.rom)
     if not a.compare:
         print(json.dumps(banks, indent=1))
