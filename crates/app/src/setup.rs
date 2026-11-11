@@ -43,19 +43,19 @@ impl Setup {
     /// Draws the screen. True when the ROM is in place and the editor can open.
     pub fn ui(&mut self, ui: &mut egui::Ui) -> bool {
         let mut ready = false;
-        // The page of the patcher: the star background, and in the middle the framed table with the logo
+        // The theme's backdrop, and in the middle the framed box with the logo
         egui::CentralPanel::default().frame(egui::Frame::NONE).show(ui, |ui| {
-            style::stars(ui.painter(), ui.max_rect());
+            style::backdrop(ui.painter(), ui.max_rect());
             ui.vertical_centered(|ui| {
                 ui.set_max_width(640.0f32.min(ui.available_width() - 24.0));
                 ui.add_space((ui.available_height() * 0.14).max(16.0));
                 style::framed(ui, |ui| {
                     ui.spacing_mut().item_spacing.y = 0.0;
-                    egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(8, 12)).show(ui, |ui| {
+                    egui::Frame::new().fill(style::theme(ui.ctx()).banner).inner_margin(egui::Margin::symmetric(8, 12)).show(ui, |ui| {
                         ui.set_width(ui.available_width());
                         ui.vertical_centered(|ui| style::logo(ui, "GLOVEBOX", 40.0));
                     });
-                    style::rainbow(ui);
+                    style::divider(ui);
                     egui::Frame::new().inner_margin(egui::Margin::same(14)).show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     ui.with_layout(egui::Layout::top_down(egui::Align::Min), |ui| {
@@ -71,7 +71,7 @@ impl Setup {
                         }
                     }
                     if !self.error.is_empty() {
-                        ui.label(egui::RichText::new(&self.error).color(style::ERR));
+                        ui.label(egui::RichText::new(&self.error).color(style::theme(ui.ctx()).err));
                     }
                     });
                     });

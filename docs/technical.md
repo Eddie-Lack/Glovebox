@@ -97,7 +97,7 @@ nothing else. The program never runs them.
 | `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
 | `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
 | `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
-| `settings`, `style`, `icon` | `settings.ini`, the look (the palette, the shapes of the widgets, the fonts), the app's icon. |
+| `settings`, `style`, `theme`, `icon` | `settings.ini`, the drawing of the look (the widgets' shapes, title bars, the logo), the themes as data, the app's icon. |
 | `numfield` | Number fields that change by dragging. |
 
 - A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
@@ -116,27 +116,59 @@ nothing else. The program never runs them.
   a dialog.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
   (`render/icons.rs`), not with a system font. They look the same on every computer.
-- The look follows the patcher page (`web/patcher.html`), which follows the practice ROM's patch page: a 1998 game
-  web site. All of it is in `style.rs`.
-  - The palette is the page's: navy `#000080` for panels, `#000060` for boxes, `#000040` for the toolbar, the status
-    bar and pop-ups, grey `#c0c0c0` for buttons, red `#cc0000` with yellow `#ffff00` capitals for title bars.
-    Texts are white on navy, and black on the grey buttons and the white fields.
+- The look is a theme. The themes are data in `theme.rs`; `style.rs` draws everything from the active one.
+  - A `Theme` holds the colours of every surface and text, the tones of the buttons (`Tone`: fill, text, line), and
+    one variant for each part that has a shape: `Shape` (buttons), `Field` (text boxes), `Bar` (title bars), `Logo`,
+    `Divider`, `Backdrop` (behind the setup screen), `Border` (the frame of the setup box, of a dialog and of the
+    note in the view) and `Mark` (the signs of the Checks panel). It also names the fonts, the chips over the 3D
+    view, the colours of the selection, and the 3D view's background for a level without fog.
+  - `THEMES` lists them. The first is the default.
+
+    | id | name | follows | main choices |
+    | --- | --- | --- | --- |
+    | `1998` | 1998 | the patcher page (`web/patcher.html`), a game web site of 1998 | navy panels, grey bevelled buttons, sunken white fields, red title bars with yellow capitals, a slanted yellow logo, a rainbow divider, stars |
+    | `cartridge` | Cartridge | a grey console of the late 1990s and its controller | warm grey panels, charcoal label plates with white capitals, keys with a lip, the four face-button colours for states only |
+    | `blueprint` | Blueprint | a drafting sheet | blue paper with a grid, hairline controls without fills, titles followed by dimension lines, a ruler for a divider, drawn signs |
+    | `paper` | Paper | a printed manual in two inks | off-white paper, black ink and vermilion, a serif face, rules instead of boxes, fields as tinted blanks with a line under them and typed entries |
+    | `crt` | CRT | a debug monitor | black with green phosphor in one fixed-width face, amber for the main action, inverse video for what is on, chosen or under the pointer, double-line frames, two-letter codes for the checks |
+
+  - `style::apply(ctx, theme)` sets a theme for a window: the fonts, egui's visuals and the widget themes. It keeps
+    the theme in the egui context's data, and `style::theme(ctx)` reads it there. Each window has its own:
+    tests with different themes run side by side. `apply` can run at any time. The next frame is in the new
+    look.
+  - The Theme list of the toolbar calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
+    applies the theme after the frame. `App::new` reads the setting before the first frame, for the setup screen
+    too. An unknown or missing id is `1998`.
   - egui's buttons, text boxes and separators get their shapes from widget themes (`Look`, registered with
-    `replace_widget_theme`; this needs egui's `experimental` feature). A button is a grey bevel. It is sunken while
-    it is held. A toolbar switch that is on is sunken and yellow. The main action (Build ROM) is red with yellow
-    letters. An entry of a list or a menu is flat, and the chosen one is navy on white.
-  - An egui frame has one stroke, so a themed bevel is a light stroke and a dark hard shadow of one pixel. Shapes the
-    app draws itself (checkboxes, picture wells, the ridge frame) have a true two-tone bevel (`style::bevel`).
+    `replace_widget_theme`; this needs egui's `experimental` feature). A toolbar switch that is on has the class
+    `CLASS_ON`, the main action (Build ROM) `CLASS_PRIMARY`. An entry of a list or a menu is flat: the chosen one
+    and the one under the pointer take the bands `sel` and `hover`.
+  - egui marks the entries of a menu with a clear `weak_bg_fill`, and `Look` reads that mark. `apply` therefore
+    never sets a clear `weak_bg_fill`, even in a theme whose buttons have no fill.
+  - An egui frame has one stroke. A bevel is a light stroke and a dark hard shadow of one pixel. A key's lip is a
+    hard shadow under it. The line under a Paper field is a hard shadow that shows below its tint only.
   - Title bars (`title_bar`, `h4`, the head of a `card`) show their text in capitals. The accessible name keeps the
     text as written. A card whose title is a command's tag (`FogConfiguration`) keeps its letters.
-  - Checkboxes are drawn by `style::checkbox`: a bevelled box, green with a tick when on. A layer's box takes the
-    layer's colour.
-  - The setup screen and the dialogs are the page's framed table: `style::framed` (the ridge frame), `style::logo`
-    and `style::rainbow`. `style::stars` tiles the page's star background behind the setup screen.
-  - Fonts: Verdana, then Tahoma, when the computer has them, DejaVu Sans on Linux, then the fonts compiled in. A bold
-    face of the same family is the `bold` family, and Arial Black is the logo's. Without them the text font stands
-    in. No font file is in the repository.
-  - The 3D view keeps its dark grey background for a level without fog.
+  - Checkboxes are drawn by `style::checkbox`. A layer's box takes the layer's colour.
+  - Fonts: each theme names font files of the computer for four families (text, `bold`, `label` for title bars,
+    `logo`). `style.rs` looks for them in the system's font folders. A family without a file takes the family
+    before it, and every family ends with the fonts compiled in. CRT uses the code font compiled in. No font file
+    is in the repository.
+  - The editor's state gives a level without fog the background `theme::VIEW_BG`. The view replaces that colour
+    with the theme's `view_bg`. 1998 keeps `VIEW_BG`; the render comparison tests use it.
+  - To add a theme: write a `Theme` in `theme.rs` and add it to `THEMES`. A new variant of a shape needs its
+    drawing in `style.rs`. A theme must keep these rules:
+    - No file outside `theme.rs` holds a colour of the window. `style.rs` only picks black or white for a tick on a
+      coloured box, and shades a mark with a see-through white or black.
+    - The panels, the cards, the toolbar and the pop-ups are all dark or all light: `text` and `muted` are read on
+      each of them.
+    - Layout does not depend on the theme: the same margins, row heights and frame widths (`RIDGE`). Only the
+      width of the text differs.
+    - A switch that is on, the main action, the keyboard focus, the chosen row, and good, warning and bad must
+      each be clear at a glance.
+    - `GLOVEBOX_THEME=id cargo test -p glovebox --test ui` runs every click test in that theme. The test `themes`
+      chooses each theme through the toolbar at three window sizes, and `the_fonts_have_the_symbols` checks the
+      fonts of each.
 - Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
   takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
   for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
@@ -588,6 +620,12 @@ offer **Platform** for them, and the checks flag one that is.
     their start value. The hub's entrances are `ballbit` models of 18.0 to 57.4,
     the Wayroom's doors 87.6, the Castle Cave's 131.4. The end of Carnival 1 is a `ballbit` at scale 10
     (437.8), and the end of Atlantis 3 a `hoop` at scale 10 (800.0).
+  - Measured in the emulator: each of the 48 levels was booted from a quickboot ROM, and every platform with an
+    `exitType` was read from the game's list. All 126 radii equal the editor's to the one decimal the comparison
+    kept (the largest difference was 0.05). The list is `platformList` (0x802904D0): a count, then a sentinel
+    `Platform` at +4 whose `next` (+0x00) starts the chain. In a `Platform`, `flags` is at +0x14, `exitType` at
+    +0x18 and the actor at +0x80; in the actor, `radius` is at +0x30, `pos` at +0x34 and `scale` at +0xBC.
+    Levels 0x28, 0x2e and 0x2f did not reach play mode by quickboot; they have no exits.
 - Camera zones (docs/technical.md, "Level tools"): a puzzle with one `PuzzleCondGloverWithinVolume` and only actions 70
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is
@@ -729,7 +767,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 

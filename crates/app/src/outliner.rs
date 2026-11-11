@@ -37,7 +37,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
-    style::checkbox(ui, &mut ed.include_land, RichText::new("box select includes landscape").color(style::MUTED));
+    style::checkbox(ui, &mut ed.include_land, RichText::new("box select includes landscape").color(style::theme(ui.ctx()).muted));
     if !ed.has_level {
         return;
     }
@@ -56,7 +56,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 continue;
             }
             let mut on = !ed.hidden.contains(k);
-            if style::tick_box(ui, &mut on, RichText::new(format!("{name} {n}")).color(style::TEXT).into(), style::hex(color)).changed() {
+            if style::tick_box(ui, &mut on, RichText::new(format!("{name} {n}")).color(style::theme(ui.ctx()).text).into(), style::hex(color)).changed() {
                 acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(k, on)));
             }
             col += 1;
@@ -68,7 +68,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         let n = ed.exits().len();
         if n > 0 {
             let mut on = !ed.hidden.contains(exits::LAYER);
-            if style::tick_box(ui, &mut on, RichText::new(format!("Exit triggers {n}")).color(style::TEXT).into(), style::hex(exits::COLOR)).changed() {
+            if style::tick_box(ui, &mut on, RichText::new(format!("Exit triggers {n}")).color(style::theme(ui.ctx()).text).into(), style::hex(exits::COLOR)).changed() {
                 acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(exits::LAYER, on)));
             }
         }
@@ -106,6 +106,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         }
         lists.push(lst);
     }
+    let th = style::theme(ui.ctx());
     let mut act: Option<Act> = None;
     let row_height = 20.0;
     ui.spacing_mut().item_spacing.y = 0.0;
@@ -138,7 +139,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                             if *n > 0 {
                                 text.push_str(&format!("  · {n} selected"));
                             }
-                            let head = ui.add(egui::Label::new(RichText::new(text).size(12.0).color(style::MUTED)).truncate().sense(egui::Sense::click()));
+                            let head = ui.add(egui::Label::new(RichText::new(text).size(12.0).color(th.muted)).truncate().sense(egui::Sense::click()));
                             if head.clicked() {
                                 st.open.insert(kind, !open);
                             }
@@ -149,24 +150,24 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                     let e = &ed.entities[*i];
                     let on = selected.contains(i) || owners.contains(i);
                     let color = if on {
-                        style::NAVY
+                        th.sel.text
                     } else if st.bad.get(*i).copied().unwrap_or(false) {
-                        style::ERR
+                        th.err
                     } else {
-                        style::TEXT
+                        th.text
                     };
                     let tag = if e.tag == "GaribGroup" { "" } else { e.tag.as_str() };
                     ui.allocate_ui_with_layout(egui::vec2(ui.available_width(), row_height), egui::Layout::left_to_right(egui::Align::Center), |ui| {
                         ui.add_space(14.0);
-                        // The chosen rows are navy on white, as in a list of the time. The band is put in under the
-                        // text once the text's place is known.
+                        // The chosen rows take the theme's band. It is put in under the text once the text's place is
+                        // known.
                         let band = ui.painter().add(egui::Shape::Noop);
                         let text = RichText::new(format!("{}   {}", e.label, tag)).color(color);
                         let mut r = ui.add(egui::Label::new(text).truncate().sense(egui::Sense::click()));
                         let fill = if on {
-                            Some(style::WHITE)
+                            Some(th.sel.fill)
                         } else if r.hovered() {
-                            Some(style::HILITE)
+                            Some(th.hover.fill)
                         } else {
                             None
                         };

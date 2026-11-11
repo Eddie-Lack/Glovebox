@@ -58,6 +58,8 @@ pub struct View {
     pub dirty: bool,
     /// Where the view is in the window, in points.
     pub rect: egui::Rect,
+    /// The background of a level without fog: the theme's.
+    pub background: [f64; 3],
     /// The button a press in the view holds until it comes up.
     held: Option<Button>,
     /// Why the 3D view could not start.
@@ -85,6 +87,7 @@ impl View {
             fly_keys: BTreeSet::new(),
             dirty: true,
             rect: egui::Rect::NOTHING,
+            background: crate::theme::VIEW_BG,
             held: None,
             error,
             frames: 0,
@@ -140,7 +143,8 @@ impl View {
                 None => self.texture = Some(egui_renderer.register_native_texture(&rs.device, view, wgpu::FilterMode::Linear)),
             }
         }
-        r.background = ed.background;
+        // A level without fog has the theme's background
+        r.background = if ed.background == crate::theme::VIEW_BG { self.background } else { ed.background };
         r.fog = ed.fog().map(|(color, near, far)| Fog { color, near, far });
         r.ambient = ed.ambient;
         let points = ed.selection_box_points();
@@ -286,6 +290,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         w.view.rect = rect;
         w.view.dirty = true;
     }
+    let background = style::theme(ui.ctx()).view_bg;
+    if background != w.view.background {
+        w.view.background = background;
+        w.view.dirty = true;
+    }
     w.ed.set_view_size(f64::from(rect.width()), f64::from(rect.height()));
     input(w, ui, rect, resp.contains_pointer());
     fly_step(w, ui);
@@ -303,18 +312,19 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         w.view.draw(&mut w.ed, pw, ph);
     }
     let painter = ui.painter_at(rect);
+    let th = style::theme(ui.ctx());
     match w.view.texture {
         Some(t) if w.ed.has_level => {
             painter.image(t, rect, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
         }
         _ => {
-            painter.rect_filled(rect, 0.0, egui::Color32::from_rgb(13, 14, 18));
+            painter.rect_filled(rect, 0.0, th.view_color());
         }
     }
     if let Some((x0, y0, x1, y1)) = w.ed.box_rect() {
         let r = egui::Rect::from_min_max(rect.min + egui::vec2(x0 as f32, y0 as f32), rect.min + egui::vec2(x1 as f32, y1 as f32));
-        painter.rect_filled(r, 0.0, egui::Color32::from_rgba_unmultiplied(255, 255, 0, 30));
-        painter.rect_stroke(r, 0.0, egui::Stroke::new(1.0, style::GOLD), egui::StrokeKind::Inside);
+        painter.rect_filled(r, 0.0, th.select_box.1);
+        painter.rect_stroke(r, 0.0, egui::Stroke::new(1.0, th.select_box.0), egui::StrokeKind::Inside);
     }
     if resp.contains_pointer() && (w.ed.box_mode || w.ed.path.on) {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
@@ -325,32 +335,31 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 /// The level's name, the autosave chip, the hint line and the loading note.
 fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
     let inner = rect.shrink2(egui::vec2(10.0, 8.0));
-    // The chips are navy boxes, a little see-through, with the page's black edge
-    let chip = egui::Color32::from_rgba_unmultiplied(0, 0, 0x60, 225);
+    // The chips are boxes of the theme, a little see-through
+    let th = style::theme(ui.ctx());
     let mut top = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::top_down(egui::Align::Min)));
     top.spacing_mut().item_spacing.y = 3.0;
     if !w.hud_level.is_empty() {
-        let frame = egui::Frame::new().fill(chip).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(6, 1));
-        frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).font(egui::FontId::new(13.0, style::bold())).color(style::YELLOW)));
+        let frame = style::chip(th, false).inner_margin(egui::Margin::symmetric(6, 1));
+        frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).font(egui::FontId::new(13.0, style::bold())).color(th.chip_title)));
     }
     if w.ed.has_level {
         let (text, tip, edited) = w.chip();
-        let (fg, border) = if edited { (style::YELLOW, style::YELLOW) } else { (style::TEXT, style::BLACK) };
-        let frame = egui::Frame::new().fill(chip).stroke(egui::Stroke::new(1.0, border)).inner_margin(egui::Margin::symmetric(6, 1));
+        let fg = if edited { th.chip_edited } else { th.chip.text };
+        let frame = style::chip(th, edited).inner_margin(egui::Margin::symmetric(6, 1));
         frame.show(&mut top, |ui| ui.label(egui::RichText::new(text).size(12.0).color(fg))).response.on_hover_text(tip);
     }
     let hint = if w.view.fly.on { HINT_FLY } else { HINT_ORBIT };
     let mut bottom = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::bottom_up(egui::Align::Min)));
-    let hint_frame = egui::Frame::new().fill(chip).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(6, 2));
-    hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(style::TEXT)));
+    let hint_frame = style::chip(th, false).inner_margin(egui::Margin::symmetric(6, 2));
+    hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(th.chip.text)));
 
     let note = w.view.error.as_deref().unwrap_or(&w.loading);
     if !note.is_empty() {
-        let galley = ui.painter().layout(note.to_string(), egui::FontId::proportional(13.0), style::TEXT, (rect.width() - 80.0).max(100.0));
+        let galley = ui.painter().layout(note.to_string(), egui::FontId::proportional(13.0), th.text, (rect.width() - 80.0).max(100.0));
         let size = egui::vec2((galley.size().x + 40.0).max(260.0), galley.size().y.max(16.0) + 30.0);
         let r = egui::Rect::from_center_size(rect.center(), size);
-        ui.painter().rect_filled(r, 0.0, style::NAVY);
-        style::ridge(ui.painter(), r.expand(style::RIDGE));
+        style::plaque(ui.painter(), r);
         let mut child = ui.new_child(egui::UiBuilder::new().max_rect(r).layout(egui::Layout::centered_and_justified(egui::Direction::TopDown)));
         child.label(note);
     }

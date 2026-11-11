@@ -91,8 +91,8 @@ fn work(w: &mut Window, ctx: &egui::Context) {
 fn thumb_box(ui: &mut egui::Ui, texture: Option<&egui::TextureHandle>) -> egui::Rect {
     let (rect, _) = ui.allocate_exact_size(egui::vec2(64.0, 64.0), egui::Sense::hover());
     if ui.is_rect_visible(rect) {
-        ui.painter().rect_filled(rect, 0.0, style::INPUT);
-        style::bevel(ui.painter(), rect, false);
+        ui.painter().rect_filled(rect, 0.0, style::theme(ui.ctx()).well);
+        style::well_edge(ui.painter(), rect);
         if let Some(t) = texture {
             ui.painter().image(t.id(), rect.shrink(2.0), egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
         }
@@ -131,7 +131,7 @@ impl Px<'_> {
                 ui.spacing_mut().item_spacing.y = 1.0;
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing.x = 5.0;
-                    ui.label(RichText::new(title).strong().color(style::TEXT));
+                    ui.label(RichText::new(title).strong().color(style::theme(ui.ctx()).text));
                     if let Some(s) = small {
                         ui.label(s);
                     }
@@ -307,7 +307,7 @@ fn enemies(px: &mut Px, ui: &mut egui::Ui) {
         let token = v.parse::<i64>().ok().and_then(|n| ed.decomp_enum_name("ActorType", Some(n))).unwrap_or_default();
         let drawable = oid.as_deref().filter(|o| ed.model_ref(o).is_some()).map(str::to_string);
         ui.push_id(name, |ui| {
-            let small = RichText::new(token).monospace().color(style::TOK);
+            let small = RichText::new(token).monospace().color(style::theme(ui.ctx()).tok);
             let has = drawable.is_some();
             let clicked = px.prow(ui, |px, ui| px.thumb(ui, drawable.as_deref()), name, Some(small), &format!("{where_}{script}{boss}"), &[("Add", "", has)], |_, _| {});
             if clicked.is_some() {

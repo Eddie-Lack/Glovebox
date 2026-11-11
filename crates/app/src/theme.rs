@@ -287,6 +287,9 @@ impl Theme {
 /// The 3D view's background for a level without fog, as the editor's state gives it.
 pub const VIEW_BG: [f64; 3] = [0.051, 0.055, 0.071];
 
+/// The colours of the rainbow divider, from left to right.
+pub const RAINBOW: [Color32; 7] = [c(0xff0000), c(0xff8000), c(0xffff00), c(0x00c000), c(0x0080ff), c(0x8000ff), c(0xff00ff)];
+
 /// The themes. The first is the default.
 pub static THEMES: [&Theme; 5] = [&Y1998, &CARTRIDGE, &BLUEPRINT, &PAPER, &CRT];
 

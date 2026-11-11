@@ -569,7 +569,7 @@ fn puzzle_list(cx: &mut Cx, ui: &mut egui::Ui) {
     note(ui, "A puzzle runs its actions when its conditions hold. The game tests every puzzle each frame.");
     for (i, p) in ps.into_iter().enumerate() {
         let text = format!("{}. {}", i + 1, puzzles::summary(&ed.doc, p));
-        let r = ui.add(egui::Label::new(RichText::new(text).color(style::TEXT)).sense(egui::Sense::click())).on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(format!("Open puzzle {}", i + 1));
+        let r = ui.add(egui::Label::new(RichText::new(text).color(style::theme(ui.ctx()).text)).sense(egui::Sense::click())).on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(format!("Open puzzle {}", i + 1));
         if r.clicked() {
             cx.ed_act(move |ed| ed.open_puzzle(Some(p)));
         }
@@ -1052,7 +1052,8 @@ fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
         return;
     }
     let st = |v: &serde_json::Value, k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or("").to_string();
-    egui::Frame::new().fill(style::DEEP).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(6, 4)).show(ui, |ui| {
+    let th = style::theme(ui.ctx());
+    style::boxed(th, th.deep).inner_margin(egui::Margin::symmetric(6, 4)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.spacing_mut().item_spacing.y = 2.0;
         if let Some(c) = c {

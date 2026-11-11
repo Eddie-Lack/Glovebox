@@ -7,7 +7,8 @@
 //! port did not already click.
 //!
 //! `GLOVEBOX_SHOTS=DIR` saves pictures of the window after the main steps. `GLOVEBOX_ROM=PATH` also runs
-//! `the_rom`: setup with the real ROM, all 48 levels, a ROM build and a patch.
+//! `the_rom`: setup with the real ROM, all 48 levels, a ROM build and a patch. `GLOVEBOX_THEME=ID` runs every
+//! test in that theme (`themes` chooses its own).
 
 use egui::{Key, Modifiers};
 use egui_kittest::kittest::{NodeT, Queryable};
@@ -59,9 +60,23 @@ fn puzzles(ed: &Editor) -> usize {
 
 impl T {
     fn new(name: &str, backend: Option<Arc<dyn Backend>>, size: [f32; 2]) -> T {
+        let theme = std::env::var("GLOVEBOX_THEME").ok();
+        T::with_theme(name, backend, size, theme.as_deref())
+    }
+
+    /// A window on an empty user folder whose settings name a theme.
+    fn with_theme(name: &str, backend: Option<Arc<dyn Backend>>, size: [f32; 2], theme: Option<&str>) -> T {
         let home = std::env::temp_dir().join(format!("glovebox-ui-test-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&home);
         std::fs::create_dir_all(&home).unwrap();
+        if let Some(id) = theme {
+            std::fs::write(home.join("settings.ini"), format!("[General]\ntheme={id}\n")).unwrap();
+        }
+        T::open(home, backend, size)
+    }
+
+    /// A window on a user folder as it is.
+    fn open(home: PathBuf, backend: Option<Arc<dyn Backend>>, size: [f32; 2]) -> T {
         let files = Scripted::default();
         let start = Start { home: home.clone(), backend, dialogs: Box::new(files.clone()) };
         let h = Harness::builder().with_size(egui::vec2(size[0], size[1])).with_max_steps(8).wgpu().build_eframe(move |cc| App::new(cc, start));
@@ -132,10 +147,32 @@ impl T {
     fn shot(&mut self, name: &str) {
         let Some(dir) = self.shots.clone() else { return };
         self.settle();
+        let path = dir.join(format!("{name}.png"));
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         match self.h.render() {
-            Ok(img) => img.save(dir.join(format!("{name}.png"))).unwrap(),
+            Ok(img) => img.save(path).unwrap(),
             Err(e) => println!("no picture {name}: {e}"),
         }
+    }
+
+    /// The id of the window's theme.
+    fn theme(&self) -> &'static str {
+        glovebox::style::theme(&self.h.ctx).id
+    }
+
+    /// Chooses a theme in the toolbar's list.
+    fn set_theme(&mut self, name: &str) -> bool {
+        let ok = self.click("Theme") && self.choose(name);
+        self.settle();
+        ok
+    }
+
+    /// True when the window's top left corner, which is the toolbar's ground, has the theme's colour.
+    fn toolbar_is(&mut self, th: &glovebox::theme::Theme) -> bool {
+        self.settle();
+        let Ok(img) = self.h.render() else { return false };
+        let (p, want) = (img.get_pixel(2, 2).0, th.deep.to_array());
+        (0..3).all(|k| p[k].abs_diff(want[k]) <= 2)
     }
 
     fn status(&mut self) -> String {
@@ -2014,18 +2051,144 @@ fn small_and_scaled_windows() {
     }
 }
 
-/// The fonts the app carries have every symbol its buttons and texts show.
+/// The fonts of every theme have every symbol the app's buttons and texts show.
 #[test]
 fn the_fonts_have_the_symbols() {
-    let ctx = egui::Context::default();
-    glovebox::style::apply(&ctx);
-    let symbols = "↗●★♥✴↑↓×…▸▾←→⚠°·—’“”–!?";
-    let mut missing = String::new();
-    let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
-        missing = symbols.chars().filter(|c| !ui.fonts_mut(|f| f.has_glyph(&egui::FontId::proportional(13.0), *c))).collect();
-    });
-    out.textures_delta.clear();
-    assert!(missing.is_empty(), "no glyph for {missing}");
+    use glovebox::style;
+    for th in glovebox::theme::THEMES {
+        let ctx = egui::Context::default();
+        style::apply(&ctx, th);
+        let symbols = "↗●★♥✴↑↓×…▸▾←→⚠°·—’“”–!?+>";
+        let families = [egui::FontFamily::Proportional, egui::FontFamily::Monospace, style::bold(), style::label_family(), style::logo_family()];
+        let mut missing = String::new();
+        let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
+            for family in &families {
+                let id = egui::FontId::new(13.0, family.clone());
+                missing.extend(symbols.chars().filter(|c| !ui.fonts_mut(|f| f.has_glyph(&id, *c))));
+            }
+        });
+        out.textures_delta.clear();
+        assert!(missing.is_empty(), "theme {}: no glyph for {missing}", th.id);
+    }
+}
+
+/// The Theme list of the toolbar: every theme through a click, at three window sizes. The choice is kept in the
+/// settings and read back by a new window and by the setup screen. An unknown name gives the default.
+///
+/// With `GLOVEBOX_SHOTS` it saves, for every theme, pictures of a level with a selection, the Add palette, a
+/// dialog and the setup screen in `DIR/<theme>/`. With `GLOVEBOX_ROM` also a level of the game.
+#[test]
+fn themes() {
+    use glovebox::theme::THEMES;
+    let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
+    let mut results = Vec::new();
+    let mut t = T::with_theme("themes", fixture(), [1500.0, 950.0], None);
+    for (size, scale) in [([1500.0, 950.0], 1.0), ([1280.0, 720.0], 1.0), ([1920.0, 1080.0], 1.5)] {
+        if scale != 1.0 || size[0] != 1500.0 {
+            results.append(&mut t.results);
+            t.finish();
+            t = T::with_theme("themes", fixture(), size, None);
+            t.h.set_pixels_per_point(scale);
+        }
+        t.idle();
+        let first = t.theme() == "1998" && t.toolbar_is(THEMES[0]);
+        t.check("without a setting the theme is 1998", first);
+        let ed = t.ed();
+        let enemy = ent(ed, |e| e.kind == "enemy");
+        ed.select(enemy, false);
+        t.settle();
+        let window = t.h.ctx.content_rect();
+        let at = format!("{}x{} at {scale}", size[0], size[1]);
+        t.detail(&format!("{at}: the window has this size"), (window.width() * scale - size[0]).abs() < 2.0 && t.h.ctx.pixels_per_point() == scale, format!("{window:?}"));
+        for th in THEMES.iter().rev() {
+            let chosen = t.set_theme(th.name);
+            let looks = t.theme() == th.id && t.toolbar_is(th);
+            let saved = std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains(&format!("theme={}", th.id));
+            t.detail(&format!("{at}: the Theme list sets {}", th.name), chosen && looks && saved, format!("{chosen} {looks} {saved} {}", t.theme()));
+            // Everything of the toolbar is in the window, and the view keeps its room
+            let places: Vec<_> = ["Theme", "Build ROM", "Patcher ↗", "Focus"].iter().map(|l| t.find(l, true).first().map(|n| n.rect())).collect();
+            let inside = places.iter().all(|r| r.is_some_and(|r| window.contains_rect(r)));
+            let view = t.w().view.rect;
+            t.detail(&format!("{at}, {}: the toolbar fits and the view has room", th.name), inside && view.width() >= 200.0 && view.height() >= 200.0, format!("{view:?} in {window:?}: {places:?}"));
+            if scale == 1.0 && size[0] == 1500.0 {
+                // A button works in this theme, and the pictures
+                let n = kinds(t.ed(), "enemy").len();
+                t.shot(&format!("{}/1-level", th.id));
+                t.click("+ Add");
+                t.click("Enemies");
+                t.shot(&format!("{}/2-add", th.id));
+                t.click("Add dennis");
+                let added = kinds(t.ed(), "enemy").len() == n + 1;
+                t.ed().undo();
+                t.click("+ Add");
+                t.click("Export patch");
+                let open = t.has_containing("A BPS patch for other players");
+                t.shot(&format!("{}/3-dialog", th.id));
+                t.click("Cancel");
+                let closed = t.w().dialog.is_none() && !t.w().palette_open;
+                t.detail(&format!("{}: Add, a dialog and Cancel work", th.name), added && open && closed, format!("{added} {open} {closed}"));
+                let enemy = ent(t.ed(), |e| e.kind == "enemy");
+                t.ed().select(enemy, false);
+                t.settle();
+            } else {
+                t.shot(&format!("{}/6-{}", th.id, if scale == 1.0 { "1280x720" } else { "scale-150" }));
+            }
+        }
+    }
+    // A new window on the same user folder has the theme that was chosen last
+    t.set_theme("Paper");
+    let home = t.home.clone();
+    drop(t.h);
+    let mut again = T::open(home, fixture(), [1280.0, 720.0]);
+    again.idle();
+    let kept = again.theme() == "paper" && again.toolbar_is(glovebox::theme::by_id("paper"));
+    again.check("a new window has the theme of the settings", kept);
+    again.finish();
+    results.append(&mut t.results);
+
+    // An unknown theme in the settings is 1998
+    let mut odd = T::with_theme("themes-unknown", fixture(), [1280.0, 720.0], Some("glass"));
+    odd.idle();
+    let default = odd.theme() == "1998" && odd.toolbar_is(THEMES[0]);
+    odd.check("an unknown theme in the settings gives 1998", default);
+    odd.finish();
+
+    // The setup screen has the theme of the settings
+    for th in THEMES {
+        let mut setup = T::with_theme("themes-setup", None, [1280.0, 720.0], Some(th.id));
+        setup.settle();
+        let shown = setup.has("Choose the ROM…") && setup.theme() == th.id;
+        setup.shot(&format!("{}/4-setup", th.id));
+        setup.detail(&format!("the setup screen is in {}", th.name), shown, setup.theme().to_string());
+        setup.finish();
+    }
+
+    // A level of the game in every theme
+    if let Some(rom) = std::env::var_os("GLOVEBOX_ROM").map(PathBuf::from) {
+        let mut game = T::with_theme("themes-rom", None, [1500.0, 950.0], None);
+        game.files.0.borrow_mut().open.push_back(rom);
+        game.settle();
+        game.h.get_by_label("Choose the ROM…").click();
+        game.settle();
+        game.idle();
+        game.click("Level");
+        game.choose("  (0a)");
+        game.until(300, |w| !w.busy && w.ed.scene_id() == "0a" && w.jobs.running == 0);
+        let ed = game.ed();
+        let some = ent(ed, |e| e.kind == "enemy" && !e.is_handle);
+        ed.select(some, false);
+        game.settle();
+        for th in THEMES.iter().rev() {
+            let ok = game.set_theme(th.name) && game.theme() == th.id;
+            game.shot(&format!("{}/5-game", th.id));
+            game.check(&format!("a level of the game in {}", th.name), ok);
+        }
+        game.finish();
+    } else {
+        println!("skipped: GLOVEBOX_ROM is not set (a level of the game in every theme)");
+    }
+    let failed: Vec<&(String, bool, String)> = results.iter().filter(|r| !r.1).collect();
+    assert!(failed.is_empty(), "failed: {:?}", failed.iter().map(|r| &r.0).collect::<Vec<_>>());
 }
 
 /// The first-run screen: a wrong file is refused with the first-run screen's message.
