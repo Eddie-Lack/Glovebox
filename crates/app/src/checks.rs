@@ -82,7 +82,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
         if ui.checkbox(&mut on, "Copy the models into the ROM instead").on_hover_text(tip).changed() {
             w.acts.push(Box::new(move |w: &mut Window| {
                 w.ed.copy_imports = on;
-                w.ed.schedule_import_plan();
+                w.checks = w.ed.checks();
             }));
         }
         style::note(ui, tip);
