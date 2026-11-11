@@ -31,6 +31,14 @@ pub fn hex(s: &str) -> Color32 {
 /// Sets the look for the whole app.
 pub fn apply(ctx: &egui::Context) {
     ctx.set_theme(egui::Theme::Dark);
+    // The code font has arrows and shapes the text font lacks
+    let mut fonts = egui::FontDefinitions::default();
+    if let Some(list) = fonts.families.get_mut(&egui::FontFamily::Proportional) {
+        if !list.iter().any(|f| f == "Hack") {
+            list.push("Hack".to_string());
+        }
+    }
+    ctx.set_fonts(fonts);
     ctx.all_styles_mut(|style| {
         use egui::TextStyle::*;
         style.text_styles = [
@@ -51,6 +59,7 @@ pub fn apply(ctx: &egui::Context) {
         s.scroll.bar_width = 8.0;
         s.scroll.floating = false;
         s.menu_margin = Margin::same(6);
+        style.interaction.selectable_labels = false;
         let v = &mut style.visuals;
         v.dark_mode = true;
         v.override_text_color = None;
@@ -163,12 +172,17 @@ pub fn mini(ui: &mut Ui, text: &str, tip: &str) -> Response {
     }
 }
 
-/// A small button that opens a menu.
-pub fn mini_menu(ui: &mut Ui, text: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
+/// A small button that opens a menu. `label` names it for screen readers and tests when the text alone says too
+/// little.
+pub fn mini_menu(ui: &mut Ui, text: &str, label: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
     let b = egui::Button::new(RichText::new(text).size(11.0)).small().corner_radius(4);
     let r = egui::containers::menu::MenuButton::from_button(b).ui(ui, |ui| {
         egui::ScrollArea::vertical().max_height(420.0).show(ui, add);
     });
+    if !label.is_empty() {
+        let label = label.to_string();
+        r.0.widget_info(move || egui::WidgetInfo::labeled(egui::Role::Button, true, &label));
+    }
     if !tip.is_empty() {
         r.0.on_hover_text(tip);
     }
@@ -212,7 +226,7 @@ pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: O
     ui.painter().rect_filled(edge, CornerRadius { nw: 6, sw: 6, ne: 0, se: 0 }, level_color(level));
     let mut clicked = out.inner;
     if clickable {
-        let whole = ui.interact(rect, ui.id().with(("chk", rect.min.y as i32, text.len())), egui::Sense::click());
+        let whole = ui.interact(rect, ui.scope_id().with(("chk", rect.min.y as i32, text.len())), egui::Sense::click());
         clicked |= whole.clicked();
         whole.on_hover_cursor(egui::CursorIcon::PointingHand);
     }
@@ -222,26 +236,40 @@ pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: O
     clicked
 }
 
+/// The width a row of buttons with these texts takes.
+pub fn button_width(ui: &Ui, text: &str, font_size: f32) -> f32 {
+    let galley = ui.painter().layout_no_wrap(text.to_string(), FontId::proportional(font_size), TEXT);
+    galley.size().x + 2.0 * ui.spacing().button_padding.x + 2.0
+}
+
 /// A titled box. `head` adds the buttons at the header's right, `body` what is under the title.
+///
+/// The title wraps in the room the buttons leave. Their width is the one measured in the frame before.
 pub fn card<R>(ui: &mut Ui, title: &str, op: Option<&str>, head: impl FnOnce(&mut Ui), body: impl FnOnce(&mut Ui) -> R) -> R {
     let frame = egui::Frame::new().fill(PANEL).stroke(Stroke::new(1.0, BORDER)).corner_radius(8).inner_margin(Margin { left: 8, right: 8, top: 6, bottom: 8 });
     frame
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.horizontal(|ui| {
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            let id = ui.scope_id().with("card head");
+            let head_width: f32 = ui.data(|d| d.get_temp(id)).unwrap_or(0.0);
+            ui.horizontal_top(|ui| {
+                let title_width = (ui.available_width() - head_width - 6.0).max(40.0);
+                ui.allocate_ui_with_layout(egui::vec2(title_width, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                    ui.set_width(title_width);
+                    h3(ui, title);
+                });
+                let r = ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 3.0;
-                    // Right to left: the buttons come in their reading order
-                    ui.scope(|ui| {
-                        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), head);
-                    });
                     if let Some(op) = op {
                         ui.label(RichText::new(op).monospace().color(MUTED));
                     }
-                    ui.with_layout(egui::Layout::left_to_right(egui::Align::Center).with_main_wrap(true), |ui| {
-                        h3(ui, title);
-                    });
+                    head(ui);
                 });
+                let width = r.response.rect.width();
+                if (width - head_width).abs() > 0.5 {
+                    ui.data_mut(|d| d.insert_temp(id, width));
+                    ui.ctx().request_repaint();
+                }
             });
             body(ui)
         })
@@ -293,11 +321,11 @@ pub fn name(r: &Response, label: &str) {
     if !label.is_empty() {
         let enabled = r.enabled();
         let label = label.to_string();
-        r.widget_info(move || egui::WidgetInfo::labeled(egui::WidgetType::TextEdit, enabled, &label));
+        r.widget_info(move || egui::WidgetInfo::labeled(egui::Role::TextInput, enabled, &label));
     }
 }
 
 /// Python's float(): a number, or None.
 pub fn parse_f64(s: &str) -> Option<f64> {
-    glovebox_core::pyfmt::py_float(s.trim()).ok()
+    glovebox_core::pyfmt::parse_float(s.trim())
 }
