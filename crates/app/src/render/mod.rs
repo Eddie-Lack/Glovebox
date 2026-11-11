@@ -182,7 +182,10 @@ fn put_mat(out: &mut Vec<u8>, m: &Mat4) {
 fn buffer(device: &wgpu::Device, data: &[u8], usage: wgpu::BufferUsages) -> wgpu::Buffer {
     let size = (data.len() as u64).div_ceil(4).max(1) * 4;
     let b = device.create_buffer(&wgpu::BufferDescriptor { label: None, size, usage, mapped_at_creation: true });
-    b.slice(..).get_mapped_range_mut()[..data.len()].copy_from_slice(data);
+    // A buffer made mapped always gives its range
+    if let Ok(mut view) = b.slice(..).get_mapped_range_mut() {
+        view[..data.len()].copy_from_slice(data);
+    }
     b.unmap();
     b
 }
