@@ -246,8 +246,11 @@ impl GameData {
         let obj_names: Vec<String> = obj_names.into_iter().collect();
         let mut tex_names: BTreeSet<String> = BTreeSet::new();
         for r in rom.regions() {
+            // The Japanese font is a texture bank in the map, but not one of noclip's files
             if let (true, Some(name)) = (r.data_type() == "texbank", r.name()) {
-                tex_names.insert(format!("{name}.tex.fla"));
+                if rom.texture_bank(name).is_some() {
+                    tex_names.insert(format!("{name}.tex.fla"));
+                }
             }
         }
         let tex_names: Vec<String> = tex_names.into_iter().collect();

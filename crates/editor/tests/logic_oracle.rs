@@ -36,14 +36,6 @@ fn q4(v: &Value) -> [f64; 4] {
     let a = fs(v);
     [a[0], a[1], a[2], a[3]]
 }
-fn m4(v: &Value) -> [[f64; 4]; 4] {
-    let a = fs(v);
-    let mut m = [[0.0; 4]; 4];
-    for i in 0..16 {
-        m[i / 4][i % 4] = a[i];
-    }
-    m
-}
 fn s(v: &Value) -> &str {
     v.as_str().expect("text")
 }
