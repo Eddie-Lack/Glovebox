@@ -316,6 +316,12 @@ pub fn self_test(rom: &[u8]) -> Result<Vec<(&'static str, bool)>, n64::OutOfBoun
 }
 
 pub fn self_test_with(rom: &[u8], info: &Value) -> Result<Vec<(&'static str, bool)>, n64::OutOfBounds> {
+    let cases = self_test_cases(rom, info)?;
+    Ok(cases.into_iter().map(|(name, data)| (name, !check_rom_with(&data, info).is_empty())).collect())
+}
+
+/// The broken copies the self-test makes, each with the name of its break.
+pub fn self_test_cases(rom: &[u8], info: &Value) -> Result<Vec<(&'static str, Vec<u8>)>, n64::OutOfBounds> {
     let base = hex(&info["mod_rom"]).unwrap_or(0) as usize;
     let c = base.saturating_add(info["custom"]["offset"].as_u64().unwrap_or(0) as usize);
     let entry = c.saturating_add(8);
@@ -350,8 +356,7 @@ pub fn self_test_with(rom: &[u8], info: &Value) -> Result<Vec<(&'static str, boo
     let mut r = rom.to_vec();
     n64::write_u32(&mut r, obj_at, read_u32(rom, obj_at)?.wrapping_add(2))?;
     cases.push(("object pointer not aligned", r));
-
-    Ok(cases.into_iter().map(|(name, data)| (name, !check_rom_with(&data, info).is_empty())).collect())
+    Ok(cases)
 }
 
 /// Whether every break of `self_test` is found.

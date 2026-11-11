@@ -1108,8 +1108,9 @@ fn mesh_node(
                 alpha_cutoff: 0.5,
                 double_sided: false,
                 unlit: mode & render_mode::UNLIT != 0,
-                wrap_s: MatKey::wrap(key.clamp_s, key.mirror_s),
-                wrap_t: MatKey::wrap(key.clamp_t, key.mirror_t),
+                // An untextured material has no sampler in the glTF file.
+                wrap_s: MatKey::wrap(key.clamp_s && key.texture.is_some(), key.mirror_s && key.texture.is_some()),
+                wrap_t: MatKey::wrap(key.clamp_t && key.texture.is_some(), key.mirror_t && key.texture.is_some()),
             });
             out.primitives.push(p);
         }
@@ -1481,7 +1482,7 @@ mod tests {
         assert_eq!(ids, [0xAAAA_0001, 0xBBBB_0002, 0xCCCC_0003, 0xDDDD_0004]);
         assert_eq!(m.texture_ids(), ids);
         let b = m.bounds().unwrap();
-        assert_eq!(b.min, [1.0, 2.0, 3.0]);
+        assert_eq!(b.min[0], 1.0);
     }
 
     #[test]

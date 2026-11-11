@@ -309,7 +309,19 @@ impl Doc {
         if xml.len() > lim.max_bytes {
             return Err(XmlError(format!("the XML is larger than {} MB", lim.max_bytes >> 20)));
         }
-        Parser { s: xml.as_bytes(), src: xml, i: 0, lim, count: 0 }.document()
+        Parser { s: xml.as_bytes(), src: xml, i: 0, lim, count: 0, pieces: None }.document().map(|(doc, _)| doc)
+    }
+
+    /// Like `parse_with`, and also gives what each element holds, in order: every run of text (also text made
+    /// of whitespace only, and text between child elements), every child, and a mark for every comment or
+    /// processing instruction. The list is indexed by `NodeId.0`. The strict check of imported files reports
+    /// stray text and dropped comments from it.
+    pub fn parse_pieces(xml: &str, lim: Limits) -> Result<(Doc, Vec<Vec<Piece>>), XmlError> {
+        if xml.len() > lim.max_bytes {
+            return Err(XmlError(format!("the XML is larger than {} MB", lim.max_bytes >> 20)));
+        }
+        let p = Parser { s: xml.as_bytes(), src: xml, i: 0, lim, count: 0, pieces: Some(Vec::new()) };
+        p.document().map(|(doc, pieces)| (doc, pieces.unwrap_or_default()))
     }
 
     // -- Writing
@@ -391,12 +403,24 @@ fn escape(s: &str, attr: bool, out: &mut String) {
     }
 }
 
+/// One thing an element holds, as `Doc::parse_pieces` reports it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Piece {
+    /// A run of text between two pieces of markup, with its entities resolved.
+    Text(String),
+    Child(NodeId),
+    /// A comment or a processing instruction.
+    Dropped,
+}
+
 struct Parser<'a> {
     s: &'a [u8],
     src: &'a str,
     i: usize,
     lim: Limits,
     count: usize,
+    /// What each element holds, when the caller asked for it.
+    pieces: Option<Vec<Vec<Piece>>>,
 }
 
 impl<'a> Parser<'a> {
@@ -435,7 +459,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn document(mut self) -> Result<Doc, XmlError> {
+    fn document(mut self) -> Result<(Doc, Option<Vec<Vec<Piece>>>), XmlError> {
         if self.starts("\u{feff}") {
             self.i += 3;
         }
@@ -449,7 +473,7 @@ impl<'a> Parser<'a> {
         if self.i < self.s.len() {
             return self.err("there is content after the root element");
         }
-        Ok(doc)
+        Ok((doc, self.pieces))
     }
 
     fn name(&mut self) -> Result<&'a str, XmlError> {
@@ -485,6 +509,12 @@ impl<'a> Parser<'a> {
         let id = NodeId(doc.nodes.len() as u32 - 1);
         if let Some(p) = parent {
             doc.nodes[p.0 as usize].children.push(id);
+        }
+        if let Some(pieces) = self.pieces.as_mut() {
+            pieces.push(Vec::new());
+            if let Some(p) = parent {
+                pieces[p.0 as usize].push(Piece::Child(id));
+            }
         }
         loop {
             let before = self.i;
@@ -548,14 +578,19 @@ impl<'a> Parser<'a> {
             if self.i > start {
                 let t = self.unescape(&self.src[start..self.i], false)?;
                 text.push_str(&t);
+                if let Some(pieces) = self.pieces.as_mut() {
+                    pieces[id.0 as usize].push(Piece::Text(t));
+                }
             }
             if self.i >= self.s.len() {
                 return self.err("the XML ends inside an element");
             }
-            if self.starts("<!--") {
-                self.skip_past("-->")?;
-            } else if self.starts("<?") {
-                self.skip_past("?>")?;
+            if self.starts("<!--") || self.starts("<?") {
+                let end = if self.starts("<?") { "?>" } else { "-->" };
+                self.skip_past(end)?;
+                if let Some(pieces) = self.pieces.as_mut() {
+                    pieces[id.0 as usize].push(Piece::Dropped);
+                }
             } else if self.starts("<![CDATA[") {
                 return self.err("the XML may not contain CDATA");
             } else if self.starts("<!") {
@@ -648,6 +683,17 @@ mod tests {
         assert!(Doc::parse("<a><![CDATA[x]]></a>").is_err());
         assert!(Doc::parse("<a></b>").is_err());
         assert!(Doc::parse("<a/><b/>").is_err());
+    }
+
+    #[test]
+    fn pieces() {
+        let (d, p) = Doc::parse_pieces("<a> x<!-- c --><b>&amp;</b><?pi?>y </a>", Limits::default()).unwrap();
+        let b = d.children(d.root())[0];
+        assert_eq!(
+            p[0],
+            vec![Piece::Text(" x".into()), Piece::Dropped, Piece::Child(b), Piece::Dropped, Piece::Text("y ".into())]
+        );
+        assert_eq!(p[b.0 as usize], vec![Piece::Text("&".into())]);
     }
 
     #[test]
