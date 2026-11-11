@@ -40,16 +40,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 /// A bar that fills with the share of the free memory the imports take.
 fn budget(ui: &mut egui::Ui, text: &str, ratio: f64, small: &str, over: Option<bool>) {
     let over = over.unwrap_or(ratio > 1.0);
-    egui::Frame::new().fill(style::PANEL).stroke(egui::Stroke::new(1.0, style::BLACK)).inner_margin(egui::Margin::symmetric(8, 6)).show(ui, |ui| {
+    let th = style::theme(ui.ctx());
+    style::boxed(th, th.panel).inner_margin(egui::Margin::symmetric(8, 6)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.label(text);
-        // A sunken grey trough that fills with blocks, as the progress bar of the patcher page
-        let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 10.0), egui::Sense::hover());
-        ui.painter().rect_filled(rect, 0.0, style::GREY);
-        let mut fill = rect.shrink(2.0);
-        fill.set_width(fill.width() * ratio.clamp(0.0, 1.0) as f32);
-        ui.painter().rect_filled(fill, 0.0, if over { style::RED } else { style::NAVY });
-        style::bevel(ui.painter(), rect, false);
+        style::meter(ui, ratio as f32, over);
         style::src(ui, small);
     });
 }
@@ -63,7 +58,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
     let heap_free = ed.backend.heap().get(ed.scene_id()).and_then(|h| h.get("free")).and_then(|f| f.as_f64());
     if ids.is_empty() {
         if let Some(free) = heap_free {
-            ui.label(RichText::new(format!("Free heap after this level loads: {} KB (measured in the emulator).", kb(free))).color(style::MUTED));
+            ui.label(RichText::new(format!("Free heap after this level loads: {} KB (measured in the emulator).", kb(free))).color(style::theme(ui.ctx()).muted));
         }
         return;
     }

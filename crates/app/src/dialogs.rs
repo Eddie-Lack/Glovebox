@@ -290,11 +290,11 @@ fn thousands(n: usize) -> String {
     out
 }
 
-/// A dialog's title: the red bar and the rainbow divider.
+/// A dialog's title: the title bar and the theme's divider.
 fn title_bar(ui: &mut egui::Ui, title: &str) {
     ui.spacing_mut().item_spacing.y = 0.0;
     style::title_bar(ui, title);
-    style::rainbow(ui);
+    style::divider(ui);
     ui.spacing_mut().item_spacing.y = 6.0;
     ui.add_space(6.0);
 }
@@ -311,8 +311,8 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
     let mut then: Option<Act> = None;
     // A question takes Enter for Yes and Esc for No. A note takes either for OK.
     let (enter, esc) = ctx.input(|i| (i.key_pressed(egui::Key::Enter), i.key_pressed(egui::Key::Escape)));
-    // The dialog is the framed table of the pages: a ridge frame, a red title bar and the rainbow under it
-    let backdrop = egui::Color32::from_rgba_unmultiplied(0, 0, 0x30, 190);
+    // The dialog is a box in the theme's frame, with a title bar and the divider under it
+    let backdrop = style::theme(ctx).scrim;
     let modal = egui::Modal::new(egui::Id::unique("dialog")).frame(egui::Frame::NONE).backdrop_color(backdrop).show(ctx, |ui| {
         style::framed(ui, |ui| {
         egui::Frame::new().inner_margin(egui::Margin::same(12)).show(ui, |ui| {

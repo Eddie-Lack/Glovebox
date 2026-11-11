@@ -42,8 +42,10 @@ pub struct App {
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>, start: Start) -> App {
-        style::apply(&cc.egui_ctx);
         let Start { home, backend, dialogs } = start;
+        // The theme the player chose, for the setup screen too. An unknown or missing one is the default.
+        let chosen = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::SETTING).unwrap_or_default();
+        style::apply(&cc.egui_ctx, crate::theme::by_id(&chosen));
         let screen = match backend {
             Some(b) => Screen::Editor(Box::new(Window::new(cc, b, &home, dialogs))),
             None => match open_rom(&home) {
@@ -369,6 +371,15 @@ impl Window {
         if on {
             self.palette.side_tab = 2;
         }
+    }
+
+    /// Changes the theme of the whole window and remembers it.
+    pub fn set_theme(&mut self, id: &str) {
+        let th = crate::theme::by_id(id);
+        self.settings.set(style::SETTING, th.id);
+        style::apply(&self.ctx, th);
+        self.view.dirty = true;
+        self.ctx.request_repaint();
     }
 
     pub fn toggle_fog(&mut self, on: bool) {
@@ -772,17 +783,18 @@ impl Window {
         }
 
         crate::toolbar::ui(self, ui);
-        egui::Panel::bottom("status").frame(egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(8, 4))).show(ui, |ui| {
+        let th = style::theme(&ctx);
+        egui::Panel::bottom("status").frame(egui::Frame::new().fill(th.deep).inner_margin(egui::Margin::symmetric(8, 4))).show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if !self.status_size.is_empty() {
-                        ui.label(egui::RichText::new(&self.status_size).color(style::MUTED));
+                        ui.label(egui::RichText::new(&self.status_size).color(th.muted));
                     }
                     ui.with_layout(egui::Layout::left_to_right(egui::Align::Center).with_main_wrap(true), |ui| {
                         let color = match self.status.1.as_str() {
-                            "ok" => style::OK,
-                            "err" => style::ERR,
-                            _ => style::TEXT,
+                            "ok" => th.ok,
+                            "err" => th.err,
+                            _ => th.text,
                         };
                         ui.label(egui::RichText::new(&self.status.0).color(color));
                     });
@@ -791,15 +803,17 @@ impl Window {
         });
         let wide = ui.available_width() >= 1560.0;
         let side = self.palette_open || self.ed.path.on;
-        let bare = egui::Frame::new().fill(style::BG);
+        let bare = egui::Frame::new().fill(th.bg);
         let padded = egui::Frame::new().inner_margin(egui::Margin { left: 8, right: 4, top: 4, bottom: 4 });
         egui::Panel::left("level").frame(bare).default_size(270.0).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
             ui.set_min_size(ui.available_size());
+            style::ground(ui);
             panel_title(ui, "Level");
             padded.show(ui, |ui| outliner::ui(self, ui));
         });
         egui::Panel::right("inspector").frame(bare).default_size(380.0).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
             ui.set_min_size(ui.available_size());
+            style::ground(ui);
             if side && !wide {
                 side_tabs(self, ui, true);
             } else {
@@ -821,6 +835,7 @@ impl Window {
         if side && wide {
             egui::Panel::right("add").frame(bare).default_size(360.0).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
                 ui.set_min_size(ui.available_size());
+                style::ground(ui);
                 side_tabs(self, ui, false);
                 padded.show(ui, |ui| match self.palette.side_tab {
                     2 => path_panel::ui(self, ui),
@@ -828,7 +843,7 @@ impl Window {
                 });
             });
         }
-        egui::CentralPanel::default().frame(egui::Frame::new().fill(egui::Color32::BLACK)).show(ui, |ui| {
+        egui::CentralPanel::default().frame(egui::Frame::new().fill(th.view_color())).show(ui, |ui| {
             viewport::ui(self, ui);
         });
         crate::dialogs::ui(self, &ctx);
@@ -878,7 +893,7 @@ fn side_tabs(w: &mut Window, ui: &mut egui::Ui, with_inspector: bool) {
     if !tabs.iter().any(|t| t.0 == w.palette.side_tab) {
         w.palette.side_tab = tabs.last().map_or(0, |t| t.0);
     }
-    egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(6, 3)).show(ui, |ui| {
+    egui::Frame::new().fill(style::theme(ui.ctx()).deep).inner_margin(egui::Margin::symmetric(6, 3)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.horizontal(|ui| {
             for (id, name) in tabs {

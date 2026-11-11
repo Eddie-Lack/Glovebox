@@ -292,6 +292,22 @@ Note: the path is only a guide, the level doesn't keep it
 - `Reset level` throws away a level's edits (you can still undo it)
 - `Import XML` (or drop an `.xml` on the window) checks the file before it touches your level
 
+## Theme
+
+Don't like the 1998 look? Pick another one with `Theme` in the toolbar
+
+| Theme | Looks like |
+| --- | --- |
+| `1998` | the patcher page: navy, grey buttons, red title bars |
+| `Cartridge` | a grey console and its controller |
+| `Blueprint` | a drafting sheet: white lines on blue |
+| `Paper` | a printed manual: black and red ink on off-white paper |
+| `CRT` | a debug monitor: green on black |
+
+- The window changes right away, no restart
+- The editor remembers your theme, the setup screen uses it too
+- Only the look changes: every button stays where it is
+
 ## Test level
 
 `Test level` (or `T`) builds a ROM that boots straight into the edited level and opens it in your emulator

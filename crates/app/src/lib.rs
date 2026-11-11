@@ -19,6 +19,7 @@ pub mod settings;
 pub mod setup;
 pub mod shell;
 pub mod style;
+pub mod theme;
 pub mod toolbar;
 pub mod viewport;
 

@@ -15,7 +15,7 @@ fn sep(ui: &mut egui::Ui) {
 }
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
-    let frame = egui::Frame::new().fill(style::DEEP).inner_margin(egui::Margin::symmetric(6, 4));
+    let frame = egui::Frame::new().fill(style::theme(ui.ctx()).deep).inner_margin(egui::Margin::symmetric(6, 4));
     egui::Panel::top("toolbar").frame(frame).show(ui, |ui| {
         ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
         ui.horizontal_wrapped(|ui| edit_row(w, ui));
@@ -35,7 +35,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         for sc in &w.ed.scenes {
             if s(sc, "group") != group {
                 group = s(sc, "group");
-                ui.label(RichText::new(group).size(11.0).color(style::MUTED));
+                ui.label(RichText::new(group).size(11.0).color(style::theme(ui.ctx()).muted));
             }
             let on = s(sc, "id") == w.ed.scene_id();
             if ui.selectable_label(on, w.scene_label(sc)).clicked() {
@@ -70,7 +70,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
             w.ed.set_mode(m);
         }
     }
-    ui.label(RichText::new(" Pivot").color(style::MUTED));
+    ui.label(RichText::new(" Pivot").color(style::theme(ui.ctx()).muted));
     let pivots = [("group", "group centre"), ("individual", "each origin")];
     let shown = pivots.iter().find(|p| p.0 == w.ed.pivot_mode).map_or("each origin", |p| p.1);
     let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).show_ui(ui, |ui| {
@@ -82,7 +82,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     });
     r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
     r.response.on_hover_text("Where a multi-object rotation or scale is centred");
-    ui.label(RichText::new(" Snap").color(style::MUTED));
+    ui.label(RichText::new(" Snap").color(style::theme(ui.ctx()).muted));
     let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
     let shown = snaps.iter().find(|x| x.1 == w.ed.snap).map_or("off", |x| x.0);
     let r = egui::ComboBox::from_id_salt("snap").icon(style::combo_icon).selected_text(shown).width(48.0).show_ui(ui, |ui| {
@@ -103,6 +103,26 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     }
     if ui.button("Focus").on_hover_text("Frame selection (F)").clicked() {
         w.focus_selected();
+    }
+}
+
+/// The Theme list: the looks of the window. A choice restyles the window at once and is kept in the settings.
+fn theme_list(w: &mut Window, ui: &mut egui::Ui) {
+    let active = style::theme(ui.ctx());
+    let mut pick = None;
+    // The label is in the box: on a narrow window the two stay on one row
+    let r = egui::ComboBox::from_id_salt("theme").icon(style::combo_icon).selected_text(format!("Theme: {}", active.name)).width(118.0).show_ui(ui, |ui| {
+        for th in crate::theme::THEMES {
+            if ui.selectable_label(th.id == active.id, th.name).clicked() {
+                pick = Some(th.id);
+            }
+        }
+    });
+    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Theme"));
+    r.response.on_hover_text("The look of the window. It changes at once and is remembered.");
+    if let Some(id) = pick {
+        // After the frame: the panels of this frame are drawn in one theme
+        w.acts.push(Box::new(move |w: &mut Window| w.set_theme(id)));
     }
 }
 
@@ -161,4 +181,5 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
             w.open_patcher();
         }
     });
+    theme_list(w, ui);
 }
