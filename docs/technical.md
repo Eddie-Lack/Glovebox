@@ -136,6 +136,9 @@ nothing else. The program never runs them.
   "Create patched ROM". Everything happens in the page:
   - Its Content-Security-Policy has `connect-src 'none'`: the browser itself blocks any network request.
     The script is pinned by hash (`tools/build_patcher.py`; run it after editing the script).
+  - Its look follows the practice ROM's patch page (glover.love): a 1998 game web site, with a star background,
+    a ridge-framed column, red title bars and grey bevelled buttons. It is all inline CSS and `data:` SVG.
+    Nothing in it comes from the ROM. A change to the style or the markup needs no new hash.
   - Every read and copy in the decoder is bounds-checked.
   - A wrong ROM, damaged patch or malformed patch is refused with a plain explanation; nothing is saved.
   - Patch metadata is shown as text only.
