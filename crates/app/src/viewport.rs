@@ -327,7 +327,8 @@ fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
     let mut top = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::top_down(egui::Align::Min)));
     top.spacing_mut().item_spacing.y = 3.0;
     if !w.hud_level.is_empty() {
-        top.label(egui::RichText::new(&w.hud_level).strong().color(style::TEXT));
+        let frame = egui::Frame::new().fill(egui::Color32::from_rgba_unmultiplied(21, 22, 27, 150)).corner_radius(4).inner_margin(egui::Margin::symmetric(5, 1));
+        frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).strong().color(style::TEXT)));
     }
     if w.ed.has_level {
         let (text, tip, edited) = w.chip();

@@ -123,7 +123,7 @@ impl Px<'_> {
                 ui.spacing_mut().item_spacing.y = 1.0;
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing.x = 5.0;
-                    ui.label(RichText::new(title).strong());
+                    ui.label(RichText::new(title).strong().color(style::TEXT));
                     if let Some(s) = small {
                         ui.label(s);
                     }

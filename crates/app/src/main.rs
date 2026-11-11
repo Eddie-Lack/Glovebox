@@ -1,8 +1,7 @@
 //! Glovebox, the Glover level editor: the program. `glovebox::run` does the work.
 //!
-//! The release build for Windows is a windowed program: it has no console of its own. It prints into the console
-//! it was started from when there is one. Otherwise redirect its output to a file (`Glovebox.exe --self-test >
-//! report.txt`).
+//! The release build for Windows is a windowed program: it has no console. Redirect its output to a file to read
+//! it (`Glovebox.exe --self-test > report.txt`).
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 fn main() {

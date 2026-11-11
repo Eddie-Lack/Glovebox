@@ -785,10 +785,12 @@ impl Window {
         let bare = egui::Frame::new().fill(style::BG);
         let padded = egui::Frame::new().inner_margin(egui::Margin { left: 8, right: 4, top: 4, bottom: 4 });
         egui::Panel::left("level").frame(bare).default_size(270.0).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
+            ui.set_min_size(ui.available_size());
             panel_title(ui, "Level");
             padded.show(ui, |ui| outliner::ui(self, ui));
         });
         egui::Panel::right("inspector").frame(bare).default_size(380.0).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
+            ui.set_min_size(ui.available_size());
             if side && !wide {
                 side_tabs(self, ui, true);
             } else {
@@ -796,8 +798,9 @@ impl Window {
             }
             let tab = if side && !wide { self.palette.side_tab } else { 0 };
             let total = ui.available_height();
-            let checks_height = (total * 0.38).clamp(120.0, 340.0);
-            egui::Panel::bottom("checks").frame(padded).default_size(checks_height).size_range(80.0..=(total - 120.0).max(80.0)).resizable(true).show(ui, |ui| {
+            let checks_height = (total * 0.36).clamp(180.0, 320.0);
+            egui::Panel::bottom("checks").frame(padded).default_size(checks_height).size_range(120.0..=(total - 160.0).max(120.0)).resizable(true).show(ui, |ui| {
+                ui.set_min_size(ui.available_size());
                 crate::checks::ui(self, ui);
             });
             egui::CentralPanel::default().frame(padded).show(ui, |ui| match tab {
@@ -808,6 +811,7 @@ impl Window {
         });
         if side && wide {
             egui::Panel::right("add").frame(bare).default_size(360.0).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
+                ui.set_min_size(ui.available_size());
                 side_tabs(self, ui, false);
                 padded.show(ui, |ui| match self.palette.side_tab {
                     2 => path_panel::ui(self, ui),

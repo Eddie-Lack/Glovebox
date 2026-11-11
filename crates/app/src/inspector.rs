@@ -778,7 +778,8 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 note(ui, ent.why_rot.unwrap_or("SetActorRotation, applied Y·Z·X like GetQuaternionFromXYZRot in the decomp."));
             }
             _ => {
-                row(ui, "rotation", |ui| note(ui, ent.why_rot.unwrap_or(entities::WHY_NO_ORIENTATION)));
+                fieldname(ui, "rotation");
+                note(ui, ent.why_rot.unwrap_or(entities::WHY_NO_ORIENTATION));
             }
         }
         match (ent.scl, ent.get_scale(&ed.doc), &ent.volume) {
@@ -812,7 +813,8 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 note(ui, &format!("{}{}", names.join(", "), if ent.kind == "trigger" { ". Scaling keeps the centre." } else { "" }));
             }
             _ => {
-                row(ui, "scale", |ui| note(ui, ent.why_scl.unwrap_or(entities::WHY_NO_SCALE)));
+                fieldname(ui, "scale");
+                note(ui, ent.why_scl.unwrap_or(entities::WHY_NO_SCALE));
             }
         }
     });
