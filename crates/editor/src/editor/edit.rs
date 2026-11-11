@@ -100,7 +100,7 @@ impl Editor {
         })
     }
 
-    fn selection_keys(&self) -> Vec<SelKey> {
+    pub(crate) fn selection_keys(&self) -> Vec<SelKey> {
         self.selection
             .iter()
             .map(|&i| {
@@ -126,6 +126,11 @@ impl Editor {
     /// Builds the entities again after a change to the XML and puts the selection back.
     pub fn after_edit(&mut self, select: Option<&[NodeId]>, by_path: bool) {
         let keys = self.selection_keys();
+        self.finish_edit(keys, select, by_path);
+    }
+
+    /// `after_edit` with the selection's keys taken before the document was replaced.
+    pub(crate) fn finish_edit(&mut self, keys: Vec<SelKey>, select: Option<&[NodeId]>, by_path: bool) {
         self.build_entities();
         let sel: Vec<EntId> = match select {
             Some(nodes) => nodes
@@ -144,15 +149,17 @@ impl Editor {
     pub fn undo(&mut self) {
         let Some(xml) = self.undo_stack.pop() else { return };
         self.redo_stack.push(self.serialize());
+        let keys = self.selection_keys();
         self.restore_keeping_puzzle(&xml);
-        self.after_edit(None, true);
+        self.finish_edit(keys, None, true);
     }
 
     pub fn redo(&mut self) {
         let Some(xml) = self.redo_stack.pop() else { return };
         self.undo_stack.push(self.serialize());
+        let keys = self.selection_keys();
         self.restore_keeping_puzzle(&xml);
-        self.after_edit(None, true);
+        self.finish_edit(keys, None, true);
     }
 
     /// Restores a snapshot. The open puzzle stays open only when it is still the same one.
@@ -207,6 +214,7 @@ impl Editor {
     pub fn reset_level(&mut self) {
         let Some(orig) = self.orig_xml.clone() else { return };
         self.push_undo(self.serialize());
+        self.selection.clear();
         self.restore(&orig);
         self.after_edit(Some(&[]), false);
         self.flush_draft();

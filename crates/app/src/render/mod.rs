@@ -73,8 +73,6 @@ struct Target {
     msaa: Option<wgpu::TextureView>,
     color: wgpu::Texture,
     color_view: wgpu::TextureView,
-    /// The same texture read as sRGB, for egui.
-    srgb_view: wgpu::TextureView,
     depth: wgpu::TextureView,
 }
 
@@ -184,7 +182,9 @@ fn buffer(device: &wgpu::Device, data: &[u8], usage: wgpu::BufferUsages) -> wgpu
     let b = device.create_buffer(&wgpu::BufferDescriptor { label: None, size, usage, mapped_at_creation: true });
     // A buffer made mapped always gives its range
     if let Ok(mut view) = b.slice(..).get_mapped_range_mut() {
-        view[..data.len()].copy_from_slice(data);
+        let mut padded = data.to_vec();
+        padded.resize(size as usize, 0);
+        view.copy_from_slice(&padded);
     }
     b.unmap();
     b
@@ -407,12 +407,11 @@ impl Renderer {
             })
         };
         let attach = wgpu::TextureUsages::RENDER_ATTACHMENT;
-        let color = tex("view", COLOR, 1, attach | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC, &[wgpu::TextureFormat::Rgba8UnormSrgb]);
+        let color = tex("view", COLOR, 1, attach | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC, &[]);
         let color_view = color.create_view(&Default::default());
-        let srgb_view = color.create_view(&wgpu::TextureViewDescriptor { format: Some(wgpu::TextureFormat::Rgba8UnormSrgb), ..Default::default() });
         let msaa = (self.samples > 1).then(|| tex("view samples", COLOR, self.samples, attach, &[]).create_view(&Default::default()));
         let depth = tex("view depth", DEPTH, self.samples, attach, &[]).create_view(&Default::default());
-        Target { width: size.width, height: size.height, msaa, color, color_view, srgb_view, depth }
+        Target { width: size.width, height: size.height, msaa, color, color_view, depth }
     }
 
     /// Sets the size of the view's picture, in pixels. The texture behind `view` changes when the size does:
@@ -431,9 +430,9 @@ impl Renderer {
     }
 
     /// The view's picture, for `egui_wgpu::Renderer::register_native_texture`. None before the first `resize`.
-    /// It is an sRGB view of the picture: egui turns its samples back into the sRGB values the shaders wrote.
+    /// It holds the sRGB values the shaders wrote, and egui-wgpu shows a texture's values as they are.
     pub fn view(&self) -> Option<&wgpu::TextureView> {
-        self.target.as_ref().map(|t| &t.srgb_view)
+        self.target.as_ref().map(|t| &t.color_view)
     }
 
     // -- GPU resources

@@ -339,6 +339,7 @@ impl Editor {
         let Some(root) = res.root.as_ref().filter(|_| res.ok) else { return };
         let Ok(doc) = Doc::parse(&root.serialize()) else { return };
         self.push_undo(self.serialize());
+        self.selection.clear();
         self.doc = doc;
         self.after_edit(Some(&[]), false);
         let imp = self.current_imports().len();

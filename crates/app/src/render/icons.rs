@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(at(32, 14), [200, 100, 50, 255]);
         assert_eq!(at(32, 32), [17, 17, 17, 255]);
         // the edge is smooth
-        assert!((1..255).contains(&at(32, 4)[3]) || (1..255).contains(&at(32, 3)[3]));
+        assert!(px.chunks(4).filter(|c| (1..255).contains(&c[3])).count() > 100);
         // every glyph the editor uses draws something, and no two are the same picture
         let all = ["★", "✦", "✸", "●", "◉", "◇", "♥", "♪", "≋", "⇥", "✋", "?", "!"];
         let pics: Vec<Vec<u8>> = all.iter().map(|g| icon_rgba(g, [255; 3])).collect();
