@@ -7,8 +7,9 @@ edition.workspace = true
 [dependencies]
 glovebox-core = { path = "../core" }
 glovebox-editor = { path = "../editor" }
-eframe = { version = "0.37", default-features = false, features = ["wgpu", "default_fonts", "x11", "wayland"] }
-egui = "0.37"
+eframe = { version = "0.37", default-features = false, features = ["wgpu", "default_fonts", "x11", "wayland", "accesskit", "clipboard", "links", "system_fonts"] }
+# The emoji fonts have the arrows and symbols the buttons show
+egui = { version = "0.37", features = ["monochrome_emoji_fonts"] }
 egui-wgpu = "0.37"
 serde_json.workspace = true
 png = "0.18"

@@ -280,7 +280,7 @@ fn fly_step(w: &mut Window, ui: &egui::Ui) {
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let rect = ui.available_rect_before_wrap();
     let resp = ui.allocate_rect(rect, egui::Sense::click_and_drag());
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Other, true, "3D view"));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Canvas, true, "3D view"));
     if rect != w.view.rect {
         w.view.rect = rect;
         w.view.dirty = true;
@@ -337,7 +337,8 @@ fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
     }
     let hint = if w.view.fly.on { HINT_FLY } else { HINT_ORBIT };
     let mut bottom = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::bottom_up(egui::Align::Min)));
-    bottom.label(egui::RichText::new(hint).size(12.0).color(style::MUTED));
+    let hint_frame = egui::Frame::new().fill(egui::Color32::from_rgba_unmultiplied(21, 22, 27, 150)).corner_radius(4).inner_margin(egui::Margin::symmetric(5, 2));
+    hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(egui::Color32::from_rgb(0xc4, 0xc8, 0xd2))));
 
     let note = w.view.error.as_deref().unwrap_or(&w.loading);
     if !note.is_empty() {

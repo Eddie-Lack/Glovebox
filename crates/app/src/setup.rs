@@ -70,7 +70,7 @@ impl Setup {
                 });
             });
         });
-        let dropped: Option<PathBuf> = ui.ctx().input(|i| i.raw.dropped_files.iter().find_map(|f| f.path.clone()));
+        let dropped: Option<PathBuf> = ui.ctx().input(|i| i.raw.dropped_files.iter().map(|f| f.path().to_path_buf()).next());
         if let Some(p) = dropped {
             ready = self.take(&p);
         }

@@ -114,36 +114,38 @@ impl Px<'_> {
     #[allow(clippy::too_many_arguments)]
     fn prow(&mut self, ui: &mut egui::Ui, picture: impl FnOnce(&mut Self, &mut egui::Ui), title: &str, small: Option<RichText>, sub: &str, buttons: &[(&str, &str, bool)], extra: impl FnOnce(&mut Self, &mut egui::Ui)) -> Option<usize> {
         let mut clicked = None;
-        ui.horizontal(|ui| {
+        ui.horizontal_top(|ui| {
             picture(self, ui);
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.vertical(|ui| {
-                    ui.spacing_mut().item_spacing.y = 2.0;
-                    let width = buttons.iter().map(|b| b.0.len()).max().unwrap_or(3) as f32 * 7.0 + 20.0;
-                    for (i, (text, tip, enabled)) in buttons.iter().enumerate() {
-                        let mut r = ui.add_enabled(*enabled, egui::Button::new(*text).min_size(egui::vec2(width, 0.0)));
-                        if !tip.is_empty() {
-                            r = r.on_hover_text(*tip).on_disabled_hover_text(*tip);
-                        }
-                        if r.clicked() {
-                            clicked = Some(i);
-                        }
+            let buttons_width = buttons.iter().map(|b| style::button_width(ui, b.0, 13.0)).fold(0.0, f32::max);
+            let mid_width = (ui.available_width() - buttons_width - ui.spacing().item_spacing.x).max(60.0);
+            ui.allocate_ui_with_layout(egui::vec2(mid_width, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.set_width(mid_width);
+                ui.spacing_mut().item_spacing.y = 1.0;
+                ui.horizontal_wrapped(|ui| {
+                    ui.spacing_mut().item_spacing.x = 5.0;
+                    ui.label(RichText::new(title).strong());
+                    if let Some(s) = small {
+                        ui.label(s);
                     }
                 });
-                ui.with_layout(egui::Layout::top_down(egui::Align::Min), |ui| {
-                    ui.spacing_mut().item_spacing.y = 1.0;
-                    ui.horizontal_wrapped(|ui| {
-                        ui.spacing_mut().item_spacing.x = 5.0;
-                        ui.label(RichText::new(title).strong());
-                        if let Some(s) = small {
-                            ui.label(s);
-                        }
-                    });
-                    if !sub.is_empty() {
-                        muted(ui, sub);
+                if !sub.is_empty() {
+                    muted(ui, sub);
+                }
+                extra(self, ui);
+            });
+            ui.vertical(|ui| {
+                ui.spacing_mut().item_spacing.y = 2.0;
+                for (i, (text, tip, enabled)) in buttons.iter().enumerate() {
+                    let mut r = ui.add_enabled(*enabled, egui::Button::new(*text).min_size(egui::vec2(buttons_width, 0.0)));
+                    let (enabled, label) = (*enabled, format!("{text} {title}"));
+                    r.widget_info(move || egui::WidgetInfo::labeled(egui::Role::Button, enabled, &label));
+                    if !tip.is_empty() {
+                        r = r.on_hover_text(*tip).on_disabled_hover_text(*tip);
                     }
-                    extra(self, ui);
-                });
+                    if r.clicked() {
+                        clicked = Some(i);
+                    }
+                }
             });
         });
         ui.separator();
@@ -227,7 +229,7 @@ fn grid(ui: &mut egui::Ui, id: &str, buttons: Vec<(egui::Button, String)>) -> Op
 
 fn collect(px: &mut Px, ui: &mut egui::Ui) {
     h4(ui, "GARIBS");
-    let garibs = [("garib", "✦ Garib"), ("bang_500pt", "! 500-point bang"), ("extra_life", "♥ Extra life"), ("mad_garib", "✸ Mad garib")];
+    let garibs = [("garib", "★ Garib"), ("bang_500pt", "! 500-point bang"), ("extra_life", "♥ Extra life"), ("mad_garib", "✴ Mad garib")];
     if let Some(i) = grid(ui, "garibs", garibs.iter().map(|g| (egui::Button::new(g.1), String::new())).collect()) {
         let t = garibs[i].0;
         px.acts.push(Box::new(move |w: &mut Window| {
@@ -361,9 +363,10 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
             "" => "All banks",
             "@level" => "This level’s banks",
             b => b,
-        };
+        }
+        .to_string();
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let r = egui::ComboBox::from_id_salt("bank").selected_text(shown.to_string()).width(120.0).truncate().height(400.0).show_ui(ui, |ui| {
+            let r = egui::ComboBox::from_id_salt("bank").selected_text(shown).width(120.0).truncate().height(400.0).show_ui(ui, |ui| {
                 let mut pick = None;
                 for (v, text) in [("", "All banks"), ("@level", "This level’s banks")].into_iter().chain(banks.iter().map(|b| (*b, *b))) {
                     if ui.selectable_label(st.bank == v, text).clicked() {
@@ -374,7 +377,7 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
                     st.bank = p;
                 }
             });
-            r.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, "Bank"));
+            r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Bank"));
             let hint = format!("Search {} models by name, ID or bank…", thousands(catalog.len()));
             let r = ui.add(egui::TextEdit::singleline(&mut st.query).hint_text(hint).desired_width(f32::INFINITY));
             style::name(&r, "Search models");
@@ -513,7 +516,7 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
                                         }
                                     });
                                     let label = label.clone();
-                                    r.response.widget_info(move || egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, &label));
+                                    r.response.widget_info(move || egui::WidgetInfo::labeled(egui::Role::ComboBox, true, &label));
                                 } else {
                                     let mut text = vals.get(&pkey).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default();
                                     let mut r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(130.0));

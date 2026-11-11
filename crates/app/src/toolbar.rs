@@ -23,10 +23,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 }
 
 fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
-    ui.label(RichText::new("Glove").strong().color(style::GOLD));
-    ui.spacing_mut().item_spacing.x = 0.0;
-    ui.label("box");
-    ui.spacing_mut().item_spacing.x = 4.0;
+    let mut brand = egui::text::LayoutJob::default();
+    let font = egui::FontId::proportional(14.0);
+    brand.append("Glove", 0.0, egui::TextFormat { font_id: font.clone(), color: style::GOLD, ..Default::default() });
+    brand.append("box", 0.0, egui::TextFormat { font_id: font, color: style::TEXT, ..Default::default() });
+    ui.label(brand);
     ui.add_space(6.0);
 
     // The level list
@@ -45,7 +46,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
-    combo.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, "Level"));
+    combo.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Level"));
     combo.response.on_hover_text("Level (from noclip.website's scene table)");
     if let Some(sid) = pick {
         w.load_scene(&sid);
@@ -82,7 +83,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
-    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, "Pivot"));
+    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
     r.response.on_hover_text("Where a multi-object rotation or scale is centred");
     ui.label(RichText::new(" Snap").color(style::MUTED));
     let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
@@ -95,7 +96,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
-    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, "Snap"));
+    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Snap"));
     r.response.on_hover_text("Snap: grid for moves, 15° for rotation, 0.05 for scale");
     if ui.button("Duplicate").on_hover_text("Duplicate selection (Ctrl+D)").clicked() {
         w.ed.duplicate();

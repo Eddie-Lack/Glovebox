@@ -87,7 +87,7 @@ fn pick(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize, items: &[
         }
     });
     let label = label.to_string();
-    r.response.widget_info(move || egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, &label));
+    r.response.widget_info(move || egui::WidgetInfo::labeled(egui::Role::ComboBox, true, &label));
     changed
 }
 
@@ -185,7 +185,7 @@ fn scatter_box(w: &mut Window, ui: &mut egui::Ui) {
         });
         row(ui, "seed", |ui| {
             let r = ui.add(egui::DragValue::new(&mut st.sc_seed).range(0..=99999).speed(0.1));
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::DragValue, true, "scatter seed"));
+            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "scatter seed"));
         });
         note(ui, "Select one or more landscape pieces or kit models; each copy picks one of them at random. Every copy takes heap memory: the status line says how much.");
         ui.horizontal(|ui| {

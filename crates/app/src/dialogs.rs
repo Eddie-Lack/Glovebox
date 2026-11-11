@@ -300,7 +300,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
     let Some(mut dialog) = w.dialog.take() else { return };
     let mut keep = true;
     let mut then: Option<Act> = None;
-    let modal = egui::Modal::new(egui::Id::new("dialog")).show(ctx, |ui| {
+    let modal = egui::Modal::new(egui::Id::unique("dialog")).show(ctx, |ui| {
         ui.set_width(520.0f32.min(ctx.content_rect().width() - 60.0));
         ui.spacing_mut().item_spacing.y = 6.0;
         match &mut dialog {
@@ -357,7 +357,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                             }
                         }
                     });
-                    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, "Import into"));
+                    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Import into"));
                 });
                 let ok = d.res.as_ref().is_some_and(|r| r.ok) && !d.targets.is_empty();
                 buttons(ui, |ui| {
@@ -425,7 +425,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                             }
                         }
                     });
-                    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, "Boot into"));
+                    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Boot into"));
                 });
                 let mut choice = None;
                 buttons(ui, |ui| {

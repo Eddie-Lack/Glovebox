@@ -331,7 +331,11 @@ impl Window {
             match e {
                 Event::Status { message, class } => self.status = (message, class),
                 Event::SceneLoaded => self.on_scene_loaded(),
-                Event::Rebuilt | Event::ImportsChanged => rebuilt = true,
+                Event::Rebuilt => {
+                    rebuilt = true;
+                    self.view.rebuilt();
+                }
+                Event::ImportsChanged => rebuilt = true,
                 Event::Edited => self.edited_levels = self.ed.drafts.list().into_keys().collect(),
                 Event::Loading(t) => self.loading = t,
                 Event::SelectionChanged | Event::ViewChanged | Event::ModeChanged => {}
@@ -751,7 +755,7 @@ impl Window {
         }
         self.pump();
         self.keys(&ctx);
-        let dropped: Vec<PathBuf> = ctx.input(|i| i.raw.dropped_files.iter().filter_map(|f| f.path.clone()).collect());
+        let dropped: Vec<PathBuf> = ctx.input(|i| i.raw.dropped_files.iter().map(|f| f.path().to_path_buf()).collect());
         if let Some(p) = dropped.into_iter().next() {
             if self.dialog.is_none() {
                 self.file_dropped(p);
@@ -778,11 +782,13 @@ impl Window {
         });
         let wide = ui.available_width() >= 1560.0;
         let side = self.palette_open || self.ed.path.on;
-        egui::Panel::left("level").default_size(270.0).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
+        let bare = egui::Frame::new().fill(style::BG);
+        let padded = egui::Frame::new().inner_margin(egui::Margin { left: 8, right: 4, top: 4, bottom: 4 });
+        egui::Panel::left("level").frame(bare).default_size(270.0).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
             panel_title(ui, "Level");
-            outliner::ui(self, ui);
+            padded.show(ui, |ui| outliner::ui(self, ui));
         });
-        egui::Panel::right("inspector").default_size(380.0).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
+        egui::Panel::right("inspector").frame(bare).default_size(380.0).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
             if side && !wide {
                 side_tabs(self, ui, true);
             } else {
@@ -791,22 +797,22 @@ impl Window {
             let tab = if side && !wide { self.palette.side_tab } else { 0 };
             let total = ui.available_height();
             let checks_height = (total * 0.38).clamp(120.0, 340.0);
-            egui::Panel::bottom("checks").default_size(checks_height).size_range(80.0..=(total - 120.0).max(80.0)).resizable(true).show(ui, |ui| {
+            egui::Panel::bottom("checks").frame(padded).default_size(checks_height).size_range(80.0..=(total - 120.0).max(80.0)).resizable(true).show(ui, |ui| {
                 crate::checks::ui(self, ui);
             });
-            egui::CentralPanel::default().frame(egui::Frame::new()).show(ui, |ui| match tab {
+            egui::CentralPanel::default().frame(padded).show(ui, |ui| match tab {
                 1 => palette::ui(self, ui),
                 2 => path_panel::ui(self, ui),
                 _ => inspector::ui(self, ui),
             });
         });
         if side && wide {
-            egui::Panel::right("add").default_size(360.0).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
+            egui::Panel::right("add").frame(bare).default_size(360.0).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
                 side_tabs(self, ui, false);
-                match self.palette.side_tab {
+                padded.show(ui, |ui| match self.palette.side_tab {
                     2 => path_panel::ui(self, ui),
                     _ => palette::ui(self, ui),
-                }
+                });
             });
         }
         egui::CentralPanel::default().frame(egui::Frame::new().fill(egui::Color32::BLACK)).show(ui, |ui| {
@@ -849,7 +855,7 @@ fn side_tabs(w: &mut Window, ui: &mut egui::Ui, with_inspector: bool) {
     if !tabs.iter().any(|t| t.0 == w.palette.side_tab) {
         w.palette.side_tab = tabs.last().map_or(0, |t| t.0);
     }
-    egui::Frame::new().fill(style::PANEL).inner_margin(egui::Margin::symmetric(6, 3)).outer_margin(egui::Margin { left: -6, right: -6, top: -2, bottom: 2 }).show(ui, |ui| {
+    egui::Frame::new().fill(style::PANEL).inner_margin(egui::Margin::symmetric(6, 3)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.horizontal(|ui| {
             for (id, name) in tabs {
@@ -864,7 +870,7 @@ fn side_tabs(w: &mut Window, ui: &mut egui::Ui, with_inspector: bool) {
 }
 
 fn panel_title(ui: &mut egui::Ui, title: &str) {
-    egui::Frame::new().fill(style::PANEL).inner_margin(egui::Margin::symmetric(8, 4)).outer_margin(egui::Margin { left: -6, right: -6, top: -2, bottom: 2 }).show(ui, |ui| {
+    egui::Frame::new().fill(style::PANEL).inner_margin(egui::Margin::symmetric(8, 4)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.label(title);
     });

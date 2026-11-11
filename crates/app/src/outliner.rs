@@ -111,7 +111,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                     list_of_head += 1;
                     ui.allocate_ui_with_layout(egui::vec2(ui.available_width(), row_height), egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         let all = style::mini(ui, "all", &format!("Select all {} (Ctrl adds to the selection)", name.to_lowercase()));
-                        all.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, format!("all {}", name.to_lowercase())));
+                        all.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, format!("all {}", name.to_lowercase())));
                         if all.clicked() {
                             let lst = lists[li].clone();
                             let add = ui.input(|i| i.modifiers.ctrl || i.modifiers.command);

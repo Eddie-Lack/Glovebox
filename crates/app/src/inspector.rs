@@ -130,7 +130,7 @@ fn row<R>(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui) -> R) -
 }
 
 /// A combo box over (value, text) pairs. Gives the chosen value.
-fn combo<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash, label: &str, current: &T, items: &[(T, String)]) -> Option<T> {
+fn combo<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash + std::fmt::Debug, label: &str, current: &T, items: &[(T, String)]) -> Option<T> {
     let shown = items.iter().find(|i| i.0 == *current).map(|i| i.1.clone()).unwrap_or_default();
     let mut pick = None;
     let width = ui.available_width().clamp(60.0, 240.0);
@@ -143,7 +143,7 @@ fn combo<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash, labe
     });
     if !label.is_empty() {
         let label = label.to_string();
-        r.response.widget_info(move || egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, &label));
+        r.response.widget_info(move || egui::WidgetInfo::labeled(egui::Role::ComboBox, true, &label));
     }
     pick
 }
@@ -154,7 +154,7 @@ fn spin(ui: &mut egui::Ui, id: egui::Id, value: i64, range: std::ops::RangeInclu
     let r = ui.add(egui::DragValue::new(&mut v).range(range).speed(0.2));
     if !label.is_empty() {
         let label = label.to_string();
-        r.widget_info(move || egui::WidgetInfo::labeled(egui::WidgetType::DragValue, true, &label));
+        r.widget_info(move || egui::WidgetInfo::labeled(egui::Role::SpinButton, true, &label));
     }
     let done = r.drag_stopped() || r.lost_focus() || (r.changed() && !r.dragged() && !r.has_focus());
     if done {
@@ -280,14 +280,14 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
     let ed = cx.ed;
     ui.horizontal(|ui| {
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            mini_menu(ui, "+ Add", "", |ui| {
+            mini_menu(ui, "+ Add", "+ Add level setting", "", |ui| {
                 for (tag, text) in LOOK {
                     if ui.button(text).clicked() {
                         cx.ed_act(move |ed| ed.add_look(tag));
                     }
                 }
             });
-            mini_menu(ui, "Look", "Set the lights and fog to a preset (dark, coloured moods, or the shipped levels' daylight)", |ui| {
+            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, coloured moods, or the shipped levels' daylight)", |ui| {
                 for l in &LOOKS {
                     if ui.button(l.name).clicked() {
                         let name = l.name;
@@ -302,7 +302,7 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
     let root = ed.doc.root();
     let name = ed.doc.attr(root, "name").to_string();
     row(ui, "File name", |ui| {
-        let (text, r) = commit_text(ui, egui::Id::new("level file name"), &name, |t| t.char_limit(7).desired_width(120.0));
+        let (text, r) = commit_text(ui, egui::Id::unique("level file name"), &name, |t| t.char_limit(7).desired_width(120.0));
         style::name(&r, "File name");
         if let Some(v) = text {
             cx.ed_act(move |ed| ed.set_attr(root, "name", &v));
@@ -325,7 +325,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
     card(ui, "Title, music and clock", None, |_| {}, |ui| {
         let shown = info.name.clone().unwrap_or_default();
         row(ui, "title", |ui| {
-            let (text, r) = commit_text(ui, egui::Id::new("level title"), &shown, |t| t.char_limit(39).hint_text("the shipped title").desired_width(f32::INFINITY));
+            let (text, r) = commit_text(ui, egui::Id::unique("level title"), &shown, |t| t.char_limit(39).hint_text("the shipped title").desired_width(f32::INFINITY));
             style::name(&r, "title");
             if let Some(v) = text {
                 let v = v.to_uppercase().trim().to_string();
@@ -366,7 +366,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
         });
         if mode == 2 {
             row(ui, "", |ui| {
-                if let Some(v) = spin(ui, egui::Id::new("clock seconds"), cx.st.secs, 1..=32766, "seconds") {
+                if let Some(v) = spin(ui, egui::Id::unique("clock seconds"), cx.st.secs, 1..=32766, "seconds") {
                     cx.st.secs = v;
                     cx.ed_act(move |ed| ed.set_level_info(|i| i.bonus_time = Some(v)));
                 }
@@ -405,10 +405,10 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
         });
         row(ui, "seed", |ui| {
             let r = ui.add(egui::DragValue::new(&mut cx.st.reskin_seed).range(0..=99999).speed(0.1));
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::DragValue, true, "seed"));
+            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "seed"));
         });
         let ticks = *ticks;
-        let mut go = |cx: &mut Cx, next: bool| {
+        let go = |cx: &mut Cx, next: bool| {
             let worlds: Vec<String> = WORLDS.iter().zip(ticks).filter(|(w_, on)| *on && own.as_deref() != Some(**w_)).map(|(w_, _)| w_.to_string()).collect();
             if worlds.is_empty() {
                 return cx.ed_act(|ed| ed.set_status("Pick at least one world.", "err"));
@@ -455,7 +455,7 @@ fn enemy_panel(cx: &mut Cx, ui: &mut egui::Ui, enemy: NodeId) {
     }
     ui.horizontal(|ui| {
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            mini_menu(ui, "Ready-made", "Replace the normal list with a ready-made script", |ui| {
+            mini_menu(ui, "Ready-made", "", "Replace the normal list with a ready-made script", |ui| {
                 for name in scripts::TEMPLATES {
                     if ui.button(name).clicked() {
                         cx.ed_act(move |ed| ed.add_script_template(enemy, name));
@@ -474,7 +474,7 @@ fn enemy_panel(cx: &mut Cx, ui: &mut egui::Ui, enemy: NodeId) {
         ui.horizontal(|ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.push_id(("add instruction", gi), |ui| {
-                    mini_menu(ui, "+ Add", "", |ui| {
+                    mini_menu(ui, "+ Add", "+ Add instruction", "", |ui| {
                         for (t, text) in &types {
                             if ui.button(text).clicked() {
                                 let t = *t;
@@ -601,13 +601,14 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
     let n = puzzles::fires(&ed.doc, p);
     let logic = puzzles::logic(&ed.doc, p);
     let conds = ed.doc.kids(p, "PuzzleCond").len() as i64;
+    let mut delete = false;
     card(
         ui,
         "Puzzle",
         None,
         |ui| {
             if mini(ui, "×", "Delete this puzzle").clicked() {
-                cx.ed_act(move |ed| ed.remove_puzzle(p));
+                delete = true;
             }
         },
         |ui| {
@@ -625,7 +626,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
             });
             if mode == 2 {
                 row(ui, "", |ui| {
-                    if let Some(v) = spin(ui, egui::Id::new("puzzle times"), times, 1..=32767, "times") {
+                    if let Some(v) = spin(ui, egui::Id::unique("puzzle times"), times, 1..=32767, "times") {
                         cx.ed_act(move |ed| ed.set_fires(p, Some(v)));
                     }
                 });
@@ -640,7 +641,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
             });
             if how == "least" {
                 row(ui, "", |ui| {
-                    if let Some(v) = spin(ui, egui::Id::new("puzzle least"), least, 1..=m.max(conds).max(1), "conditions") {
+                    if let Some(v) = spin(ui, egui::Id::unique("puzzle least"), least, 1..=m.max(conds).max(1), "conditions") {
                         cx.ed_act(move |ed| ed.set_logic(p, "least", v));
                     }
                 });
@@ -648,6 +649,9 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
             note(ui, "Without a limit, actions run again on every frame the conditions hold. Camera zones need that; most other puzzles want Once.");
         },
     );
+    if delete {
+        cx.ed_act(move |ed| ed.remove_puzzle(p));
+    }
     type Names = fn(i128) -> Option<&'static str>;
     let kinds: [(&'static str, &[i128], Names, &str, &str); 2] = [
         ("PuzzleCond", puzzles::COND_CODES, puzzles::cond_name, "cond_type", "CONDITIONS"),
@@ -658,7 +662,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
         ui.horizontal(|ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.push_id(("add part", kind), |ui| {
-                    mini_menu(ui, "+ Add", "", |ui| {
+                    mini_menu(ui, "+ Add", if kind == "PuzzleCond" { "+ Add condition" } else { "+ Add action" }, "", |ui| {
                         for (k, text) in &names {
                             if ui.button(text).clicked() {
                                 let k = *k;
@@ -739,7 +743,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
     let ent = &ed.entities[i];
     let Some(bind) = ent.bind.clone() else { return };
     card(ui, "Transform", None, |_| {}, |ui| {
-        let id = egui::Id::new(("transform", ed.doc.path_of(ent.sub.unwrap_or(ent.node)), ent.is_handle.then(|| ent.label.clone())));
+        let id = egui::Id::unique(("transform", ed.doc.path_of(ent.sub.unwrap_or(ent.node)), ent.is_handle.then(|| ent.label.clone())));
         let p = bind.get(&ed.doc, &ed.entities);
         if let Some((k, v)) = row(ui, "position", |ui| trio(ui, id.with("p"), &p, &["position x", "position y", "position z"], true)) {
             let points = ent.points.clone();
@@ -860,7 +864,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 });
             }
             let vals = [z.look.unwrap_or(0.0) * DEG, z.speed.unwrap_or(2.0)];
-            if let Some((k, v)) = trio(ui, egui::Id::new("zone look"), &vals, &["look", "look speed"], z.look.is_some()) {
+            if let Some((k, v)) = trio(ui, egui::Id::unique("zone look"), &vals, &["look", "look speed"], z.look.is_some()) {
                 cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| if k == 0 { cur.look = Some(v / DEG) } else { cur.speed = Some(v) }));
             }
         });
@@ -876,7 +880,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 if ui.checkbox(&mut on, name).changed() {
                     cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| set(cur, on.then_some(start))));
                 }
-                if let Some((_, v)) = trio(ui, egui::Id::new(("zone", name)), &[value.unwrap_or(0.0)], &[name], value.is_some()) {
+                if let Some((_, v)) = trio(ui, egui::Id::unique(("zone", name)), &[value.unwrap_or(0.0)], &[name], value.is_some()) {
                     cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| set(cur, Some(v))));
                 }
             });
@@ -901,7 +905,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 });
             }
             let fly = z.fly.unwrap_or([0.0; 3]);
-            if let Some((k, v)) = trio(ui, egui::Id::new("zone fly"), &fly, &["fly to x", "fly to y", "fly to z"], z.fly.is_some()) {
+            if let Some((k, v)) = trio(ui, egui::Id::unique("zone fly"), &fly, &["fly to x", "fly to y", "fly to z"], z.fly.is_some()) {
                 cx.ed_act(move |ed| {
                     ed.write_zone(puzzle, |cur| {
                         if let Some(f) = cur.fly.as_mut() {
@@ -937,7 +941,7 @@ fn command_buttons(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
     let tag = ed.doc.tag(node).to_string();
     let allowed = with_format(ed, |f| f.children_of(&tag).into_iter().map(|t| (f.label(&t).to_string(), t)).collect::<Vec<_>>());
     if !allowed.is_empty() {
-        mini_menu(ui, "+", &format!("Add a command inside <{tag}>"), |ui| {
+        mini_menu(ui, "+", "", &format!("Add a command inside <{tag}>"), |ui| {
             for (label, t) in &allowed {
                 let text = if label == t { t.clone() } else { format!("{label}   <{t}>") };
                 let why = refusal(&ed.doc, node, t);
@@ -982,7 +986,7 @@ fn colour_button(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
     };
     ui.horizontal(|ui| {
         let r = ui.color_edit_button_srgb(&mut rgb);
-        r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, "Colour…"));
+        r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ColorWell, true, "Colour…"));
         muted(ui, "Colour…");
         if r.changed() {
             cx.st.colour = Some((path.clone(), rgb));
@@ -1039,7 +1043,7 @@ fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
             for (hi, h) in c.get("handlers").and_then(|h| h.as_array()).into_iter().flatten().take(2).enumerate() {
                 let (file, func, snippet) = (st(h, "file"), st(h, "func"), st(h, "snippet"));
                 let line = h.get("line").map(|l| l.as_i64().map(|n| n.to_string()).unwrap_or_else(|| l.as_str().unwrap_or("").to_string())).unwrap_or_default();
-                let id = ui.id().with(("snippet", hi));
+                let id = ui.scope_id().with(("snippet", hi));
                 let mut open = ui.data(|d| d.get_temp::<bool>(id)).unwrap_or(false);
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing.x = 4.0;
@@ -1089,7 +1093,7 @@ fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
 }
 
 /// One element of the level as a card: its fields, what the decompilation says, and its children.
-pub(crate) fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, extra: &str, buttons: bool) {
+fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, extra: &str, buttons: bool) {
     let ed = cx.ed;
     let tag = ed.doc.tag(node).to_string();
     let c = ed.type_for(&tag);
@@ -1098,7 +1102,7 @@ pub(crate) fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_childr
     let bits = ed.doc.parent(node).is_some_and(|p| ed.doc.tag(p) == "PuzzleAction");
     let mut head_acts: Vec<Act> = Vec::new();
     ui.push_id(("card", &path), |ui| {
-        let mut head_cx = Cx { ed, st: &mut *cx.st, acts: Vec::new() };
+        let st = std::cell::RefCell::new(&mut *cx.st);
         let mut body_acts: Vec<Act> = Vec::new();
         card(
             ui,
@@ -1106,12 +1110,15 @@ pub(crate) fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_childr
             op.as_deref(),
             |ui| {
                 if buttons {
+                    let mut st = st.borrow_mut();
+                    let mut head_cx = Cx { ed, st: &mut st, acts: Vec::new() };
                     command_buttons(&mut head_cx, ui, node);
+                    head_acts.append(&mut head_cx.acts);
                 }
-                head_acts.append(&mut head_cx.acts);
             },
             |ui| {
-                let mut cx = Cx { ed, st: head_cx.st, acts: Vec::new() };
+                let mut st = st.borrow_mut();
+                let mut cx = Cx { ed, st: &mut st, acts: Vec::new() };
                 let attrs = ed.doc.attrs(node).to_vec();
                 for (name, value) in &attrs {
                     let fd = c.as_ref().and_then(|c| c.get("fields")).and_then(|f| f.as_array()).and_then(|f| f.iter().find(|x| x.get("id").and_then(|i| i.as_str()) == Some(name)));
@@ -1124,7 +1131,7 @@ pub(crate) fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_childr
                         Some(t) => format!("{name}  {t}"),
                         None => name.clone(),
                     };
-                    let id = egui::Id::new(("field", &path, name));
+                    let id = egui::Id::unique(("field", &path, name));
                     row(ui, &label, |ui| {
                         if let Some(en) = ed.ksy_enum_for(&tag, name) {
                             let mut items: Vec<(String, String)> = en.values().filter_map(|v| v.as_str()).map(|v| (v.to_string(), v.to_string())).collect();
@@ -1229,7 +1236,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
                 style::name(&r, name);
             }
             let r = ui.button("Apply");
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Apply move"));
+            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Apply move"));
             if r.clicked() {
                 let v = [fl(&st.mv[0], 0.0), fl(&st.mv[1], 0.0), fl(&st.mv[2], 0.0)];
                 go = Some(Box::new(move |w: &mut Window| w.ed.apply_transform(Some(v), None, 1, None)));
@@ -1243,7 +1250,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             let r = ui.add(egui::TextEdit::singleline(&mut st.deg).desired_width(40.0));
             style::name(&r, "rotate by");
             let r = ui.button("Apply");
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Apply rotation"));
+            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Apply rotation"));
             if r.clicked() {
                 let (deg, axis) = (fl(&st.deg, 0.0), [1usize, 0, 2][st.axis]);
                 go = Some(Box::new(move |w: &mut Window| w.ed.apply_transform(None, Some(deg), axis, None)));
@@ -1253,7 +1260,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             let r = ui.add(egui::TextEdit::singleline(&mut st.sc).desired_width(40.0));
             style::name(&r, "scale by");
             let r = ui.button("Apply");
-            r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Apply scale"));
+            r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Apply scale"));
             if r.clicked() {
                 let s = fl(&st.sc, 1.0);
                 go = Some(Box::new(move |w: &mut Window| w.ed.apply_transform(None, None, 1, Some(s))));
