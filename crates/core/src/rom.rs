@@ -457,26 +457,32 @@ impl Rom {
         landscape_name(self.level(index)?)
     }
 
-    /// The region of a bank ("objbank" or "texbank") by its name in the map. Two texture banks are named
-    /// LEVELEND_TEX_BANK (1 and 14): the lower number wins, as in the game's bank numbers.
-    pub fn bank(&self, data_type: &str, name: &str) -> Option<&Region> {
-        self.regions
-            .iter()
-            .filter(|r| r.key.data_type == data_type && r.name.as_deref() == Some(name))
-            .min_by_key(|r| match r.key.id {
-                Id::Num(n) => (0, n),
-                Id::Name(_) => (1, 0),
+    /// The banks with this name, each with its number.
+    fn banks(&self, data_type: &str, name: &str) -> Vec<(u32, &Region)> {
+        let named = self.regions.iter().filter(|r| r.key.data_type == data_type && r.name.as_deref() == Some(name));
+        named
+            .map(|r| match r.key.id {
+                Id::Num(n) => (n, r),
+                Id::Name(_) => (u32::MAX, r),
             })
+            .collect()
     }
 
-    /// An object bank's bytes by its name ("HUB_PART1").
+    /// The region a build replaces for a bank ("objbank" or "texbank") named like this in the map. Two texture
+    /// banks are named LEVELEND_TEX_BANK (1 and 14): the lower number wins, as in the Python app's table of keys.
+    pub fn bank(&self, data_type: &str, name: &str) -> Option<&Region> {
+        self.banks(data_type, name).into_iter().min_by_key(|b| b.0).map(|b| b.1)
+    }
+
+    /// An object bank's bytes by its name ("HUB_PART1"), as noclip's ROM splitter writes them to NAME.obj.fla.
     pub fn object_bank(&self, name: &str) -> Option<&[u8]> {
         self.bank("objbank", name)?.bytes()
     }
 
-    /// A texture bank's bytes by its name ("HUB_TEX_BANK").
+    /// A texture bank's bytes by its name ("HUB_TEX_BANK"), as noclip's ROM splitter writes them to NAME.tex.fla.
+    /// Of the two banks named LEVELEND_TEX_BANK this is number 14, the one noclip keeps. `bank` names number 1.
     pub fn texture_bank(&self, name: &str) -> Option<&[u8]> {
-        self.bank("texbank", name)?.bytes()
+        self.banks("texbank", name).into_iter().filter(|b| b.0 != u32::MAX).max_by_key(|b| b.0).map(|b| b.1)?.bytes()
     }
 
     /// Replaces a region that is one block. Empty data deletes the region's content.
