@@ -1,5 +1,5 @@
-//! The kit's ruins and barriers: a signpost, rubble, a scorch mark, thorns and two gates. A port of kit/ruins.py and
-//! kit/barrier.py. Every random number is drawn in the same order as there.
+//! The kit's ruins and barriers: a signpost, rubble, a scorch mark, thorns and two gates. A port of
+//! the former Python kit's ruins.py and barrier.py. Every random number is drawn in the same order as there.
 
 use super::font;
 use super::image::{Image, Rgba};

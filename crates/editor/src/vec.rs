@@ -3,7 +3,7 @@
 //! A vector is `[x, y, z]`. A quaternion is `[x, y, z, w]`. A matrix is row-major and acts on column vectors
 //! (`M · [x, y, z, 1]`). The game's rotation order is R = Ry·Rz·Rx, three.js's Euler order 'YZX'.
 //!
-//! The formulas are the ones of the Python editor (`desktop/vec.py`), in the same order of operations. Where Python
+//! The formulas are the ones of the Python editor (`vec.py`), in the same order of operations. Where Python
 //! called numpy's dot products, the sums here are fused in the order the reference machine's numpy used, and the
 //! results are the same doubles.
 

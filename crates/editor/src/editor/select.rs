@@ -240,7 +240,7 @@ impl Editor {
     }
 
     // -----------------------------------------------------------------------------------------------------------
-    // The mouse in the 3D view (desktop/viewport.py). Positions are pixels from the view's top left corner.
+    // The mouse in the 3D view. Positions are pixels from the view's top left corner.
 
     /// The size of the 3D view in pixels. Set it before any mouse call and whenever the view changes size.
     pub fn set_view_size(&mut self, width: f64, height: f64) {

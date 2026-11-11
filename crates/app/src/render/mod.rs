@@ -1,5 +1,5 @@
 //! Draws a scene (`glovebox_editor::scene`) with wgpu: Lambert-shaded meshes with fog, lines (dashed or not) and
-//! sprites. A port of `desktop/render.py`.
+//! sprites. A port of the former Python editor's `render.py`.
 //!
 //! The renderer draws into its own colour and depth textures, never into the window. The window shows the colour
 //! texture as an egui image (`Renderer::view`). `read_pixels`, `render_image` and `render_thumbnail` give the

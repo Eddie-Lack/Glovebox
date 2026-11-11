@@ -1,7 +1,7 @@
 //! Python's `random.Random` seeded with a string: the Mersenne Twister with CPython's seeding, `getrandbits` and
 //! `choice`.
 //!
-//! `core.reskin` picks textures with `random.Random("...")`. The same string must give the same picks here.
+//! `reskin` of the former Python back end picked textures with `random.Random("...")`. The same string must give the same picks here.
 //! `kit::rng` holds the generator for whole number seeds.
 
 use sha2::{Digest, Sha512};

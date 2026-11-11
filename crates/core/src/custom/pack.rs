@@ -1,8 +1,8 @@
 //! Builds an object bank from triangles, as libgarib's `objbank-tool pack` builds one from a glTF file.
 //!
 //! This follows libgarib's Python step by step (`objects.packActor`, `gltf_helper.MeshData`,
-//! `vertex_cache_optimizer`, `display_lists.gltfNodeToDisplayList`), with the fixes of
-//! `patches/libgarib-pack-fixes.patch`. The bytes must equal libgarib's, so its oddities are kept and marked.
+//! `vertex_cache_optimizer`, `display_lists.gltfNodeToDisplayList`), with the fixes Glovebox made to libgarib's
+//! packer (docs/technical.md, "Notes and limits"). The bytes must equal libgarib's, so its oddities are kept and marked.
 
 use std::collections::HashMap;
 

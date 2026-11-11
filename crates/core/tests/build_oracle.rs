@@ -447,7 +447,7 @@ fn imported_models_are_pythons() {
     };
     let built = maker.build(&request).unwrap();
     assert_eq!(built.imports.as_ref().unwrap().objects, kit_ids.len());
-    // The console's rules hold for a ROM with the game mod (tools/hw_check.py)
+    // The console's rules hold for a ROM with the game mod (`hwcheck`)
     assert_eq!(glovebox_core::hwcheck::check_rom(&built.data), Vec::<String>::new());
     for id in strings(&want["reskins"]) {
         let x = cat[&id].custom.as_ref().unwrap();

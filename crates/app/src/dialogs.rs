@@ -300,6 +300,8 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
     let Some(mut dialog) = w.dialog.take() else { return };
     let mut keep = true;
     let mut then: Option<Act> = None;
+    // A question takes Enter for Yes and Esc for No. A note takes either for OK.
+    let (enter, esc) = ctx.input(|i| (i.key_pressed(egui::Key::Enter), i.key_pressed(egui::Key::Escape)));
     let modal = egui::Modal::new(egui::Id::unique("dialog")).show(ctx, |ui| {
         ui.set_width(520.0f32.min(ctx.content_rect().width() - 60.0));
         ui.spacing_mut().item_spacing.y = 6.0;
@@ -308,7 +310,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 style::h2(ui, title);
                 ui.label(text.as_str());
                 buttons(ui, |ui| {
-                    if ui.add(style::primary("OK")).clicked() {
+                    if ui.add(style::primary("OK")).clicked() || enter || esc {
                         keep = false;
                         then = after.take();
                     }
@@ -318,11 +320,11 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 style::h2(ui, title);
                 ui.label(text.as_str());
                 buttons(ui, |ui| {
-                    if ui.add(style::primary("Yes")).clicked() {
+                    if ui.add(style::primary("Yes")).clicked() || enter {
                         keep = false;
                         then = yes.take();
                     }
-                    if ui.button("No").clicked() {
+                    if ui.button("No").clicked() || esc {
                         keep = false;
                     }
                 });

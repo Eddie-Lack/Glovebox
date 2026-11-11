@@ -4,7 +4,7 @@
  * The game has 5 object bank slots and 5 texture bank slots, and a level fills about 3 of each (LoadLevel).
  * A level built with the editor can use models from other banks. Instead of copying those models into the
  * patched ROM, the patch lists the extra banks each level needs (modExtraBanks, filled in by
- * tools/mod_patch.py). Before the level is parsed, Mod_LoadExtraBanks loads them with the game's own
+ * crates/core/src/modpatch.rs). Before the level is parsed, Mod_LoadExtraBanks loads them with the game's own
  * LoadTextureBank and LoadObjectBank: it empties the slots for the call, then moves the new bank into the
  * mod's own lists and puts the level's banks back. FindTexture and FindObject are redirected to versions
  * that search the game's slots first, then the mod's lists.
@@ -49,7 +49,7 @@ extern s32 modHeapGen;
 
 u8 modExtraBanks[256] = { END_OF_LIST };
 
-/* Custom models (generated glTF, packed by tools/mod_patch.py): per level key one texture bank and one object bank in the
+/* Custom models (generated glTF, packed by crates/core/src/modpatch.rs): per level key one texture bank and one object bank in the
    mod's ROM store, in the game's own bank format and uncompressed. The key is the one of modExtraBanks. */
 typedef struct CustomEntry {
     u8 key;

@@ -2,7 +2,7 @@
 //!
 //! The Python kit drew words with Pillow's built-in font in 1-bit mode. That font is not copied here. Each letter is a
 //! few strokes on a grid 5 wide and 7 high, written below, and drawn into a cell of the size the old letter had. The
-//! table holds the old layout as numbers only (advances and cell boxes, measured by the reference script kit/font_metrics.py
+//! table holds the old layout as numbers only (advances and cell boxes, measured by a script outside the repository
 //! in the port's test data), so words sit where they did.
 
 use super::image::{Image, Rgba};

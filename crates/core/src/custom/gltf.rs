@@ -1,6 +1,6 @@
 //! Reads a glTF 2.0 model for Import model: a `.glb` file, or a `.gltf` file with its data in data URIs.
 //!
-//! This is the reader of `tools/custom_model.py`. It takes the triangles of the default scene in world space, with
+//! It reads what the former Python converter read. It takes the triangles of the default scene in world space, with
 //! normals, texture coordinates and the material of each. The file is untrusted. Every read is checked.
 
 use serde_json::Value;

@@ -1,6 +1,6 @@
 //! The 3D view: draws the level into the renderer's picture and shows it, and turns the mouse and the fly keys into
 //! camera moves, picks, box selections and gizmo drags. Over the picture it draws the HUD: the level's name, the
-//! autosave chip, the hint line and the loading note. A port of `desktop/viewport.py`.
+//! autosave chip, the hint line and the loading note. A port of the former Python editor's `viewport.py`.
 //!
 //! Click: select · Ctrl+click: add/remove · B or Ctrl+Alt+drag: box select · drag: orbit · right drag: pan · wheel:
 //! zoom. The fly camera (C): WASD moves along the view, Space and Shift move straight up and down, dragging turns
@@ -251,7 +251,8 @@ fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
 /// Moves the fly camera by the keys held.
 fn fly_step(w: &mut Window, ui: &egui::Ui) {
     let view = &mut w.view;
-    if !view.fly.on {
+    // Keys typed into a text box or at a dialog are not the camera's
+    if !view.fly.on || w.dialog.is_some() || ui.ctx().egui_wants_keyboard_input() {
         return;
     }
     let (shift, dt) = ui.input(|i| (i.modifiers.shift && !i.modifiers.ctrl && !i.modifiers.command, f64::from(i.unstable_dt)));

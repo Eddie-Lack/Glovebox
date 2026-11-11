@@ -1,4 +1,4 @@
-//! The scene nodes of the entities: what `desktop/entities.py` built next to each entity.
+//! The scene nodes of the entities: what the former Python editor's `entities.py` built next to each entity.
 //!
 //! `entities::build` reads the XML into entities. This module makes the nodes each entity draws, puts them where
 //! the XML says (`place_ent`), turns spinning platforms (`animate`) and hides layers (`apply_visibility`).

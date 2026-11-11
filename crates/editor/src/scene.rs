@@ -1,8 +1,9 @@
 //! A small scene graph for the 3D view: nodes with transforms, and the meshes, lines and sprites they draw.
 //!
-//! It is plain data, a port of `desktop/scene.py` and of what `desktop/gltf.py` built from a model. The renderer in
-//! the app crate draws it. This module also finds what a ray hits (picking, the ground under a point) and the boxes
-//! around things, on the CPU. Transforms and picking use `f64`, as numpy did. Vertex data is `f32`.
+//! It is plain data, a port of the former Python editor's `scene.py` and of what its `gltf.py` built from a model.
+//! The renderer in the app crate draws it. This module also finds what a ray hits (picking, the ground under a
+//! point) and the boxes around things, on the CPU. Transforms and picking use `f64`, as numpy did. Vertex data is
+//! `f32`.
 //!
 //! How it differs from the Python module in shape:
 //! - Nodes live in a [`Scene`] and are named by a [`NodeId`]. Python held them by reference.
@@ -949,7 +950,7 @@ pub struct Prefab {
 }
 
 impl Prefab {
-    /// Builds the scene data of a model as `desktop/gltf.py` did from the model's glTF file. `texture` gives the
+    /// Builds the scene data of a model as the former Python editor's `gltf.py` did from the model's glTF file. `texture` gives the
     /// pixels of a texture id, or none when they are missing (the material is then drawn without a texture).
     ///
     /// The material follows gltf.py: the base colour and its alpha as opacity, `Blend` as transparent, the

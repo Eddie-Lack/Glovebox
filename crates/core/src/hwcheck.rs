@@ -1,5 +1,5 @@
-//! Checks a built ROM against the rules of real N64 hardware, which an emulator does not enforce. This is
-//! `tools/hw_check.py`, with the same findings and the same texts.
+//! Checks a built ROM against the rules of real N64 hardware, which an emulator does not enforce. It gives
+//! the findings and texts of the former Python `hw_check.py`.
 //!
 //! `check_rom` returns a list of problems (empty: all fine). The mod patcher runs it on every ROM it builds and
 //! refuses a ROM with a problem. The rules (docs/technical.md, "Real hardware"):

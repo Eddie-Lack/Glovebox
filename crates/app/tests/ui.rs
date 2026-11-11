@@ -1,4 +1,5 @@
-//! The editor's window on the fixture, without a ROM: a port of `tools/desktop_test.py` under the same check names.
+//! The editor's window on the fixture, without a ROM: a port of the former Python editor's test, under the same
+//! check names.
 //!
 //! The test drives the real window through `egui_kittest`: it clicks the widgets it finds by their labels, types
 //! into fields, presses the shortcut keys, and sends pointer events at pixel positions into the 3D view (picking,
@@ -85,6 +86,9 @@ impl T {
 
     fn detail(&mut self, name: &str, ok: bool, detail: String) {
         println!("{}  {}{}", if ok { "ok  " } else { "FAIL" }, name, if ok || detail.is_empty() { String::new() } else { format!("  ({detail})") });
+        if std::env::var_os("GLOVEBOX_TEST_DEBUG").is_some() {
+            println!("      entities: {:?}", self.h.state_mut().window().map(|w| w.ed.entities.len()));
+        }
         self.results.push((name.to_string(), ok, detail));
     }
 
@@ -239,6 +243,12 @@ impl T {
 
     /// Types into the text box whose label contains `label`, and presses Enter.
     fn fill(&mut self, label: &str, text: &str) -> bool {
+        if let Some(node) = self.find(label, false).into_iter().find(|n| n.accesskit_node().role() == egui::accesskit::Role::TextInput) {
+            node.scroll_to_me();
+        }
+        for _ in 0..4 {
+            self.h.step();
+        }
         let found = match self.find(label, false).into_iter().find(|n| n.accesskit_node().role() == egui::accesskit::Role::TextInput) {
             Some(node) => {
                 node.click();
@@ -251,6 +261,12 @@ impl T {
             return false;
         }
         self.settle();
+        // Without the focus the keys below would be the editor's shortcuts
+        if !self.h.ctx.egui_wants_keyboard_input() {
+            let rects: Vec<_> = self.find(label, false).iter().map(|n| (n.accesskit_node().role(), n.rect())).collect();
+            println!("      the text box {label:?} did not take the focus: {rects:?}");
+            return false;
+        }
         self.h.key_press_modifiers(Modifiers::COMMAND, Key::A);
         self.h.step();
         self.h.key_press(Key::Backspace);
@@ -370,7 +386,7 @@ fn tiny_glb() -> Vec<u8> {
 }
 
 #[test]
-fn desktop_test_on_the_fixture() {
+fn editor_on_the_fixture() {
     let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
     let mut t = T::new("fixture", Some(backend.clone()), [1500.0, 950.0]);
     let none = Modifiers::default();
@@ -1123,7 +1139,7 @@ fn desktop_test_on_the_fixture() {
     t.finish();
 }
 
-/// One click for each button the port of `desktop_test.py` did not click.
+/// One click for each button the former Python editor's test did not click.
 fn more_clicks(t: &mut T) {
     let none = Modifiers::default();
     // The toolbar's tools
@@ -1579,7 +1595,111 @@ fn more_clicks(t: &mut T) {
     }
     let panned = t.ed().orbit.target != target;
     t.check("a right drag pans", panned);
+    review_fixes(t);
     t.shot("18-end");
+}
+
+/// What a review of the window against the Python one found.
+fn review_fixes(t: &mut T) {
+    // Esc and Enter answer a question and a note
+    let ed = t.ed();
+    let tip = ent(ed, |e| e.kind == "tip");
+    ed.select(tip, false);
+    ed.apply_transform(Some([5.0, 0.0, 0.0]), None, 1, None);
+    t.settle();
+    t.click("Reset level");
+    let asked = t.w().dialog.is_some();
+    t.key(Key::Escape);
+    let kept = t.w().dialog.is_none() && t.ed().is_edited();
+    t.click("Reset level");
+    t.key(Key::Enter);
+    let reset = t.w().dialog.is_none() && !t.ed().is_edited();
+    t.detail("Esc answers No and Enter answers Yes in a question", asked && kept && reset, format!("{asked} {kept} {reset}"));
+    t.click("Undo");
+    t.w().settings.remove("emulator");
+    t.click("Test level");
+    let asked = t.w().dialog.is_some();
+    t.key(Key::Escape);
+    let (closed, status) = (t.w().dialog.is_none(), t.status());
+    t.click("Test level");
+    t.key(Key::Enter);
+    let closed2 = t.w().dialog.is_none();
+    t.detail("Esc and Enter close a note", asked && closed && closed2 && status.contains("Test level needs an emulator."), status);
+
+    // Fly mode: Shift typed into a text box, or held at a dialog, does not move the camera
+    t.ed().set_selection(Vec::new());
+    t.settle();
+    t.click("Fly");
+    t.fill("Filter entities", "");
+    t.click_containing("Filter entities");
+    let p0 = t.ed().camera.pos;
+    t.h.event(egui::Event::ModifiersChanged(Modifiers::SHIFT));
+    for _ in 0..4 {
+        t.h.step();
+    }
+    let still = t.ed().camera.pos == p0;
+    t.h.key_press(Key::Enter);
+    t.settle();
+    // Without the text box the same key moves it
+    t.h.event(egui::Event::ModifiersChanged(Modifiers::SHIFT));
+    for _ in 0..4 {
+        t.h.step();
+    }
+    let moved = t.ed().camera.pos[1] < p0[1];
+    t.click("Reset level");
+    let p1 = t.ed().camera.pos;
+    for _ in 0..4 {
+        t.h.step();
+    }
+    let still_at_dialog = t.w().dialog.is_none() || t.ed().camera.pos == p1;
+    t.h.event(egui::Event::ModifiersChanged(Modifiers::default()));
+    t.key(Key::Escape);
+    t.click("Fly");
+    let off = !t.w().view.fly.on;
+    t.detail("fly keys are ignored in a text box and at a dialog", still && moved && still_at_dialog && off, format!("{still} {moved} {still_at_dialog} {off}"));
+
+    // The clear buttons of the filter and of the model search
+    t.fill("Filter entities", "spin");
+    let had = t.ed().filter == "spin" && t.has("Clear filter");
+    t.click("Clear filter");
+    let cleared = t.ed().filter.is_empty() && !t.has("Clear filter");
+    t.detail("click: the filter's clear button", had && cleared, format!("{had} {cleared}"));
+    // The Models tab opens with the search box ready for typing
+    t.click("+ Add");
+    t.click("Collectables");
+    t.click("Models");
+    let focused = t.find("Search models", false).iter().any(|n| n.is_focused());
+    t.h.event(egui::Event::Text("gra".to_string()));
+    t.settle();
+    let typed = t.w().palette.query == "gra";
+    t.detail("the Models tab opens with the search box focused", focused && typed, format!("{focused} {typed}"));
+    t.click("Clear search");
+    let cleared = t.w().palette.query.is_empty() && !t.has("Clear search");
+    t.check("click: the search's clear button", cleared);
+
+    // The kit: a value an item can't be made with does not stop its picture for good
+    t.click("Kit");
+    t.until(120, |w| w.side_jobs.running == 0 && w.palette.kit_picture("grave").is_some());
+    t.fill("Lean", "x");
+    let refused = t.until(30, |w| w.side_jobs.running == 0 && w.palette.kit_picture("grave").is_some_and(|p| p.0.contains("\"x\"")));
+    t.fill("Lean", "9");
+    let again = t.until(30, |w| w.side_jobs.running == 0 && w.palette.kit_picture("grave").is_some_and(|p| p.0.contains("\"9\"") && p.1));
+    t.detail("a kit picture is drawn again after a wrong value", refused && again, format!("{refused} {again}"));
+    t.click("+ Add");
+
+    // The path panel's camera list says what each camera does
+    t.click("Path");
+    t.click("camera");
+    if let Some(n) = t.find("High", true).first() {
+        n.hover();
+    }
+    for _ in 0..8 {
+        t.h.step();
+    }
+    let tip = t.has_containing("rises and looks down");
+    t.choose("High");
+    t.click("Path");
+    t.check("the camera list of the path panel has tooltips", tip);
 }
 
 /// The window at 1280 by 720 and at a display scale of 1.5: nothing panics and the panels stay inside.
@@ -1626,7 +1746,7 @@ fn the_fonts_have_the_symbols() {
     assert!(missing.is_empty(), "no glyph for {missing}");
 }
 
-/// The first-run screen: a wrong file is refused with the launcher's message.
+/// The first-run screen: a wrong file is refused with the first-run screen's message.
 #[test]
 fn setup_refuses_a_wrong_file() {
     let mut t = T::new("setup", None, [1280.0, 720.0]);

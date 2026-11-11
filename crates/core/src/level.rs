@@ -1164,7 +1164,7 @@ pub fn parse_level_xml(xml: &[u8]) -> Result<Doc, LevelError> {
     Ok(doc)
 }
 
-/// `parse_level_xml`, the schema check and `assemble` in one step, as the Python editor's `core.assemble`:
+/// `parse_level_xml`, the schema check and `assemble` in one step, as `assemble` of the former Python back end did:
 /// the level file, and whether it needs the game mod.
 pub fn assemble_xml(xml: &[u8]) -> Result<(Vec<u8>, bool), LevelError> {
     let doc = parse_level_xml(xml)?;

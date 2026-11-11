@@ -1,6 +1,6 @@
 //! Adds the Expansion Pak game mod (`mod/mod.json` and `mod/mod.bin`) to a built ROM, and the two small patches
-//! every built ROM can get: Easy's controls and the rows of the level table. This is `tools/mod_patch.py`, with the
-//! same ROM bytes and the same error texts.
+//! every built ROM can get: Easy's controls and the rows of the level table. It writes the
+//! ROM bytes and the error texts of the former Python patcher.
 //!
 //! `apply_mod` checks every word it replaces, writes the loader and the hooks into the game's code, stores the mod
 //! at 12 MiB (past anything the ROM builder writes), and recomputes the header CRCs. The mod needs the Expansion
@@ -444,7 +444,7 @@ pub fn apply_mod_with(
     fix_crc(&mut out)?;
     let problems = hwcheck::check_rom_with(&out, info);
     if !problems.is_empty() {
-        return err(format!("the ROM breaks a rule of real N64 hardware (tools/hw_check.py): {}", problems.join("; ")));
+        return err(format!("the ROM breaks a rule of real N64 hardware (hwcheck): {}", problems.join("; ")));
     }
     Ok(out)
 }

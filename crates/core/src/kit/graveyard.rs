@@ -1,5 +1,5 @@
-//! The kit's graveyard props: gravestone, pumpkin, candles, coffin, fence, dead trees and cobweb. A port of
-//! kit/gravestone.py, pumpkin.py, candles.py, coffin.py, fence.py, tree.py and web.py. Every random number is drawn
+//! The kit's graveyard props: gravestone, pumpkin, candles, coffin, fence, dead trees and cobweb. A port of the former Python kit's
+//! gravestone.py, pumpkin.py, candles.py, coffin.py, fence.py, tree.py and web.py. Every random number is drawn
 //! in the same order as there.
 
 use super::image::{Image, Rgba};

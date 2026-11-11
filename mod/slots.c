@@ -1,7 +1,7 @@
 /*
  * Glover game mod: extra level slots.
  *
- * The editor can store new levels behind the mod instead of in the ROM's level files. tools/mod_patch.py lists them in
+ * The editor can store new levels behind the mod instead of in the ROM's level files. crates/core/src/modpatch.rs lists them in
  * modSlots: per Space slot 35 to 41, the cart address of its file, its name, song and bonus time. The ROM keeps the
  * retail Space levels in those slots. A flag, modSlotsActive, decides which ones load:
  *   - A loading zone in a hub (a platform with exit type 11, SPACE_EXIT, and the tag modSlots.entryTag) sets the flag.
@@ -62,7 +62,7 @@ typedef struct SlotTable {
     SlotLevel level[SLOTS_COUNT];
 } SlotTable;
 
-/* Filled in by tools/mod_patch.py */
+/* Filled in by crates/core/src/modpatch.rs */
 SlotTable modSlots = { 0x534C5431 };
 
 extern u8 bestTimes[6][TIMES_SIZE];
@@ -220,7 +220,7 @@ void *Mod_LoadLandscapeFile(s32 num) {
         sprintf(gameInfo.message, "LEVEL UNPLAYABLE - NO LEV FILE");
         return NULL;
     }
-    /* mod_patch.py stores each file padded with zeros to a multiple of 16, so the DMA reads a whole number of 16 byte blocks */
+    /* modpatch.rs stores each file padded with zeros to a multiple of 16, so the DMA reads a whole number of 16 byte blocks */
     size = (size + 15) & ~15;
     buf = JallocAlloc(DMAGetSize(rom, rom + size), 1, "LandData");
     DMAMemory(buf, rom, rom + size);

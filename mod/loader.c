@@ -51,7 +51,7 @@ void ModLoader(void) {
 
     if (OS_MEM_SIZE >= 0x800000) {
         /* DMAMemory invalidates the data cache over the target before the DMA. The ROM address, the RAM address and the length are all
-           multiples of 16 (tools/hw_check.py checks it). */
+           multiples of 16 (crates/core/src/hwcheck.rs checks it). */
         DMAMemory((void *)MOD_RAM, MOD_ROM, MOD_ROM + MOD_SIZE);
         osInvalICache((void *)MOD_RAM, MOD_SIZE);
         Mod_Init();

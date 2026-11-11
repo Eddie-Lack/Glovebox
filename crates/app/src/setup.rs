@@ -1,6 +1,6 @@
 //! The first-run screen: the player chooses their ROM. The app checks it and keeps a copy in the user folder. Then
-//! the editor opens in the same window. A port of `desktop/setup.py`. Nothing has to be prepared any more: opening
-//! the game data takes milliseconds.
+//! the editor opens in the same window. A port of the former Python editor's `setup.py`. Nothing has to be prepared
+//! any more: opening the game data takes milliseconds.
 
 use crate::dialogs::FileDialogs;
 use crate::{shell, style};
