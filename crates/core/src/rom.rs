@@ -281,6 +281,12 @@ impl Region {
         self.offset
     }
 
+    /// Whether an instruction pair in the code holds the region's start. False for the code and the Japanese font,
+    /// which the map gives a fixed place.
+    pub fn start_is_pointer(&self) -> bool {
+        self.kind != Kind::Static
+    }
+
     /// Whether the region is a list of files (the level files, the songs).
     pub fn is_array(&self) -> bool {
         matches!(self.data, Data::Array(_))
