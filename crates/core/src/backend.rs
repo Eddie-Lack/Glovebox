@@ -6,15 +6,17 @@
 //! and `model` and `texture` give the model and the pixels.
 
 use crate::build::{self, BuildAllRequest, BuildRequest, Built};
+use crate::custom;
 use crate::gamedata::{self, hex, parse_id, GameData, Image};
 use crate::imports::{self, Customs, Plan};
+use crate::kit;
 use crate::level;
 use crate::model::Model;
 use crate::objbank::{self, Bank};
 use crate::tables;
 use crate::texbank::TexBank;
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -151,7 +153,7 @@ pub trait Backend: Send + Sync {
     fn import_custom(&self, data: &[u8], name: &str, scale: f64) -> Result<Value>;
     fn delete_custom(&self, set: &str) -> Result<()>;
     /// A copy of a retail model with textures from other worlds. Returns the copy's object id.
-    fn reskin(&self, oid: &str, worlds: &[String], seed: u64) -> Result<String>;
+    fn reskin(&self, oid: &str, worlds: &[String], seed: i64) -> Result<String>;
     fn kit_items(&self) -> Result<Value>;
     /// A PNG picture of a kit model.
     fn kit_preview(&self, item: &str, params: &Value) -> Result<Vec<u8>>;
@@ -168,20 +170,24 @@ pub struct GameBackend {
     templates: OnceLock<Value>,
     /// Decoded textures by the bank's name and the texture id
     textures: Mutex<BTreeMap<(String, u32), Arc<Image>>>,
-}
-
-/// The longest model file `import_custom` takes.
-pub const MAX_MODEL: usize = 64 << 20;
-
-fn not_yet<T>(what: &str) -> Result<T> {
-    // todo: call crate::custom and crate::kit when they exist
-    Err(BackendError(format!("{what} is not available yet")))
+    /// Kit pictures by the item and its settings
+    kit_previews: Mutex<HashMap<String, Vec<u8>>>,
+    /// One model is imported at a time
+    custom_lock: Mutex<()>,
 }
 
 impl GameBackend {
     /// `home` is the user folder. Imported models are in its `custom` folder.
     pub fn new(game: Arc<GameData>, home: impl Into<PathBuf>, rom_path: Option<PathBuf>) -> GameBackend {
-        GameBackend { game, home: home.into(), rom_path, templates: OnceLock::new(), textures: Mutex::new(BTreeMap::new()) }
+        GameBackend {
+            game,
+            home: home.into(),
+            rom_path,
+            templates: OnceLock::new(),
+            textures: Mutex::new(BTreeMap::new()),
+            kit_previews: Mutex::new(HashMap::new()),
+            custom_lock: Mutex::new(()),
+        }
     }
 
     /// Reads the ROM file and opens the back end on it.
@@ -195,13 +201,29 @@ impl GameBackend {
         &self.game
     }
 
-    fn custom_dir(&self) -> PathBuf {
-        self.home.join("custom")
-    }
-
     /// The author's imported models, read from the user folder.
     pub fn customs(&self) -> Customs {
-        imports::load_customs(&self.custom_dir())
+        imports::load_customs(&self.home)
+    }
+
+    /// Converts a glTF model and returns the set's `meta.json` with its id as `set` (`core.import_custom`).
+    fn import(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {
+        let taken_ids: HashSet<u32> = self.game.catalog().keys().copied().collect();
+        let mut taken_textures: HashSet<u32> = HashSet::new();
+        for bank in self.game.all_texture_banks() {
+            taken_textures.extend(self.game.texture_ids(bank));
+        }
+        let _guard = self.custom_lock.lock().unwrap_or_else(|e| e.into_inner());
+        let set = custom::import_custom(&self.home, data, name, scale, &taken_ids, &taken_textures)
+            .map_err(|e| BackendError(e.0))?;
+        let meta = custom::custom_sets(&self.home).remove(&set);
+        let Some(Value::Object(meta)) = meta else {
+            return Err(BackendError("The imported model could not be read back".into()));
+        };
+        let mut out = serde_json::Map::new();
+        out.insert("set".into(), Value::String(set));
+        out.extend(meta);
+        Ok(Value::Object(out))
     }
 
     fn cached_texture(&self, bank: String, id: u32, load: impl FnOnce() -> Result<Option<Image>>) -> Result<Arc<Image>> {
@@ -383,37 +405,86 @@ impl Backend for GameBackend {
         Ok(build::build_all(&self.game, &self.customs(), request)?)
     }
 
-    fn import_custom(&self, data: &[u8], _name: &str, _scale: f64) -> Result<Value> {
-        if data.len() > MAX_MODEL {
-            return Err(BackendError(format!("The model is larger than {} MB", MAX_MODEL >> 20)));
+    fn import_custom(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {
+        if data.len() > custom::MAX_MODEL {
+            return Err(BackendError(format!("The model is larger than {} MB", custom::MAX_MODEL >> 20)));
         }
-        not_yet("Importing a model")
+        let words: Vec<&str> = name.split_whitespace().collect();
+        let name: String = words.join(" ").chars().take(40).collect();
+        self.import(data, if name.is_empty() { "Model" } else { &name }, scale)
     }
 
     fn delete_custom(&self, set: &str) -> Result<()> {
-        if !imports::is_set_id(set) {
+        let _guard = self.custom_lock.lock().unwrap_or_else(|e| e.into_inner());
+        if !custom::delete_custom(&self.home, set) {
             return Err(BackendError("no such model".into()));
         }
-        // A folder that is not there is not an error, as in the Python app
-        let _ = std::fs::remove_dir_all(self.custom_dir().join(set));
         self.textures.lock().unwrap_or_else(|e| e.into_inner()).retain(|(bank, _), _| *bank != format!("custom:{set}"));
         Ok(())
     }
 
-    fn reskin(&self, _oid: &str, _worlds: &[String], _seed: u64) -> Result<String> {
-        not_yet("Reskinning a model")
+    fn reskin(&self, oid: &str, worlds: &[String], seed: i64) -> Result<String> {
+        let unknown = || BackendError(format!("no model {oid}"));
+        let id = parse_id(oid).ok_or_else(unknown)?;
+        let entry = self.game.catalog().get(&id).ok_or_else(unknown)?;
+        let bank = self.game.model_bank(id).ok_or_else(unknown)?;
+        let mut worlds: Vec<&str> = worlds.iter().map(|w| w.as_str()).collect();
+        worlds.sort_unstable();
+        let textures: Vec<String> =
+            self.game.object_texture_ids(id).iter().flat_map(|s| s.iter()).map(|t| hex(*t)).collect();
+        let pool: Vec<String> = self.game.reskin_pool(&worlds).into_iter().map(hex).collect();
+        let taken_ids: HashSet<u32> = self.game.catalog().keys().copied().collect();
+        let model = custom::Reskin {
+            oid,
+            name: &entry.name,
+            world: &entry.world,
+            bank,
+            textures: &textures,
+            pool: &pool,
+            taken_ids: &taken_ids,
+        };
+        let record = |t: &str| parse_id(t).and_then(|t| self.game.texture_record(t));
+        let _guard = self.custom_lock.lock().unwrap_or_else(|e| e.into_inner());
+        let set = custom::reskin(&self.home, &model, &worlds, seed, &record).map_err(|e| BackendError(e.0))?;
+        let made = custom::custom_catalog(&self.home).into_iter().find(|c| c.custom == set);
+        made.map(|c| c.id).ok_or_else(|| BackendError("The reskinned model could not be read back".into()))
     }
 
     fn kit_items(&self) -> Result<Value> {
-        not_yet("The kit")
+        Ok(kit::items())
     }
 
-    fn kit_preview(&self, _item: &str, _params: &Value) -> Result<Vec<u8>> {
-        not_yet("The kit")
+    fn kit_preview(&self, item: &str, params: &Value) -> Result<Vec<u8>> {
+        // The Python window's back end turned every setting into text first
+        let mut texts = kit::Params::new();
+        for (k, v) in params.as_object().into_iter().flatten() {
+            let text = match v {
+                Value::String(s) => s.clone(),
+                Value::Bool(b) => if *b { "True" } else { "False" }.to_string(),
+                Value::Number(n) if n.is_f64() => crate::pyfmt::repr(n.as_f64().unwrap_or(0.0)),
+                other => other.to_string(),
+            };
+            texts.insert(k.clone(), Value::String(text));
+        }
+        let clean = kit::clean(item, &texts)?;
+        let key = format!("{item} {}", Value::Object(clean.clone()));
+        if let Some(png) = self.kit_previews.lock().unwrap_or_else(|e| e.into_inner()).get(&key) {
+            return Ok(png.clone());
+        }
+        let png = kit::preview_png(item, &clean, 128)?;
+        let mut cache = self.kit_previews.lock().unwrap_or_else(|e| e.into_inner());
+        if cache.len() > 200 {
+            cache.clear();
+        }
+        cache.insert(key, png.clone());
+        Ok(png)
     }
 
-    fn make_kit(&self, _item: &str, _params: &Value) -> Result<Value> {
-        not_yet("The kit")
+    fn make_kit(&self, item: &str, params: &Value) -> Result<Value> {
+        let empty = kit::Params::new();
+        let clean = kit::clean(item, params.as_object().unwrap_or(&empty))?;
+        let glb = kit::build(item, &clean)?.glb();
+        self.import(&glb, &kit::label(item, &clean)?, 1.0)
     }
 
     fn rom_path(&self) -> Option<PathBuf> {

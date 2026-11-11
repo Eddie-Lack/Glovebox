@@ -32,8 +32,6 @@ pub struct CustomModel {
     pub bank: Vec<u8>,
     /// The size `meta.json` gives for the bank
     pub bytes: u64,
-    /// The file name of the preview model, when the set has one
-    pub preview: Option<String>,
     /// The retail model a reskinned model was made from
     pub reskin_from: Option<String>,
 }
@@ -60,62 +58,35 @@ impl Customs {
     }
 }
 
-/// True for the name of a set's folder: 10 hex digits in lower case.
-pub fn is_set_id(text: &str) -> bool {
-    text.len() == 10 && text.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-}
-
-/// Reads the imported models of `<home>/custom`: for each set its `meta.json`, the bank of each piece
-/// (`<id>.obj.bin`) and `textures.tex.bin`. A set that can't be read is left out.
-pub fn load_customs(custom_dir: &Path) -> Customs {
+/// Reads the imported models of `<home>/custom` (`custom::custom_catalog`), with the bank of each piece
+/// (`<id>.obj.bin`) and each set's `textures.tex.bin`. A piece whose bank can't be read is left out.
+pub fn load_customs(home: &Path) -> Customs {
     let mut out = Customs::default();
-    let Ok(entries) = std::fs::read_dir(custom_dir) else { return out };
-    let mut sets: Vec<String> = entries.filter_map(|e| e.ok()?.file_name().into_string().ok()).collect();
-    sets.retain(|s| is_set_id(s));
-    sets.sort();
-    for set in sets {
-        let dir = custom_dir.join(&set);
-        let Ok(text) = std::fs::read(dir.join("meta.json")) else { continue };
-        let Ok(meta) = serde_json::from_slice::<Value>(&text) else { continue };
-        let Some(pieces) = meta["pieces"].as_array() else { continue };
-        let set_name = meta["name"].as_str().unwrap_or("").to_string();
-        let mut models = Vec::new();
-        for (i, p) in pieces.iter().enumerate() {
-            let Some(id) = p["id"].as_str() else { continue };
-            // The id is a file name here. Only a real id is safe to use as one.
-            if parse_id(id).is_none() {
-                continue;
-            }
-            let Ok(bank) = std::fs::read(dir.join(format!("{id}.obj.bin"))) else { continue };
-            let name = match pieces.len() {
-                1 => set_name.clone(),
-                n => format!("{} {}/{}", set_name, i + 1, n),
-            };
-            let texts = |v: &Value| -> Vec<String> {
-                v.as_array().map(|a| a.iter().filter_map(|t| t.as_str().map(String::from)).collect()).unwrap_or_default()
-            };
-            let mut offset = [0.0; 3];
-            for (k, o) in offset.iter_mut().enumerate() {
-                *o = p["offset"][k].as_f64().unwrap_or(0.0);
-            }
-            let model = CustomModel {
-                name,
-                set_name: set_name.clone(),
-                set: set.clone(),
-                piece: p["name"].as_str().unwrap_or("").to_string(),
-                offset,
-                textures: texts(&p["textures"]),
-                bytes: p["bytes"].as_u64().unwrap_or(bank.len() as u64),
-                bank,
-                preview: p["preview"].as_str().filter(|s| !s.is_empty()).map(String::from),
-                reskin_from: meta["reskin"]["from"].as_str().map(String::from),
-            };
-            models.push((id.to_string(), model));
+    for entry in crate::custom::custom_catalog(home) {
+        // The id is part of a file name here. Only a real id is safe to use as one.
+        if parse_id(&entry.id).is_none() || !crate::custom::is_set_id(&entry.custom) {
+            continue;
         }
-        if let Ok(tex) = std::fs::read(dir.join("textures.tex.bin")) {
-            out.tex_banks.insert(set, tex);
+        let Ok(bank) = std::fs::read(&entry.path) else { continue };
+        if !out.tex_banks.contains_key(&entry.custom) {
+            let dir = entry.path.parent().unwrap_or(home);
+            if let Ok(tex) = std::fs::read(dir.join("textures.tex.bin")) {
+                out.tex_banks.insert(entry.custom.clone(), tex);
+            }
         }
-        out.models.extend(models);
+        let set_name = entry.bank.strip_prefix("Custom: ").unwrap_or(&entry.bank).to_string();
+        let model = CustomModel {
+            name: entry.name,
+            set_name,
+            set: entry.custom,
+            piece: entry.piece,
+            offset: entry.offset,
+            textures: entry.textures,
+            bank,
+            bytes: entry.bytes,
+            reskin_from: entry.reskin_from,
+        };
+        out.models.push((entry.id, model));
     }
     out
 }
@@ -459,15 +430,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set_ids() {
-        assert!(is_set_id("0123456789"));
-        assert!(is_set_id("abcdef0123"));
-        for bad in ["", "ABCDEF0123", "abcdef012", "abcdef01234", "../abcdef0", "abcdef012g"] {
-            assert!(!is_set_id(bad), "{bad}");
-        }
-    }
-
-    #[test]
     fn a_plan_prints_as_pythons_dict() {
         let mut plan = Plan {
             objects: vec!["0x00000001".into()],
@@ -493,6 +455,6 @@ mod tests {
 
     #[test]
     fn no_folder_means_no_imported_models() {
-        assert_eq!(load_customs(Path::new("/nonexistent/custom")), Customs::default());
+        assert_eq!(load_customs(Path::new("/nonexistent/home")), Customs::default());
     }
 }

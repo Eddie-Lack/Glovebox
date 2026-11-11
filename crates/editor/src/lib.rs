@@ -7,6 +7,7 @@ pub mod entities;
 pub mod presets;
 pub mod puzzles;
 pub mod sanitize;
+pub mod scene;
 pub mod scripts;
 pub mod vec;
 pub mod xmlutil;

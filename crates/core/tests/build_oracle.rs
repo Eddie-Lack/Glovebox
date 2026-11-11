@@ -301,30 +301,27 @@ fn headers(built: &Built, several: bool) -> Value {
     h
 }
 
-#[test]
-fn builds_are_pythons() {
-    let Some(e) = env("builds_are_pythons") else { return };
-    let cases = json_file(&e.oracle.join("gamedata/builds.json"));
-    let cases = cases.as_array().unwrap();
-    let b = backend(e);
+/// Runs the builds of a reference file and compares each with the Python app's. Returns the numbers of ROMs,
+/// patches, level files and refused builds, and the slowest build.
+fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usize, usize, usize, usize, (f64, String)) {
     let (mut roms, mut patches, mut levs, mut refused) = (0, 0, 0, 0);
     let mut slowest = (0.0, String::new());
     for c in cases {
         let name = c["name"].as_str().unwrap();
         assert!(c.get("crash").is_none(), "{name}: the reference build crashed");
         let Some(sha1) = c["sha1"].as_str() else {
-            let message = run(b.as_ref(), e, c, None).err().unwrap_or_else(|| panic!("{name}: built, Python refuses"));
+            let message = run(b, e, c, None).err().unwrap_or_else(|| panic!("{name}: built, Python refuses"));
             assert_eq!(json!(message), c["error"], "{name}");
             refused += 1;
             continue;
         };
-        let theirs = read(&e.oracle.join("gamedata/out").join(name));
+        let theirs = read(&e.oracle.join("gamedata/out").join(format!("{prefix}{name}")));
         assert_eq!(n64::sha1_hex(&theirs), sha1);
         let format = c["fmt"].as_str().unwrap();
         let created = if format == "bps" { created_of(&theirs) } else { None };
         assert_eq!(created.is_some(), format == "bps");
         let t = Instant::now();
-        let built = run(b.as_ref(), e, c, created).unwrap_or_else(|err| panic!("{name}: {err}"));
+        let built = run(b, e, c, created).unwrap_or_else(|err| panic!("{name}: {err}"));
         let took = t.elapsed().as_secs_f64();
         if took > slowest.0 {
             slowest = (took, name.to_string());
@@ -337,6 +334,9 @@ fn builds_are_pythons() {
         match format {
             "rom" => {
                 assert_eq!(n64::header_crc(&built.data).unwrap(), n64::stored_crc(&built.data).unwrap(), "{name}");
+                if built.needs_mod {
+                    assert_eq!(glovebox_core::hwcheck::check_rom(&built.data), Vec::<String>::new(), "{name}");
+                }
                 roms += 1
             }
             "bps" => {
@@ -349,6 +349,16 @@ fn builds_are_pythons() {
             _ => levs += 1,
         }
     }
+    (roms, patches, levs, refused, slowest)
+}
+
+#[test]
+fn builds_are_pythons() {
+    let Some(e) = env("builds_are_pythons") else { return };
+    let cases = json_file(&e.oracle.join("gamedata/builds.json"));
+    let cases = cases.as_array().unwrap();
+    let b = backend(e);
+    let (roms, patches, levs, refused, slowest) = check_builds(b.as_ref(), e, cases, "");
     assert!(roms + patches >= 25 && patches >= 8 && refused >= 10, "{roms} {patches} {refused}");
     // A patch made now carries the time of now
     let first = cases.iter().find(|c| c["fmt"] == "bps" && c.get("sha1").is_some()).unwrap();
@@ -358,6 +368,110 @@ fn builds_are_pythons() {
         "builds_are_pythons: {roms} ROMs, {patches} patches and {levs} level files equal; {refused} refused with the \
          same message; slowest {:.2}s ({})",
         slowest.0, slowest.1
+    );
+}
+
+/// Imported models. The Python app made three in `gamedata/pyhome/custom`: a kit model and two reskinned models.
+#[test]
+fn imported_models_are_pythons() {
+    let Some(e) = env("imported_models_are_pythons") else { return };
+    let want = json_file(&e.oracle.join("gamedata/custom.json"));
+    let home = e.oracle.join("gamedata/pyhome");
+    let b: Arc<dyn Backend> = Arc::new(GameBackend::new(e.game.clone(), &home, None));
+    // The catalog's entries
+    let cat = b.catalog().unwrap();
+    let theirs = want["catalog"].as_object().unwrap();
+    assert_eq!(cat.len(), e.game.catalog().len() + theirs.len());
+    for (id, w) in theirs {
+        let c = &cat[id];
+        let x = c.custom.as_ref().unwrap();
+        let mine = json!({"name": c.name, "bank": c.bank, "bytes": c.bytes, "custom": x.set, "piece": x.piece,
+                          "offset": x.offset, "textures": x.textures, "texBank": x.tex_bank, "reskinFrom": x.reskin_from});
+        // The Python app's reskinned models have whole numbers as offsets
+        let mut w = w.clone();
+        w["offset"] = json!(w["offset"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<_>>());
+        assert_eq!(mine, w, "{id}");
+        assert_eq!(json!(b.faces(id)), want["faces"][id], "{id}");
+        // The model and its textures are there to draw
+        let model = b.model(c.model.as_ref().unwrap()).unwrap();
+        assert!(model.triangles() > 0, "{id}");
+        for t in model.texture_ids() {
+            assert!(x.textures.contains(&hex(t)), "{id} {}", hex(t));
+            assert!(b.texture(c.model.as_ref().unwrap(), t).is_ok(), "{id} {}", hex(t));
+        }
+    }
+    // Plans and builds that import them
+    let customs = imports::load_customs(&home);
+    assert_eq!(customs.models.len(), theirs.len());
+    let plans = want["plans"].as_array().unwrap();
+    for c in plans {
+        let sid = c["sid"].as_str().unwrap();
+        let ids = strings(&c["imports"]);
+        let what = format!("{sid} {ids:?}");
+        same_plan(&format!("plan_imports {what}"), imports::plan_imports(&e.game, &customs, sid, &ids), &c["plan_imports"]);
+        same_plan(&format!("plan_runtime {what}"), imports::plan_runtime(&e.game, &customs, sid, &ids), &c["plan_runtime"]);
+        same_plan(&format!("plan {what}"), b.plan(sid, &ids).map_err(|err| err.0), &c["backend"]);
+    }
+    let (roms, patches, _, refused, _) = check_builds(b.as_ref(), e, want["builds"].as_array().unwrap(), "custom-");
+    assert!(roms >= 4 && patches >= 2 && refused >= 1);
+
+    // Making the same models again in an empty folder gives the Python app's files
+    let fresh = Path::new(env!("CARGO_TARGET_TMPDIR")).join("gamedata-custom-home");
+    let _ = std::fs::remove_dir_all(&fresh);
+    let maker = GameBackend::new(e.game.clone(), &fresh, None);
+    // The Python app cut a model's bank out with `objbank-tool split`, which orders the parts of a bank differently
+    // from run to run. Packed again, its bank is the bank made here.
+    let same_files = |set: &str, id: &str| {
+        let file = |home: &Path, name: &str| read(&home.join("custom").join(set).join(name));
+        let (mine, theirs) = (file(&fresh, &format!("{id}.obj.bin")), file(&home, &format!("{id}.obj.bin")));
+        let none: [&[u8]; 0] = [];
+        assert_eq!(mine.len(), theirs.len(), "{set}/{id}");
+        assert!(mine == glovebox_core::objbank::pack(&theirs, &none).unwrap(), "{set}/{id}.obj.bin differs");
+        assert!(file(&fresh, "textures.tex.bin") == file(&home, "textures.tex.bin"), "{set}/textures.tex.bin differs");
+    };
+    // A kit model is converted by `custom` from the glTF file `kit` writes. Those bytes are not the Python app's, so
+    // the set and its ids differ. The model itself is the same.
+    let made = maker.make_kit(want["kit"]["item"].as_str().unwrap(), &json!({})).unwrap();
+    for key in ["name", "scale", "triangles", "size"] {
+        assert_eq!(made[key], want["kit"]["made"][key], "{key}");
+    }
+    let kit_ids: Vec<String> = made["pieces"].as_array().unwrap().iter().map(|p| p["id"].as_str().unwrap().to_string()).collect();
+    assert_eq!(kit_ids.len(), strings(&want["kit"]["ids"]).len());
+    let request = BuildRequest {
+        sid: "0a".into(),
+        xml: maker.level_xml("0a").unwrap(),
+        format: "rom".into(),
+        imports: kit_ids.clone(),
+        expansion: true,
+        ..BuildRequest::default()
+    };
+    let built = maker.build(&request).unwrap();
+    assert_eq!(built.imports.as_ref().unwrap().objects, kit_ids.len());
+    // The console's rules hold for a ROM with the game mod (tools/hw_check.py)
+    assert_eq!(glovebox_core::hwcheck::check_rom(&built.data), Vec::<String>::new());
+    for id in strings(&want["reskins"]) {
+        let x = cat[&id].custom.as_ref().unwrap();
+        let meta = json_file(&home.join("custom").join(&x.set).join("meta.json"));
+        let r = &meta["reskin"];
+        let got = maker.reskin(r["from"].as_str().unwrap(), &strings(&r["worlds"]), r["seed"].as_i64().unwrap()).unwrap();
+        assert_eq!(got, id);
+        same_files(&x.set, &id);
+    }
+    assert_eq!(maker.catalog().unwrap().len(), cat.len());
+    let set = made["set"].as_str().unwrap();
+    maker.delete_custom(set).unwrap();
+    assert!(!fresh.join("custom").join(set).exists());
+    assert_eq!(maker.catalog().unwrap().len(), cat.len() - strings(&want["kit"]["ids"]).len());
+    assert!(!maker.kit_items().unwrap().as_array().unwrap().is_empty());
+    let png = maker.kit_preview(want["kit"]["item"].as_str().unwrap(), &json!({})).unwrap();
+    assert_eq!(&png[..4], b"\x89PNG");
+    let _ = std::fs::remove_dir_all(&fresh);
+    println!(
+        "imported_models_are_pythons: {} pieces, {} plans, {roms} ROMs and {patches} patches equal, {refused} refused; \
+         {} reskinned models made again are the same files; a kit model made here builds into a ROM",
+        theirs.len(),
+        plans.len() * 3,
+        strings(&want["reskins"]).len()
     );
 }
 

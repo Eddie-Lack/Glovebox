@@ -1,7 +1,7 @@
 //! Pictures for Import model: PNG and JPEG decoding to RGBA, and Pillow's Lanczos resize.
 //!
 //! The converter names a texture by a hash of its pixels, so the resize must give Pillow's pixels exactly.
-//! `resize` follows Pillow's `Image.resize` for an RGBA picture: premultiply the alpha, resample across then down
+//! `resize` follows Pillow's `Image.resize` for an RGBA picture: premultiply the alpha, resample in two passes
 //! with fixed point weights (`Resample.c`), and divide the alpha out again.
 
 /// The most pixels Pillow opens with `MAX_IMAGE_PIXELS = 4096 * 4096`: twice that number.
@@ -70,19 +70,8 @@ fn decode_png(data: &[u8]) -> Result<Rgba, String> {
 }
 
 fn decode_jpeg(data: &[u8]) -> Result<Rgba, String> {
-    use zune_jpeg::zune_core::{bytestream::ZCursor, colorspace::ColorSpace, options::DecoderOptions};
-    let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGB);
-    let mut decoder = zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(data), options);
-    decoder.decode_headers().map_err(|e| e.to_string())?;
-    let info = decoder.info().ok_or("the image has no header")?;
-    let (w, h) = (info.width as u64, info.height as u64);
-    check_size(w, h)?;
-    let rgb = decoder.decode().map_err(|e| e.to_string())?;
-    let (w, h) = (w as usize, h as usize);
-    if rgb.len() != w * h * 3 {
-        return Err("the image is cut short".into());
-    }
-    Ok(Rgba { w, h, px: rgb.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect() })
+    let (w, h, px) = super::jpeg::decode(data, &check_size)?;
+    Ok(Rgba { w, h, px })
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -200,27 +189,30 @@ pub fn resize(im: &Rgba, w: usize, h: usize) -> Rgba {
             *c = (((t >> 8) + t) >> 8) as u8;
         }
     }
-    let (mut cur_w, mut cur_h) = (im.w, im.h);
-    let vert = coeffs(im.h, h);
-    let mut vert_bounds = vert.bounds.clone();
-    if im.w != w {
-        // Only the rows the second pass reads are resampled
-        let first = vert_bounds[0].0;
-        let last = vert_bounds[h - 1].0 + vert_bounds[h - 1].1;
-        let horiz = coeffs(im.w, w);
-        px = horizontal(&px, im.w, first..last, w, &horiz);
-        for b in &mut vert_bounds {
-            b.0 -= first;
+    // When the height shrinks by more than twice what the width does, Pillow resamples down first
+    let (dw, dh) = (im.w as i64 - w as i64, im.h as i64 - h as i64);
+    let horizontal_first = !(dh > 0 && dh > dw * 2);
+    let mut vert = coeffs(im.h, h);
+    if horizontal_first {
+        if im.w != w {
+            // Only the rows the second pass reads are resampled
+            let first = vert.bounds[0].0;
+            let last = vert.bounds[h - 1].0 + vert.bounds[h - 1].1;
+            px = horizontal(&px, im.w, first..last, w, &coeffs(im.w, w));
+            for b in &mut vert.bounds {
+                b.0 -= first;
+            }
         }
-        cur_w = w;
-        cur_h = last - first;
+        if im.h != h {
+            px = vertical(&px, w, h, &vert);
+        }
+    } else {
+        px = vertical(&px, im.w, h, &vert);
+        if im.w != w {
+            px = horizontal(&px, im.w, 0..h, w, &coeffs(im.w, w));
+        }
     }
-    if im.h != h {
-        let c = Coeffs { ksize: vert.ksize, bounds: vert_bounds, kk: vert.kk };
-        px = vertical(&px, cur_w, h, &c);
-        cur_h = h;
-    }
-    debug_assert_eq!(px.len(), cur_w * cur_h * 4);
+    debug_assert_eq!(px.len(), w * h * 4);
     // Back to plain alpha
     for p in px.chunks_exact_mut(4) {
         let a = p[3] as u32;

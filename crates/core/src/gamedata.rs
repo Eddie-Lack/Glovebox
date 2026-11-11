@@ -404,6 +404,31 @@ impl GameData {
         self.tex_bank(file).map_or(&NONE, |b| &b.ids)
     }
 
+    /// Texture ids from these worlds' texture banks that no other bank holds (`core.reskin_pool`). The same id can
+    /// be a different picture in another world.
+    pub fn reskin_pool(&self, worlds: &[&str]) -> Vec<u32> {
+        let mut count: HashMap<u32, usize> = HashMap::new();
+        for b in &self.tex {
+            for id in &b.ids {
+                *count.entry(*id).or_default() += 1;
+            }
+        }
+        let mut out = Vec::new();
+        for w in worlds {
+            if let Some(b) = self.tex_bank(&format!("{w}_TEX_BANK.tex.fla")) {
+                out.extend(b.ids.iter().copied().filter(|id| count.get(id) == Some(&1)));
+            }
+        }
+        out
+    }
+
+    /// The record of a texture in the first texture bank that has it, padded to a multiple of 8.
+    pub fn texture_record(&self, id: u32) -> Option<Vec<u8>> {
+        let bank = self.tex.iter().find(|b| b.ids.contains(&id))?;
+        let recs = texbank::records(&bank.data).ok()?;
+        recs.records.into_iter().find(|(i, _)| *i == id).map(|(_, r)| r.into_owned())
+    }
+
     /// The single-object banks of an object bank, by its name: each object's id, root mesh name and bank
     /// (`core.split_bank`).
     pub fn split_bank(&self, name: &str) -> Result<&[Single], GameError> {
@@ -679,12 +704,6 @@ pub fn texture_of(bank: &[u8], id: u32) -> Result<Image, GameError> {
     decode(&data, id)
 }
 
-/// The records of a texture bank by id, each padded to a multiple of 8 (`core.texbank_records`).
-pub fn records_of(bank: &[u8]) -> Result<HashMap<u32, Vec<u8>>, GameError> {
-    let recs = texbank::records(bank).map_err(|e| GameError(e.0))?;
-    Ok(recs.records.into_iter().map(|(id, r)| (id, r.into_owned())).collect())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -701,9 +720,10 @@ mod tests {
     #[test]
     fn the_scene_table_is_whole() {
         assert_eq!(scenes().len(), 48);
-        for (i, s) in scenes().iter().enumerate() {
-            assert_eq!(s.index, i);
-            assert_eq!(s.id, format!("{i:02x}"));
+        let indices: BTreeSet<usize> = scenes().iter().map(|s| s.index).collect();
+        assert_eq!(indices, (0..48).collect());
+        for s in scenes() {
+            assert_eq!(s.id, format!("{:02x}", s.index));
             assert!(!s.object_banks.is_empty() && !s.texture_banks.is_empty());
             assert!(bank_number("obj", &s.import_object_bank).is_some());
             assert!(bank_number("tex", &s.import_texture_bank).is_some());

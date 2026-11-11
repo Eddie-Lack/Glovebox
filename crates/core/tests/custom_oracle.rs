@@ -195,8 +195,14 @@ fn images_match_pillow() {
             }
         }
         let (tw, th) = size("out");
-        if resize(&rgba, tw, th).px != read("out") {
-            failures.push(format!("{name}: the resize to {tw} by {th} differs"));
+        let (ours, theirs) = (resize(&rgba, tw, th).px, read("out"));
+        if ours != theirs {
+            let at: Vec<usize> = (0..ours.len()).filter(|i| ours[*i] != theirs[*i]).collect();
+            let worst = at.iter().map(|i| ours[*i].abs_diff(theirs[*i])).max().unwrap_or(0);
+            failures.push(format!(
+                "{name}: the resize to {tw} by {th} differs in {} values by at most {worst}, first at x {} y {} channel {}",
+                at.len(), at[0] / 4 % tw, at[0] / 4 / tw, at[0] % 4
+            ));
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));

@@ -9,6 +9,7 @@
 
 pub mod gltf;
 pub mod image;
+mod jpeg;
 pub mod pack;
 
 use std::collections::{BTreeMap, HashSet};
