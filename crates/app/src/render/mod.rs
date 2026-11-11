@@ -92,7 +92,7 @@ struct GpuLines {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-struct TexKey(u64, Wrap, Wrap);
+struct TexKey(u64, u32, u32);
 
 #[derive(Clone, Copy, PartialEq)]
 enum What {
@@ -132,7 +132,7 @@ pub struct Renderer {
     /// The spacing of the draws' uniforms in their buffer.
     slot: u64,
     texture_layout: wgpu::BindGroupLayout,
-    samplers: HashMap<(Wrap, Wrap), wgpu::Sampler>,
+    samplers: HashMap<(u32, u32), wgpu::Sampler>,
     white: wgpu::BindGroup,
     geoms: HashMap<u64, GpuGeometry>,
     lines: HashMap<u64, GpuLines>,
@@ -286,7 +286,7 @@ impl Renderer {
             color: wgpu::BlendComponent { src_factor: wgpu::BlendFactor::SrcAlpha, dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha, operation: wgpu::BlendOperation::Add },
             alpha: wgpu::BlendComponent { src_factor: wgpu::BlendFactor::One, dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha, operation: wgpu::BlendOperation::Add },
         };
-        let pipeline = |vs: &str, fs: &str, buffers: &[wgpu::VertexBufferLayout], lines: bool, test: bool, write: bool| {
+        let pipeline = |vs: &str, fs: &str, buffers: &[Option<wgpu::VertexBufferLayout>], lines: bool, test: bool, write: bool| {
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some(fs),
                 layout: Some(&layout),
@@ -314,8 +314,8 @@ impl Renderer {
                 cache: None,
             })
         };
-        let mesh_buffers = [wgpu::VertexBufferLayout { array_stride: MESH_STRIDE, step_mode: wgpu::VertexStepMode::Vertex, attributes: &mesh_attrs }];
-        let line_buffers = [wgpu::VertexBufferLayout { array_stride: 16, step_mode: wgpu::VertexStepMode::Vertex, attributes: &line_attrs }];
+        let mesh_buffers = [Some(wgpu::VertexBufferLayout { array_stride: MESH_STRIDE, step_mode: wgpu::VertexStepMode::Vertex, attributes: &mesh_attrs })];
+        let line_buffers = [Some(wgpu::VertexBufferLayout { array_stride: 16, step_mode: wgpu::VertexStepMode::Vertex, attributes: &line_attrs })];
         let pipelines = vec![
             pipeline("mesh_vs", "mesh_fs", &mesh_buffers, false, true, true),
             pipeline("mesh_vs", "mesh_fs", &mesh_buffers, false, true, false),
@@ -339,7 +339,10 @@ impl Renderer {
         let align = u64::from(device.limits().min_uniform_buffer_offset_alignment.max(1));
         let slot = DRAW_SIZE.div_ceil(align) * align;
         let (draws, draws_group) = Self::draw_buffer(device, &draw_layout, slot * 256);
-        let mut r = Renderer {
+        let mut samplers = HashMap::new();
+        let white_pixel = Texture { id: 0, width: 1, height: 1, rgba: vec![255; 4], srgb: true };
+        let white = Self::texture_group(device, queue, &texture_layout, &mut samplers, &white_pixel, (Wrap::Repeat, Wrap::Repeat));
+        Renderer {
             device: device.clone(),
             queue: queue.clone(),
             samples,
@@ -352,8 +355,8 @@ impl Renderer {
             draws_capacity: slot * 256,
             slot,
             texture_layout,
-            samplers: HashMap::new(),
-            white: None.unwrap_or_else(|| unreachable_group()),
+            samplers,
+            white,
             geoms: HashMap::new(),
             lines: HashMap::new(),
             textures: HashMap::new(),
@@ -363,9 +366,7 @@ impl Renderer {
             ambient: [1.0; 3],
             sun: vec::div([0.4, 1.0, 0.3], vec::norm([0.4, 1.0, 0.3])),
             stats: Stats::default(),
-        };
-        r.white = r.texture_group(&Texture { id: 0, width: 1, height: 1, rgba: vec![255; 4], srgb: true }, (Wrap::Repeat, Wrap::Repeat));
-        r
+        }
     }
 
     fn draw_buffer(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, size: u64) -> (wgpu::Buffer, wgpu::BindGroup) {
@@ -483,10 +484,17 @@ impl Renderer {
         self.lines.insert(l.id, GpuLines { vertices, count: segs.len() as u32 * 2, version: l.version });
     }
 
-    fn texture_group(&mut self, t: &Texture, wrap: (Wrap, Wrap)) -> wgpu::BindGroup {
+    fn texture_group(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        layout: &wgpu::BindGroupLayout,
+        samplers: &mut HashMap<(u32, u32), wgpu::Sampler>,
+        t: &Texture,
+        wrap: (Wrap, Wrap),
+    ) -> wgpu::BindGroup {
         let mips = mip_chain(t);
         let format = if t.srgb { wgpu::TextureFormat::Rgba8UnormSrgb } else { wgpu::TextureFormat::Rgba8Unorm };
-        let tex = self.device.create_texture(&wgpu::TextureDescriptor {
+        let tex = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
             size: wgpu::Extent3d { width: t.width, height: t.height, depth_or_array_layers: 1 },
             mip_level_count: mips.len() as u32,
@@ -497,15 +505,14 @@ impl Renderer {
             view_formats: &[],
         });
         for (level, (w, h, data)) in mips.iter().enumerate() {
-            self.queue.write_texture(
+            queue.write_texture(
                 wgpu::TexelCopyTextureInfo { texture: &tex, mip_level: level as u32, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
                 data,
                 wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(4 * w), rows_per_image: None },
                 wgpu::Extent3d { width: *w, height: *h, depth_or_array_layers: 1 },
             );
         }
-        let device = &self.device;
-        let sampler = self.samplers.entry(wrap).or_insert_with(|| {
+        let sampler = samplers.entry((wrap.0.gl(), wrap.1.gl())).or_insert_with(|| {
             device.create_sampler(&wgpu::SamplerDescriptor {
                 address_mode_u: address(wrap.0),
                 address_mode_v: address(wrap.1),
@@ -517,7 +524,7 @@ impl Renderer {
         });
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
-            layout: &self.texture_layout,
+            layout,
             entries: &[
                 wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&tex.create_view(&Default::default())) },
                 wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(sampler) },
@@ -526,9 +533,9 @@ impl Renderer {
     }
 
     fn ensure_texture(&mut self, t: &Texture, wrap: (Wrap, Wrap)) -> TexKey {
-        let key = TexKey(t.id, wrap.0, wrap.1);
+        let key = TexKey(t.id, wrap.0.gl(), wrap.1.gl());
         if !self.textures.contains_key(&key) {
-            let g = self.texture_group(t, wrap);
+            let g = Self::texture_group(&self.device, &self.queue, &self.texture_layout, &mut self.samplers, t, wrap);
             self.textures.insert(key, g);
         }
         key
@@ -831,7 +838,7 @@ impl Renderer {
         });
         self.device.poll(wgpu::PollType::wait_indefinitely()).map_err(|e| e.to_string())?;
         rx.recv().map_err(|e| e.to_string())?.map_err(|e| e.to_string())?;
-        let data = buf.slice(..).get_mapped_range();
+        let data = buf.slice(..).get_mapped_range().map_err(|e| e.to_string())?;
         let mut out = Vec::with_capacity(4 * t.width as usize * t.height as usize);
         for y in 0..t.height as usize {
             out.extend_from_slice(&data[y * row as usize..][..4 * t.width as usize]);
@@ -881,9 +888,4 @@ impl Renderer {
         (self.background, self.fog, self.ambient, self.stats) = saved;
         out.ok()
     }
-}
-
-/// Never called: `Renderer::with_samples` sets the white texture right after it builds the renderer.
-fn unreachable_group() -> wgpu::BindGroup {
-    unreachable!()
 }

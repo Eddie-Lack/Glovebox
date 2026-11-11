@@ -3,6 +3,7 @@
 pub mod camera;
 pub mod commands;
 pub mod drafts;
+pub mod editor;
 pub mod entities;
 pub mod gizmo;
 pub mod presets;
