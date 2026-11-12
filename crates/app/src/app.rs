@@ -46,6 +46,9 @@ impl App {
         // The theme the player chose, for the setup screen too. An unknown or missing one is the default.
         let chosen = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::SETTING).unwrap_or_default();
         style::apply(&cc.egui_ctx, crate::theme::by_id(&chosen));
+        // How the notes show. An unknown or missing value shows them.
+        let info = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::INFO_SETTING).unwrap_or_default();
+        style::set_info(&cc.egui_ctx, style::Info::from_id(&info));
         let screen = match backend {
             Some(b) => Screen::Editor(Box::new(Window::new(cc, b, &home, dialogs))),
             None => match open_rom(&home) {
@@ -379,6 +382,13 @@ impl Window {
         self.settings.set(style::SETTING, th.id);
         style::apply(&self.ctx, th);
         self.view.dirty = true;
+        self.ctx.request_repaint();
+    }
+
+    /// Changes how the notes show (the Info texts of the Options menu) and remembers it.
+    pub fn set_info(&mut self, info: style::Info) {
+        self.settings.set(style::INFO_SETTING, info.id());
+        style::set_info(&self.ctx, info);
         self.ctx.request_repaint();
     }
 

@@ -3,7 +3,7 @@
 
 use crate::numfield::{self, Spec};
 use crate::app::Window;
-use crate::style::{self, card, fieldname, muted, note};
+use crate::style::{self, card, fieldname, muted};
 use glovebox_core::pyfmt::parse_float;
 use glovebox_editor::editor::Scatter;
 use glovebox_editor::entities::CAM_PRESETS;
@@ -70,11 +70,13 @@ const SC_SIDES: [(&[f64], &str); 3] = [(&[1.0, -1.0], "both sides"), (&[1.0], "r
 const SC_TURNS: [(&str, &str); 3] = [("free", "any way"), ("player", "towards the path"), ("path", "along the path")];
 
 fn row(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui)) {
-    ui.horizontal(|ui| {
+    let r = ui.horizontal(|ui| {
         let r = fieldname(ui, name);
         ui.add_space((104.0 - r.rect.width()).max(0.0));
         add(ui);
+        r.rect
     });
+    style::anchor_row(ui, r.response.rect, r.inner);
 }
 
 fn pick(ui: &mut egui::Ui, id: &str, label: &str, current: &mut usize, items: &[&str]) -> bool {
@@ -127,7 +129,8 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 }
 
 fn body(w: &mut Window, ui: &mut egui::Ui) {
-    muted(ui, &w.ed.path_info());
+    // The line that says how long the path is. The note about laying a path belongs to it.
+    let head = muted(ui, &w.ed.path_info()).rect;
     let st = &mut w.path_panel;
     row(ui, "place", |ui| {
         if pick(ui, "what", "place", &mut st.what, &WHAT.map(|x| x.1)) {
@@ -146,7 +149,7 @@ fn body(w: &mut Window, ui: &mut egui::Ui) {
     row(ui, "random turn", |ui| {
         style::checkbox(ui, &mut st.turn, "one selected model, about y");
     });
-    note(ui, "Click the ground to add points. Backspace takes the last one off. Each copy is dropped onto the ground under it.");
+    style::note_on(ui, head, Some(head), "Click the ground to add points. Backspace takes the last one off. Each copy is dropped onto the ground under it.");
     ui.horizontal(|ui| {
         if ui.button("Clear path").clicked() {
             w.acts.push(Box::new(|w: &mut Window| {
@@ -200,7 +203,7 @@ fn scatter_box(w: &mut Window, ui: &mut egui::Ui) {
                 st.sc_seed = v;
             }
         });
-        note(ui, "Select one or more landscape pieces or kit models; each copy picks one of them at random. Every copy takes heap memory: the status line says how much.");
+        style::card_note(ui, "Select one or more landscape pieces or kit models; each copy picks one of them at random. Every copy takes heap memory: the status line says how much.");
         ui.horizontal(|ui| {
             if ui.button("Try another").on_hover_text("Undo the last scatter and scatter again with the next seed").clicked() {
                 w.acts.push(Box::new(rescatter));
@@ -263,7 +266,7 @@ fn zone_box(w: &mut Window, ui: &mut egui::Ui) {
         });
         row(ui, "from, to %", |ui| two(ui, &mut st.zn_span, "zone"));
         row(ui, "boxes up to", |ui| text(ui, &mut st.zn_split, "boxes up to", 60.0));
-        note(ui, "Boxes 140 to each side of the path, 300 below and 400 above. The boxes line up with the axes, so a diagonal stretch is split into shorter boxes.");
+        style::card_note(ui, "Boxes 140 to each side of the path, 300 below and 400 above. The boxes line up with the axes, so a diagonal stretch is split into shorter boxes.");
         if ui.button("Add zones").clicked() {
             w.acts.push(Box::new(add_zones));
         }

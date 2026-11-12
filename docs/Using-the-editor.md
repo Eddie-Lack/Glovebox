@@ -292,13 +292,20 @@ Note: the path is only a guide, the level doesn't keep it
 - `Reset level` throws away a level's edits (you can still undo it)
 - `Import XML` (or drop an `.xml` on the window) checks the file before it touches your level
 
-## Theme
+## Options
 
-Don't like the 1998 look? Pick another one with `Theme` in the toolbar
+`Options` in the toolbar holds two things: the theme and the info texts
+
+### Theme
+
+Don't like the 1998 look? Pick another one under `Theme`
 
 | Theme | Looks like |
 | --- | --- |
 | `1998` | the patcher page: navy, grey buttons, red title bars |
+| `Light` | a plain desktop program: greys, white fields, one blue |
+| `Dark` | the same, in dark greys |
+| `High contrast` | white on black, with yellow and cyan |
 | `Cartridge` | a grey console and its controller |
 | `Blueprint` | a drafting sheet: white lines on blue |
 | `Paper` | a printed manual: black and red ink on off-white paper |
@@ -307,6 +314,22 @@ Don't like the 1998 look? Pick another one with `Theme` in the toolbar
 - The window changes right away, no restart
 - The editor remembers your theme, the setup screen uses it too
 - Only the look changes: every button stays where it is
+
+### Info texts
+
+The small grey texts under titles, fields and check lines explain how the game or the editor works. Know them by heart? Hide them with `Info texts`
+
+| Choice | What you get |
+| --- | --- |
+| `Shown` | every text in its place (the default) |
+| `On hover` | no texts in the panels, rest the pointer on a title, a field or a line to read its text |
+| `Off` | no texts at all |
+
+- On hover, a dotted line under a name means it has a text
+- The key hints at the bottom of the view shrink to `Keys ?` on hover, and go away with `Off`
+- Checks, warnings, values and names always stay
+- The tooltips of the buttons stay too
+- The editor remembers your choice
 
 ## Test level
 

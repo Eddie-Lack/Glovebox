@@ -352,7 +352,16 @@ fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
     let hint = if w.view.fly.on { HINT_FLY } else { HINT_ORBIT };
     let mut bottom = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::bottom_up(egui::Align::Min)));
     let hint_frame = style::chip(th, false).inner_margin(egui::Margin::symmetric(6, 2));
-    hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(th.chip.text)));
+    // The key hints are a note: shown, behind a small chip on hover, or off
+    match style::info(ui.ctx()) {
+        style::Info::Shown => {
+            hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(th.chip.text)));
+        }
+        style::Info::Hover => {
+            hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new("Keys ?").size(12.0).color(th.chip.text))).response.on_hover_text(hint);
+        }
+        style::Info::Off => {}
+    }
 
     let note = w.view.error.as_deref().unwrap_or(&w.loading);
     if !note.is_empty() {

@@ -103,6 +103,19 @@ fn thumb_box(ui: &mut egui::Ui, texture: Option<&egui::TextureHandle>) -> egui::
 struct Px<'a> {
     w: &'a mut Window,
     acts: Vec<Act>,
+    /// The note at the top of the open tab, when it is not drawn there: it is the tooltip of the tab's button.
+    intro: Option<&'static str>,
+}
+
+impl Px<'_> {
+    /// The note at the top of a tab.
+    fn intro(&mut self, ui: &mut egui::Ui, text: &'static str) {
+        if style::info(ui.ctx()) == style::Info::Shown {
+            style::para(ui, text);
+        } else {
+            self.intro = Some(text);
+        }
+    }
 }
 
 impl Px<'_> {
@@ -166,16 +179,24 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         return;
     }
     let ctx = ui.ctx().clone();
-    ui.horizontal_wrapped(|ui| {
+    let mut open = egui::Rect::NOTHING;
+    let strip = ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
         for (i, name) in TABS.iter().enumerate() {
-            if style::tab(ui, w.palette.tab == i, name).clicked() {
+            let on = w.palette.tab == i;
+            let r = style::tab(ui, on, name);
+            if on {
+                open = r.rect;
+            }
+            if r.clicked() {
                 w.palette.tab = i;
             }
         }
     });
-    let mut px = Px { w, acts: Vec::new() };
-    let foot = 26.0;
+    let strip = strip.response.rect;
+    let mut px = Px { w, acts: Vec::new(), intro: None };
+    // Room for the note under the list
+    let foot = if style::info(ui.ctx()) == style::Info::Shown { 26.0 } else { 0.0 };
     let tab = px.w.palette.tab;
     egui::ScrollArea::vertical().id_salt(("palette", tab)).auto_shrink([false, false]).max_height((ui.available_height() - foot).max(60.0)).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 6.0;
@@ -185,7 +206,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             2 => models(&mut px, ui),
             3 => kit_tab(&mut px, ui),
             4 => {
-                muted(ui, "Ready-made platforms: rings, exits, lifts, spikes and more, with the commands in the order the game reads them. Each one uses the game's own models.");
+                px.intro(ui, "Ready-made platforms: rings, exits, lifts, spikes and more, with the commands in the order the game reads them. Each one uses the game's own models.");
                 for p in PRESETS {
                     let key = p.key;
                     ui.push_id(key, |ui| {
@@ -196,7 +217,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 }
             }
             _ => {
-                muted(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels’ camera zones, so it needs no game mod. The zone expects the player to walk the way the view looks; change it in the inspector.");
+                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels’ camera zones, so it needs no game mod. The zone expects the player to walk the way the view looks; change it in the inspector.");
                 for (key, lab, about) in CAM_PRESETS {
                     ui.push_id(key, |ui| {
                         if px.prow(ui, |_, _| {}, lab, None, about, &[("Add", "", true)], |_, _| {}).is_some() {
@@ -207,7 +228,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             }
         });
     });
-    muted(ui, "New objects appear where the view’s centre meets the ground.");
+    // The tab's note belongs to its button, the note about new objects to the row of tabs
+    if let Some(text) = px.intro {
+        style::para_on(ui, open, None, text);
+    }
+    style::para_on(ui, strip, None, "New objects appear where the view’s centre meets the ground.");
     px.w.palette.shown_tab = Some(tab);
     let acts = px.acts;
     w.acts.extend(acts);
@@ -237,6 +262,7 @@ fn grid(ui: &mut egui::Ui, id: &str, buttons: Vec<(egui::Button, String)>) -> Op
 
 fn collect(px: &mut Px, ui: &mut egui::Ui) {
     h4(ui, "GARIBS");
+    let head = style::last_anchor(ui);
     let garibs = [("garib", "★ Garib"), ("bang_500pt", "! 500-point bang"), ("extra_life", "♥ Extra life"), ("mad_garib", "✴ Mad garib")];
     if let Some(i) = grid(ui, "garibs", garibs.iter().map(|g| (egui::Button::new(g.1), String::new())).collect()) {
         let t = garibs[i].0;
@@ -245,7 +271,7 @@ fn collect(px: &mut Px, ui: &mut egui::Ui) {
             w.ed.add_garib(p, t);
         }));
     }
-    muted(ui, "Added to the selected garib’s group, or a new visible group.");
+    style::para_at(ui, head, "Added to the selected garib’s group, or a new visible group.");
     h4(ui, "POWERUPS");
     let ed = &px.w.ed;
     let pickups: Vec<(String, i64)> = ed
@@ -285,7 +311,7 @@ fn collect(px: &mut Px, ui: &mut egui::Ui) {
 }
 
 fn enemies(px: &mut Px, ui: &mut egui::Ui) {
-    muted(ui, "A new enemy copies the shortest script that type has in a shipped level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.");
+    px.intro(ui, "A new enemy copies the shortest script that type has in a shipped level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.");
     let backend = px.w.ed.backend.clone();
     let Some(types) = backend.decomp().get("ksyEnums").and_then(|e| e.get("enemy::enemy_type")).and_then(|e| e.as_object()) else { return };
     let templates = backend.templates();
@@ -333,10 +359,11 @@ fn thousands(n: usize) -> String {
 
 fn models(px: &mut Px, ui: &mut egui::Ui) {
     ui.horizontal_wrapped(|ui| {
-        if ui.add(style::accent("Import model…")).clicked() {
+        let r = ui.add(style::accent("Import model…"));
+        if r.clicked() {
             px.acts.push(Box::new(|w: &mut Window| crate::dialogs::open_model_dialog(w, None)));
         }
-        muted(ui, "from another game or a 3D program (.glb)");
+        style::para_on(ui, r.rect, None, "from another game or a 3D program (.glb)");
     });
     let catalog = px.w.ed.catalog.clone();
     let mut sets: Vec<String> = Vec::new();
@@ -467,7 +494,7 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
         let items = px.w.ed.backend.kit_items().ok().and_then(|v| v.as_array().cloned()).unwrap_or_default();
         px.w.palette.kit = Some(items);
     }
-    muted(ui, "Props made by the editor, free to share. Background has no collision; Scenery is solid. They are copied into the level’s banks at ROM build, like imported models.");
+    px.intro(ui, "Props made by the editor, free to share. Background has no collision; Scenery is solid. They are copied into the level’s banks at ROM build, like imported models.");
     let items = px.w.palette.kit.clone().unwrap_or_default();
     let st = |v: &Value, k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or("").to_string();
     let mut group = String::new();

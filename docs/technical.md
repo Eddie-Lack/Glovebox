@@ -122,11 +122,21 @@ nothing else. The program never runs them.
     `Divider`, `Backdrop` (behind the setup screen), `Border` (the frame of the setup box, of a dialog and of the
     note in the view) and `Mark` (the signs of the Checks panel). It also names the fonts, the chips over the 3D
     view, the colours of the selection, and the 3D view's background for a level without fog.
-  - `THEMES` lists them. The first is the default.
+  - `THEMES` lists them in the order of the Theme list. The first is the default. The three plain themes come
+    next, then the styled ones.
+  - The plain themes (Light, Dark, High contrast) use the system's sans face (Segoe UI on Windows, then Tahoma,
+    Arial, Liberation Sans, DejaVu Sans). They have the plain variants `Logo::Plain`, `Divider::Line` and
+    `Backdrop::Plain`, and title bars that are a flat strip with a line under it (`Bar::Solid` with a light line
+    in the colour of the fill).
+  - `Theme::disabled` is how much of a control that cannot be used is left (egui's `disabled_alpha`). The styled
+    themes have 0.55, the plain ones 0.6 or 0.62: their disabled text keeps a contrast of 4.5.
 
     | id | name | follows | main choices |
     | --- | --- | --- | --- |
     | `1998` | 1998 | the patcher page (`web/patcher.html`), a game web site of 1998 | navy panels, grey bevelled buttons, sunken white fields, red title bars with yellow capitals, a slanted yellow logo, a rainbow divider, stars |
+    | `light` | Light | a desktop tool in the system's light colours | neutral greys, white buttons and fields with a thin line and a corner radius of 3, one blue for the selection, the focus and the main action, a switch that is on filled dark grey, no decoration |
+    | `dark` | Dark | the same tool in the system's dark colours | near-black greys, one light blue for the selection, the focus and the main action, a switch that is on filled light grey |
+    | `contrast` | High contrast | the system's high contrast mode | white on black, a white line round every control, yellow for the pointer and the focus (a focused button is filled yellow), cyan for the selection and the main action, a switch that is on white with black letters |
     | `cartridge` | Cartridge | a grey console of the late 1990s and its controller | warm grey panels, charcoal label plates with white capitals, keys with a lip, the four face-button colours for states only |
     | `blueprint` | Blueprint | a drafting sheet | blue paper with a grid, hairline controls without fills, titles followed by dimension lines, a ruler for a divider, drawn signs |
     | `paper` | Paper | a printed manual in two inks | off-white paper, black ink and vermilion, a serif face, rules instead of boxes, fields as tinted blanks with a line under them and typed entries |
@@ -136,7 +146,7 @@ nothing else. The program never runs them.
     the theme in the egui context's data, and `style::theme(ctx)` reads it there. Each window has its own:
     tests with different themes run side by side. `apply` can run at any time. The next frame is in the new
     look.
-  - The Theme list of the toolbar calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
+  - The Theme list of the toolbar's Options menu (`toolbar::options_menu`) calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
     applies the theme after the frame. `App::new` reads the setting before the first frame, for the setup screen
     too. An unknown or missing id is `1998`.
   - egui's buttons, text boxes and separators get their shapes from widget themes (`Look`, registered with
@@ -166,9 +176,33 @@ nothing else. The program never runs them.
       width of the text differs.
     - A switch that is on, the main action, the keyboard focus, the chosen row, and good, warning and bad must
       each be clear at a glance.
+    - Text keeps a contrast of 4.5 on its ground (3 for bold text and for the marks): body, muted, disabled and
+      field text, the chosen row, the buttons, and the good, warning and bad colours.
     - `GLOVEBOX_THEME=id cargo test -p glovebox --test ui` runs every click test in that theme. The test `themes`
-      chooses each theme through the toolbar at three window sizes, and `the_fonts_have_the_symbols` checks the
-      fonts of each.
+      chooses each theme through the Options menu at three window sizes and checks that the toolbar has two rows,
+      and `the_fonts_have_the_symbols` checks the fonts of each.
+- A note is a text that explains how the game or the editor works: the small muted text under a title, a field, a
+  group of fields or a row, the second line of a check, the paragraph under a dialog's title, the key hints over
+  the view. The Info texts of the Options menu say how notes show: `Shown`, `On hover` or `Off`. The setting is
+  `info` in `settings.ini`; `Window::set_info` writes it and `App::new` reads it.
+  - Every note is drawn by the helpers under "Notes" in `style.rs`: `note`, `note_at`, `note_on`, `card_note`,
+    `src_on`, `para`, `para_at`, `para_on`, and the `sub` line of `check_line`. The state is in the egui
+    context's data (`style::info`), as the theme is.
+  - A text about the player's own level is not a note and always shows: values, counts, status lines, the main
+    line of a check, a wrong value's message, refusals, the notices about the Expansion Pak. Those use `muted`,
+    `remark`, `src` or `check_line`.
+  - `Shown` draws the note as a label. `Off` draws nothing. `On hover` draws nothing in the panel and lays an
+    area that senses only the pointer over the thing the note explains. The area has the note as its tooltip.
+    Clicks and drags go to the widgets under it. A widget's own tooltip shows with it.
+  - The thing a note explains is its anchor. Title bars, headings, rows of fields (`anchor_row`), checkboxes and
+    card titles name themselves as the anchor when they are drawn (`style::anchor`), and `note` takes the last
+    one. `card_note` takes the whole card and its title. `note_on` and `para_on` take a place the caller gives.
+    A note without an anchor within 48 points over it shows as a small "?" with the tooltip.
+  - On hover, a dotted line under the anchor's letters is the cue that it has a note. Check lines, buttons and
+    tabs get no cue.
+  - A check's second line joins the check's own tooltip on hover (`tip_with_note`). The key hints over the view
+    become a chip "Keys ?" with the hints as its tooltip.
+  - A new explanatory text must use one of the note helpers. The test `info_texts` checks the three states.
 - Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
   takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
   for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
@@ -767,7 +801,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `shown`), `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 

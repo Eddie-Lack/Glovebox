@@ -160,11 +160,47 @@ impl T {
         glovebox::style::theme(&self.h.ctx).id
     }
 
-    /// Chooses a theme in the toolbar's list.
-    fn set_theme(&mut self, name: &str) -> bool {
-        let ok = self.click("Theme") && self.choose(name);
+    /// Chooses an entry of the toolbar's Options menu: a theme, or a state of the Info texts.
+    fn option(&mut self, entry: &str) -> bool {
+        let ok = self.click("Options") && self.click(entry);
         self.settle();
         ok
+    }
+
+    /// Chooses a theme in the Options menu.
+    fn set_theme(&mut self, name: &str) -> bool {
+        self.option(name)
+    }
+
+    /// How the window shows its notes.
+    fn info(&self) -> glovebox::style::Info {
+        glovebox::style::info(&self.h.ctx)
+    }
+
+    /// True when a text of the window holds `part`: a label in a panel, or a tooltip that is open. A tooltip that
+    /// is not open does not count.
+    fn reads(&self, part: &str) -> bool {
+        self.find(part, false).iter().any(|n| n.accesskit_node().role() == egui::accesskit::Role::Label)
+    }
+
+    /// Rests the pointer on the first widget whose label holds `label`, long enough for a tooltip.
+    fn hover(&mut self, label: &str, role: Option<egui::accesskit::Role>) -> bool {
+        let found = match self.find(label, false).into_iter().find(|n| role.is_none_or(|r| n.accesskit_node().role() == r)) {
+            Some(n) => {
+                n.hover();
+                true
+            }
+            None => false,
+        };
+        for _ in 0..8 {
+            self.h.step();
+        }
+        found
+    }
+
+    /// The top of the first widget with this label.
+    fn top_of(&self, label: &str) -> Option<f32> {
+        self.find(label, true).first().map(|n| n.rect().min.y)
     }
 
     /// True when the window's top left corner, which is the toolbar's ground, has the theme's colour.
@@ -2072,7 +2108,8 @@ fn the_fonts_have_the_symbols() {
     }
 }
 
-/// The Theme list of the toolbar: every theme through a click, at three window sizes. The choice is kept in the
+/// The Theme list of the Options menu: every theme through a click, at three window sizes. The toolbar keeps to
+/// two rows at each size. The choice is kept in the
 /// settings and read back by a new window and by the setup screen. An unknown name gives the default.
 ///
 /// With `GLOVEBOX_SHOTS` it saves, for every theme, pictures of a level with a selection, the Add palette, a
@@ -2106,8 +2143,11 @@ fn themes() {
             let saved = std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains(&format!("theme={}", th.id));
             t.detail(&format!("{at}: the Theme list sets {}", th.name), chosen && looks && saved, format!("{chosen} {looks} {saved} {}", t.theme()));
             // Everything of the toolbar is in the window, and the view keeps its room
-            let places: Vec<_> = ["Theme", "Build ROM", "Patcher ↗", "Focus"].iter().map(|l| t.find(l, true).first().map(|n| n.rect())).collect();
+            let places: Vec<_> = ["Options", "Build ROM", "Patcher ↗", "Focus", "Undo", "Box select"].iter().map(|l| t.find(l, true).first().map(|n| n.rect())).collect();
             let inside = places.iter().all(|r| r.is_some_and(|r| window.contains_rect(r)));
+            // Two rows: the last button of each row is on the row of its first
+            let row = |a: usize, b: usize| matches!((places[a], places[b]), (Some(a), Some(b)) if (a.center().y - b.center().y).abs() < 6.0);
+            t.detail(&format!("{at}, {}: the toolbar has two rows", th.name), row(3, 4) && row(0, 5), format!("{places:?}"));
             let view = t.w().view.rect;
             t.detail(&format!("{at}, {}: the toolbar fits and the view has room", th.name), inside && view.width() >= 200.0 && view.height() >= 200.0, format!("{view:?} in {window:?}: {places:?}"));
             if scale == 1.0 && size[0] == 1500.0 {
@@ -2187,6 +2227,143 @@ fn themes() {
     } else {
         println!("skipped: GLOVEBOX_ROM is not set (a level of the game in every theme)");
     }
+    let failed: Vec<&(String, bool, String)> = results.iter().filter(|r| !r.1).collect();
+    assert!(failed.is_empty(), "failed: {:?}", failed.iter().map(|r| &r.0).collect::<Vec<_>>());
+}
+
+/// The Info texts of the Options menu: Shown, On hover and Off, each through a click. A note is in the window when
+/// shown, a tooltip of the thing it explains on hover, and gone when off. What is about the level itself stays:
+/// a check's main line and a wrong value's message. The choice is kept in the settings and read back by a new
+/// window. An unknown value shows the notes.
+///
+/// With `GLOVEBOX_SHOTS` it saves the level's settings and the Checks panel in each state, in `DIR/info/`.
+#[test]
+fn info_texts() {
+    use egui::accesskit::Role;
+    use glovebox::style::Info;
+    const FILE: &str = "The name inside the level file";
+    const HEAD: &str = "The game reads these once";
+    const CARD: &str = "The game's level table";
+    const HELP: &str = "Click something in the level";
+    let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
+    let mut t = T::new("info", fixture(), [1500.0, 950.0]);
+    t.idle();
+    // A wrong value: its message is in the Checks panel, and in the inspector when its trigger is chosen
+    let ed = t.ed();
+    let vol = ed.doc.iter_tags(ed.root(), &["PuzzleCondBallWithinRangeOfPoint"])[0];
+    ed.set_attr(vol, "range", "0.0");
+    ed.select(None, false);
+    t.settle();
+    let sub = t.w().checks.iter().find(|c| c.text.starts_with("Draw load")).and_then(|c| c.sub.clone()).unwrap_or_default();
+    let sub: String = sub.lines().next().unwrap_or("").chars().take(40).collect();
+    t.detail("the draw load check has a second line", !sub.is_empty(), sub.clone());
+    let first = t.info() == Info::Shown && t.reads(FILE);
+    t.check("without a setting the notes are shown", first);
+
+    let mut tops = Vec::new();
+    for (state, name) in [(Info::Hover, "On hover"), (Info::Off, "Off"), (Info::Shown, "Shown")] {
+        let chosen = t.option(name);
+        let saved = std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains(&format!("info={}", state.id()));
+        t.detail(&format!("the Options menu sets the info texts to {name}"), chosen && t.info() == state && saved, format!("{chosen} {:?} {saved}", t.info()));
+        t.ed().select(None, false);
+        t.settle();
+        t.shot(&format!("info/{}-settings", state.id()));
+        // The notes of a title, a field, a card, a paragraph, and a check's second line
+        let seen: Vec<bool> = [FILE, HEAD, CARD, HELP, sub.as_str()].iter().map(|n| t.reads(n)).collect();
+        let want = state == Info::Shown;
+        t.detail(&format!("{name}: the notes are {}", if want { "in the panels" } else { "not in the panels" }), seen.iter().all(|s| *s == want), format!("{seen:?}"));
+        // What is about the level stays
+        let kept = t.has_containing("Draw load") && t.has_containing("range = 0") && t.has("File name") && t.has("LEVEL SETTINGS") && t.has("No selection");
+        t.check(&format!("{name}: check lines, titles and field names stay"), kept);
+        tops.push((state, t.top_of("title"), t.top_of("Title, music and clock")));
+        if state == Info::Hover {
+            // The pointer on a field, on its name, on a title and on a check's line
+            let on_field = t.hover("File name", Some(Role::TextInput)) && t.reads(FILE);
+            let on_name = t.hover("File name", Some(Role::Label)) && t.reads(FILE);
+            let on_title = t.hover("LEVEL SETTINGS", None) && t.reads(HEAD);
+            let away = !t.reads(FILE);
+            let on_card = t.hover("Title, music and clock", None) && t.reads(CARD);
+            let on_help = t.hover("No selection", None) && t.reads(HELP);
+            let on_check = t.hover("Draw load", Some(Role::Label)) && t.reads(&sub);
+            t.shot("info/hover-tooltip");
+            t.detail("On hover: a note is the tooltip of what it explains", on_field && on_name && on_title && away && on_card && on_help && on_check, format!("{on_field} {on_name} {on_title} {away} {on_card} {on_help} {on_check}"));
+            // A click still goes to the field under the note's area
+            let typed = t.fill("File name", "abcdefg") && {
+                let ed = t.ed();
+                ed.doc.attr(ed.root(), "name") == "abcdefg"
+            };
+            t.ed().undo();
+            t.check("On hover: a field under a note still takes a click", typed);
+        }
+        // A wrong value's message in the inspector, with its trigger chosen
+        let ed = t.ed();
+        let mut puzzle = vol;
+        while ed.doc.tag(puzzle) != "Puzzle" {
+            puzzle = ed.doc.parent(puzzle).unwrap();
+        }
+        let trigger = ent(ed, |e| e.kind == "trigger" && e.node == puzzle);
+        ed.select(trigger, false);
+        t.settle();
+        let lines = t.find("range = 0", false).len();
+        let with_trigger = t.ed().selection.len() == 1;
+        t.detail(&format!("{name}: a wrong value's message stays in the inspector"), with_trigger && lines >= 2, lines.to_string());
+        t.shot(&format!("info/{}-object", state.id()));
+        t.ed().select(None, false);
+        t.settle();
+    }
+    // With the notes hidden the panel closes up: what is under a note moves up
+    let y = |s: Info, k: usize| tops.iter().find(|x| x.0 == s).and_then(|x| if k == 0 { x.1 } else { x.2 }).unwrap_or(f32::NAN);
+    let closed = y(Info::Off, 0) < y(Info::Shown, 0) - 20.0 && y(Info::Hover, 0) < y(Info::Shown, 0) - 20.0 && y(Info::Off, 1) < y(Info::Shown, 1) - 20.0;
+    t.detail("with the notes hidden the panel is shorter", closed, format!("{tops:?}"));
+
+    // The other panels: the palette's notes and a dialog's paragraph
+    for (state, name) in [(Info::Off, "Off"), (Info::Hover, "On hover"), (Info::Shown, "Shown")] {
+        t.option(name);
+        t.click("+ Add");
+        t.click("Presets");
+        let palette = t.reads("Ready-made platforms") && t.reads("New objects appear");
+        let rows = !t.find("Add ", false).is_empty();
+        let tip = state != Info::Hover || (t.hover("Presets", None) && t.reads("Ready-made platforms"));
+        t.shot(&format!("info/{}-palette", state.id()));
+        t.click("+ Add");
+        t.click("Export patch");
+        let dialog = t.reads("A BPS patch for other players");
+        let title = t.has("Export patch") && t.has("Export .bps");
+        let tip2 = state != Info::Hover || {
+            let bar = t.find("Export patch", true).into_iter().find(|n| n.accesskit_node().role() == Role::Label).map(|n| n.hover()).is_some();
+            for _ in 0..8 {
+                t.h.step();
+            }
+            bar && t.reads("A BPS patch for other players")
+        };
+        t.click("Cancel");
+        let want = state == Info::Shown;
+        t.detail(&format!("{name}: the palette's and a dialog's notes follow the setting"), palette == want && dialog == want && rows && title && tip && tip2, format!("{palette} {dialog} {rows} {title} {tip} {tip2}"));
+    }
+
+    // A new window on the same user folder has the state that was chosen last
+    t.option("On hover");
+    let home = t.home.clone();
+    let mut results = std::mem::take(&mut t.results);
+    drop(t.h);
+    let mut again = T::open(home, fixture(), [1280.0, 720.0]);
+    again.idle();
+    let kept = again.info() == Info::Hover && !again.reads(FILE) && again.has("File name");
+    again.check("a new window has the info texts of the settings", kept);
+    results.append(&mut again.results);
+    again.finish();
+
+    // An unknown value in the settings shows the notes
+    let home = std::env::temp_dir().join(format!("glovebox-ui-test-info-unknown-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&home);
+    std::fs::create_dir_all(&home).unwrap();
+    std::fs::write(home.join("settings.ini"), "[General]\ninfo=loud\n").unwrap();
+    let mut odd = T::open(home, fixture(), [1280.0, 720.0]);
+    odd.idle();
+    let shown = odd.info() == Info::Shown && odd.reads(FILE);
+    odd.check("an unknown value of the info texts shows them", shown);
+    results.append(&mut odd.results);
+    odd.finish();
     let failed: Vec<&(String, bool, String)> = results.iter().filter(|r| !r.1).collect();
     assert!(failed.is_empty(), "failed: {:?}", failed.iter().map(|r| &r.0).collect::<Vec<_>>());
 }
