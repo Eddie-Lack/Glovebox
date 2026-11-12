@@ -1,4 +1,5 @@
-//! The two rows of the toolbar: the level list, undo and redo, the tools, and the files and builds.
+//! The two rows of the toolbar: the level list, undo and redo, the tools, the files and builds, and the Options
+//! menu (the theme and the info texts).
 
 use crate::app::Window;
 use crate::style;
@@ -106,23 +107,35 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     }
 }
 
-/// The Theme list: the looks of the window. A choice restyles the window at once and is kept in the settings.
-fn theme_list(w: &mut Window, ui: &mut egui::Ui) {
+/// The Options menu: the look of the window (Theme) and how the notes show (Info texts). A choice works at once
+/// and is kept in the settings.
+fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let active = style::theme(ui.ctx());
-    let mut pick = None;
-    // The label is in the box: on a narrow window the two stay on one row
-    let r = egui::ComboBox::from_id_salt("theme").icon(style::combo_icon).selected_text(format!("Theme: {}", active.name)).width(118.0).show_ui(ui, |ui| {
+    let info = style::info(ui.ctx());
+    let (mut theme, mut notes) = (None, None);
+    let (r, _) = egui::containers::menu::MenuButton::new("Options").ui(ui, |ui| {
+        ui.set_min_width(150.0);
+        style::h4(ui, "Theme");
         for th in crate::theme::THEMES {
             if ui.selectable_label(th.id == active.id, th.name).clicked() {
-                pick = Some(th.id);
+                theme = Some(th.id);
+            }
+        }
+        ui.add_space(4.0);
+        style::h4(ui, "Info texts").on_hover_text("The notes under titles, fields and rows that explain the game and the editor");
+        for i in style::Info::ALL {
+            if ui.selectable_label(i == info, i.name()).clicked() {
+                notes = Some(i);
             }
         }
     });
-    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Theme"));
-    r.response.on_hover_text("The look of the window. It changes at once and is remembered.");
-    if let Some(id) = pick {
-        // After the frame: the panels of this frame are drawn in one theme
+    r.on_hover_text("The look of the window, and how the notes that explain things show. A choice is remembered.");
+    // After the frame: the panels of this frame are drawn in one theme and one state
+    if let Some(id) = theme {
         w.acts.push(Box::new(move |w: &mut Window| w.set_theme(id)));
+    }
+    if let Some(i) = notes {
+        w.acts.push(Box::new(move |w: &mut Window| w.set_info(i)));
     }
 }
 
@@ -181,5 +194,5 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
             w.open_patcher();
         }
     });
-    theme_list(w, ui);
+    options_menu(w, ui);
 }

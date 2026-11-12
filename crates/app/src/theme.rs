@@ -5,7 +5,8 @@
 //!
 //! Each theme follows one model from the world. "1998" is the patcher page (`web/patcher.html`): a game web site
 //! of that year. "Cartridge" is a grey console and its controller. "Blueprint" is a drafting sheet. "Paper" is a
-//! printed manual in two inks. "CRT" is a debug monitor with green phosphor.
+//! printed manual in two inks. "CRT" is a debug monitor with green phosphor. "Light", "Dark" and "High contrast" are
+//! the plain looks of a desktop tool: they follow the system's own windows and have no decoration.
 //!
 //! To add a theme: write a `Theme` here, add it to `THEMES`, and give `style.rs` a drawing for any new variant of
 //! the enums below. docs/technical.md, "Themes", lists what a theme has to keep.
@@ -86,6 +87,8 @@ pub enum Logo {
     Masthead,
     /// A prompt, the name in capitals and a block cursor.
     Prompt,
+    /// The name in bold letters, and nothing else.
+    Plain,
 }
 
 /// The line under a dialog's title and under the setup screen's logo.
@@ -100,6 +103,8 @@ pub enum Divider {
     DoubleRule,
     /// Two hairlines.
     DoubleLine,
+    /// One hairline.
+    Line,
 }
 
 /// What is behind the setup screen.
@@ -114,6 +119,8 @@ pub enum Backdrop {
     Ruled,
     /// The dark lines of a picture tube.
     Scanlines,
+    /// One flat colour.
+    Plain,
 }
 
 /// The frame of the setup screen's box, of a dialog and of the note in the view. Every frame is `style::RIDGE`
@@ -169,6 +176,8 @@ pub struct Theme {
     /// The name in the Theme list.
     pub name: &'static str,
     pub dark: bool,
+    /// How much of a control that cannot be used is left: 1 is all of it.
+    pub disabled: f32,
 
     // Surfaces
     /// The panels.
@@ -290,8 +299,14 @@ pub const VIEW_BG: [f64; 3] = [0.051, 0.055, 0.071];
 /// The colours of the rainbow divider, from left to right.
 pub const RAINBOW: [Color32; 7] = [c(0xff0000), c(0xff8000), c(0xffff00), c(0x00c000), c(0x0080ff), c(0x8000ff), c(0xff00ff)];
 
-/// The themes. The first is the default.
-pub static THEMES: [&Theme; 5] = [&Y1998, &CARTRIDGE, &BLUEPRINT, &PAPER, &CRT];
+/// The themes, in the order of the Theme list. The first is the default. The plain ones come after it.
+pub static THEMES: [&Theme; 8] = [&Y1998, &LIGHT, &DARK, &CONTRAST, &CARTRIDGE, &BLUEPRINT, &PAPER, &CRT];
+
+/// The font files of the plain themes: the system's sans face.
+const SANS: Files = &["segoeui.ttf", "SegoeUI.ttf", "tahoma.ttf", "Arial.ttf", "arial.ttf", "LiberationSans-Regular.ttf", "DejaVuSans.ttf"];
+const SANS_BOLD: Files = &["segoeuib.ttf", "SegoeUI-Bold.ttf", "tahomabd.ttf", "Arial Bold.ttf", "arialbd.ttf", "LiberationSans-Bold.ttf", "DejaVuSans-Bold.ttf"];
+const SANS_LABEL: Files = &["seguisb.ttf", "segoeuib.ttf", "SegoeUI-Bold.ttf", "tahomabd.ttf", "Arial Bold.ttf", "arialbd.ttf", "LiberationSans-Bold.ttf", "DejaVuSans-Bold.ttf"];
+const SANS_FONTS: Fonts = Fonts { text: SANS, bold: SANS_BOLD, label: SANS_LABEL, logo: &[], mono: false, body: 13.0, label_spacing: 0.4 };
 
 /// The theme with an id. An unknown id gives the default.
 pub fn by_id(id: &str) -> &'static Theme {
@@ -306,6 +321,7 @@ pub static Y1998: Theme = Theme {
     id: "1998",
     name: "1998",
     dark: true,
+    disabled: 0.55,
     bg: c(0x000080),
     panel: c(0x000060),
     deep: c(0x000040),
@@ -391,6 +407,7 @@ pub static CARTRIDGE: Theme = Theme {
     id: "cartridge",
     name: "Cartridge",
     dark: false,
+    disabled: 0.55,
     bg: c(0xbdb9b0),
     panel: c(0xcbc7be),
     deep: c(0xa9a59c),
@@ -476,6 +493,7 @@ pub static BLUEPRINT: Theme = Theme {
     id: "blueprint",
     name: "Blueprint",
     dark: true,
+    disabled: 0.55,
     bg: c(0x16407a),
     panel: NONE,
     deep: c(0x113566),
@@ -561,6 +579,7 @@ pub static PAPER: Theme = Theme {
     id: "paper",
     name: "Paper",
     dark: false,
+    disabled: 0.55,
     bg: c(0xf3eee2),
     panel: NONE,
     deep: c(0xe8e2d2),
@@ -594,7 +613,8 @@ pub static PAPER: Theme = Theme {
     primary: tone(0xc2321b, 0xfffaf0, 0x7d1c0c),
     primary_hover: tone(0xd4442c, 0xfffaf0, 0x7d1c0c),
     bevel: [c(0x1b1a18), c(0xa8a294), c(0xa8a294), c(0x1b1a18)],
-    button_padding: [8.0, 3.0],
+    // The serif letters are wide. With less room beside them the toolbar keeps to two rows at 1280 points.
+    button_padding: [6.0, 3.0],
     field: Field::Underlined,
     field_tone: tone(0xe9e3d3, 0x1b1a18, 0x1b1a18),
     field_hint: c(0x6f695c),
@@ -646,6 +666,7 @@ pub static CRT: Theme = Theme {
     id: "crt",
     name: "CRT",
     dark: true,
+    disabled: 0.55,
     bg: c(0x040804),
     panel: c(0x040804),
     deep: c(0x091209),
@@ -712,4 +733,237 @@ pub static CRT: Theme = Theme {
     select_box: (c(0xffb000), ca(0xffb000, 30)),
     view_bg: [0.0, 0.0, 0.0],
     fonts: Fonts { text: &[], bold: &[], label: &[], logo: &[], mono: true, body: 12.0, label_spacing: 1.0 },
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+// Light: a desktop tool in the system's light colours. Neutral greys, white fields and buttons with a thin line
+// and a small corner radius, one blue for the selection, the focus and the main action. A switch that is on is
+// filled dark grey. No decoration.
+
+pub static LIGHT: Theme = Theme {
+    id: "light",
+    name: "Light",
+    dark: false,
+    disabled: 0.62,
+    bg: c(0xf3f3f3),
+    panel: c(0xffffff),
+    deep: c(0xe6e6e6),
+    well: c(0xdcdcdc),
+    card_edge: c(0xcfcfcf),
+    ruled: NONE,
+    line: c(0xc4c4c4),
+    grid: None,
+    popup: c(0xffffff),
+    popup_edge: (1.0, c(0xa6a6a6)),
+    popup_shadow: ca(0x000000, 40),
+    scrim: ca(0x000000, 110),
+    text: c(0x1b1b1b),
+    muted: c(0x595959),
+    hover_text: c(0x005a9e),
+    link: c(0x005a9e),
+    focus: c(0x005fb8),
+    focus_block: None,
+    ok: c(0x0b6a0b),
+    err: c(0xb3261e),
+    warn: c(0x7a4a00),
+    imp: c(0x005a9e),
+    tok: c(0x7a2a8c),
+    shape: Shape::Outline,
+    radius: 3,
+    button: tone(0xffffff, 0x1b1b1b, 0xb4b4b4),
+    button_hover: tone(0xe5f1fb, 0x1b1b1b, 0x005fb8),
+    button_down: tone(0xcce4f7, 0x1b1b1b, 0x005fb8),
+    on: tone(0x505050, 0xffffff, 0x3a3a3a),
+    on_hover: tone(0x626262, 0xffffff, 0x3a3a3a),
+    primary: tone(0x005fb8, 0xffffff, 0x004c94),
+    primary_hover: tone(0x1a70c2, 0xffffff, 0x004c94),
+    bevel: [c(0xffffff), c(0xdcdcdc), c(0xa6a6a6), c(0x8a8a8a)],
+    button_padding: [8.0, 3.0],
+    field: Field::Boxed,
+    field_tone: tone(0xffffff, 0x1b1b1b, 0x8a8a8a),
+    field_hint: c(0x6b6b6b),
+    field_mono: false,
+    check: c(0xffffff),
+    sel: tone(0x005fb8, 0xffffff, 0x005fb8),
+    hover: tone(0xe5f1fb, 0x1b1b1b, 0xe5f1fb),
+    text_sel: (c(0x0067c0), c(0xffffff)),
+    scroll: [c(0xc1c1c1), c(0xa6a6a6), c(0x7a7a7a)],
+    trough: c(0xededed),
+    meter: [c(0xdcdcdc), c(0x005fb8), c(0xc42b1c)],
+    bar: Bar::Solid,
+    bar_fill: c(0xe2e2e2),
+    bar_lines: (c(0xe2e2e2), c(0xc4c4c4)),
+    bar_text: c(0x1b1b1b),
+    bar_text_small: c(0x1b1b1b),
+    logo: Logo::Plain,
+    logo_colors: [c(0x1b1b1b), c(0x005fb8), c(0x005fb8)],
+    divider: Divider::Line,
+    backdrop: Backdrop::Plain,
+    backdrop_colors: [c(0xe6e6e6), c(0xe6e6e6), c(0xe6e6e6)],
+    banner: NONE,
+    border: Border::Lines(&[(0.0, 1.0)]),
+    border_colors: [c(0xa6a6a6), c(0xa6a6a6), c(0xa6a6a6), c(0xa6a6a6)],
+    mark: Mark::Printed,
+    marks: [c(0x107c10), c(0xc42b1c), c(0x9d5d00), c(0x005fb8), c(0x767676)],
+    chip: Tone { fill: ca(0xffffff, 235), text: c(0x1b1b1b), edge: c(0xa6a6a6) },
+    chip_title: c(0x1b1b1b),
+    chip_edited: c(0x7a4a00),
+    select_box: (c(0x4cc2ff), ca(0x4cc2ff, 34)),
+    view_bg: [0.169, 0.169, 0.169],
+    fonts: SANS_FONTS,
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+// Dark: the same tool in the system's dark colours. Near-black greys, a light blue for the selection, the focus
+// and the main action. A switch that is on is filled light grey.
+
+pub static DARK: Theme = Theme {
+    id: "dark",
+    name: "Dark",
+    dark: true,
+    disabled: 0.6,
+    bg: c(0x242424),
+    panel: c(0x2b2b2b),
+    deep: c(0x1c1c1c),
+    well: c(0x181818),
+    card_edge: c(0x404040),
+    ruled: NONE,
+    line: c(0x454545),
+    grid: None,
+    popup: c(0x2c2c2c),
+    popup_edge: (1.0, c(0x5a5a5a)),
+    popup_shadow: ca(0x000000, 110),
+    scrim: ca(0x000000, 150),
+    text: c(0xe6e6e6),
+    muted: c(0xababab),
+    hover_text: c(0x60cdff),
+    link: c(0x60cdff),
+    focus: c(0x60cdff),
+    focus_block: None,
+    ok: c(0x6ccb5f),
+    err: c(0xff8f87),
+    warn: c(0xf2c661),
+    imp: c(0x60cdff),
+    tok: c(0xd7a6e8),
+    shape: Shape::Outline,
+    radius: 3,
+    button: tone(0x383838, 0xf0f0f0, 0x5a5a5a),
+    button_hover: tone(0x464646, 0xffffff, 0x60cdff),
+    button_down: tone(0x2e2e2e, 0xffffff, 0x60cdff),
+    on: tone(0xd6d6d6, 0x111111, 0xf0f0f0),
+    on_hover: tone(0xeaeaea, 0x111111, 0xffffff),
+    primary: tone(0x60cdff, 0x00131f, 0x60cdff),
+    primary_hover: tone(0x86d9ff, 0x00131f, 0x86d9ff),
+    bevel: [c(0x757575), c(0x4a4a4a), c(0x4a4a4a), c(0x111111)],
+    button_padding: [8.0, 3.0],
+    field: Field::Boxed,
+    field_tone: tone(0x1b1b1b, 0xf0f0f0, 0x757575),
+    field_hint: c(0x9a9a9a),
+    field_mono: false,
+    check: c(0x60cdff),
+    sel: tone(0x0b5a8f, 0xffffff, 0x0b5a8f),
+    hover: tone(0x3a3a3a, 0xffffff, 0x3a3a3a),
+    text_sel: (c(0x264f78), c(0xffffff)),
+    scroll: [c(0x555555), c(0x6e6e6e), c(0x8a8a8a)],
+    trough: c(0x1c1c1c),
+    meter: [c(0x181818), c(0x60cdff), c(0xff7b72)],
+    bar: Bar::Solid,
+    bar_fill: c(0x363636),
+    bar_lines: (c(0x363636), c(0x161616)),
+    bar_text: c(0xe6e6e6),
+    bar_text_small: c(0xe6e6e6),
+    logo: Logo::Plain,
+    logo_colors: [c(0xf0f0f0), c(0x60cdff), c(0x60cdff)],
+    divider: Divider::Line,
+    backdrop: Backdrop::Plain,
+    backdrop_colors: [c(0x1c1c1c), c(0x1c1c1c), c(0x1c1c1c)],
+    banner: NONE,
+    border: Border::Lines(&[(0.0, 1.0)]),
+    border_colors: [c(0x5a5a5a), c(0x5a5a5a), c(0x5a5a5a), c(0x5a5a5a)],
+    mark: Mark::Printed,
+    marks: [c(0x6ccb5f), c(0xff7b72), c(0xf2c661), c(0x60cdff), c(0x9a9a9a)],
+    chip: Tone { fill: ca(0x2b2b2b, 235), text: c(0xe6e6e6), edge: c(0x5a5a5a) },
+    chip_title: c(0xffffff),
+    chip_edited: c(0xf2c661),
+    select_box: (c(0x60cdff), ca(0x60cdff, 34)),
+    view_bg: [0.094, 0.094, 0.094],
+    fonts: SANS_FONTS,
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+// High contrast: white on black, as the system's high contrast mode. Every control has a white line. Yellow is
+// for the pointer and the keyboard focus, which fills the button. Cyan is for the selection and the main action.
+// A switch that is on is white with black letters.
+
+pub static CONTRAST: Theme = Theme {
+    id: "contrast",
+    name: "High contrast",
+    dark: true,
+    disabled: 0.6,
+    bg: c(0x000000),
+    panel: c(0x000000),
+    deep: c(0x000000),
+    well: c(0x000000),
+    card_edge: c(0xffffff),
+    ruled: NONE,
+    line: c(0xffffff),
+    grid: None,
+    popup: c(0x000000),
+    popup_edge: (2.0, c(0xffffff)),
+    popup_shadow: NONE,
+    scrim: ca(0x000000, 200),
+    text: c(0xffffff),
+    muted: c(0xd9d9d9),
+    hover_text: c(0xffff00),
+    link: c(0xffff00),
+    focus: c(0xffff00),
+    focus_block: Some(c(0x000000)),
+    ok: c(0x3ff23f),
+    err: c(0xff6b6b),
+    warn: c(0xffd500),
+    imp: c(0x1aebff),
+    tok: c(0xff9cf5),
+    shape: Shape::Outline,
+    radius: 0,
+    button: tone(0x000000, 0xffffff, 0xffffff),
+    button_hover: tone(0x000000, 0xffff00, 0xffff00),
+    button_down: tone(0xffff00, 0x000000, 0xffff00),
+    on: tone(0xffffff, 0x000000, 0xffffff),
+    on_hover: tone(0xffff00, 0x000000, 0xffff00),
+    primary: tone(0x1aebff, 0x000000, 0x1aebff),
+    primary_hover: tone(0x9df6ff, 0x000000, 0x9df6ff),
+    bevel: [c(0xffffff), c(0xffffff), c(0xffffff), c(0xffffff)],
+    button_padding: [8.0, 3.0],
+    field: Field::Boxed,
+    field_tone: tone(0x000000, 0xffffff, 0xffffff),
+    field_hint: c(0xc8c8c8),
+    field_mono: false,
+    check: c(0x1aebff),
+    sel: tone(0x1aebff, 0x000000, 0x1aebff),
+    hover: tone(0x004b52, 0xffffff, 0x004b52),
+    text_sel: (c(0x1aebff), c(0x000000)),
+    scroll: [c(0xffffff), c(0xffff00), c(0x1aebff)],
+    trough: c(0x000000),
+    meter: [c(0x000000), c(0x1aebff), c(0xff6b6b)],
+    bar: Bar::Solid,
+    bar_fill: c(0x000000),
+    bar_lines: (c(0x000000), c(0xffffff)),
+    bar_text: c(0xffffff),
+    bar_text_small: c(0xffffff),
+    logo: Logo::Plain,
+    logo_colors: [c(0xffffff), c(0xffff00), c(0xffff00)],
+    divider: Divider::Line,
+    backdrop: Backdrop::Plain,
+    backdrop_colors: [c(0x000000), c(0x000000), c(0x000000)],
+    banner: NONE,
+    border: Border::Lines(&[(0.0, 2.0)]),
+    border_colors: [c(0xffffff), c(0xffffff), c(0xffffff), c(0xffffff)],
+    mark: Mark::Printed,
+    marks: [c(0x3ff23f), c(0xff6b6b), c(0xffd500), c(0x1aebff), c(0xffffff)],
+    chip: Tone { fill: c(0x000000), text: c(0xffffff), edge: c(0xffffff) },
+    chip_title: c(0xffffff),
+    chip_edited: c(0xffff00),
+    select_box: (c(0xffff00), ca(0xffff00, 40)),
+    view_bg: [0.0, 0.0, 0.0],
+    fonts: SANS_FONTS,
 };

@@ -38,14 +38,18 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 }
 
 /// A bar that fills with the share of the free memory the imports take.
-fn budget(ui: &mut egui::Ui, text: &str, ratio: f64, small: &str, over: Option<bool>) {
+fn budget(ui: &mut egui::Ui, text: &str, ratio: f64, warning: &str, small: &str, over: Option<bool>) {
     let over = over.unwrap_or(ratio > 1.0);
     let th = style::theme(ui.ctx());
     style::boxed(th, th.panel).inner_margin(egui::Margin::symmetric(8, 6)).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.label(text);
         style::meter(ui, ratio as f32, over);
-        style::src(ui, small);
+        // What is over the budget is about this level and always shows. How the budget is measured is a note.
+        if !warning.is_empty() {
+            style::src(ui, warning);
+        }
+        style::src_on(ui, ui.min_rect(), small);
     });
 }
 
@@ -82,7 +86,10 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
                 w.checks = w.ed.checks();
             }));
         }
-        style::note(ui, tip);
+        // The same words are the box's tooltip
+        if style::info(ui.ctx()) == style::Info::Shown {
+            style::note(ui, tip);
+        }
     }
     let Some(plan) = &ed.plan else { return };
     if let (true, Some(rt)) = (ed.runtime_imports(), &plan.runtime) {
@@ -116,6 +123,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
                 ui,
                 &format!("{} KB of {} KB free with the Expansion Pak", kb(cost as f64), kb(room)),
                 cost as f64 / room.max(1.0),
+                "",
                 "Only this level loads these banks. Free heap is measured in the emulator, minus 16 KB for allocations during play.",
                 None,
             );
@@ -147,10 +155,10 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
         head.push_str(&format!(" ({} KB with the Expansion Pak)", kb((t.room + b.extra) as f64)));
     }
     let small = format!(
-        "{n} level{} load {} or {} and grow by this much. {pak}Free heap is measured per level in the emulator, minus 16 KB for allocations during play (measured runs used 2–3 KB).",
+        "{n} level{} load {} or {} and grow by this much. Free heap is measured per level in the emulator, minus 16 KB for allocations during play (measured runs used 2–3 KB).",
         plural(n),
         plan.target_bank,
         plan.target_tex_bank
     );
-    budget(ui, &head, t.ratio, &small, Some(!b.over_with_pak.is_empty()));
+    budget(ui, &head, t.ratio, pak.trim_end(), &small, Some(!b.over_with_pak.is_empty()));
 }

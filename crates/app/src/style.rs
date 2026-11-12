@@ -158,7 +158,7 @@ pub fn apply(ctx: &egui::Context, th: &'static Theme) {
         v.selection.bg_fill = th.text_sel.0;
         v.selection.stroke = Stroke::new(1.0, th.text_sel.1);
         v.text_cursor.stroke = Stroke::new(2.0, th.field_tone.text);
-        v.disabled_alpha = 0.55;
+        v.disabled_alpha = th.disabled;
         // egui's own widgets take the text colour in every state. `Look` gives the buttons and the fields theirs.
         // The fills here are the handle of a scroll bar. None may be clear: a clear one marks a menu's entries.
         let w = &mut v.widgets;
@@ -490,6 +490,7 @@ pub fn divider(ui: &mut Ui) {
             band(1.0, 2.0, th.bar_lines.0);
             band(3.0, 4.0, th.bar_lines.0);
         }
+        Divider::Line => band(2.0, 3.0, th.line),
     }
 }
 
@@ -498,7 +499,7 @@ pub fn logo(ui: &mut Ui, text: &str, size: f32) -> Response {
     let th = theme(ui.ctx());
     let [front, second, third] = th.logo_colors;
     let shown = match th.logo {
-        Logo::WordArt | Logo::Masthead => text.to_string(),
+        Logo::WordArt | Logo::Masthead | Logo::Plain => text.to_string(),
         Logo::Prompt => format!("> {}", text.to_uppercase()),
         _ => text.to_uppercase(),
     };
@@ -508,6 +509,7 @@ pub fn logo(ui: &mut Ui, text: &str, size: f32) -> Response {
         Logo::TitleBlock => (false, (size / 4.0).round(), 0.8),
         Logo::Masthead => (false, 0.0, 0.98),
         Logo::Prompt => (false, 0.0, 0.9),
+        Logo::Plain => (false, 0.0, 1.0),
     };
     let job = |color: Color32| {
         let format = egui::TextFormat { font_id: FontId::new((size * shrink).round(), logo_family()), color, italics, extra_letter_spacing: apart, ..Default::default() };
@@ -523,6 +525,7 @@ pub fn logo(ui: &mut Ui, text: &str, size: f32) -> Response {
         Logo::TitleBlock => (egui::vec2(8.0 * step + apart, 2.0 * step), egui::vec2(4.0 * step + apart, step)),
         Logo::Masthead => (egui::vec2(0.0, 2.0 * step), egui::Vec2::ZERO),
         Logo::Prompt => (egui::vec2((size * 0.62).round() + 2.0, 2.0 * step), egui::vec2(0.0, step)),
+        Logo::Plain => (egui::Vec2::ZERO, egui::Vec2::ZERO),
     };
     let (rect, r) = ui.allocate_exact_size(text_size + extra, egui::Sense::hover());
     if ui.is_rect_visible(rect) {
@@ -560,6 +563,7 @@ pub fn logo(ui: &mut Ui, text: &str, size: f32) -> Response {
                 let top = rect.min.y + at.y + (text_size.y - h) / 2.0;
                 painter.rect_filled(Rect::from_min_max(egui::pos2(rect.min.x + text_size.x + 2.0, top), egui::pos2(rect.max.x, top + h)), 0.0, second);
             }
+            Logo::Plain => {}
         }
         painter.galley(rect.min + at, galley, front);
     }
@@ -593,6 +597,7 @@ pub fn backdrop(painter: &egui::Painter, rect: Rect) {
             mesh.add_colored_rect(Rect::from_min_max(egui::pos2(rect.min.x + 72.0, rect.min.y), egui::pos2(rect.min.x + 73.5, rect.max.y)), second);
         }
         Backdrop::Scanlines => rows(&mut mesh, 3.0, &[(0.0, 1.0, first)]),
+        Backdrop::Plain => return,
     }
     painter.add(mesh);
 }
@@ -733,7 +738,9 @@ fn bar(ui: &mut Ui, title: &str, size: f32, margin: Margin, rank: Rank) -> Respo
         (back, r)
     });
     let (back, r) = out.inner;
-    ui.painter().set(back, bar_shape(theme(ui.ctx()), out.response.rect, r.rect, rank));
+    let th = theme(ui.ctx());
+    ui.painter().set(back, bar_shape(th, out.response.rect, r.rect, rank));
+    anchor(ui, out.response.rect, Some((r.rect, bar_color(th, rank))));
     r
 }
 
@@ -743,7 +750,10 @@ pub fn title_bar(ui: &mut Ui, title: &str) -> Response {
 }
 
 pub fn h2(ui: &mut Ui, text: &str) -> Response {
-    ui.label(RichText::new(text).font(FontId::new(15.0, bold())).color(theme(ui.ctx()).text))
+    let th = theme(ui.ctx());
+    let r = ui.label(RichText::new(text).font(FontId::new(15.0, bold())).color(th.text));
+    anchor(ui, r.rect, Some((r.rect, th.muted)));
+    r
 }
 
 pub fn h3(ui: &mut Ui, text: &str) -> Response {
@@ -759,8 +769,203 @@ pub fn muted(ui: &mut Ui, text: &str) -> Response {
     ui.label(RichText::new(text).color(theme(ui.ctx()).muted))
 }
 
-pub fn note(ui: &mut Ui, text: &str) -> Response {
+/// A small muted text about the player's own level. It shows whatever the Info texts setting is.
+pub fn remark(ui: &mut Ui, text: &str) -> Response {
     ui.label(RichText::new(text).size(12.0).color(theme(ui.ctx()).muted))
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Notes: the texts that explain how the game or the editor works
+//
+// Every such text goes through `note`, `note_on`, `card_note`, `para` or `para_on`, or is the second line of
+// `check_line`. The Info texts setting says how they show. A text about the player's own level (a value, a
+// status, a warning) is not a note: it uses `muted` or `remark`.
+
+/// The key of the Info texts setting in the settings file.
+pub const INFO_SETTING: &str = "info";
+
+/// How the notes show.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Info {
+    /// Under the thing they explain.
+    Shown,
+    /// As a tooltip of the thing they explain.
+    Hover,
+    /// Not at all.
+    Off,
+}
+
+impl Info {
+    pub const ALL: [Info; 3] = [Info::Shown, Info::Hover, Info::Off];
+
+    /// The name in the settings file.
+    pub fn id(self) -> &'static str {
+        match self {
+            Info::Shown => "shown",
+            Info::Hover => "hover",
+            Info::Off => "off",
+        }
+    }
+
+    /// The name in the Options menu.
+    pub fn name(self) -> &'static str {
+        match self {
+            Info::Shown => "Shown",
+            Info::Hover => "On hover",
+            Info::Off => "Off",
+        }
+    }
+
+    /// The state with a name of the settings file. An unknown or missing name gives `Shown`.
+    pub fn from_id(id: &str) -> Info {
+        Info::ALL.into_iter().find(|i| i.id() == id.trim()).unwrap_or(Info::Shown)
+    }
+}
+
+/// How the notes of a window show.
+pub fn info(ctx: &egui::Context) -> Info {
+    ctx.data(|d| d.get_temp::<Info>(egui::Id::NULL)).unwrap_or(Info::Shown)
+}
+
+/// Sets how the notes of a window show. The next frame follows it.
+pub fn set_info(ctx: &egui::Context, info: Info) {
+    ctx.data_mut(|d| d.insert_temp(egui::Id::NULL, info));
+}
+
+/// The last thing a note can belong to: the place the pointer rests on, and the letters that get the cue.
+#[derive(Clone, Copy)]
+pub struct Anchor {
+    pass: u64,
+    hover: Rect,
+    cue: Option<(Rect, Color32)>,
+}
+
+/// Names a thing the next `note` belongs to: a title, a row, a checkbox. `hover` is the place of the tooltip.
+/// `cue` is the place of its letters and their colour.
+pub fn anchor(ui: &Ui, hover: Rect, cue: Option<(Rect, Color32)>) {
+    if info(ui.ctx()) == Info::Hover {
+        let pass = ui.ctx().cumulative_pass_nr();
+        ui.data_mut(|d| d.insert_temp(egui::Id::NULL, Anchor { pass, hover, cue }));
+    }
+}
+
+/// The thing `anchor` named last, to give to `note_at` after other widgets.
+pub fn last_anchor(ui: &Ui) -> Option<Anchor> {
+    let pass = ui.ctx().cumulative_pass_nr();
+    ui.data(|d| d.get_temp::<Anchor>(egui::Id::NULL)).filter(|m| m.pass == pass && info(ui.ctx()) == Info::Hover)
+}
+
+/// Makes the tooltip's place of the thing `anchor` named last as big as `hover`: a checkbox with its fields.
+pub fn widen(ui: &Ui, hover: Rect) {
+    if info(ui.ctx()) == Info::Hover {
+        let pass = ui.ctx().cumulative_pass_nr();
+        ui.data_mut(|d| {
+            if let Some(mut m) = d.get_temp::<Anchor>(egui::Id::NULL).filter(|m| m.pass == pass) {
+                m.hover = hover;
+                d.insert_temp(egui::Id::NULL, m);
+            }
+        });
+    }
+}
+
+/// `anchor` for a row of fields: the tooltip is on the whole row, the cue under the row's name.
+pub fn anchor_row(ui: &Ui, row: Rect, name: Rect) {
+    anchor(ui, row, Some((name, theme(ui.ctx()).muted)));
+}
+
+/// What is in `ui` from the height `top` down to its last widget.
+pub fn span(ui: &Ui, top: f32) -> Rect {
+    let r = ui.min_rect();
+    Rect::from_min_max(egui::pos2(r.min.x, top.min(r.max.y)), r.max)
+}
+
+/// A note in the state of the Info texts setting. `place` is the thing it explains. Without one it is the
+/// thing `anchor` named last, when that is just over the note.
+fn explain(ui: &mut Ui, text: &str, size: Option<f32>, place: Option<(Rect, Option<(Rect, Color32)>)>) {
+    let th = theme(ui.ctx());
+    match info(ui.ctx()) {
+        Info::Off => {}
+        Info::Shown => {
+            let text = RichText::new(text).color(th.muted);
+            ui.label(match size {
+                Some(s) => text.size(s),
+                None => text,
+            });
+        }
+        Info::Hover => {
+            let pass = ui.ctx().cumulative_pass_nr();
+            let near = ui.cursor().top();
+            let last = ui.data(|d| d.get_temp::<Anchor>(egui::Id::NULL)).filter(|m| m.pass == pass && (near - m.hover.max.y).abs() < 48.0);
+            let Some((hover, cue)) = place.or(last.map(|m| (m.hover, m.cue))) else {
+                // Nothing to hang the note on: a small sign in its place carries it
+                ui.label(RichText::new("?").size(11.0).color(th.muted)).on_hover_text(text);
+                return;
+            };
+            // The area senses the pointer only. Clicks and drags go to the widgets under it.
+            let id = ui.scope_id().with(("note", text, hover.min.y as i32));
+            ui.interact(hover, id, egui::Sense::hover()).on_hover_text(text);
+            if let Some((letters, color)) = cue {
+                if ui.is_rect_visible(letters) {
+                    let y = (letters.max.y + 0.5).round_to_pixels(ui.pixels_per_point());
+                    let dots = egui::Shape::dotted_line(&[egui::pos2(letters.min.x + 1.0, y), egui::pos2(letters.max.x, y)], color.gamma_multiply(0.8), 3.0, 0.6);
+                    ui.painter().extend(dots);
+                }
+            }
+        }
+    }
+}
+
+/// A small note under the thing `anchor` named last: a title bar, a heading, a row, a checkbox.
+pub fn note(ui: &mut Ui, text: &str) {
+    explain(ui, text, Some(12.0), None);
+}
+
+/// A small note under a thing that `last_anchor` gave: a heading with widgets between it and the note.
+pub fn note_at(ui: &mut Ui, at: Option<Anchor>, text: &str) {
+    explain(ui, text, Some(12.0), at.map(|m| (m.hover, m.cue)));
+}
+
+/// A small note about what is in `hover`. The cue goes under `cue`, in the colour of muted text.
+pub fn note_on(ui: &mut Ui, hover: Rect, cue: Option<Rect>, text: &str) {
+    let color = theme(ui.ctx()).muted;
+    explain(ui, text, Some(12.0), Some((hover, cue.map(|c| (c, color)))));
+}
+
+/// `note_on` in the smaller letters of a source line.
+pub fn src_on(ui: &mut Ui, hover: Rect, text: &str) {
+    explain(ui, text, Some(11.0), Some((hover, None)));
+}
+
+/// A small note about the whole card it is in. The tooltip is on the card as far as it is drawn, the cue under
+/// the card's title.
+pub fn card_note(ui: &mut Ui, text: &str) {
+    let title = ui.data(|d| d.get_temp::<(Rect, Color32)>(ui.scope_id().with("card title")));
+    explain(ui, text, Some(12.0), Some((ui.min_rect(), title)));
+}
+
+/// A note in the size of body text, under the thing `anchor` named last: the paragraph under a dialog's title.
+pub fn para(ui: &mut Ui, text: &str) {
+    explain(ui, text, None, None);
+}
+
+/// `para` under a thing that `last_anchor` gave.
+pub fn para_at(ui: &mut Ui, at: Option<Anchor>, text: &str) {
+    explain(ui, text, None, at.map(|m| (m.hover, m.cue)));
+}
+
+/// `para` about what is in `hover`.
+pub fn para_on(ui: &mut Ui, hover: Rect, cue: Option<Rect>, text: &str) {
+    let color = theme(ui.ctx()).muted;
+    explain(ui, text, None, Some((hover, cue.map(|c| (c, color)))));
+}
+
+/// A tooltip's text with a note added to it, when notes show on hover.
+pub fn tip_with_note(ctx: &egui::Context, tip: Option<&str>, note: Option<&str>) -> Option<String> {
+    let note = note.filter(|_| info(ctx) == Info::Hover);
+    match (note, tip) {
+        (Some(n), Some(t)) => Some(format!("{n}\n\n{t}")),
+        (n, t) => n.or(t).map(str::to_string),
+    }
 }
 
 pub fn src(ui: &mut Ui, text: &str) -> Response {
@@ -847,6 +1052,10 @@ pub fn tick_box(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32
     }
     let (checked, enabled) = (*on, ui.is_enabled());
     r.widget_info(|| egui::WidgetInfo::selected(egui::Role::CheckBox, enabled, checked, &name));
+    if gap > 0.0 {
+        let letters = Rect::from_min_size(egui::pos2(rect.min.x + SIDE + gap, rect.center().y - galley.size().y / 2.0), galley.size());
+        anchor(ui, rect, Some((letters, th.muted)));
+    }
     if ui.is_rect_visible(rect) {
         let square = Rect::from_min_size(egui::pos2(rect.min.x, rect.center().y - SIDE / 2.0), egui::Vec2::splat(SIDE));
         let square = square.round_to_pixels(ui.pixels_per_point());
@@ -959,7 +1168,7 @@ pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: O
         ui.spacing_mut().item_spacing.y = 2.0;
         let sense = if clickable { egui::Sense::click() } else { egui::Sense::hover() };
         let mut r = ui.add(egui::Label::new(RichText::new(text).color(th.text)).sense(sense));
-        if let Some(sub) = sub {
+        if let Some(sub) = sub.filter(|_| info(ui.ctx()) == Info::Shown) {
             src(ui, sub);
         }
         if let Some((href, name)) = link {
@@ -981,15 +1190,20 @@ pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: O
     let bullet = Rect::from_min_size(rect.min + egui::vec2(7.0, 8.0), egui::Vec2::splat(9.0)).round_to_pixels(ui.pixels_per_point());
     mark(ui.painter(), th, level, bullet);
     let mut clicked = out.inner;
+    // The second line is a note. On hover it joins the line's tooltip.
+    let tip = tip_with_note(ui.ctx(), title, sub);
     if clickable {
         let whole = ui.interact(rect, ui.scope_id().with(("chk", rect.min.y as i32, text.len())), egui::Sense::click());
         clicked |= whole.clicked();
         if whole.hovered() {
             ui.painter().rect_stroke(rect, 0.0, Stroke::new(1.0, th.hover_text), egui::StrokeKind::Inside);
         }
-        whole.on_hover_cursor(egui::CursorIcon::PointingHand);
-    }
-    if let Some(t) = title {
+        // The tooltip is on the area that takes the click: it lies over the box
+        let whole = whole.on_hover_cursor(egui::CursorIcon::PointingHand);
+        if let Some(t) = &tip {
+            whole.on_hover_text(t);
+        }
+    } else if let Some(t) = tip {
         out.response.on_hover_text(t);
     }
     clicked
@@ -1078,6 +1292,9 @@ pub fn card<R>(ui: &mut Ui, title: &str, op: Option<&str>, head: impl FnOnce(&mu
                 _ => bar_shape(th, bar, letters, Rank::Card),
             };
             ui.painter().set(back, shape);
+            let cue = (letters, if plain_words(title) { bar_color(th, Rank::Card) } else { th.bar_text });
+            ui.data_mut(|d| d.insert_temp(ui.scope_id().with("card title"), cue));
+            anchor(ui, Rect::from_min_max(bar.min, egui::pos2(right, bar.max.y)), Some(cue));
             ui.add_space(5.0);
             body(ui)
         })

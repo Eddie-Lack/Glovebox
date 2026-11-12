@@ -344,8 +344,9 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
             }
             Dialog::ImportXml(d) => {
                 title_bar(ui, "Import level XML");
-                muted(ui, "The editor reads and checks the file. It must be libgarib level XML. Anything unknown is refused.");
+                style::para(ui, "The editor reads and checks the file. It must be libgarib level XML. Anything unknown is refused.");
                 let mut chosen = None;
+                let top = ui.cursor().top();
                 ui.horizontal(|ui| {
                     if ui.button("Choose file…").clicked() {
                         chosen = w.dialogs.open_file("Import level XML", None, &[("Level XML", &["xml"]), ("All files", &[])]);
@@ -355,7 +356,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 if let Some(p) = chosen {
                     read_xml(w, d, &p);
                 }
-                muted(ui, "or drop an .xml file on the window");
+                style::para_on(ui, style::span(ui, top), None, "or drop an .xml file on the window");
                 for (level, text) in &d.lines {
                     check_line(ui, level, text, false, None, None, None);
                 }
@@ -396,7 +397,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
             }
             Dialog::Patch { lines, quickboot } => {
                 title_bar(ui, "Export patch");
-                muted(ui, "A BPS patch for other players. They apply it to their own Glover (USA) ROM with patcher.html. Share the .bps and patcher.html (one file, works offline).");
+                style::para(ui, "A BPS patch for other players. They apply it to their own Glover (USA) ROM with patcher.html. Share the .bps and patcher.html (one file, works offline).");
                 for (level, text) in lines.iter() {
                     check_line(ui, level, text, false, None, None, None);
                 }
@@ -421,7 +422,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                     }
                     return;
                 }
-                muted(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
+                style::para(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
                 egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
                     for (_, _, label, on) in levels.iter_mut() {
                         style::checkbox(ui, on, label.as_str());
@@ -463,7 +464,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
             }
             Dialog::ImportModel(d) => {
                 title_bar(ui, "Import model");
-                muted(ui, "One .glb file (binary glTF) with its textures inside. Blender and most model rippers export these. The editor turns it into Glover models. Textures shrink to N64 textures of at most 2,048 pixels. A big model, like a map, is cut into solid pieces of at most 1,500 triangles.");
+                style::para(ui, "One .glb file (binary glTF) with its textures inside. Blender and most model rippers export these. The editor turns it into Glover models. Textures shrink to N64 textures of at most 2,048 pixels. A big model, like a map, is cut into solid pieces of at most 1,500 triangles.");
                 let mut chosen = None;
                 ui.horizontal(|ui| {
                     if ui.button("Choose .glb…").clicked() {

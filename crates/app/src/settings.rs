@@ -1,6 +1,6 @@
 //! The app's settings file, `settings.ini` in the user folder. It holds the keys the Python app kept in its
-//! QSettings file: `scene`, `fog`, `triggers`, `saveDir` and `emulator`, as `key=value` lines. `exits` and `theme`
-//! are new here.
+//! QSettings file: `scene`, `fog`, `triggers`, `saveDir` and `emulator`, as `key=value` lines. `exits`, `theme`
+//! and `info` are new here.
 
 use glovebox_editor::editor::Settings;
 use std::collections::BTreeMap;

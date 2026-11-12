@@ -3,7 +3,7 @@
 
 use crate::app::{with_format, Act, Window};
 use crate::numfield::{self, Spec};
-use crate::style::{self, card, check_line, commit_text, fieldname, h2, h4, mini, mini_menu, muted, note, num_input};
+use crate::style::{self, card, card_note, check_line, commit_text, fieldname, h2, h4, mini, mini_menu, muted, note, note_on, num_input, remark};
 use egui::RichText;
 use glovebox_core::pyfmt;
 use glovebox_core::xml::NodeId;
@@ -121,17 +121,26 @@ fn kind_name(kind: &str) -> &'static str {
     KINDS.iter().find(|k| k.0 == kind).map_or("", |k| k.1)
 }
 
-/// A row of a field grid: the name, then the widget.
+/// A row of a field grid: the name, then the widget. A note after it belongs to the row.
 fn row<R>(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui) -> R) -> R {
-    let r = ui
-        .horizontal(|ui| {
-            let label = fieldname(ui, name);
-            let pad = (96.0 - label.rect.width()).max(0.0);
-            ui.add_space(pad);
-            add(ui)
-        })
-        .inner;
-    r
+    let r = ui.horizontal(|ui| {
+        let label = fieldname(ui, name);
+        let pad = (96.0 - label.rect.width()).max(0.0);
+        ui.add_space(pad);
+        (label.rect, add(ui))
+    });
+    style::anchor_row(ui, r.response.rect, r.inner.0);
+    r.inner.1
+}
+
+/// A field the game does not keep for this object: its name, and why as a note.
+fn absent(ui: &mut egui::Ui, name: &str, why: &str) {
+    if style::info(ui.ctx()) == style::Info::Shown {
+        fieldname(ui, name);
+    } else {
+        row(ui, name, |ui| muted(ui, "not stored"));
+    }
+    note(ui, why);
 }
 
 /// A combo box over (value, text) pairs. Gives the chosen value.
@@ -187,7 +196,7 @@ fn fill(cx: &mut Cx, ui: &mut egui::Ui) {
             return puzzle_view(cx, ui, p);
         }
         h2(ui, "No selection");
-        ui.label("Click something in the level, drag a box (B), or pick from the list on the left. Ctrl+click adds to the selection.");
+        style::para(ui, "Click something in the level, drag a box (B), or pick from the list on the left. Ctrl+click adds to the selection.");
         stats(cx, ui);
         return level_settings(cx, ui);
     }
@@ -364,7 +373,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
                 }
             });
         }
-        note(ui, "The game's level table, written into the ROM at build. The title shows in the level select. At 0 the clock says TIME UP and sends the player to the way room, as in a bonus level.");
+        card_note(ui, "The game's level table, written into the ROM at build. The title shows in the level select. At 0 the clock says TIME UP and sends the player to the way room, as in a bonus level.");
         if ed.can_be_extra() {
             let mut on = info.extra;
             if style::checkbox(ui, &mut on, "Extra level (Expansion Pak)").changed() {
@@ -384,7 +393,7 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
     let Some(src) = from.clone().or_else(|| custom.is_none().then(|| oid.to_string())) else { return };
     let own = ed.catalog.get(&src).and_then(|c| c.world.clone());
     card(ui, "New look", None, |_| {}, |ui| {
-        note(ui, "A copy of the model with textures from other worlds. The copy is kept with your imported models and copied into the level's banks at ROM build.");
+        card_note(ui, "A copy of the model with textures from other worlds. The copy is kept with your imported models and copied into the level's banks at ROM build.");
         let ticks = cx.st.worlds.get_or_insert_with(|| std::array::from_fn(|i| WORLDS[i] == "PIRATES" && own.as_deref() != Some("PIRATES")));
         egui::Grid::new("worlds").num_columns(2).show(ui, |ui| {
             for (i, world) in WORLDS.iter().enumerate() {
@@ -518,7 +527,7 @@ fn enemy_panel(cx: &mut Cx, ui: &mut egui::Ui, enemy: NodeId) {
                     |ui| {
                         let cond = ed.doc.get(ins, "execution_condition").filter(|c| !c.is_empty()).unwrap_or("always");
                         if cond != "always" {
-                            note(ui, &format!("when {}", cond.replace('_', " ")));
+                            remark(ui, &format!("when {}", cond.replace('_', " ")));
                         }
                         if scripts::needs_target(t) {
                             let fl = scripts::flags_value(ed.doc.get(ins, "flags"), ed.flag_enum().as_ref());
@@ -639,7 +648,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
                     }
                 });
             }
-            note(ui, "Without a limit, actions run again on every frame the conditions hold. Camera zones need that; most other puzzles want Once.");
+            card_note(ui, "Without a limit, actions run again on every frame the conditions hold. Camera zones need that; most other puzzles want Once.");
         },
     );
     if delete {
@@ -671,7 +680,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
         });
         let parts = ed.doc.kids(p, kind);
         if parts.is_empty() {
-            note(ui, if kind == "PuzzleCond" { "None: it fires when the level starts." } else { "None yet." });
+            remark(ui, if kind == "PuzzleCond" { "None: it fires when the level starts." } else { "None yet." });
         }
         for (pi, part) in parts.into_iter().enumerate() {
             let t = puzzles::code(&ed.doc, part, attr);
@@ -772,10 +781,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 }
                 note(ui, ent.why_rot.unwrap_or("SetActorRotation, applied Y·Z·X like GetQuaternionFromXYZRot in the decomp."));
             }
-            _ => {
-                fieldname(ui, "rotation");
-                note(ui, ent.why_rot.unwrap_or(entities::WHY_NO_ORIENTATION));
-            }
+            _ => absent(ui, "rotation", ent.why_rot.unwrap_or(entities::WHY_NO_ORIENTATION)),
         }
         match (ent.scl, ent.get_scale(&ed.doc), &ent.volume) {
             (Some("xyz"), Some(s), _) => {
@@ -807,10 +813,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 }
                 note(ui, &format!("{}{}", names.join(", "), if ent.kind == "trigger" { ". Scaling keeps the centre." } else { "" }));
             }
-            _ => {
-                fieldname(ui, "scale");
-                note(ui, ent.why_scl.unwrap_or(entities::WHY_NO_SCALE));
-            }
+            _ => absent(ui, "scale", ent.why_scl.unwrap_or(entities::WHY_NO_SCALE)),
         }
     });
 }
@@ -832,21 +835,26 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         row(ui, "who", |ui| ui.label(who));
         match (t.rule.who, t.radius) {
             (Who::OnPlatform, _) => {
-                note(ui, "The game tests no distance for this exit type. The view draws no sphere.");
+                card_note(ui, "The game tests no distance for this exit type. The view draws no sphere.");
             }
             (_, None) => {
-                note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
+                card_note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
             }
             (_, Some(r)) if r > 0.0 => {
-                note(ui, "The exit fires when the centre comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
+                card_note(ui, "The exit fires when the centre comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
             }
             _ => {
                 let why = t.zero.as_ref().map(|z| z.text()).unwrap_or_default();
                 check_line(ui, "err", &format!("The radius is 0. This exit can never fire. {why}"), false, None, None, None);
             }
         }
-        for n in &t.rule.notes {
-            note(ui, n);
+        // What else the game asks of this exit. On hover it is one tooltip.
+        if style::info(ui.ctx()) == style::Info::Shown {
+            for n in &t.rule.notes {
+                card_note(ui, n);
+            }
+        } else if !t.rule.notes.is_empty() {
+            card_note(ui, &t.rule.notes.join(" "));
         }
     });
 }
@@ -857,6 +865,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
     let Some(z) = camera_zone(&ed.doc, puzzle) else { return };
     card(ui, "Camera zone", None, |_| {}, |ui| {
         let facing = cx.st.facing.get_or_insert_with(|| format!("{}", pyfmt::py_round(ed.view_facing() * DEG) as i64)).clone();
+        let top = ui.cursor().top();
         row(ui, "preset", |ui| {
             let mut items = vec![("", "Choose…".to_string())];
             items.extend(CAM_PRESETS.iter().map(|(k, lab, about)| (*k, format!("{lab}: {about}"))));
@@ -878,13 +887,13 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 style::name(&r, "player walks");
             }
         });
-        note(ui, "A preset replaces the actions below. “Player walks” is the heading the player goes along in the zone (0 is +z); it starts as the way the view looks.");
+        note_on(ui, style::span(ui, top), None, "A preset replaces the actions below. “Player walks” is the heading the player goes along in the zone (0 is +z); it starts as the way the view looks.");
 
         let facing_now = ed.view_facing();
         let orbit = ed.orbit.target;
         // look
         let mut on = z.look.is_some();
-        ui.horizontal(|ui| {
+        let line = ui.horizontal(|ui| {
             if style::checkbox(ui, &mut on, "look °").changed() {
                 cx.ed_act(move |ed| {
                     ed.write_zone(puzzle, |cur| {
@@ -901,6 +910,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| if k == 0 { cur.look = Some(v / DEG) } else { cur.speed = Some(v) }));
             }
         });
+        style::widen(ui, line.response.rect);
         note(ui, "LookAtGlover: the heading from the camera to Glover, and how fast it turns there (the shipped levels use 1 to 4).");
         // distance and height
         for (name, value, start, why, which) in [
@@ -908,7 +918,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
             ("height", z.height, 100.0, "TweenYAdjust: how far over Glover the camera rises (negative goes under).", 1),
         ] {
             let mut on = value.is_some();
-            ui.horizontal(|ui| {
+            let line = ui.horizontal(|ui| {
                 let set = move |cur: &mut entities::Zone, v: Option<f64>| if which == 0 { cur.distance = v } else { cur.height = v };
                 if style::checkbox(ui, &mut on, name).changed() {
                     cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| set(cur, on.then_some(start))));
@@ -917,11 +927,12 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                     cx.ed_act(move |ed| ed.write_zone(puzzle, |cur| set(cur, Some(v))));
                 }
             });
+            style::widen(ui, line.response.rect);
             note(ui, why);
         }
         // fly to
         let mut on = z.fly.is_some();
-        ui.horizontal(|ui| {
+        let line = ui.horizontal(|ui| {
             if style::checkbox(ui, &mut on, "fly to").changed() {
                 cx.ed_act(move |ed| {
                     ed.edit(|ed| {
@@ -948,9 +959,11 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 });
             }
         });
+        style::widen(ui, line.response.rect);
         note(ui, "FlyTowardsPoint: the camera flies to this point and watches Glover from there.");
         if let Some(view) = zone_camera(&ed.doc, &z) {
-            if ui.button("Look from the zone’s camera").clicked() {
+            let look = ui.button("Look from the zone’s camera");
+            if look.clicked() {
                 cx.act(move |w| {
                     w.ed.camera.pos = view.1;
                     w.ed.orbit.target = view.0;
@@ -959,7 +972,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                     w.view.dirty = true;
                 });
             }
-            note(ui, "Shows about what the player sees with Glover in the middle of the box.");
+            note_on(ui, look.rect, None, "Shows about what the player sees with Glover in the middle of the box.");
         }
     });
 }
@@ -1223,7 +1236,7 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                             Some(oid) if ed.catalog.contains_key(&oid) => format!("imported from {} at ROM build", ed.catalog[&oid].bank),
                             _ => "⚠ not in any object bank".to_string(),
                         };
-                        note(ui, &text);
+                        remark(ui, &text);
                     }
                 }
                 if ["r", "g", "b"].iter().all(|k| ed.doc.has(node, k)) {
@@ -1307,7 +1320,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
         });
         cx.acts.extend(go);
         let pivot = if ed.pivot_mode == "group" { "group centre (positions rotate and scale around it)" } else { "each object’s own origin" };
-        note(ui, &format!("Pivot: {pivot}. {rot} of {} can store a rotation and {scl} a size; the rest only move.", tset.len()));
+        remark(ui, &format!("Pivot: {pivot}. {rot} of {} can store a rotation and {scl} a size; the rest only move.", tset.len()));
     });
     for (n, &i) in sel.iter().take(200).enumerate() {
         let e = &ed.entities[i];
