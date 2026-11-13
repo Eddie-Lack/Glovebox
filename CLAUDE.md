@@ -8,6 +8,8 @@ built ROM has to keep on a console.
 
 - **Never commit the ROM** or anything made from it: `.z64`, `.bps`, `.lev`, extracted models or textures, the
   user folder, test dumps, savestates, emulator screenshots. The editor reads the player's own ROM.
+- The one exception, allowed by the owner: the editor's own screenshots for the guide, in `docs/guide/img/`. Nothing
+  else from the ROM goes in: no ROM, levels, models, textures, patches or emulator screenshots.
 - **Never use leaked original source code.** Facts about the game come from the
   [gloveworld](https://github.com/Eddie-Lack/gloveworld) decompilation, the ROM's own code, or tests in an emulator.
 - **A rule that fires on a shipped level is wrong.** Every check the editor makes must pass on all 48 shipped levels.

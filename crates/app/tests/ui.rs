@@ -5,6 +5,8 @@
 //! the gizmo, box select, the path tool). Checks named "click: ..." come last: one for each button the earlier
 //! checks do not click.
 //!
+//! `GLOVEBOX_ROM=PATH GLOVEBOX_GUIDE=DIR` also runs `guide_shots`, which saves the pictures of the guide (`guide/mod.rs`).
+//!
 //! `GLOVEBOX_SHOTS=DIR` saves pictures of the window after the main steps. `GLOVEBOX_ROM=PATH` also runs
 //! `the_rom`: setup with the real ROM, all 48 levels, a ROM build and a patch. `GLOVEBOX_THEME=ID` runs every
 //! test in that theme (`themes` chooses its own).
@@ -27,6 +29,8 @@ use glovebox_editor::{scripts, vec};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+mod guide;
 
 struct T {
     h: Harness<'static, App>,
@@ -2525,4 +2529,16 @@ fn the_rom() {
     t.detail("Test level builds into test/ and starts the emulator", built.is_file() && status.contains("Testing"), status);
     t.shot("42-rom-end");
     t.finish();
+}
+
+/// With `GLOVEBOX_ROM` and `GLOVEBOX_GUIDE=DIR`: saves the pictures of the guide (`docs/guide/img`) into DIR.
+#[test]
+fn guide_shots() {
+    let (Some(rom), Some(dir)) = (std::env::var_os("GLOVEBOX_ROM").map(PathBuf::from), std::env::var_os("GLOVEBOX_GUIDE").map(PathBuf::from)) else {
+        println!("skipped: GLOVEBOX_ROM and GLOVEBOX_GUIDE are not both set");
+        return;
+    };
+    // The folder is given from where cargo was started. The test runs in the crate's folder.
+    let dir = if dir.is_absolute() { dir } else { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..").join(dir) };
+    guide::run(rom, dir);
 }

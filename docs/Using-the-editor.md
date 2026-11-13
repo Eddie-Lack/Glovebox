@@ -2,6 +2,8 @@
 
 _Back to the [README](../README.md)_
 
+New here? _[The guide](guide/README.md)_ shows how to do things, with pictures. This page is the full list
+
 ## Moving around
 
 - Pick a level in the list at the top, all 48 load

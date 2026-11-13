@@ -29,6 +29,7 @@ process. Nothing is installed, unpacked or run next to it. It builds on three pr
 | `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. After editing the page's script, run `tools/build_patcher.py` to pin the new hash. |
 | `tools/licenses.py` | Collects the licences of the Rust crates and fonts in the program, for the release archive. |
 | `app/README.txt` | The guide for players that goes into the release archive. |
+| `docs/guide/` | The guide with pictures for players: one Markdown page for each job, and the pictures in `img/` (see "The guide's pictures"). |
 | `.github/workflows/app.yml` | Tests, the Windows build, the archive and the release. |
 
 The tables in `crates/core/data/` and the developer tools that write them. The tools need Python 3 with PyYAML and
@@ -854,6 +855,31 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
 - `licenses/` is made by `tools/licenses.py`: the licence files of every crate linked into the Windows program
   (from `cargo metadata`, without build and test dependencies) and of the fonts egui embeds.
 - The app is released for Windows. It also builds and runs on Linux from source (`cargo run -p glovebox --release`).
+
+## The guide's pictures
+
+The pictures in `docs/guide/img/` are made by the test `guide_shots` (`crates/app/tests/guide/mod.rs`, a part of
+`tests/ui.rs`). One command makes them all again, from the repository's folder:
+
+```sh
+GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glovebox --test ui guide_shots
+```
+
+- Without both variables the test does nothing and passes. `GLOVEBOX_GUIDE_ONLY=add,exit` makes the pictures of
+  some steps only (the names are in `run`).
+- The test opens the real window at 1280 by 800 in the Sage theme with the fog off, takes the ROM on the setup
+  screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the shipped level.
+- A picture of one panel is cut out of the window's picture. For a tall panel the window is 1060 high.
+- The numbers on `window-tour.png` are drawn by the test (`Pic::marker`). The list under the picture in
+  `docs/guide/The-window.md` explains them. No other picture is drawn on.
+- The small pictures of the contents list (`thumb-*.png`) are parts of the same pictures, 240 by 150.
+- The files are PNGs with a palette of 256 colours (`Pic::save`). The 64 most used colours keep their exact values,
+  which keeps the window's flat colours right. A median cut shares the rest among the shades of the 3D view.
+- The pointer shows in the pictures of an open menu and of the box select. Elsewhere it leaves the window first.
+- The autosave chip shows the time of the run. Everything else is the same from run to run.
+- These pictures show the game's levels. The owner allows them in the repository. Nothing else made from the ROM
+  goes in (CLAUDE.md, "Rules").
+- After a change to a page's pictures, look at each new picture, and check the page's links and picture paths.
 
 ## Reference tests
 
