@@ -1,10 +1,9 @@
-//! The editor's window on the fixture, without a ROM: a port of the former Python editor's test, under the same
-//! check names.
+//! The editor's window on the fixture, without a ROM.
 //!
 //! The test drives the real window through `egui_kittest`: it clicks the widgets it finds by their labels, types
 //! into fields, presses the shortcut keys, and sends pointer events at pixel positions into the 3D view (picking,
-//! the gizmo, box select, the path tool). After the port come checks named "click: ...": one for each button the
-//! port did not already click.
+//! the gizmo, box select, the path tool). Checks named "click: ..." come last: one for each button the earlier
+//! checks do not click.
 //!
 //! `GLOVEBOX_SHOTS=DIR` saves pictures of the window after the main steps. `GLOVEBOX_ROM=PATH` also runs
 //! `the_rom`: setup with the real ROM, all 48 levels, a ROM build and a patch. `GLOVEBOX_THEME=ID` runs every
@@ -1258,7 +1257,7 @@ fn editor_on_the_fixture() {
     t.finish();
 }
 
-/// One click for each button the former Python editor's test did not click.
+/// One click for each button the earlier checks do not click.
 fn more_clicks(t: &mut T) {
     let none = Modifiers::default();
     // The toolbar's tools
@@ -1718,7 +1717,7 @@ fn more_clicks(t: &mut T) {
     t.shot("18-end");
 }
 
-/// What a review of the window against the Python one found.
+/// What a review of the window found.
 fn review_fixes(t: &mut T) {
     // Esc and Enter answer a question and a note
     let ed = t.ed();
@@ -2112,8 +2111,8 @@ fn the_fonts_have_the_symbols() {
 /// two rows at each size. The choice is kept in the
 /// settings and read back by a new window and by the setup screen. An unknown name gives the default.
 ///
-/// With `GLOVEBOX_SHOTS` it saves, for every theme, pictures of a level with a selection, the Add palette, a
-/// dialog and the setup screen in `DIR/<theme>/`. With `GLOVEBOX_ROM` also a level of the game.
+/// With `GLOVEBOX_SHOTS` it saves, for every theme, pictures of a level with a selection, the Options menu, the Add
+/// palette, a dialog and the setup screen in `DIR/<theme>/`. With `GLOVEBOX_ROM` also a level of the game.
 #[test]
 fn themes() {
     use glovebox::theme::THEMES;
@@ -2154,6 +2153,11 @@ fn themes() {
                 // A button works in this theme, and the pictures
                 let n = kinds(t.ed(), "enemy").len();
                 t.shot(&format!("{}/1-level", th.id));
+                if t.shots.is_some() {
+                    t.click("Options");
+                    t.shot(&format!("{}/0-menu", th.id));
+                    t.key(Key::Escape);
+                }
                 t.click("+ Add");
                 t.click("Enemies");
                 t.shot(&format!("{}/2-add", th.id));
@@ -2401,7 +2405,7 @@ fn the_rom() {
         return;
     };
     let mut t = T::new("rom", None, [1500.0, 950.0]);
-    // What only the Python app made is not this test's business; the setup screen's own path is
+    // The setup screen's own path
     t.files.0.borrow_mut().open.push_back(rom);
     t.settle();
     t.h.get_by_label("Choose the ROM…").click();

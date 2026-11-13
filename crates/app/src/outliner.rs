@@ -172,7 +172,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                             None
                         };
                         if let Some(fill) = fill {
-                            ui.painter().set(band, egui::Shape::rect_filled(r.rect.expand2(egui::vec2(3.0, 1.0)), 0.0, fill));
+                            ui.painter().set(band, egui::Shape::rect_filled(r.rect.expand2(egui::vec2(3.0, 1.0)), style::row_radius(th), fill));
                         }
                         if e.imported {
                             r = r.on_hover_text("Imported at ROM build");

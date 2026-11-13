@@ -1,7 +1,7 @@
-//! Import model against the Python converter (the former Python app's `custom_model.py` with libgarib's tools).
+//! Import model against the reference dumps.
 //!
-//! The reference sets are made by `convert/make.py` in the folder `GLOVEBOX_ORACLE` names. Each has the glTF file,
-//! its name and scale, and the Python converter's `meta.json`, object banks and texture bank.
+//! The reference sets are in `convert/` in the folder `GLOVEBOX_REFERENCE` names. Each has the glTF file, its name
+//! and scale, and the expected `meta.json`, object banks and texture bank.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -10,11 +10,11 @@ use glovebox_core::custom::{self, CustomSet};
 use glovebox_core::{objbank, texbank};
 use serde_json::Value;
 
-fn oracle(test: &str) -> Option<PathBuf> {
-    match std::env::var_os("GLOVEBOX_ORACLE") {
+fn reference(test: &str) -> Option<PathBuf> {
+    match std::env::var_os("GLOVEBOX_REFERENCE") {
         Some(dir) if Path::new(&dir).join("convert").is_dir() => Some(Path::new(&dir).join("convert")),
         _ => {
-            println!("{test}: skipped, GLOVEBOX_ORACLE is not set or has no convert folder");
+            println!("{test}: skipped, GLOVEBOX_REFERENCE is not set or has no convert folder");
             None
         }
     }
@@ -72,8 +72,8 @@ fn texture_difference(ours: &[u8], theirs: &[u8]) -> (u8, f64) {
 }
 
 #[test]
-fn sets_match_python() {
-    let Some(dir) = oracle("sets_match_python") else { return };
+fn sets_match_the_reference() {
+    let Some(dir) = reference("sets_match_the_reference") else { return };
     let mut cases: Vec<PathBuf> =
         std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.join("case.json").is_file()).collect();
     cases.sort();
@@ -117,7 +117,7 @@ fn sets_match_python() {
             match std::fs::read(&path) {
                 Ok(bytes) if bytes == p.bank => {}
                 Ok(_) => problems.push(format!("bank 0x{:08X} differs", p.id)),
-                Err(_) => problems.push(format!("Python has no bank 0x{:08X}", p.id)),
+                Err(_) => problems.push(format!("the reference has no bank 0x{:08X}", p.id)),
             }
         }
         let their_bank = std::fs::read(out.join("textures.tex.bin")).unwrap();
@@ -145,15 +145,15 @@ fn sets_match_python() {
 }
 
 #[test]
-fn errors_match_python() {
-    let Some(dir) = oracle("errors_match_python") else { return };
+fn errors_match_the_reference() {
+    let Some(dir) = reference("errors_match_the_reference") else { return };
     let errors = json(&dir.join("errors.json"));
     for (name, e) in errors.as_object().unwrap() {
         let data = std::fs::read(dir.join("errors").join(format!("{name}.glb"))).unwrap();
         let got = custom::convert(&data, "model", e["scale"].as_f64().unwrap(), &HashSet::new(), &HashSet::new());
-        let want = e["error"].as_str().unwrap_or_else(|| panic!("{name}: Python gave no error"));
-        let got = got.err().unwrap_or_else(|| panic!("{name}: no error, Python says {want}")).0;
-        // Pillow names a Python object in this one
+        let want = e["error"].as_str().unwrap_or_else(|| panic!("{name}: the reference has no error"));
+        let got = got.err().unwrap_or_else(|| panic!("{name}: no error, the reference says {want}")).0;
+        // One reference text goes on with the name of an object in memory. That part is cut off
         let want = want.split(" <_io.BytesIO").next().unwrap();
         assert_eq!(got, want, "{name}");
     }
@@ -163,7 +163,7 @@ fn errors_match_python() {
 #[test]
 fn images_match_pillow() {
     use glovebox_core::custom::image::{decode, resize, Rgba};
-    let Some(dir) = oracle("images_match_pillow") else { return };
+    let Some(dir) = reference("images_match_pillow") else { return };
     let dir = dir.join("images");
     let mut failures = Vec::new();
     for im in json(&dir.join("index.json")).as_array().unwrap() {
@@ -208,28 +208,20 @@ fn temp_home(name: &str) -> PathBuf {
     dir
 }
 
-/// `import_custom` stores what `convert` makes, under the set name the Python app gives, and the sets the Python
-/// converter wrote load through `custom_sets` and `custom_catalog`.
+/// `import_custom` stores what `convert` makes, under the expected set name, and the reference
+/// sets load through `custom_sets` and `custom_catalog`.
 #[test]
-fn storage_matches_python() {
-    let Some(dir) = oracle("storage_matches_python") else { return };
+fn storage_matches_the_reference() {
+    let Some(dir) = reference("storage_matches_the_reference") else { return };
     let home = temp_home("storage");
     let case = dir.join("testmodel");
     let data = std::fs::read(case.join("input.glb")).unwrap();
     let none = HashSet::new();
     let set = custom::import_custom(&home, &data, "model", 1.0, &none, &none).unwrap();
-    // sha1(data + repr(1.0))[:10], from Python
-    let expect = std::process::Command::new("python3")
-        .arg("-c")
-        .arg("import hashlib,sys; print(hashlib.sha1(open(sys.argv[1],'rb').read() + repr(1.0).encode()).hexdigest()[:10])")
-        .arg(case.join("input.glb"))
-        .output()
-        .ok()
-        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
-        .filter(|s| s.len() == 10);
-    if let Some(expect) = expect {
-        assert_eq!(set, expect);
-    }
+    // The set's name: the first 10 hex digits of the SHA-1 of the file and the scale's text
+    let mut hashed = data.clone();
+    hashed.extend_from_slice(b"1.0");
+    assert_eq!(set, glovebox_core::n64::sha1_hex(&hashed)[..10]);
     let stored = home.join("custom").join(&set);
     let out = case.join("out");
     let mut names: Vec<String> = std::fs::read_dir(&stored).unwrap().flatten().map(|e| e.file_name().into_string().unwrap()).collect();
@@ -242,7 +234,7 @@ fn storage_matches_python() {
     for name in names.iter().filter(|n| n.ends_with(".bin")) {
         assert!(std::fs::read(stored.join(name)).unwrap() == std::fs::read(out.join(name)).unwrap(), "{name}");
     }
-    // The text of meta.json is Python's, but for the preview's file name and the PNG sizes
+    // The text of meta.json is the reference's, but for the preview's file name and the PNG sizes
     let ours = std::fs::read_to_string(stored.join("meta.json")).unwrap();
     let mut theirs_same = theirs.clone();
     for p in theirs_same["pieces"].as_array_mut().unwrap() {
@@ -250,7 +242,7 @@ fn storage_matches_python() {
     }
     theirs_same["textures"] = json(&stored.join("meta.json"))["textures"].clone();
     assert_eq!(ours, custom::py_json(&theirs_same));
-    // py_json writes Python's own file back byte for byte
+    // py_json writes the reference file back byte for byte
     assert_eq!(custom::py_json(&theirs), std::fs::read_to_string(out.join("meta.json")).unwrap());
     // A second import of the same file gives the same set and writes nothing
     let before = std::fs::metadata(stored.join("meta.json")).unwrap().modified().unwrap();
@@ -265,12 +257,12 @@ fn storage_matches_python() {
     assert_eq!(catalog.len(), 8);
     assert!(!home.join("custom").join(format!("{set}.tmp")).exists());
 
-    // A set the Python converter wrote, copied in as the Python app stores it
-    let python_set = home.join("custom").join("0123456789");
-    std::fs::create_dir_all(&python_set).unwrap();
+    // A reference set, copied into the user folder
+    let copied_set = home.join("custom").join("0123456789");
+    std::fs::create_dir_all(&copied_set).unwrap();
     for entry in std::fs::read_dir(dir.join("big").join("out")).unwrap().flatten() {
         if entry.path().is_file() {
-            std::fs::copy(entry.path(), python_set.join(entry.file_name())).unwrap();
+            std::fs::copy(entry.path(), copied_set.join(entry.file_name())).unwrap();
         }
     }
     let sets = custom::custom_sets(&home);
@@ -289,10 +281,10 @@ fn storage_matches_python() {
     let _ = std::fs::remove_dir_all(&home);
 }
 
-/// `reskin` against the former Python back end's: the same set, new ID, bank, texture bank and `meta.json`.
+/// `reskin` against the reference: the same set, new ID, bank, texture bank and `meta.json`.
 #[test]
-fn reskin_matches_python() {
-    let Some(dir) = oracle("reskin_matches_python") else { return };
+fn reskin_matches_the_reference() {
+    let Some(dir) = reference("reskin_matches_the_reference") else { return };
     let dir = dir.join("reskin");
     let cases = json(&dir.join("index.json"));
     assert!(cases.as_array().unwrap().len() >= 3);
@@ -343,7 +335,7 @@ fn reskin_matches_python() {
 /// has bytes changed, by a fixed rule.
 #[test]
 fn damaged_files_do_not_panic() {
-    let Some(dir) = oracle("damaged_files_do_not_panic") else { return };
+    let Some(dir) = reference("damaged_files_do_not_panic") else { return };
     let none = HashSet::new();
     let mut state = 0x2545F491u32;
     let mut next = move || {

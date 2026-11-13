@@ -37,7 +37,7 @@ fn wall_clock() -> f64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0)
 }
 
-/// Python's `str.replace("_", " ", 1)`.
+/// The text with its first underscore as a space.
 fn spaced(s: &str) -> String {
     s.replacen('_', " ", 1)
 }

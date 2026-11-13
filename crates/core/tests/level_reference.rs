@@ -1,17 +1,16 @@
-//! `level` against the Python app's outputs.
+//! `level` against the reference dumps.
 //!
-//! Needs `GLOVEBOX_ORACLE`: the folder with `levels/<id>.xml` and `.lev` for the 48 shipped levels, and
-//! `level/variants.json`, the edited levels and what libgarib does with each (made by `level/make_variants.py` in
-//! that folder). Without the variable the tests pass without doing anything.
+//! Needs `GLOVEBOX_REFERENCE`: the folder with `levels/<id>.xml` and `.lev` for the 48 shipped levels, and
+//! `level/variants.json`, the edited levels and what libgarib does with each. Without the variable the tests pass without doing anything.
 
 use glovebox_core::level;
 use std::path::PathBuf;
 
-fn oracle() -> Option<PathBuf> {
-    match std::env::var_os("GLOVEBOX_ORACLE") {
+fn reference() -> Option<PathBuf> {
+    match std::env::var_os("GLOVEBOX_REFERENCE") {
         Some(p) => Some(PathBuf::from(p)),
         None => {
-            println!("skipped: GLOVEBOX_ORACLE is not set");
+            println!("skipped: GLOVEBOX_REFERENCE is not set");
             None
         }
     }
@@ -29,13 +28,13 @@ fn levels(dir: &PathBuf) -> Vec<(String, Vec<u8>, String)> {
             out.push((id, std::fs::read(&p).unwrap(), xml));
         }
     }
-    assert_eq!(out.len(), 48, "the oracle has 48 levels");
+    assert_eq!(out.len(), 48, "the reference has 48 levels");
     out
 }
 
 #[test]
 fn every_level_disassembles_to_the_same_xml() {
-    let Some(dir) = oracle() else { return };
+    let Some(dir) = reference() else { return };
     for (id, lev, xml) in levels(&dir) {
         let doc = level::disassemble(&lev).unwrap_or_else(|e| panic!("level {}: {}", id, e));
         assert!(doc.pretty_no_newline() == xml, "level {}: the XML differs", id);
@@ -44,16 +43,16 @@ fn every_level_disassembles_to_the_same_xml() {
 
 #[test]
 fn every_level_assembles_to_the_same_bytes() {
-    let Some(dir) = oracle() else { return };
+    let Some(dir) = reference() else { return };
     let path = dir.join("level").join("reassembled.json");
     let text = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{}: {} (make it with level/make_variants.py)", path.display(), e));
-    let python: serde_json::Value = serde_json::from_str(&text).unwrap();
+        .unwrap_or_else(|e| panic!("{}: {}", path.display(), e));
+    let recorded: serde_json::Value = serde_json::from_str(&text).unwrap();
     let (mut same_as_shipped, mut shorter, mut reordered) = (0, 0, Vec::new());
     for (id, lev, xml) in levels(&dir) {
         let hex = |b: &[u8]| b.iter().map(|x| format!("{:02x}", x)).collect::<String>();
-        let expected = python[&id].as_str().unwrap();
-        // From the tree that disassemble made, and from the Python app's text
+        let expected = recorded[&id].as_str().unwrap();
+        // From the tree that disassemble made, and from the reference XML text
         let doc = level::disassemble(&lev).unwrap();
         let mine = level::assemble(&doc).unwrap();
         assert!(hex(&mine) == expected, "level {}: the bytes differ from libgarib's", id);
@@ -81,7 +80,7 @@ fn every_level_assembles_to_the_same_bytes() {
 
 #[test]
 fn every_level_passes_the_schema_check() {
-    let Some(dir) = oracle() else { return };
+    let Some(dir) = reference() else { return };
     for (id, _, xml) in levels(&dir) {
         let doc = level::parse_level_xml(xml.as_bytes()).unwrap();
         let problems = level::validate(&doc);
@@ -92,7 +91,7 @@ fn every_level_passes_the_schema_check() {
 
 #[test]
 fn a_damaged_level_file_never_panics() {
-    let Some(dir) = oracle() else { return };
+    let Some(dir) = reference() else { return };
     for (_, lev, _) in levels(&dir).into_iter().step_by(7) {
         // Cut short, and with single bytes changed
         for n in (0..lev.len()).step_by(37) {
@@ -114,10 +113,10 @@ fn a_damaged_level_file_never_panics() {
 
 #[test]
 fn edited_levels_match_libgarib() {
-    let Some(dir) = oracle() else { return };
+    let Some(dir) = reference() else { return };
     let path = dir.join("level").join("variants.json");
     let text = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{}: {} (make it with level/make_variants.py)", path.display(), e));
+        .unwrap_or_else(|e| panic!("{}: {}", path.display(), e));
     let variants: serde_json::Value = serde_json::from_str(&text).unwrap();
     let variants = variants.as_array().unwrap();
     assert!(variants.len() > 2000);
@@ -130,13 +129,13 @@ fn edited_levels_match_libgarib() {
             Ok(doc) => doc,
             Err(e) => {
                 if v["parses"].as_bool().unwrap() {
-                    failures.push(format!("{}: Python parses it, Rust says {}", name, e));
+                    failures.push(format!("{}: libgarib parses it, this says {}", name, e));
                 }
                 continue;
             }
         };
         if !v["parses"].as_bool().unwrap() {
-            failures.push(format!("{}: Python refuses to parse it", name));
+            failures.push(format!("{}: libgarib refuses to parse it", name));
             continue;
         }
         let problems = level::validate(&doc);

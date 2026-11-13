@@ -1,7 +1,7 @@
-//! The editor against the Python editor on the real game (the reference script `editor/dump.py`, not in this repository).
+//! The editor against the reference dumps, on the real game.
 //!
 //! The dumps hold level content. They stay outside the repository. The tests need `GLOVEBOX_ROM` (the ROM),
-//! `GLOVEBOX_ORACLE` (the dump folder) and `GLOVEBOX_PYHOME` (the Python app's user folder, for the imported
+//! `GLOVEBOX_REFERENCE` (the dump folder) and `GLOVEBOX_REFHOME` (a user folder, for the imported
 //! models of its catalog). Without them each test says that it was skipped, and passes.
 
 use glovebox_core::backend::{Backend, GameBackend};
@@ -13,12 +13,12 @@ use std::sync::Arc;
 
 fn setup() -> Option<(Arc<dyn Backend>, PathBuf)> {
     let get = |k: &str| std::env::var(k).ok();
-    let (Some(rom), Some(oracle), Some(home)) = (get("GLOVEBOX_ROM"), get("GLOVEBOX_ORACLE"), get("GLOVEBOX_PYHOME")) else {
-        println!("skipped: GLOVEBOX_ROM, GLOVEBOX_ORACLE and GLOVEBOX_PYHOME are not all set");
+    let (Some(rom), Some(reference), Some(home)) = (get("GLOVEBOX_ROM"), get("GLOVEBOX_REFERENCE"), get("GLOVEBOX_REFHOME")) else {
+        println!("skipped: GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not all set");
         return None;
     };
     let backend = GameBackend::open(Path::new(&rom), home).expect("the ROM opens");
-    Some((Arc::new(backend), Path::new(&oracle).join("editor")))
+    Some((Arc::new(backend), Path::new(&reference).join("editor")))
 }
 
 fn read(path: &Path) -> Value {
@@ -27,7 +27,7 @@ fn read(path: &Path) -> Value {
 }
 
 fn editor(backend: &Arc<dyn Backend>, tag: &str) -> (Editor, PathBuf) {
-    let home = std::env::temp_dir().join(format!("glovebox-editor-oracle-{}-{}", tag, std::process::id()));
+    let home = std::env::temp_dir().join(format!("glovebox-editor-reference-{}-{}", tag, std::process::id()));
     let _ = std::fs::remove_dir_all(&home);
     let mut ed = Editor::new(backend.clone(), Drafts::new(home.join("drafts")), None);
     ed.load_textures = false;
@@ -41,7 +41,7 @@ fn v3(p: [f64; 3]) -> Value {
     json!([p[0], p[1], p[2]])
 }
 
-/// What dump.py's `summary` writes.
+/// A level's summary, in the layout of the reference dumps.
 fn summary(ed: &mut Editor) -> Value {
     let checks: Vec<Value> = ed.checks().iter().map(|c| json!([c.level, c.text, c.sub])).collect();
     let d = ed.draw_load();
@@ -87,10 +87,10 @@ fn differences(got: &Value, want: &Value) -> Vec<String> {
     out
 }
 
-/// Every level: the entities, the checks, the draw load and the ground checks are Python's, and no check fires
+/// Every level: the entities, the checks, the draw load and the ground checks are the reference's, and no check fires
 /// on a shipped level.
 #[test]
-fn all_levels_match_python() {
+fn all_levels_match_the_reference() {
     let Some((backend, dir)) = setup() else { return };
     let want = read(&dir.join("all.json"));
     let (mut ed, home) = editor(&backend, "all");
@@ -212,13 +212,13 @@ fn apply(ed: &mut Editor, op: &Value) {
 fn first_difference(a: &str, b: &str) -> String {
     let i = a.bytes().zip(b.bytes()).position(|(x, y)| x != y).unwrap_or(a.len().min(b.len()));
     let cut = |t: &str| String::from_utf8_lossy(&t.as_bytes()[i.saturating_sub(200)..(i + 120).min(t.len())]).into_owned();
-    format!("at byte {}:\n  rust:   {}\n  python: {}", i, cut(a), cut(b))
+    format!("at byte {}:\n  got:       {}\n  reference: {}", i, cut(a), cut(b))
 }
 
 /// Whether two levels are the same but for the last bits of numbers. Returns how many whole numbers differ by one.
 ///
-/// A point under the view comes from a ray through the camera. Python made that ray with numpy's matrix inverse
-/// (LAPACK), whose last bits depend on the BLAS build and the CPU. The ray here agrees to about 1e-14, and a point
+/// A point under the view comes from a ray through the camera. The reference ray came from LAPACK's matrix
+/// inverse, whose last bits depend on the BLAS build and the CPU. The ray here agrees to about 1e-14, and a point
 /// it hits to about 1e-11. A preset writes such a point in full, so its last digits differ. `r1` rounds it to a
 /// whole number, and a point that lies on a half (the edge of a model placed at whole numbers) can round either
 /// way.
@@ -255,7 +255,7 @@ fn near(a: &str, b: &str) -> Option<usize> {
     Some(flips)
 }
 
-/// Goes on from Python's level, with the same selection.
+/// Goes on from the reference level, with the same selection.
 fn adopt(ed: &mut Editor, xml: &str) {
     let keys: Vec<(Vec<usize>, Option<String>)> = ed
         .selection
@@ -278,7 +278,7 @@ fn adopt(ed: &mut Editor, xml: &str) {
 /// The recorded edits on real levels: the same XML text, selection and status line after each, and the same
 /// checks, draw load, imports and budget at the end.
 #[test]
-fn recorded_edits_match_python() {
+fn recorded_edits_match_the_reference() {
     let Some((backend, dir)) = setup() else { return };
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir).expect("the dump folder").filter_map(|e| e.ok()).map(|e| e.path()).collect();
     files.retain(|p| p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.starts_with("ops_") && n.ends_with(".json")));
@@ -328,6 +328,6 @@ fn recorded_edits_match_python() {
         println!("{}: {} steps", sid, steps.len());
         let _ = std::fs::remove_dir_all(&home);
     }
-    println!("{} steps differ from Python only in the last bits of a point under the view:\n{}", noisy.len(), noisy.join("\n"));
+    println!("{} steps differ from the reference only in the last bits of a point under the view:\n{}", noisy.len(), noisy.join("\n"));
     assert!(bad.is_empty(), "{} differences:\n{}", bad.len(), bad.iter().take(25).cloned().collect::<Vec<_>>().join("\n"));
 }

@@ -43,7 +43,7 @@ fn is_name(s: &str) -> bool {
         && b.iter().all(|c| c.is_ascii_alphanumeric() || *c == b'_')
 }
 
-/// Printable ASCII. Like the Python pattern's `$`, one line feed at the end is let through.
+/// Printable ASCII. One line feed at the end is let through.
 fn is_printable(s: &str) -> bool {
     let s = s.strip_suffix('\n').unwrap_or(s);
     s.bytes().all(|b| (0x20..=0x7E).contains(&b))
@@ -249,7 +249,7 @@ pub struct SanitizeResult {
     pub info: Info,
 }
 
-/// The text with the letters folded as Python's case-insensitive search folds them.
+/// The text with its letters folded for a search that ignores case.
 fn folded(text: &str) -> String {
     text.chars()
         .map(|c| match c {

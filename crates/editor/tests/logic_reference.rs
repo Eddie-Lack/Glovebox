@@ -1,6 +1,6 @@
-//! The logic modules against dumps made by the Python editor (the reference scripts `logic/*_dump.py`, not in this repository).
+//! The logic modules against the reference dumps.
 //!
-//! The dumps hold level content. They stay outside the repository. Set `GLOVEBOX_ORACLE` to the dump folder to
+//! The dumps hold level content. They stay outside the repository. Set `GLOVEBOX_REFERENCE` to the dump folder to
 //! run these tests. Without it each test says that it was skipped, and passes.
 
 use glovebox_core::tables;
@@ -12,9 +12,9 @@ use glovebox_editor::{camera, drafts, presets, puzzles, scripts, vec, xmlutil};
 use serde_json::Value;
 use std::collections::HashSet;
 
-fn oracle(name: &str) -> Option<Value> {
-    let Ok(dir) = std::env::var("GLOVEBOX_ORACLE") else {
-        println!("skipped: GLOVEBOX_ORACLE is not set");
+fn reference(name: &str) -> Option<Value> {
+    let Ok(dir) = std::env::var("GLOVEBOX_REFERENCE") else {
+        println!("skipped: GLOVEBOX_REFERENCE is not set");
         return None;
     };
     let path = std::path::Path::new(&dir).join("logic").join(name);
@@ -85,7 +85,7 @@ fn format() -> &'static Format<'static> {
 
 #[test]
 fn vec_maths() {
-    let Some(o) = oracle("vec.json") else { return };
+    let Some(o) = reference("vec.json") else { return };
     for r in list(&o["euler"]) {
         let e = v3(&r["e"]);
         let q = vec::quat_from_euler_yzx(e[0], e[1], e[2]);
@@ -145,7 +145,7 @@ fn vec_maths() {
 
 #[test]
 fn commands_tables_and_platforms() {
-    let Some(o) = oracle("commands.json") else { return };
+    let Some(o) = reference("commands.json") else { return };
     let fm = format();
     for (tag, want) in o["children_of"].as_object().unwrap() {
         let got: Vec<Value> = fm.children_of(tag).into_iter().map(Value::String).collect();
@@ -204,7 +204,7 @@ fn node_path(doc: &Doc, n: NodeId) -> Value {
 
 #[test]
 fn puzzles_and_scripts() {
-    let Some(o) = oracle("puzzles.json") else { return };
+    let Some(o) = reference("puzzles.json") else { return };
     let fm = format();
     let flags = tables::decomp()["ksyEnums"]["enemy_instruction::instruction_flags"].as_object();
     assert!(flags.is_some());
@@ -342,7 +342,7 @@ fn puzzles_and_scripts() {
                     scripts::retarget_puzzles(&mut doc, enemy, kind, &swap);
                     assert_eq!(doc.serialize(), s(&step[2]), "retarget");
                     if kind == "ConditionalInstructions" {
-                        // The Python script now takes the groups out
+                        // The reference step now takes the groups out
                         for g in doc.children(enemy).to_vec() {
                             if scripts::GROUPS.contains(&doc.tag(g)) {
                                 doc.detach(g);
@@ -363,7 +363,7 @@ fn puzzles_and_scripts() {
 
 #[test]
 fn presets_xml() {
-    let Some(o) = oracle("presets.json") else { return };
+    let Some(o) = reference("presets.json") else { return };
     for (key, want) in o["presets"].as_object().unwrap() {
         let p = presets::preset(key).unwrap();
         assert_eq!(serde_json::json!([p.name, p.about, [p.model.0, p.model.1]]), *want);
@@ -400,7 +400,7 @@ fn check_sanitize(r: &Value, what: &str) {
 
 #[test]
 fn sanitize_levels_and_hostile_files() {
-    let Some(o) = oracle("sanitize.json") else { return };
+    let Some(o) = reference("sanitize.json") else { return };
     let scenes = tables::scenes();
     let scenes: Vec<&Value> = match scenes {
         Value::Object(m) => m.values().collect(),
@@ -466,8 +466,8 @@ fn zone_json(doc: &Doc, z: &entities::Zone) -> Value {
 
 #[test]
 fn entities_of_every_level() {
-    let Some(o) = oracle("entities.json") else { return };
-    let dir = std::env::var("GLOVEBOX_ORACLE").unwrap();
+    let Some(o) = reference("entities.json") else { return };
+    let dir = std::env::var("GLOVEBOX_REFERENCE").unwrap();
     let read = |name: &str| -> Value {
         serde_json::from_str(&std::fs::read_to_string(std::path::Path::new(&dir).join(name)).unwrap()).unwrap()
     };
@@ -641,7 +641,7 @@ fn entities_of_every_level() {
 
 #[test]
 fn camera_and_drafts() {
-    let Some(o) = oracle("camera.json") else { return };
+    let Some(o) = reference("camera.json") else { return };
     for r in list(&o["cams"]) {
         let mut c = camera::Camera::new(f(&r["fov"]), 1.0, 60000.0);
         c.pos = v3(&r["pos"]);
@@ -665,7 +665,7 @@ fn camera_and_drafts() {
         exact(&ro, &r["ray"][0], "ray origin");
         near(&rd, &r["ray"][1], 1e-7, "ray direction");
         let segs: Vec<([f64; 3], [f64; 3])> = list(&r["segs"]).iter().map(|x| (v3(&x[0]), v3(&x[1]))).collect();
-        // The Python ray, so that a hit at the edge of the reach does not depend on the last bits of the inverse
+        // The reference ray: a hit at the edge of the reach must not depend on the last bits of the inverse
         let hit = c.segment_hit(&segs, v3(&r["ray"][0]), v3(&r["ray"][1]), 6.0);
         match (hit, r["hit"].as_array()) {
             (Some((d, w)), Some(h)) => {
@@ -686,19 +686,19 @@ fn camera_and_drafts() {
         near(&c.pos, &r["dollied"][0], 1e-12, "dolly");
         near(&c.quat, &r["dollied"][1], 1e-12, "dolly");
     }
-    // Drafts the Python editor wrote open here, and the files written here are the same bytes
-    let dir = std::path::Path::new(&std::env::var("GLOVEBOX_ORACLE").unwrap()).join("logic").join("drafts_py");
-    let py = drafts::Drafts::new(&dir);
-    let tmp = std::env::temp_dir().join(format!("glovebox-oracle-drafts-{}", std::process::id()));
+    // The reference drafts open here, and the files written here are the same bytes
+    let dir = std::path::Path::new(&std::env::var("GLOVEBOX_REFERENCE").unwrap()).join("logic").join("drafts_py");
+    let recorded = drafts::Drafts::new(&dir);
+    let tmp = std::env::temp_dir().join(format!("glovebox-reference-drafts-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&tmp);
     let mine = drafts::Drafts::new(&tmp);
     for d in list(&o["drafts"]) {
-        let got = py.load(s(&d["id"])).unwrap();
+        let got = recorded.load(s(&d["id"])).unwrap();
         assert_eq!(got.xml, s(&d["xml"]));
         assert!(mine.save_at(s(&d["id"]), &got.xml, got.saved_at));
         assert_eq!(std::fs::read_to_string(tmp.join(format!("{}.json", s(&d["id"])))).unwrap(), s(&d["file"]));
     }
-    let info = py.all_info();
+    let info = recorded.all_info();
     let as_json: serde_json::Map<String, Value> = info
         .iter()
         .map(|(k, v)| (k.clone(), serde_json::json!({"name": v.name, "song": v.song, "bonus_time": v.bonus_time, "extra": v.extra})))
@@ -712,7 +712,7 @@ fn camera_and_drafts() {
     let want: Vec<(&String, f64)> = o["list2"].as_object().unwrap().iter().map(|(k, v)| (k, f(v))).collect();
     let mut want = want;
     want.sort_by(|a, b| a.0.cmp(b.0));
-    let got = py.list();
+    let got = recorded.list();
     assert_eq!(got.iter().map(|(k, v)| (k, *v)).collect::<Vec<_>>(), want);
     let _ = std::fs::remove_dir_all(&tmp);
 }

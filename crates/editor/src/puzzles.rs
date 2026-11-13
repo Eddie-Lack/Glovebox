@@ -379,8 +379,7 @@ fn name_or_code(name: Option<&'static str>, code: i128) -> String {
     }
 }
 
-/// Python's `int(float)` for the message of action 67. Python stops on a NaN or an infinity; here they give the
-/// nearest i64.
+/// The whole part of a number, for the message of action 67. A NaN or an infinity gives the nearest i64.
 fn int_of(v: f64) -> i64 {
     v.trunc() as i64
 }

@@ -116,11 +116,21 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let (r, _) = egui::containers::menu::MenuButton::new("Options").ui(ui, |ui| {
         ui.set_min_width(150.0);
         style::h4(ui, "Theme");
-        for th in crate::theme::THEMES {
-            if ui.selectable_label(th.id == active.id, th.name).clicked() {
-                theme = Some(th.id);
+        // Two columns: the default, the plain and the styled themes, then the palette themes
+        use crate::theme::{PALETTES, THEMES};
+        let palette = |th: &crate::theme::Theme| PALETTES.iter().any(|p| p.id == th.id);
+        ui.horizontal_top(|ui| {
+            for second in [false, true] {
+                ui.allocate_ui_with_layout(egui::vec2(116.0, 0.0), egui::Layout::top_down_justified(egui::Align::Min), |ui| {
+                    ui.set_width(116.0);
+                    for th in THEMES.iter().filter(|th| palette(th) == second) {
+                        if ui.selectable_label(th.id == active.id, th.name).clicked() {
+                            theme = Some(th.id);
+                        }
+                    }
+                });
             }
-        }
+        });
         ui.add_space(4.0);
         style::h4(ui, "Info texts").on_hover_text("The notes under titles, fields and rows that explain the game and the editor");
         for i in style::Info::ALL {

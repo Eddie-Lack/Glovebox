@@ -1,9 +1,7 @@
 //! Import model: a player's glTF file becomes Glover objects, a texture bank and the facts in `meta.json`.
 //!
-//! It does what the former Python converter (`custom_model.py`) and the parts of libgarib it ran did, with the
-//! storage of the former Python back end
-//! (`import_custom`, `custom_sets`, `custom_catalog`, `reskin`). For the same file, name and scale it gives the
-//! same pieces, IDs and bank bytes as the Python app. See docs/technical.md, "Imported models".
+//! The packing follows libgarib (`pack.rs`). The same file, name and scale always give the same pieces, IDs and
+//! bank bytes. See docs/technical.md, "Imported models".
 //!
 //! A set is stored in `<home>/custom/<set>/`: `meta.json`, one single-object bank `<id>.obj.bin` for each piece, and
 //! `textures.tex.bin`.
@@ -245,7 +243,7 @@ fn split(centroids: &[[f64; 3]], order: Vec<usize>, limit: usize, out: &mut Vec<
     split(centroids, second, limit, out);
 }
 
-/// numpy's `round(v, 1)`.
+/// Rounds to one decimal. A half goes to the even neighbour.
 fn round1(v: f64) -> f64 {
     (v * 10.0).round_ties_even() / 10.0
 }
@@ -418,8 +416,8 @@ pub fn convert(
             bank,
         });
     }
-    // libgarib's unpacker divides by a texture's size less one. The Python app stops at the first piece it
-    // could not read back.
+    // libgarib's unpacker divides by a texture's size less one. The import stops at the first piece that
+    // can't be read back.
     for piece in &pieces {
         let thin = |t: &u32| textures.iter().any(|x| x.1 == *t && (x.2.w == 1 || x.2.h == 1));
         if piece.textures.iter().any(thin) {
@@ -527,9 +525,8 @@ fn py_dumps(value: &Value, indent: bool) -> String {
 }
 
 impl CustomSet {
-    /// The set's `meta.json`, with the fields the Python app writes. `preview` is empty: there are no preview
-    /// files. A texture's size is the length of its record. The Python app wrote the size of a PNG file there,
-    /// and nothing reads it.
+    /// The set's `meta.json`. `preview` is empty: there are no preview files. A texture's size is the length of
+    /// its record. Nothing reads it.
     pub fn meta(&self) -> Value {
         let pieces: Vec<Value> = self
             .pieces
@@ -606,7 +603,7 @@ pub struct CatalogEntry {
 }
 
 /// An entry for every piece of every imported model: the catalog's entries, without the preview's
-/// URL. An ID that two sets hold keeps its first place and takes the later set's entry, as a Python dict does.
+/// URL. An ID that two sets hold keeps its first place and takes the later set's entry.
 pub fn custom_catalog(home: &Path) -> Vec<CatalogEntry> {
     let mut out: Vec<CatalogEntry> = Vec::new();
     for (set, meta) in custom_sets(home) {
@@ -728,9 +725,9 @@ pub struct Reskin<'a> {
     pub world: &'a str,
     /// The model's single-object bank
     pub bank: &'a [u8],
-    /// The IDs of the textures the model uses (`object_texture_ids` of the former Python back end), as `0x%08X`
+    /// The IDs of the textures the model uses, as `0x%08X`
     pub textures: &'a [String],
-    /// The textures to pick from (`reskin_pool` of the former Python back end for the sorted worlds), as `0x%08X`
+    /// The textures to pick from, for the sorted worlds, as `0x%08X`
     pub pool: &'a [String],
     /// The IDs of the game's own objects
     pub taken_ids: &'a HashSet<u32>,
@@ -751,7 +748,7 @@ fn count(data: &[u8], word: &[u8; 4]) -> usize {
 
 /// A copy of a retail model with each texture swapped for one from the chosen worlds, kept as a custom model.
 /// Returns the set. `record` gives a texture's record from the game's banks, padded as `texbank::records` pads it.
-/// This is `reskin` of the former Python back end: the same model, worlds and seed give the same set and the same new ID.
+/// The same model, worlds and seed give the same set and the same new ID.
 pub fn reskin(
     home: &Path,
     model: &Reskin,

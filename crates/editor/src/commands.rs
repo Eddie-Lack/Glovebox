@@ -293,7 +293,7 @@ pub fn as_list(v: Option<&Value>) -> Vec<&str> {
     }
 }
 
-/// Python's truth of a JSON value.
+/// Whether a JSON value counts as true: not null, false, zero or empty.
 pub fn truthy(v: Option<&Value>) -> bool {
     match v {
         None | Some(Value::Null) => false,

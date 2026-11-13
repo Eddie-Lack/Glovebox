@@ -335,7 +335,7 @@ fn geometry(f: &Flat) -> GeometryParts<'static> {
         }
         for c in n {
             let c = c * 127.0;
-            // numpy casts a number that is not finite to 0 here
+            // libgarib packs a number that is not finite as 0
             norms.push(if c.is_finite() { c as i64 as i8 as u8 } else { 0 });
         }
         norms.push(0);

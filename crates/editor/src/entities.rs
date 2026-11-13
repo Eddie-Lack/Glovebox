@@ -640,7 +640,7 @@ pub fn water_volume(doc: &Doc, node: NodeId) -> (V3, V3) {
     let n = |a: &str| num0(doc, node, a);
     let sum = n("top") + n("bottom");
     let surface = n("surface_y");
-    // Python's min(a, b)
+    // The lower of the two. A NaN `surface` gives `sum`
     let top = if surface < sum { surface } else { sum };
     let h = top - n("top");
     (
@@ -718,7 +718,7 @@ pub fn enum_value(fmt_: &Format, tag: &str, field: &str, name: Option<&str>) -> 
     int10(name?)
 }
 
-/// Python's `int(text, 10)` within the i64 range.
+/// A decimal whole number within the i64 range, as `pyfmt::parse_int` reads one without a prefix.
 fn int10(s: &str) -> Option<i64> {
     let t = s.trim();
     let (neg, digits) = match t.strip_prefix('-') {
@@ -832,7 +832,7 @@ fn trigger_entity(node: NodeId, vol: NodeId, spec: (&'static str, &'static str),
     ent
 }
 
-/// Reads the level into entities, in the order the Python editor made them.
+/// Reads the level into entities, in the XML's order.
 pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
     let mut ents: Vec<Ent> = Vec::new();
     let mut platforms_by_tag: Vec<(f64, EntId)> = Vec::new();
@@ -879,7 +879,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
                 if let Some(t) = doc.first(node, "PlatSetTag") {
                     let v = num0(doc, t, "tag");
                     ent.plat_tag = Some(v);
-                    // A NaN never finds its entry again, as in a Python dict
+                    // A NaN never finds its entry again
                     match platforms_by_tag.iter_mut().find(|(k, _)| *k == v) {
                         Some(e) => e.1 = id,
                         None => platforms_by_tag.push((v, id)),
@@ -888,7 +888,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
                 if let Some(p) = doc.first(node, "PlatSetParent") {
                     let v = num0(doc, p, "tag");
                     ent.parent_tag = Some(v);
-                    // A platform that names itself as its parent has no parent here. Python never returns from it.
+                    // A platform that names itself as its parent has no parent here.
                     ent.parent_ent = platforms_by_tag.iter().find(|(k, _)| *k == v).map(|(_, e)| *e).filter(|e| *e != id);
                 }
                 let parent = ent.parent_ent;
@@ -991,7 +991,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             }
             "Powerup" => {
                 let v = num0(doc, node, "type");
-                // Python stops on a type that is not a number. Here it reads as type 0.
+                // A type that is not a number reads as type 0.
                 let t = if v.is_finite() { v.trunc() as i64 } else { 0 };
                 let name = decomp_enum_name(cx.format.decomp, "Pickup", Some(t)).filter(|n| !n.is_empty());
                 let mut ent = Ent::new("pickup", node, tag, Look::Start).why(WHY_ROT_PICKUP, WHY_SCALE_PICKUP);
@@ -1171,7 +1171,7 @@ pub fn camera_zone(doc: &Doc, puzzle: NodeId) -> Option<Zone> {
     Some(z)
 }
 
-/// Python's `a % b` for floats: the result has the sign of b.
+/// The remainder of `a / b` with the sign of `b`.
 fn py_mod(a: f64, b: f64) -> f64 {
     let r = a % b;
     if r != 0.0 && (r < 0.0) != (b < 0.0) {

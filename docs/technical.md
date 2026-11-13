@@ -6,16 +6,13 @@ How the editor is put together, what the game does with a level, and the rules a
 
 The editor is a desktop level editor for Glover (N64, NGVE). It is one native program written in Rust: an egui window
 with a wgpu view (`crates/app`) over the editor's state (`crates/editor`) and the back end (`crates/core`), all in one
-process. Nothing is installed, unpacked or run next to it, and it needs no Python. It builds on three projects:
+process. Nothing is installed, unpacked or run next to it. It builds on three projects:
 
 | Source | Used for |
 |---|---|
 | **libgarib** (naclomi) | The formats and the ROM tools. Its descriptions of the level file and of the retail ROM's layout are in `formats/`. Its algorithms are ported to Rust in `crates/core`: `.lev` ↔ XML (byte-identical round trip), the XML's rules, object banks and their models, texture banks, FLA2, repacking and relocating the ROM's data, and the `copyskip` and `quickboot` patches. |
 | **noclip.website** | The level list. Its scene table supplies level names and the object and texture banks of each level (`crates/core/data/scenes.json`), and its enemy and powerup model tables are `noclip_tables.json`. Its placement logic (actor rotation order, X/Z-swapped scale) was the editor's starting point. The editor names a bank by the file name noclip's ROM splitter gives it (`HUB_PART1.obj.fla`). |
 | **gloveworld** decompilation (`../gloveworld`) | Meaning: the decomp names each opcode (`enum Token`) and points to the C that parses it. It gives real names for 31 opcodes that libgarib only has placeholders for (e.g. `PlatMvspn0x58` = `TOKEN_SPINTOMOVE`). It also supplies enum names for enemy types, puzzle conditions/actions and enemy instructions, plus the checks: the game's own level-parser warnings and `Crash()` limits, re-run on your edits. |
-
-The editor was first written in Python, on libgarib's own tools. The last Python version is commit `06a7cdb`. The Rust
-code gives the same bytes ("Equal to the Python app", below).
 
 ## Where things are
 
@@ -49,8 +46,8 @@ nothing else. The program never runs them.
 
 - `build_xref.py` and `game_banks.py --numbers` read gloveworld's sources only. They give the committed files byte
   for byte from gloveworld at the commit `decomp.json` records (`source.gloveworld`).
-- `scenes.json` and `noclip_tables.json` were made once, by the Python version's `prepare.py`, from noclip.website's
-  scene table and enemy tables (`src/Glover/scenes.ts`, `enemy.ts`) joined with the banks the game's `LoadLevel` loads
+- `scenes.json` and `noclip_tables.json` were made once from noclip.website's scene table and enemy tables
+  (`src/Glover/scenes.ts`, `enemy.ts`) joined with the banks the game's `LoadLevel` loads
   (`tools/game_banks.py` still prints those, and `--compare crates/core/data/scenes.json` compares them). They
   describe the retail game, which does not change. They are committed data without a generator.
 
@@ -122,14 +119,25 @@ nothing else. The program never runs them.
     `Divider`, `Backdrop` (behind the setup screen), `Border` (the frame of the setup box, of a dialog and of the
     note in the view) and `Mark` (the signs of the Checks panel). It also names the fonts, the chips over the 3D
     view, the colours of the selection, and the 3D view's background for a level without fog.
-  - `THEMES` lists them in the order of the Theme list. The first is the default. The three plain themes come
-    next, then the styled ones.
+  - `THEMES` lists them. The first is the default. The three plain themes come next, then the seven palette
+    themes (`PALETTES` names them again), then the styled ones.
   - The plain themes (Light, Dark, High contrast) use the system's sans face (Segoe UI on Windows, then Tahoma,
     Arial, Liberation Sans, DejaVu Sans). They have the plain variants `Logo::Plain`, `Divider::Line` and
     `Backdrop::Plain`, and title bars that are a flat strip with a line under it (`Bar::Solid` with a light line
     in the colour of the fill).
+  - The palette themes (Sage, Sand, Ocean, Lavender, Coral, Slate, Plum) look like a phone app. Each has five
+    colours: a ground, a card, a main colour, a second colour and the text. Every other colour is a mix of those
+    five: the toolbar is the ground with a little of the main colour, a hairline is the ground with a little of
+    the text. They share the fonts and the plain variants of the plain themes. Their own shapes: buttons and
+    fields with a corner radius of 6 (`radius`), cards, check lines, chips, pop-ups and dialogs with one of 8
+    (`round`, 0 in every other theme), and `Bar::Soft` title bars (a tinted strip for a panel or a card, a
+    hairline under a small heading). A switch that is on is a tint of the main colour with a line and bold letters
+    in it. The main action and the chosen row are filled with the main colour. A ticked box is too, with a tick in
+    the colour of the main action's letters. Good, warning and bad are a green, an amber and a red that suit the
+    palette. Coral's bad is a crimson, apart from its coral.
   - `Theme::disabled` is how much of a control that cannot be used is left (egui's `disabled_alpha`). The styled
-    themes have 0.55, the plain ones 0.6 or 0.62: their disabled text keeps a contrast of 4.5.
+    themes have 0.55. The plain ones have 0.6 or 0.62 and the palette ones 0.6 to 0.71: their disabled text keeps a
+    contrast of 4.5.
 
     | id | name | follows | main choices |
     | --- | --- | --- | --- |
@@ -137,6 +145,13 @@ nothing else. The program never runs them.
     | `light` | Light | a desktop tool in the system's light colours | neutral greys, white buttons and fields with a thin line and a corner radius of 3, one blue for the selection, the focus and the main action, a switch that is on filled dark grey, no decoration |
     | `dark` | Dark | the same tool in the system's dark colours | near-black greys, one light blue for the selection, the focus and the main action, a switch that is on filled light grey |
     | `contrast` | High contrast | the system's high contrast mode | white on black, a white line round every control, yellow for the pointer and the focus (a focused button is filled yellow), cyan for the selection and the main action, a switch that is on white with black letters |
+    | `sage` | Sage | a calm phone app in muted greens | a very pale green ground (`e9f0e4`), off-white cards, a deep sage (`456f52`) for the main action, the selection and the focus, moss headers, an ochre box select |
+    | `sand` | Sand | the same app in warm paper tones | a sand ground (`f4eee3`), cream cards, a caramel brown (`a65f2b`), a teal box select |
+    | `ocean` | Ocean | the same app in sea tones | a pale blue-grey ground (`eaf2f6`), near-white cards, a deep teal blue (`1b6e8c`), an orange box select |
+    | `lavender` | Lavender | the same app in violets | a pale lilac ground (`f2eff8`), near-white cards, a violet (`6650b0`), a rose box select |
+    | `coral` | Coral | the same app in warm pinks | a blush ground (`fbf0ec`), near-white cards, a coral red (`c54e3e`), a teal box select, crimson for bad |
+    | `slate` | Slate | a dark phone app in blue-greys | a slate ground (`222932`), lighter slate cards, a soft teal (`6cc4b6`) with dark letters, an amber box select |
+    | `plum` | Plum | a dark phone app in warm purples | a plum ground (`2a2030`), lighter plum cards, a rose (`e79bb8`) with dark letters, a gold box select |
     | `cartridge` | Cartridge | a grey console of the late 1990s and its controller | warm grey panels, charcoal label plates with white capitals, keys with a lip, the four face-button colours for states only |
     | `blueprint` | Blueprint | a drafting sheet | blue paper with a grid, hairline controls without fills, titles followed by dimension lines, a ruler for a divider, drawn signs |
     | `paper` | Paper | a printed manual in two inks | off-white paper, black ink and vermilion, a serif face, rules instead of boxes, fields as tinted blanks with a line under them and typed entries |
@@ -146,7 +161,8 @@ nothing else. The program never runs them.
     the theme in the egui context's data, and `style::theme(ctx)` reads it there. Each window has its own:
     tests with different themes run side by side. `apply` can run at any time. The next frame is in the new
     look.
-  - The Theme list of the toolbar's Options menu (`toolbar::options_menu`) calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
+  - The Theme list of the toolbar's Options menu (`toolbar::options_menu`) has two columns: the default, the plain
+    and the styled themes, then the palette themes. A click calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
     applies the theme after the frame. `App::new` reads the setting before the first frame, for the setup screen
     too. An unknown or missing id is `1998`.
   - egui's buttons, text boxes and separators get their shapes from widget themes (`Look`, registered with
@@ -498,13 +514,12 @@ Each row shows a preview, and the preview follows the settings. **Background** p
 collision, **Scenery** as a solid `LandActor`. The editor builds the model and converts it like an imported
 model ([Import model](Import-model.md)), and it then shows with the imported models. The same settings give the same model.
 
-- The shapes and textures come from seeded random numbers (`kit/rng.rs`: the Mersenne Twister with Python's seeding).
-  On Linux the geometry is equal, bit for bit, to what the Python kit made there. Sines, cosines and `atan2` come
+- The shapes and textures come from seeded random numbers (`kit/rng.rs`: the Mersenne Twister with CPython's seeding).
+  On Linux the geometry is fixed bit for bit, and the reference tests hold it. Sines, cosines and `atan2` come
   from the system's maths library: on Windows a coordinate can differ in its last bit. This was not measured.
 - The textures are drawn by `kit/image.rs`, which follows Pillow's drawing rules.
 - The words on gravestones and signs use the kit's own letter shapes (`kit/font.rs`, a stroke font on a 5 by 7 grid).
-  The Python kit drew them with Pillow's built-in font, which is not copied. A model with words has other pixels in
-  its texture than the Python kit's, and so another texture ID.
+  The letters sit in cells with the measures of Pillow's built-in font. That font is not copied.
 
 ### Path
 
@@ -768,7 +783,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   characters. The converter pads the short name with NULs and appends a hash.
 - A texture is named by a hash of its pixels and its size. The same picture in two models is one texture. Every
   triangle needs a texture: the packer reads its size to scale the texture coordinates.
-- The pixels must be the ones the Python version got from Pillow, or the IDs change. `image.rs` decodes PNG with the
+- The pixels must come out the same on every computer, or the IDs change. `image.rs` decodes PNG with the
   `png` crate and resizes with Pillow's Lanczos filter (two passes with fixed point weights, in Pillow's order).
   `jpeg.rs` is the editor's own JPEG decoder. It gives libjpeg-turbo's pixels for baseline and progressive files, and
   refuses arithmetic-coded, lossless, CMYK and 12-bit files and fractional sampling.
@@ -809,8 +824,6 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   accepts it because of that file.
 - One copy of the app uses a user folder at a time: it holds a file lock on `editor.lock`. A second copy says so and
   exits. `--reset` refuses while the editor runs.
-- A user folder of the Python version keeps working: drafts, imported models and settings have the same layout. The
-  app deletes what only that version made (`data/`, `cache/`, `web/`, `config.json`, `prepared.json`).
 - The first start shows the setup screen (`setup.rs`) in the editor's window. The player picks the ROM. The app
   converts `.v64` and `.n64` to `.z64`, checks the SHA-1 (`270be17b…`, as in gloveworld's `NGVE.sha1`) and keeps the
   copy. The editor then opens in the same window.
@@ -841,46 +854,32 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   (from `cargo metadata`, without build and test dependencies) and of the fonts egui embeds.
 - The app is released for Windows. It also builds and runs on Linux from source (`cargo run -p glovebox --release`).
 
-## Equal to the Python app
+## Reference tests
 
-The editor was Python until commit `06a7cdb`: a Qt window, with libgarib's Python tools doing every format
-operation in processes of their own. The Rust code replaced it in one step, and had to give the same results. This
-was proven by tests that compare the two on the whole game, not on samples. The reference outputs ("dumps") were made
-by the Python version from the retail ROM. They hold game data and are not in the repository. The tests are
-(`GLOVEBOX_ROM`, `GLOVEBOX_ORACLE` and `GLOVEBOX_PYHOME` name the ROM, the dumps and the Python version's user folder):
+The comparison tests check the Rust code against recorded reference outputs ("reference dumps"), on the whole game.
+The dumps hold game data and are not in the repository. Without them each test prints that it was skipped, and
+passes. `GLOVEBOX_ROM` names the ROM, `GLOVEBOX_REFERENCE` the folder of dumps and `GLOVEBOX_REFHOME` a folder with
+the split ROM and libgarib's exported files.
 
-| Test | What was compared | On |
+| Test | What it compares | On |
 |---|---|---|
-| `crates/core/tests/level_oracle.rs` | The XML text of a level file, the level file of that XML, the schema check, and what libgarib does with edited levels (accepts, refuses, the bytes) | All 48 levels and a set of edited ones |
-| `banks_oracle.rs` | Texture IDs and pixels, written texture banks, single-object banks (`split`), packed banks, each object's texture IDs, and the model against libgarib's glTF export | Every object and texture bank of the game |
-| `rom_oracle.rs` | The ROM's regions against libgarib's dump and noclip's split files, the pointer pairs, rebuilt ROMs, ROMs with the mod, the hardware check's findings, BPS patches | The retail ROM |
-| `build_oracle.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game |
-| `custom_oracle.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
-| `kit_oracle.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel | Every kit item with several settings |
-| `crates/editor/tests/logic_oracle.rs` | The vector maths, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
-| `editor_oracle.rs` | The editor's state after loading, and the XML after recorded edits | All 48 levels |
-| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level against the Python editor's | By mean colour difference: two renderers do not give equal pixels |
+| `crates/core/tests/level_reference.rs` | The XML text of a level file, the level file of that XML, the schema check, and what libgarib does with edited levels (accepts, refuses, the bytes) | All 48 levels and a set of edited ones |
+| `banks_reference.rs` | Texture IDs and pixels, written texture banks, single-object banks (`split`), packed banks, each object's texture IDs, and the model against libgarib's glTF export | Every object and texture bank of the game |
+| `rom_reference.rs` | The ROM's regions against libgarib's dump and noclip's split files, the pointer pairs, rebuilt ROMs, ROMs with the mod, the hardware check's findings, BPS patches | The retail ROM |
+| `build_reference.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game and the build scenarios |
+| `custom_reference.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
+| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel | Every kit item with several settings |
+| `crates/editor/tests/logic_reference.rs` | The vector maths, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
+| `editor_reference.rs` | The editor's state after loading, and the XML after each recorded edit step | All 48 levels |
+| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean colour difference: two renderers do not give equal pixels |
 
-All of them passed against the dumps of `06a7cdb` before the Python code was removed. Without the dumps they print
-that they were skipped, and pass. Anyone with the ROM can make the dumps again from that commit.
-
-What is not equal, on purpose:
-
-- A kit model with words has the kit's own letters (The kit, above).
-- The round icons, the fonts and the widgets look different: the window is egui, not Qt.
-- A `.gltf` text file with embedded data is accepted. The Python version took `.glb` only.
-- Arithmetic-coded and CMYK JPEG files are refused. Pillow read them.
-- A ROM that breaks a hardware rule is refused with the same text, except that the text names the check as
-  `hwcheck`. The Python text named the file `tools/hw_check.py`.
-- `LEVELEND_TEX_BANK` (Notes and limits, below).
-
-How the same bytes are reached where it is not obvious:
+What keeps the results exact:
 
 - Floats in the XML are written as Python's `repr` writes a double, and read as Python's `float()` reads them
-  (`pyfmt.rs`). The XML writer gives lxml's bytes.
-- The editor's maths is in `f64` in the order the Python code computed. Where Python called numpy's dot products,
-  `vec.rs` uses fused multiply-adds (`mul_add`) in the order numpy used on the reference machine, an x86-64 with FMA.
-  The results are the same doubles.
+  (`pyfmt.rs`). libgarib, a Python library, defined the format. The XML writer gives the bytes of lxml, which
+  libgarib writes with.
+- The editor's maths is in `f64`, in a fixed order. The dot products in `vec.rs` use fused multiply-adds (`mul_add`),
+  as the reference results were computed.
 - Random choices (the kit, `reskin`, scatter) use the Mersenne Twister with CPython's seeding (`pyrandom.rs`,
   `kit/rng.rs`).
 
@@ -893,7 +892,7 @@ How the same bytes are reached where it is not obvious:
   the retail ROM with its data repacked. A ROM with the mod is padded and checked (`modpatch::apply_mod`).
 - Every built ROM comes from your ROM. Keep it local.
 - libgarib's behaviour that the Rust code reproduces on purpose:
-  - The level format follows two sets of nesting rules, because libgarib's Python tools used two.
+  - The level format follows two sets of nesting rules, because libgarib's tools use two.
     `SetActorRotation` and `SetActorScale` may sit inside enemies, platforms, powerups and water in the XML's rules
     (our change to `formats/glover.lev.ksy`). Turning a `.lev` into XML follows libgarib's own, unchanged rules:
     there the two commands only attach to landscape and background actors. `tools/gen_formats.py` writes both sets
@@ -914,7 +913,7 @@ How the same bytes are reached where it is not obvious:
   (found by checking `StartNewLevel` in the decomp).
 - Two texture banks are named `LEVELEND_TEX_BANK`: the game's banks 1 and 14. `bank_numbers.json` has 1 for the name.
   noclip's split file of that name is bank 14, and the catalog reads that one. A build that adds textures to the
-  bank replaces bank 1, as the Python version did.
+  bank replaces bank 1.
 - Rendering is approximate: static poses, Lambert lighting, garibs/tips as icons.
 - Enemies from another world bring their own model, but projectiles come from the game's bullet table and
   are looked up as optional (non-vital `FindObject`). They may be invisible. Boss enemies are tied to their

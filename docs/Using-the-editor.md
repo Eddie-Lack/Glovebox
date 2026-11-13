@@ -306,11 +306,19 @@ Don't like the 1998 look? Pick another one under `Theme`
 | `Light` | a plain desktop program: greys, white fields, one blue |
 | `Dark` | the same, in dark greys |
 | `High contrast` | white on black, with yellow and cyan |
+| `Sage` | a calm phone app in muted greens |
+| `Sand` | the same in warm sand and caramel |
+| `Ocean` | pale blue-grey with a deep teal |
+| `Lavender` | soft lilac with violet |
+| `Coral` | blush pink with coral red |
+| `Slate` | dark blue-grey with a soft teal |
+| `Plum` | dark purple with rose |
 | `Cartridge` | a grey console and its controller |
 | `Blueprint` | a drafting sheet: white lines on blue |
 | `Paper` | a printed manual: black and red ink on off-white paper |
 | `CRT` | a debug monitor: green on black |
 
+- The list has two columns: the colour themes (`Sage` to `Plum`) are in the right one
 - The window changes right away, no restart
 - The editor remembers your theme, the setup screen uses it too
 - Only the look changes: every button stays where it is

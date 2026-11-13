@@ -1,5 +1,5 @@
-//! Compares the kit with the Python kit's outputs, dumped by the reference script kit/dump_kit.py into
-//! `$GLOVEBOX_ORACLE/kit/dump`. Skipped when `GLOVEBOX_ORACLE` is not set.
+//! Compares the kit with the reference dumps in `$GLOVEBOX_REFERENCE/kit/dump`. Skipped when `GLOVEBOX_REFERENCE`
+//! is not set.
 //!
 //! Geometry must be equal bit for bit, as float64 in the soup and as float32 in the GLB. Textures without words must
 //! be equal pixel for pixel. Textures with words differ in the letters only, because the kit draws its own font.
@@ -9,10 +9,10 @@ use serde_json::Value;
 use std::path::PathBuf;
 
 fn dump() -> Option<PathBuf> {
-    match std::env::var("GLOVEBOX_ORACLE") {
+    match std::env::var("GLOVEBOX_REFERENCE") {
         Ok(p) => Some(PathBuf::from(p).join("kit").join("dump")),
         Err(_) => {
-            println!("skipped: GLOVEBOX_ORACLE is not set");
+            println!("skipped: GLOVEBOX_REFERENCE is not set");
             None
         }
     }
@@ -135,7 +135,7 @@ fn list_numbers_and_refusals() {
 }
 
 #[test]
-fn every_case_matches_python() {
+fn every_case_matches_the_reference() {
     let Some(dir) = dump() else { return };
     let ix = index(&dir);
     let cases = ix["cases"].as_array().unwrap();

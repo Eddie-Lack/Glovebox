@@ -1,10 +1,9 @@
-//! The scene nodes of the entities: what the former Python editor's `entities.py` built next to each entity.
+//! The scene nodes of the entities.
 //!
 //! `entities::build` reads the XML into entities. This module makes the nodes each entity draws, puts them where
 //! the XML says (`place_ent`), turns spinning platforms (`animate`) and hides layers (`apply_visibility`).
 //!
-//! One thing differs from Python on purpose. Python made the faint fill of a trigger volume and never added it to
-//! the world, so it was not drawn. Here it is in the world. It is not pickable and changes no box.
+//! The faint fill of a trigger volume is in the world. It is not pickable and changes no box.
 //!
 //! A platform with a SetExit also gets the sphere the game tests for the exit (`exit_nodes`). Like a trigger's fill
 //! it is in the world next to the entity's node: a click goes through it, and it is in no box.

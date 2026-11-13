@@ -1,9 +1,8 @@
 //! What the editor's window asks its back end for: the tables, the levels, the models and textures, plans and
-//! builds, and the author's imported models. `Backend` has the methods of the former Python editor's `Backend`
-//! class. `GameBackend` answers from the player's ROM (`GameData`) and the user folder.
+//! builds, and the author's imported models. `Backend` is the list of those
+//! methods. `GameBackend` answers from the player's ROM (`GameData`) and the user folder.
 //!
-//! The Python app named a model by a path and read its file with `fetch`. Here a model is named by a `ModelRef`,
-//! and `model` and `texture` give the model and the pixels.
+//! A model is named by a `ModelRef`. `model` and `texture` give the model and the pixels.
 
 use crate::build::{self, BuildAllRequest, BuildRequest, Built};
 use crate::custom;
@@ -209,7 +208,7 @@ impl GameBackend {
         imports::load_customs(&self.home)
     }
 
-    /// Converts a glTF model and returns the set's `meta.json` with its id as `set` (`import_custom` of the former Python back end).
+    /// Converts a glTF model and returns the set's `meta.json` with its id as `set`.
     fn import(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {
         let taken_ids: HashSet<u32> = self.game.catalog().keys().copied().collect();
         let mut taken_textures: HashSet<u32> = HashSet::new();
@@ -465,7 +464,7 @@ impl Backend for GameBackend {
     }
 
     fn kit_preview(&self, item: &str, params: &Value) -> Result<Vec<u8>> {
-        // The Python window's back end turned every setting into text first
+        // The kit takes every setting as text
         let mut texts = kit::Params::new();
         for (k, v) in params.as_object().into_iter().flatten() {
             let text = match v {

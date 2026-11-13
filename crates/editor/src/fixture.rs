@@ -1,6 +1,6 @@
 //! A stand-in for the editor's back end that needs no ROM: two made-up levels and a few made-up models.
 //!
-//! A port of the former Python editor's fixture. The tests run the editor against it, and the app can show it with
+//! The tests run the editor against it, and the app can show it with
 //! `--fixture`. It holds no game data. The ground is a made-up hilly square, the blocks are cubes, and the grave,
 //! the pumpkin and the sign come from the kit. Building a .lev works. Building a ROM or a patch needs the ROM and
 //! says so.

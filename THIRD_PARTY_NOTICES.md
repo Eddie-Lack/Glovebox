@@ -168,7 +168,7 @@ THE SOFTWARE.
 - Source: https://github.com/python-pillow/Pillow
 - Licence: MIT-CMU (HPND)
 - Use: two files follow Pillow's C code, written again in Rust, because the pictures must come out pixel for pixel
-  as Pillow made them. `crates/core/src/kit/image.rs` follows its drawing rules and resize (`libImaging/Draw.c`,
+  as Pillow makes them. `crates/core/src/kit/image.rs` follows its drawing rules and resize (`libImaging/Draw.c`,
   `Resample.c`). `crates/core/src/custom/image.rs` follows its Lanczos resize (`Resample.c`). Pillow itself is not
   included.
 

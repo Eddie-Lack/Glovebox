@@ -2,7 +2,7 @@
 //
 // Lighting follows three.js r160: Lambert's albedo / pi, an ambient light of 0.8 and a sun of 1.4, sRGB output.
 // The shaders write sRGB values themselves. The target is not an sRGB format, and blending happens on the sRGB
-// values, as in the OpenGL view.
+// values.
 
 struct Globals {
     view: mat4x4f,
@@ -133,7 +133,7 @@ fn sprite_vs(@builtin(vertex_index) i: u32) -> SpriteOut {
     return o;
 }
 
-// The texel is written as it is sampled, without the sRGB step, as the OpenGL view did.
+// The texel is written as it is sampled, without the sRGB step.
 @fragment
 fn sprite_fs(in: SpriteOut) -> @location(0) vec4f {
     var c = textureSample(tex, samp, in.uv);

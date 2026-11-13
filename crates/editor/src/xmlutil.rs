@@ -1,5 +1,5 @@
 //! Helpers on the level XML that `Doc` and `pyfmt` do not have: attributes as numbers, object ids as hex text,
-//! Python's `%g`, and small ordered attribute lists.
+//! `%g` formatting, and small ordered attribute lists.
 
 use glovebox_core::pyfmt;
 use glovebox_core::xml::{Doc, NodeId};
@@ -19,7 +19,7 @@ pub fn num0(doc: &Doc, e: NodeId, a: &str) -> f64 {
     num(doc, Some(e), a, 0.0)
 }
 
-/// Python's `int(float)` for a finite value inside the i64 range.
+/// The whole part of a finite value inside the i64 range.
 fn trunc_i64(v: f64) -> i64 {
     v.trunc() as i64
 }
@@ -39,8 +39,8 @@ pub fn r1(v: f64) -> String {
     fmt(pyfmt::py_round(v))
 }
 
-/// Python's `int(text, 16)`, kept to its low 32 bits: surrounding whitespace, a sign, an optional 0x and single
-/// underscores between digits are allowed.
+/// A hex number as Python's `int(text, 16)` reads it, kept to its low 32 bits: surrounding whitespace, a sign, an
+/// optional 0x and single underscores between digits are allowed.
 fn parse_hex_u32(s: &str) -> Option<u32> {
     let t = s.trim_matches(|c: char| c.is_whitespace());
     let (neg, body) = match t.strip_prefix('-') {
@@ -120,10 +120,10 @@ pub fn ensure_child(
     c
 }
 
-/// Attributes in the order they were set, as a Python dict keeps them.
+/// Attributes in the order they were set.
 pub type Attrs = Vec<(String, String)>;
 
-/// Python's `dict[k] = v`: a known key keeps its place.
+/// Sets an attribute. A known key keeps its place.
 pub fn put(attrs: &mut Attrs, k: &str, v: &str) {
     match attrs.iter_mut().find(|(n, _)| n == k) {
         Some(a) => a.1 = v.to_string(),
@@ -153,7 +153,8 @@ pub fn body(doc: &Doc, node: NodeId) -> Option<NodeId> {
     doc.children(node).first().copied()
 }
 
-/// Python's `int(text or "0", 0)`. `None` where Python raises ValueError.
+/// A whole number in any of Python's bases (`pyfmt::parse_int`). Missing or empty text is 0. `None` for text
+/// that is not a number.
 pub fn int0(s: Option<&str>) -> Option<i128> {
     match s {
         Some(v) if !v.is_empty() => pyfmt::parse_int(v),
@@ -161,7 +162,7 @@ pub fn int0(s: Option<&str>) -> Option<i128> {
     }
 }
 
-/// Python's `"%g" % v`: six significant digits, no trailing zeros, an exponent below 1e-4 and from 1e6.
+/// A number as `%g` prints it: six significant digits, no trailing zeros, an exponent below 1e-4 and from 1e6.
 pub fn fmt_g(v: f64) -> String {
     if v.is_nan() {
         return "nan".into();

@@ -1,10 +1,9 @@
 //! Tests of the 3D view's renderer, without a window.
 //!
-//! The first tests draw made-up scenes and check pixels. The others replay scenes the Python editor drew
-//! (the reference script `render/shots.py`, not in this repository) and compare the pictures. They need
-//! `GLOVEBOX_ORACLE` (the folder of dumps); the level also needs `GLOVEBOX_PYHOME` (the Python app's folder with the
-//! split ROM). Without them they print that they were skipped. Each comparison saves its pictures next to Python's,
-//! as `<name>_rs.png` and `<name>_diff.png`.
+//! The first tests draw made-up scenes and check pixels. The others replay scenes of the reference dumps and compare
+//! the pictures. They need `GLOVEBOX_REFERENCE` (the folder of reference dumps); the level also needs
+//! `GLOVEBOX_REFHOME` (a folder with the split ROM). Without them they print that they were skipped. Each comparison
+//! saves its pictures next to the reference's, as `<name>_rs.png` and `<name>_diff.png`.
 
 use eframe::egui_wgpu::wgpu;
 use glovebox::render::{icons::Icons, Fog, Frame, Renderer};
@@ -155,7 +154,7 @@ fn a_made_up_scene() {
     r.draw(&Frame::new(&s, &roots, &cam));
     let img = r.read_pixels().unwrap();
     assert_eq!(img.len(), (w * h * 4) as usize);
-    if let Ok(dir) = std::env::var("GLOVEBOX_ORACLE") {
+    if let Ok(dir) = std::env::var("GLOVEBOX_REFERENCE") {
         save_png(&Path::new(&dir).join("render/out/unit_rs.png"), w, h, &img);
     }
     let at = |p: [f64; 3], dx: i32, dy: i32| {
@@ -176,7 +175,7 @@ fn a_made_up_scene() {
     // The grey box shows its front face
     assert!(near(at([110.0, 0.0, 25.0], 0, 0), lit([0.5; 3], [1.0; 3], n_dot), 2), "{:?}", at([110.0, 0.0, 25.0], 0, 0));
     // The sprite: the icon's red disc with the dark dot in the middle and a black rim. The sprite's shader writes
-    // the texel as sampled (linear), as Python's did: 255 stays 255, the glyph's 17 becomes 1.
+    // the texel as sampled (linear): 255 stays 255, the glyph's 17 becomes 1.
     assert!(near(at([-110.0, 18.0, 0.0], 0, 0), [255, 0, 0, 255], 2), "{:?}", at([-110.0, 18.0, 0.0], 0, 0));
     assert!(near(at([-110.0, 0.0, 0.0], 0, 0), [1, 1, 1, 255], 2));
     assert!(near(at([-110.0, 24.5, 0.0], 0, 0), [0, 0, 0, 255], 2));
@@ -323,10 +322,10 @@ fn a_thumbnail_keeps_its_shape() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Against the Python renderer
+// Against the reference pictures
 
-fn oracle() -> Option<PathBuf> {
-    let dir = PathBuf::from(std::env::var_os("GLOVEBOX_ORACLE")?).join("render/out");
+fn reference() -> Option<PathBuf> {
+    let dir = PathBuf::from(std::env::var_os("GLOVEBOX_REFERENCE")?).join("render/out");
     dir.is_dir().then_some(dir)
 }
 
@@ -372,9 +371,9 @@ fn compare(dir: &Path, name: &str, w: u32, h: u32, ours: &[u8], theirs: &[u8]) -
 }
 
 #[test]
-fn the_made_up_scene_matches_python() {
-    let Some(dir) = oracle() else {
-        println!("the_made_up_scene_matches_python: skipped, GLOVEBOX_ORACLE is not set");
+fn the_made_up_scene_matches_the_reference() {
+    let Some(dir) = reference() else {
+        println!("the_made_up_scene_matches_the_reference: skipped, GLOVEBOX_REFERENCE is not set");
         return;
     };
     let read = |name: &str| std::fs::read(dir.join(name)).unwrap();
@@ -422,7 +421,7 @@ impl Models {
         self.banks.entry(file.to_string()).or_insert_with(|| fla2::data(&std::fs::read(home.join("data/Glover").join(file)).unwrap()).unwrap())
     }
 
-    /// The model of a URL of the Python back end: /models/BANK@WORLD+WORLD/0xID-name.glb
+    /// The model of a URL in the reference dumps: /models/BANK@WORLD+WORLD/0xID-name.glb
     fn prefab(&mut self, url: &str) -> Arc<Prefab> {
         if let Some(p) = self.prefabs.get(url) {
             return p.clone();
@@ -455,9 +454,9 @@ impl Models {
 }
 
 #[test]
-fn a_level_matches_python() {
-    let (Some(dir), Some(home)) = (oracle(), std::env::var_os("GLOVEBOX_PYHOME")) else {
-        println!("a_level_matches_python: skipped, GLOVEBOX_ORACLE and GLOVEBOX_PYHOME are not both set");
+fn a_level_matches_the_reference() {
+    let (Some(dir), Some(home)) = (reference(), std::env::var_os("GLOVEBOX_REFHOME")) else {
+        println!("a_level_matches_the_reference: skipped, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not both set");
         return;
     };
     let read = |name: &str| std::fs::read(dir.join(name)).unwrap();
@@ -488,7 +487,7 @@ fn a_level_matches_python() {
         let copy = prefab.instance(s);
         (s[copy].pos, s[copy].quat, s[copy].scale) = (s[old].pos, s[old].quat, s[old].scale);
         s.add(parent, copy);
-        // This crate's model gives the nodes, the matrices and the box that Python's glTF loader gave
+        // This crate's model gives the nodes, the matrices and the box the reference holds
         let walk = s.world_walk(copy, false);
         let theirs: Vec<usize> = (i..nodes.len()).take_while(|k| owner[*k] == Some(i)).collect();
         assert_eq!(walk.len(), theirs.len(), "{url}");
