@@ -10,6 +10,7 @@ use crate::app::Window;
 use crate::render::icons::Icons;
 use crate::render::{Fog, Frame, Renderer};
 use crate::style;
+use crate::tour::Target;
 use eframe::egui_wgpu::{wgpu, RenderState};
 use glovebox_editor::editor::{Button, Editor, Mods};
 use glovebox_editor::entities::EntId;
@@ -192,8 +193,8 @@ fn mods(m: egui::Modifiers) -> Mods {
 
 /// The mouse in the view. Positions are points from the view's top left corner.
 fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
+    let blocked = w.modal();
     let (ed, view) = (&mut w.ed, &mut w.view);
-    let blocked = w.dialog.is_some();
     let events = ui.input(|i| i.events.clone());
     for e in events {
         match e {
@@ -256,7 +257,7 @@ fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
 fn fly_step(w: &mut Window, ui: &egui::Ui) {
     let view = &mut w.view;
     // Keys typed into a text box or at a dialog are not the camera's
-    if !view.fly.on || w.dialog.is_some() || ui.ctx().egui_wants_keyboard_input() {
+    if !view.fly.on || w.dialog.is_some() || w.tour.active() || ui.ctx().egui_wants_keyboard_input() {
         return;
     }
     let (shift, dt) = ui.input(|i| (i.modifiers.shift && !i.modifiers.ctrl && !i.modifiers.command, f64::from(i.unstable_dt)));
@@ -293,6 +294,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         w.view.rect = rect;
         w.view.dirty = true;
     }
+    w.tour.mark(Target::View, rect);
     let background = style::theme(ui.ctx()).view_bg;
     if background != w.view.background {
         w.view.background = background;

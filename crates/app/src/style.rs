@@ -408,6 +408,67 @@ pub fn plaque(painter: &egui::Painter, rect: Rect) {
     border(painter, outer);
 }
 
+/// The spotlight of the tour: the window is dimmed with the theme's scrim, `spot` stays bright and gets a line in
+/// the theme's focus colour. Without a spot the whole window is dimmed.
+pub fn spotlight(painter: &egui::Painter, window: Rect, spot: Option<Rect>) {
+    let th = theme(painter.ctx());
+    // Half of a dialog's scrim: the window stays readable
+    let dim = th.scrim.gamma_multiply(0.5);
+    let Some(spot) = spot else {
+        painter.rect_filled(window, 0.0, dim);
+        return;
+    };
+    let s = spot.intersect(window);
+    for r in [
+        Rect::from_min_max(window.min, egui::pos2(window.max.x, s.min.y)),
+        Rect::from_min_max(egui::pos2(window.min.x, s.max.y), window.max),
+        Rect::from_min_max(egui::pos2(window.min.x, s.min.y), egui::pos2(s.min.x, s.max.y)),
+        Rect::from_min_max(egui::pos2(s.max.x, s.min.y), egui::pos2(window.max.x, s.max.y)),
+    ] {
+        if r.is_positive() {
+            painter.rect_filled(r, 0.0, dim);
+        }
+    }
+    painter.rect_stroke(s, f32::from(th.radius), Stroke::new(2.0, th.focus), egui::StrokeKind::Inside);
+}
+
+/// The length of a callout's pointer.
+pub const POINTER: f32 = 9.0;
+
+/// The bubble of the tour: a box in the colours of the theme's menus, with a pointer whose tip is `tip`. The
+/// pointer leaves the side of the box that is nearest to the tip.
+pub fn callout(painter: &egui::Painter, rect: Rect, tip: Option<egui::Pos2>) {
+    let th = theme(painter.ctx());
+    let round = f32::from(th.round);
+    let edge = Stroke::new(th.popup_edge.0.max(1.0), th.popup_edge.1);
+    painter.rect_filled(rect.translate(egui::vec2(3.0, 3.0)), round, th.popup_shadow);
+    painter.rect_filled(rect, round, th.popup);
+    painter.rect_stroke(rect, round, edge, egui::StrokeKind::Inside);
+    let Some(tip) = tip else { return };
+    // The base of the pointer lies on the box's edge, clear of the round corners
+    let half = POINTER * 0.8;
+    let keep = round + half + 2.0;
+    let along_x = |x: f32| x.clamp(rect.min.x + keep, (rect.max.x - keep).max(rect.min.x + keep));
+    let along_y = |y: f32| y.clamp(rect.min.y + keep, (rect.max.y - keep).max(rect.min.y + keep));
+    let (base, side, inward) = if tip.y < rect.min.y {
+        (egui::pos2(along_x(tip.x), rect.min.y), egui::vec2(half, 0.0), egui::vec2(0.0, 1.0))
+    } else if tip.y > rect.max.y {
+        (egui::pos2(along_x(tip.x), rect.max.y), egui::vec2(half, 0.0), egui::vec2(0.0, -1.0))
+    } else if tip.x < rect.min.x {
+        (egui::pos2(rect.min.x, along_y(tip.y)), egui::vec2(0.0, half), egui::vec2(1.0, 0.0))
+    } else if tip.x > rect.max.x {
+        (egui::pos2(rect.max.x, along_y(tip.y)), egui::vec2(0.0, half), egui::vec2(-1.0, 0.0))
+    } else {
+        return;
+    };
+    // The base sits inside the box's line: the fill of the pointer covers the line between its two sides
+    let (a, b) = (base - side + inward * (edge.width + 0.5), base + side + inward * (edge.width + 0.5));
+    let point = base - inward * POINTER;
+    painter.add(egui::Shape::convex_polygon(vec![a, point, b], th.popup, Stroke::NONE));
+    painter.line_segment([base - side, point], edge);
+    painter.line_segment([point, base + side], edge);
+}
+
 /// The theme's fine grid behind a panel's content, when it has one.
 /// Shows a panel's contents in the room the panel has now. The contents cannot make the panel larger: what
 /// does not fit is clipped. A panel's size then comes from its default and from drags on its edge only.
@@ -862,15 +923,18 @@ impl Info {
         }
     }
 
-    /// The state with a name of the settings file. An unknown or missing name gives `Shown`.
+    /// The state a window has without a setting.
+    pub const DEFAULT: Info = Info::Hover;
+
+    /// The state with a name of the settings file. An unknown or missing name gives the default, `Hover`.
     pub fn from_id(id: &str) -> Info {
-        Info::ALL.into_iter().find(|i| i.id() == id.trim()).unwrap_or(Info::Shown)
+        Info::ALL.into_iter().find(|i| i.id() == id.trim()).unwrap_or(Info::DEFAULT)
     }
 }
 
 /// How the notes of a window show.
 pub fn info(ctx: &egui::Context) -> Info {
-    ctx.data(|d| d.get_temp::<Info>(egui::Id::NULL)).unwrap_or(Info::Shown)
+    ctx.data(|d| d.get_temp::<Info>(egui::Id::NULL)).unwrap_or(Info::DEFAULT)
 }
 
 /// Sets how the notes of a window show. The next frame follows it.

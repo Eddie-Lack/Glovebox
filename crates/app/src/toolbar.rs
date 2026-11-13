@@ -1,8 +1,9 @@
 //! The two rows of the toolbar: the level list, undo and redo, the tools, the files and builds, and the Options
-//! menu (the theme and the info texts).
+//! menu (the theme, the info texts and the tour).
 
 use crate::app::Window;
 use crate::style;
+use crate::tour::Target;
 use egui::RichText;
 use glovebox_editor::exits;
 use glovebox_editor::gizmo::Mode;
@@ -17,11 +18,12 @@ fn sep(ui: &mut egui::Ui) {
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let frame = egui::Frame::new().fill(style::theme(ui.ctx()).deep).inner_margin(egui::Margin::symmetric(6, 4));
-    egui::Panel::top("toolbar").frame(frame).show(ui, |ui| {
+    let bar = egui::Panel::top("toolbar").frame(frame).show(ui, |ui| {
         ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
         ui.horizontal_wrapped(|ui| edit_row(w, ui));
         ui.horizontal_wrapped(|ui| files_row(w, ui));
     });
+    w.tour.mark(Target::Toolbar, bar.response.rect);
 }
 
 fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
@@ -45,6 +47,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         }
     });
     combo.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Level"));
+    w.tour.mark(Target::LevelList, combo.response.rect);
     combo.response.on_hover_text("Level (from noclip.website's scene table)");
     if let Some(sid) = pick {
         w.load_scene(&sid);
@@ -52,22 +55,31 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     sep(ui);
 
     let edited = w.ed.has_level && w.ed.is_edited();
-    if ui.add_enabled(edited, egui::Button::new("Reset level")).on_hover_text("Discard all edits to this level and its autosave (undoable)").clicked() {
+    let r = ui.add_enabled(edited, egui::Button::new("Reset level")).on_hover_text("Discard all edits to this level and its autosave (undoable)");
+    w.tour.mark(Target::Undo, r.rect);
+    if r.clicked() {
         w.reset_level();
     }
-    if ui.add_enabled(!w.ed.undo_stack.is_empty(), egui::Button::new("Undo")).on_hover_text("Undo (Ctrl+Z)").clicked() {
+    let r = ui.add_enabled(!w.ed.undo_stack.is_empty(), egui::Button::new("Undo")).on_hover_text("Undo (Ctrl+Z)");
+    w.tour.mark(Target::Undo, r.rect);
+    if r.clicked() {
         w.ed.undo();
     }
-    if ui.add_enabled(!w.ed.redo_stack.is_empty(), egui::Button::new("Redo")).on_hover_text("Redo (Ctrl+Shift+Z)").clicked() {
+    let r = ui.add_enabled(!w.ed.redo_stack.is_empty(), egui::Button::new("Redo")).on_hover_text("Redo (Ctrl+Shift+Z)");
+    w.tour.mark(Target::Undo, r.rect);
+    if r.clicked() {
         w.ed.redo();
     }
     sep(ui);
     let add = if w.palette_open { style::toggle(ui, true, "+ Add", "") } else { ui.add(style::accent("+ Add")) };
+    w.tour.mark(Target::Add, add.rect);
     if add.on_hover_text("Add objects, enemies, collectables and models from any level (A)").clicked() {
         w.toggle_palette(None);
     }
     for (m, text, key) in [(Mode::Translate, "Move", "W"), (Mode::Rotate, "Rotate", "E"), (Mode::Scale, "Scale", "R")] {
-        if style::toggle(ui, w.ed.mode == m, text, &format!("{text} ({key})")).clicked() {
+        let r = style::toggle(ui, w.ed.mode == m, text, &format!("{text} ({key})"));
+        w.tour.mark(Target::Tools, r.rect);
+        if r.clicked() {
             w.ed.set_mode(m);
         }
     }
@@ -107,12 +119,12 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     }
 }
 
-/// The Options menu: the look of the window (Theme) and how the notes show (Info texts). A choice works at once
-/// and is kept in the settings.
+/// The Options menu: the look of the window (Theme), how the notes show (Info texts) and `Take the tour`. A
+/// choice works at once and is kept in the settings.
 fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let active = style::theme(ui.ctx());
     let info = style::info(ui.ctx());
-    let (mut theme, mut notes) = (None, None);
+    let (mut theme, mut notes, mut tour) = (None, None, false);
     let (r, _) = egui::containers::menu::MenuButton::new("Options").ui(ui, |ui| {
         ui.set_width(238.0);
         style::h4(ui, "Theme");
@@ -138,14 +150,24 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
                 notes = Some(i);
             }
         }
+        ui.add_space(4.0);
+        ui.separator();
+        if ui.add_enabled(w.ed.has_level && !w.busy, egui::Button::selectable(false, "Take the tour")).on_hover_text("A quick walk through the parts of the window").clicked() {
+            tour = true;
+            ui.close();
+        }
     });
-    r.on_hover_text("The look of the window, and how the notes that explain things show. A choice is remembered.");
+    w.tour.mark(Target::Options, r.rect);
+    r.on_hover_text("The look of the window, how the notes that explain things show, and the tour of the window.");
     // After the frame: the panels of this frame are drawn in one theme and one state
     if let Some(id) = theme {
         w.acts.push(Box::new(move |w: &mut Window| w.set_theme(id)));
     }
     if let Some(i) = notes {
         w.acts.push(Box::new(move |w: &mut Window| w.set_info(i)));
+    }
+    if tour {
+        w.acts.push(Box::new(|w: &mut Window| w.start_tour()));
     }
 }
 
@@ -188,13 +210,19 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
             w.export("lev", None);
         }
         style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Build ROM: the ROM boots straight into this level (libgarib's copyskip and quickboot patches)");
-        if ui.button("Export patch").on_hover_text("Export a BPS patch: share it, and players apply it to their own ROM with the patcher").clicked() {
+        let r = ui.button("Export patch").on_hover_text("Export a BPS patch: share it, and players apply it to their own ROM with the patcher");
+        w.tour.mark(Target::Patch, r.rect);
+        if r.clicked() {
             crate::dialogs::open_patch_dialog(w);
         }
-        if ui.button("Test level").on_hover_text("Build the level into a ROM and open it in your emulator (T)").clicked() {
+        let r = ui.button("Test level").on_hover_text("Build the level into a ROM and open it in your emulator (T)");
+        w.tour.mark(Target::Build, r.rect);
+        if r.clicked() {
             w.test_level();
         }
-        if ui.add(style::primary("Build ROM")).on_hover_text("Patch the edited level (and any imported models) into the ROM with libgarib").clicked() {
+        let r = ui.add(style::primary("Build ROM")).on_hover_text("Patch the edited level (and any imported models) into the ROM with libgarib");
+        w.tour.mark(Target::Build, r.rect);
+        if r.clicked() {
             w.export("rom", None);
         }
         if ui.button("Build all…").on_hover_text("Build every edited level into one ROM or patch").clicked() {

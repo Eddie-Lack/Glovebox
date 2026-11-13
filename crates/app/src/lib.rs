@@ -2,7 +2,8 @@
 //!
 //! `shell` is what is around the window (the user folder, the options, the self-test). `app` is the application:
 //! the setup screen (`setup`) or the editor's window, whose parts are `toolbar`, `viewport`, `outliner`,
-//! `inspector`, `checks`, `palette`, `path_panel` and `dialogs`. `jobs` runs slow work on threads.
+//! `inspector`, `checks`, `palette`, `path_panel` and `dialogs`. `tour` is the welcome and the tour of the window.
+//! `jobs` runs slow work on threads.
 
 pub mod app;
 pub mod checks;
@@ -21,6 +22,7 @@ pub mod shell;
 pub mod style;
 pub mod theme;
 pub mod toolbar;
+pub mod tour;
 pub mod viewport;
 
 use std::sync::Arc;

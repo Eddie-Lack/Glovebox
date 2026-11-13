@@ -4,6 +4,7 @@
 use crate::dialogs::{Dialog, FileDialogs};
 use crate::jobs::Jobs;
 use crate::settings::{IniSettings, Shared};
+use crate::tour::{self, Target};
 use crate::{inspector, outliner, palette, path_panel, setup, shell, style, viewport};
 use glovebox_core::backend::{Backend, CatalogEntry};
 use glovebox_core::xml::NodeId;
@@ -45,7 +46,7 @@ impl App {
         // The theme the player chose, for the setup screen too. An unknown or missing one is the default.
         let chosen = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::SETTING).unwrap_or_default();
         style::apply(&cc.egui_ctx, crate::theme::by_id(&chosen));
-        // How the notes show. An unknown or missing value shows them.
+        // How the notes show. An unknown or missing value shows them on hover.
         let info = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::INFO_SETTING).unwrap_or_default();
         style::set_info(&cc.egui_ctx, style::Info::from_id(&info));
         let screen = match backend {
@@ -153,8 +154,10 @@ pub struct Window {
     pub last_saved: Option<PathBuf>,
     /// Where the panels were in the last frame.
     pub panels: Panels,
+    /// The welcome and the tour.
+    pub tour: tour::State,
     clock: std::time::Instant,
-    ctx: egui::Context,
+    pub(crate) ctx: egui::Context,
 }
 
 /// The widths the side panels start with, in points.
@@ -236,6 +239,7 @@ impl Window {
             acts: Vec::new(),
             after_load: None,
             last_saved: None,
+            tour: tour::State::default(),
             clock: std::time::Instant::now(),
             ctx: ctx.clone(),
         };
@@ -245,6 +249,12 @@ impl Window {
 
     pub fn now(&self) -> f64 {
         self.clock.elapsed().as_secs_f64()
+    }
+
+    /// True while a dialog, the welcome or the tour is over the window. The editor's keys and the view's mouse are
+    /// off then.
+    pub fn modal(&self) -> bool {
+        self.dialog.is_some() || self.tour.active()
     }
 
     pub fn set_status(&mut self, msg: &str, cls: &str) {
@@ -702,7 +712,7 @@ impl Window {
         let ctrl = mods.ctrl || mods.command;
         // Holding Ctrl suspends the gizmo: Ctrl+click reaches the object under it
         self.ed.gizmo.enabled = !ctrl;
-        if self.dialog.is_some() || ctx.egui_wants_keyboard_input() {
+        if self.modal() || ctx.egui_wants_keyboard_input() {
             self.view.fly_keys.clear();
             return;
         }
@@ -809,11 +819,12 @@ impl Window {
         self.keys(&ctx);
         let dropped: Vec<PathBuf> = ctx.input(|i| i.raw.dropped_files.iter().map(|f| f.path().to_path_buf()).collect());
         if let Some(p) = dropped.into_iter().next() {
-            if self.dialog.is_none() {
+            if !self.modal() {
                 self.file_dropped(p);
             }
         }
 
+        self.tour.begin_frame();
         crate::toolbar::ui(self, ui);
         let th = style::theme(&ctx);
         egui::Panel::bottom("status").frame(egui::Frame::new().fill(th.deep).inner_margin(egui::Margin::symmetric(8, 4))).show(ui, |ui| {
@@ -847,6 +858,7 @@ impl Window {
             });
         });
         self.panels.level = level.response.rect;
+        self.tour.mark(Target::LevelPanel, level.response.rect);
         let inspector = egui::Panel::right("inspector").frame(bare).default_size(INSPECTOR_WIDTH).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
             style::fixed(ui, |ui| {
                 style::ground(ui);
@@ -862,6 +874,10 @@ impl Window {
                     style::fixed(ui, |ui| crate::checks::ui(self, ui));
                 });
                 self.panels.checks = checks.response.rect;
+                self.tour.mark(Target::Checks, checks.response.rect);
+                if tab == 0 {
+                    self.tour.mark(Target::Inspector, ui.available_rect_before_wrap());
+                }
                 egui::CentralPanel::default().frame(padded).show(ui, |ui| {
                     style::fixed(ui, |ui| match tab {
                         1 => palette::ui(self, ui),
@@ -872,6 +888,7 @@ impl Window {
             });
         });
         self.panels.inspector = inspector.response.rect;
+        self.tour.mark(Target::RightPanel, inspector.response.rect);
         self.panels.add = egui::Rect::NOTHING;
         if side && wide {
             let add = egui::Panel::right("add").frame(bare).default_size(ADD_WIDTH).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
@@ -890,6 +907,7 @@ impl Window {
             viewport::ui(self, ui);
         });
         crate::dialogs::ui(self, &ctx);
+        tour::ui(self, &ctx);
 
         // A drag on a number field is one undo step: it opens before the frame's edits and closes after them
         let signals = crate::numfield::take_signals(&ctx);

@@ -67,13 +67,20 @@ impl T {
         T::with_theme(name, backend, size, theme.as_deref())
     }
 
-    /// A window on an empty user folder whose settings name a theme.
+    /// A window on an empty user folder whose settings name a theme. The settings also say that the welcome was
+    /// answered and that the notes are shown: the checks read the notes in the panels.
     fn with_theme(name: &str, backend: Option<Arc<dyn Backend>>, size: [f32; 2], theme: Option<&str>) -> T {
+        let theme = theme.map(|id| format!("theme={id}\n")).unwrap_or_default();
+        T::with_settings(name, backend, size, &format!("[General]\ntour=seen\ninfo=shown\n{theme}"))
+    }
+
+    /// A window on an empty user folder with this settings file. An empty text gives no file: the first start.
+    fn with_settings(name: &str, backend: Option<Arc<dyn Backend>>, size: [f32; 2], settings: &str) -> T {
         let home = std::env::temp_dir().join(format!("glovebox-ui-test-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&home);
         std::fs::create_dir_all(&home).unwrap();
-        if let Some(id) = theme {
-            std::fs::write(home.join("settings.ini"), format!("[General]\ntheme={id}\n")).unwrap();
+        if !settings.is_empty() {
+            std::fs::write(home.join("settings.ini"), settings).unwrap();
         }
         T::open(home, backend, size)
     }
@@ -163,7 +170,7 @@ impl T {
         glovebox::style::theme(&self.h.ctx).id
     }
 
-    /// Chooses an entry of the toolbar's Options menu: a theme, or a state of the Info texts.
+    /// Chooses an entry of the toolbar's Options menu: a theme, a state of the Info texts, or Take the tour.
     fn option(&mut self, entry: &str) -> bool {
         let ok = self.click("Options") && self.click(entry);
         self.settle();
@@ -2396,7 +2403,7 @@ fn themes() {
 /// The Info texts of the Options menu: Shown, On hover and Off, each through a click. A note is in the window when
 /// shown, a tooltip of the thing it explains on hover, and gone when off. What is about the level itself stays:
 /// a check's main line and a wrong value's message. The choice is kept in the settings and read back by a new
-/// window. An unknown value shows the notes.
+/// window. Without a setting, and with an unknown value, the notes are on hover.
 ///
 /// With `GLOVEBOX_SHOTS` it saves the level's settings and the Checks panel in each state, in `DIR/info/`.
 #[test]
@@ -2408,7 +2415,9 @@ fn info_texts() {
     const CARD: &str = "The game's level table";
     const HELP: &str = "Click something in the level";
     let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
-    let mut t = T::new("info", fixture(), [1500.0, 950.0]);
+    // No setting for the info texts: the default
+    let theme = std::env::var("GLOVEBOX_THEME").map(|id| format!("theme={id}\n")).unwrap_or_default();
+    let mut t = T::with_settings("info", fixture(), [1500.0, 950.0], &format!("[General]\ntour=seen\n{theme}"));
     t.idle();
     // A wrong value: its message is in the Checks panel, and in the inspector when its trigger is chosen
     let ed = t.ed();
@@ -2419,8 +2428,8 @@ fn info_texts() {
     let sub = t.w().checks.iter().find(|c| c.text.starts_with("Draw load")).and_then(|c| c.sub.clone()).unwrap_or_default();
     let sub: String = sub.lines().next().unwrap_or("").chars().take(40).collect();
     t.detail("the draw load check has a second line", !sub.is_empty(), sub.clone());
-    let first = t.info() == Info::Shown && t.reads(FILE);
-    t.check("without a setting the notes are shown", first);
+    let first = t.info() == Info::Hover && !t.reads(FILE) && t.has("File name");
+    t.check("without a setting the notes are on hover", first);
 
     let mut tops = Vec::new();
     for (state, name) in [(Info::Hover, "On hover"), (Info::Off, "Off"), (Info::Shown, "Shown")] {
@@ -2515,19 +2524,306 @@ fn info_texts() {
     results.append(&mut again.results);
     again.finish();
 
-    // An unknown value in the settings shows the notes
+    // A setting that says Shown or Off is kept
+    for (id, state) in [("shown", Info::Shown), ("off", Info::Off)] {
+        let mut set = T::with_settings("info-set", fixture(), [1280.0, 720.0], &format!("[General]\ntour=seen\ninfo={id}\n"));
+        set.idle();
+        let kept = set.info() == state && set.reads(FILE) == (state == Info::Shown);
+        set.check(&format!("the setting {id} is kept"), kept);
+        results.append(&mut set.results);
+        set.finish();
+    }
+
+    // An unknown value in the settings is the default, on hover
     let home = std::env::temp_dir().join(format!("glovebox-ui-test-info-unknown-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&home);
     std::fs::create_dir_all(&home).unwrap();
-    std::fs::write(home.join("settings.ini"), "[General]\ninfo=loud\n").unwrap();
+    std::fs::write(home.join("settings.ini"), "[General]\ntour=seen\ninfo=loud\n").unwrap();
     let mut odd = T::open(home, fixture(), [1280.0, 720.0]);
     odd.idle();
-    let shown = odd.info() == Info::Shown && odd.reads(FILE);
-    odd.check("an unknown value of the info texts shows them", shown);
+    let hover = odd.info() == Info::Hover && !odd.reads(FILE) && odd.has("File name");
+    odd.check("an unknown value of the info texts gives On hover", hover);
     results.append(&mut odd.results);
     odd.finish();
     let failed: Vec<&(String, bool, String)> = results.iter().filter(|r| !r.1).collect();
     assert!(failed.is_empty(), "failed: {:?}", failed.iter().map(|r| &r.0).collect::<Vec<_>>());
+}
+
+/// What the tour must leave as it was.
+#[derive(Debug, PartialEq)]
+struct Kept {
+    selection: Vec<EntId>,
+    palette_open: bool,
+    side_tab: u8,
+    undo: usize,
+    xml: String,
+    edited: bool,
+    drafts: usize,
+    mode: Mode,
+    camera: glovebox_editor::camera::Camera,
+}
+
+fn kept(t: &mut T) -> Kept {
+    let drafts = std::fs::read_dir(t.home.join("drafts")).map(|d| d.count()).unwrap_or(0);
+    let w = t.w();
+    Kept {
+        selection: w.ed.selection.clone(),
+        palette_open: w.palette_open,
+        side_tab: w.palette.side_tab,
+        undo: w.ed.undo_stack.len(),
+        xml: w.ed.serialize(),
+        edited: w.ed.is_edited() || !w.edited_levels.is_empty(),
+        drafts,
+        mode: w.ed.mode,
+        camera: w.ed.camera.clone(),
+    }
+}
+
+/// The rectangle round the widgets with these labels.
+fn around(t: &T, labels: &[&str]) -> Option<egui::Rect> {
+    let mut out: Option<egui::Rect> = None;
+    for l in labels {
+        let r = t.find(l, true).first()?.rect();
+        out = Some(out.map_or(r, |o| o.union(r)));
+    }
+    out
+}
+
+fn close(a: egui::Rect, b: egui::Rect) -> bool {
+    (a.min - b.min).abs().max_elem() <= 1.0 && (a.max - b.max).abs().max_elem() <= 1.0
+}
+
+/// Goes through a running tour from its first step to Done. At each step the bright part is the target's
+/// rectangle, inside the window, and the bubble is inside the window and beside it. `tag` names the pictures.
+fn walk_tour(t: &mut T, tag: &str) {
+    use glovebox::tour::{Show, Target, GUIDE, STEPS};
+    let n = STEPS.len();
+    let mut i = 0;
+    let mut went_back = false;
+    while i < n {
+        t.settle();
+        let s = &STEPS[i];
+        let window = t.h.ctx.content_rect();
+        let Some((step, spot, bubble)) = t.w().tour.run.as_ref().map(|r| (r.step, r.spot, r.bubble)) else {
+            t.check(&format!("{tag}: the tour runs at step {}", i + 1), false);
+            return;
+        };
+        let target = t.w().tour.target(s.target);
+        // The target is the real widget or panel
+        let w = t.w();
+        let (panels, view) = (w.panels, w.view.rect);
+        let widget = match s.target {
+            Target::LevelList => around(t, &["Level"]),
+            Target::Tools => around(t, &["Move", "Rotate", "Scale"]),
+            Target::Add => around(t, &["+ Add"]),
+            Target::Build => around(t, &["Test level", "Build ROM"]),
+            Target::Patch => around(t, &["Export patch"]),
+            Target::Undo => around(t, &["Reset level", "Undo", "Redo"]),
+            Target::Options => around(t, &["Options"]),
+            Target::View => Some(view),
+            Target::LevelPanel => Some(panels.level),
+            Target::Checks => Some(panels.checks),
+            // The inspector is the right panel's part over the Checks panel
+            Target::Inspector => target.filter(|r| panels.inspector.contains_rect(*r) && (r.max.y - panels.checks.min.y).abs() <= 1.0 && r.height() > 100.0),
+            Target::Toolbar | Target::RightPanel => None,
+        };
+        let on_target = match (spot, target, widget) {
+            (Some(s), Some(t), Some(w)) => close(s, t.intersect(window)) && close(t, w),
+            _ => false,
+        };
+        let size_ok = spot.is_some_and(|s| s.width() >= 8.0 && s.height() >= 8.0 && window.contains_rect(s));
+        let bubble_ok = bubble.is_positive() && window.contains_rect(bubble) && spot.is_some_and(|s| !bubble.intersects(s));
+        let texts = step == i && t.reads(s.title) && t.has(&format!("{} of {n}", i + 1)) && t.has(if i + 1 == n { "Done" } else { "Next" }) && t.has("Skip") == (i + 1 < n);
+        let w = t.w();
+        let (selected, palette) = (w.ed.selection.len(), w.palette_open);
+        let shows = match s.show {
+            Show::Plain => selected == 0 && !palette,
+            Show::Selection => selected == 1 && !palette,
+            Show::AddPanel => palette && t.has("Collectables"),
+        };
+        t.shot(&format!("{tag}-{:02}", i + 1));
+        t.detail(
+            &format!("{tag}: step {} ({}) lights its target, with the bubble beside it", i + 1, s.title),
+            on_target && size_ok && bubble_ok && texts && shows,
+            format!("{on_target} {size_ok} {bubble_ok} {texts} {shows} spot {spot:?} target {target:?} widget {widget:?} bubble {bubble:?} window {window:?}"),
+        );
+        if i == 1 {
+            // The editor's keys and a click in the view do nothing
+            let before = kept(t);
+            let ed = t.ed();
+            let some = ent(ed, |e| e.kind == "enemy" && !e.is_handle);
+            let at = some.map(|e| px(ed, ed.obj_pos(e))).unwrap_or((100.0, 100.0));
+            let had = ed.entities.len();
+            for key in [Key::R, Key::A, Key::B, Key::C, Key::P, Key::Delete] {
+                t.key(key);
+            }
+            t.key_with(Modifiers::COMMAND, Key::A);
+            t.view_click(at, Modifiers::default());
+            let w = t.w();
+            let off = !w.ed.box_mode && !w.ed.path.on && !w.view.fly.on && w.ed.entities.len() == had && w.tour.run.as_ref().is_some_and(|r| r.step == 1);
+            let same = kept(t) == before;
+            t.check(&format!("{tag}: the editor's keys and a click in the view do nothing during the tour"), off && same);
+        }
+        if i == 3 && !went_back {
+            // Back, by the button and by the key, then forward again by the keys
+            went_back = true;
+            let a = t.click("Back") && t.w().tour.run.as_ref().is_some_and(|r| r.step == 2);
+            t.key(Key::ArrowLeft);
+            let b = t.w().tour.run.as_ref().is_some_and(|r| r.step == 1);
+            t.key(Key::ArrowRight);
+            t.key(Key::Enter);
+            let c = t.w().tour.run.as_ref().is_some_and(|r| r.step == 3);
+            t.detail(&format!("{tag}: Back, the arrow keys and Enter move between the steps"), a && b && c, format!("{a} {b} {c}"));
+            continue;
+        }
+        if i + 1 == n {
+            // The link to the guide opens the browser
+            let mut opened = false;
+            if let Some(link) = t.find("Open the guide", false).first() {
+                link.click();
+            }
+            for _ in 0..4 {
+                t.h.step();
+                opened |= t.h.output().platform_output.commands.iter().any(|c| matches!(c, egui::OutputCommand::OpenUrl(u) if u.url == GUIDE));
+            }
+            t.check(&format!("{tag}: the last step's link opens the guide"), opened);
+            let done = t.click("Done") && t.w().tour.run.is_none() && !t.has("Done");
+            t.check(&format!("{tag}: Done ends the tour"), done);
+        } else {
+            t.click("Next");
+        }
+        i += 1;
+    }
+}
+
+/// The welcome on the first start, and the tour of the window.
+///
+/// On a user folder without settings the welcome shows once a level is open, and not before. `No thanks` closes it
+/// and writes the setting: a new window on the folder has no welcome. `Show me round` starts the tour, and so does
+/// `Take the tour` of the Options menu. The tour is walked at three window sizes (`walk_tour`). `Skip` and Esc end
+/// it. After it the selection, the panels, the camera, the undo steps and the level are as before, and no draft is
+/// written.
+///
+/// With `GLOVEBOX_SHOTS` it saves every step in `DIR/THEME/`, and with `GLOVEBOX_ROM` also on a level of the game.
+#[test]
+fn welcome_and_tour() {
+    use glovebox::tour::STEPS;
+    let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
+    let theme = std::env::var("GLOVEBOX_THEME").ok();
+    let first_start = theme.as_ref().map(|id| format!("[General]\ntheme={id}\n")).unwrap_or_default();
+    let dir = theme.clone().unwrap_or_else(|| "1998".to_string());
+    let mut results = Vec::new();
+    for (k, (name, size, scale)) in [("1500x950", [1500.0, 950.0], 1.0), ("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5)].into_iter().enumerate() {
+        let tag = format!("{dir}/{name}");
+        let mut t = T::with_settings(&format!("tour-{name}"), fixture(), size, &first_start);
+        t.h.set_pixels_per_point(scale);
+        // The welcome waits for the level
+        let mut early = false;
+        let t0 = Instant::now();
+        loop {
+            t.h.step();
+            let w = t.w();
+            early |= w.tour.welcome && (!w.ed.has_level || w.busy);
+            if w.tour.welcome || t0.elapsed() > Duration::from_secs(60) {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(3));
+        }
+        t.idle();
+        let shown = t.w().tour.welcome && t.has("Show me round") && t.has("No thanks") && t.reads("first time");
+        t.shot(&format!("{tag}-00-welcome"));
+        t.detail(&format!("{name}: the welcome shows once the level is open, and not before"), shown && !early, format!("{shown} {early}"));
+        let unset = !std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains("tour=");
+        // The editor's keys are off under the welcome
+        let before = kept(&mut t);
+        t.key(Key::R);
+        t.key(Key::A);
+        let quiet = kept(&mut t) == before && t.w().tour.welcome;
+        t.check(&format!("{name}: the editor's keys do nothing under the welcome"), unset && quiet);
+        let saved = |t: &T| std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains("tour=seen");
+        if k == 0 {
+            // No thanks, then a new window on the same folder
+            let closed = t.click("No thanks") && !t.w().tour.welcome && t.w().tour.run.is_none() && !t.has("Show me round");
+            t.detail("No thanks closes the welcome and writes the setting", closed && saved(&t), format!("{closed}"));
+            let home = t.home.clone();
+            results.append(&mut t.results);
+            drop(t.h);
+            t = T::open(home, fixture(), size);
+            t.idle();
+            let none = !t.w().tour.welcome && !t.has("Show me round") && t.w().tour.run.is_none();
+            t.check("a new window on the same folder has no welcome", none);
+            // Something selected and the Add panel open, then the tour from the Options menu
+            let ed = t.ed();
+            let enemy = ent(ed, |e| e.kind == "enemy");
+            ed.select(enemy, false);
+            t.click("+ Add");
+            t.click("Rotate");
+            let before = kept(&mut t);
+            let started = t.option("Take the tour") && t.w().tour.run.as_ref().is_some_and(|r| r.step == 0);
+            t.check("Take the tour of the Options menu starts the tour", started && before.palette_open && before.selection.len() == 1);
+            walk_tour(&mut t, &tag);
+            t.settle();
+            let after = kept(&mut t);
+            t.detail("after the tour the editor is as it was before", after == before && after.drafts == 0 && !after.edited, format!("{:?} {:?} {} {} {:?}", after.selection, after.palette_open, after.side_tab, after.undo, after.mode));
+        } else {
+            let before = kept(&mut t);
+            let started = t.click("Show me round") && !t.w().tour.welcome && t.w().tour.run.as_ref().is_some_and(|r| r.step == 0);
+            t.detail(&format!("{name}: Show me round starts the tour and writes the setting"), started && saved(&t), format!("{started}"));
+            walk_tour(&mut t, &tag);
+            t.settle();
+            let after = kept(&mut t);
+            t.check(&format!("{name}: after the tour the editor is as it was before"), after == before && after.drafts == 0 && !after.edited);
+        }
+        // Again from the Options menu: Skip ends it, and so does Esc, at any step
+        let before = kept(&mut t);
+        let again = t.option("Take the tour") && t.w().tour.run.is_some();
+        t.click("Next");
+        t.click("Next");
+        let at_three = t.w().tour.run.as_ref().is_some_and(|r| r.step == 2) && t.ed().selection.len() == 1;
+        let skipped = t.click("Skip") && t.w().tour.run.is_none() && kept(&mut t) == before;
+        t.detail(&format!("{name}: Skip ends the tour"), again && at_three && skipped, format!("{again} {at_three} {skipped}"));
+        t.option("Take the tour");
+        for _ in 0..4 {
+            t.key(Key::ArrowRight);
+        }
+        let open = t.w().tour.run.as_ref().is_some_and(|r| r.step == 4) && t.w().palette_open;
+        t.key(Key::Escape);
+        let ended = t.w().tour.run.is_none() && !t.has(&format!("5 of {}", STEPS.len())) && kept(&mut t) == before;
+        t.detail(&format!("{name}: Esc ends the tour"), open && ended, format!("{open} {ended}"));
+        // The editor's keys work again
+        t.key(Key::R);
+        let back = t.ed().mode == Mode::Scale;
+        t.check(&format!("{name}: after the tour the editor's keys work"), back);
+        results.append(&mut t.results);
+        t.finish();
+    }
+
+    // A level of the game, for the pictures
+    match (std::env::var_os("GLOVEBOX_ROM").map(PathBuf::from), std::env::var_os("GLOVEBOX_SHOTS")) {
+        (Some(rom), Some(_)) => {
+            let mut t = T::with_settings("tour-rom", None, [1280.0, 800.0], &first_start);
+            t.files.0.borrow_mut().open.push_back(rom);
+            t.settle();
+            let setup = !t.has("Show me round");
+            t.h.get_by_label("Choose the ROM…").click();
+            t.settle();
+            t.idle();
+            let shown = t.w().tour.welcome && t.has("Show me round");
+            t.detail("the welcome is not over the setup screen, and shows on the first level of the game", setup && shown, format!("{setup} {shown}"));
+            t.shot(&format!("{dir}/rom-00-welcome"));
+            let before = kept(&mut t);
+            t.click("Show me round");
+            walk_tour(&mut t, &format!("{dir}/rom"));
+            t.settle();
+            let same = kept(&mut t) == before;
+            t.check("a level of the game is as it was after the tour", same);
+            results.append(&mut t.results);
+            t.finish();
+        }
+        _ => println!("skipped: GLOVEBOX_ROM and GLOVEBOX_SHOTS are not both set (the tour on a level of the game)"),
+    }
+    let failed: Vec<&(String, bool, String)> = results.iter().filter(|r| !r.1).collect();
+    assert!(failed.is_empty(), "failed: {:?}", failed.iter().map(|r| (&r.0, &r.2)).collect::<Vec<_>>());
 }
 
 /// The first-run screen: a wrong file is refused with the first-run screen's message.

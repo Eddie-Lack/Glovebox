@@ -291,7 +291,7 @@ fn thousands(n: usize) -> String {
 }
 
 /// A dialog's title: the title bar and the theme's divider.
-fn title_bar(ui: &mut egui::Ui, title: &str) {
+pub(crate) fn title_bar(ui: &mut egui::Ui, title: &str) {
     ui.spacing_mut().item_spacing.y = 0.0;
     style::title_bar(ui, title);
     style::divider(ui);
@@ -299,7 +299,7 @@ fn title_bar(ui: &mut egui::Ui, title: &str) {
     ui.add_space(6.0);
 }
 
-fn buttons(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
+pub(crate) fn buttons(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
     ui.add_space(6.0);
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), add);
 }
