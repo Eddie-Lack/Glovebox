@@ -38,6 +38,9 @@ is written out in the practice ROM's CLAUDE.md, "Writing style for docs" (github
 In short: talk to the player as "you", casually; one fact per line; no full stop at the end of table cells, bullets or
 one-line paragraphs; links in italics; choices in backticks; important warnings in headings with "!".
 
+The owner edits `README.md` and `app/README.txt` himself. They are the model for this style: match them, and keep his
+wording when you change something near it.
+
 ## Running it from source
 
 You need the Rust toolchain (stable) and the ROM. On Linux the window also needs `libxkbcommon-dev` and

@@ -864,7 +864,9 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   `--self-test` and packs `Glovebox-<version>-windows-x64.zip`: `Glovebox.exe`, `README.txt`,
   `THIRD_PARTY_NOTICES.md` and `licenses/`.
 - `licenses/` is made by `tools/licenses.py`: the licence files of every crate linked into the Windows program
-  (from `cargo metadata`, without build and test dependencies) and of the fonts egui embeds.
+  (from `cargo metadata`, without build and test dependencies and without procedural macros, which run in the
+  compiler) and of the fonts egui embeds. Each distinct text is there once, and `CRATES.txt` lists the crates with
+  their licences and files.
 - The app is released for Windows. It also builds and runs on Linux from source (`cargo run -p glovebox --release`).
 
 ## The guide's pictures
