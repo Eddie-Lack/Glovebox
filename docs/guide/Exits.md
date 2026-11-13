@@ -20,7 +20,7 @@ The game doesn't care what the model looks like. It tests a sphere round the pla
 
 Select the platform. The `Exit trigger` card tells you the radius, who has to get inside and what else the game wants.
 
-<img src="img/exit-trigger-inspector.png" alt="The Exit trigger card: exit type 1, radius 20, the ball, and Glover must hold the ball" width="480">
+<img src="img/exit-trigger-inspector.png" alt="The Exit trigger card: exit type 1, radius 20, the ball, and Glover must hold the ball" width="380">
 
 It's the centre of Glover or the ball that counts, not the edge.
 

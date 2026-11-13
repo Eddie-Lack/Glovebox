@@ -409,6 +409,37 @@ pub fn plaque(painter: &egui::Painter, rect: Rect) {
 }
 
 /// The theme's fine grid behind a panel's content, when it has one.
+/// Shows a panel's contents in the room the panel has now. The contents cannot make the panel larger: what
+/// does not fit is clipped. A panel's size then comes from its default and from drags on its edge only.
+pub fn fixed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
+    let rect = ui.available_rect_before_wrap();
+    ui.set_min_size(rect.size());
+    let mut child = ui.new_child(egui::UiBuilder::new().id_salt("fixed").max_rect(rect).layout(egui::Layout::top_down(egui::Align::Min)));
+    child.shrink_clip_rect(rect);
+    add(&mut child)
+}
+
+/// Notes how much wider than its room a scroll area's content was. `overflow` gives the largest so far.
+pub fn fits<R>(ui: &Ui, name: &'static str, out: &egui::scroll_area::ScrollAreaOutput<R>) {
+    let over = out.content_size.x - out.inner_rect.width();
+    let id = egui::Id::unique("panel overflow");
+    ui.data_mut(|d| {
+        let worst = d.get_temp_mut_or(id, (0.0f32, ""));
+        if over > worst.0 {
+            *worst = (over, name);
+        }
+    });
+}
+
+/// The largest overflow `fits` saw since the last `reset_overflow`, in points, and the scroll area's name.
+pub fn overflow(ctx: &egui::Context) -> (f32, &'static str) {
+    ctx.data(|d| d.get_temp(egui::Id::unique("panel overflow"))).unwrap_or((0.0, ""))
+}
+
+pub fn reset_overflow(ctx: &egui::Context) {
+    ctx.data_mut(|d| d.insert_temp(egui::Id::unique("panel overflow"), (0.0f32, "")));
+}
+
 pub fn ground(ui: &Ui) {
     if let Some((fine, coarse)) = theme(ui.ctx()).grid {
         let rect = ui.max_rect();

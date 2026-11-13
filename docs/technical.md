@@ -110,8 +110,19 @@ nothing else. The program never runs them.
 - Picking runs on the CPU: a ray against each mesh's triangles, sprites as camera-facing squares, lines
   within 5 pixels.
 - The panels are fixed in place: the outliner on the left, the inspector on the right, the checks under the view, and
-  the Add palette beside the inspector. Their edges can be dragged. A colour is picked in the inspector itself, not in
-  a dialog.
+  the Add palette beside the inspector. A colour is picked in the inspector itself, not in a dialog.
+- A panel's size comes from its default (`LEVEL_WIDTH` 270, `INSPECTOR_WIDTH` 380, `ADD_WIDTH` 360 in `app.rs`) and
+  from drags on its edge. Its contents never change it:
+  - egui grows a panel to fit its contents and remembers the larger size. A card measures the buttons of its title
+    bar in its first frame and is too wide in that frame. Each new selection then widened the inspector, up to its
+    largest width, and it went back there after every drag.
+  - `style::fixed` shows a panel's contents in a child `Ui` of the panel's size and clips it. Every panel uses it.
+  - Contents must fit the default width. Each scroll area reports how much wider its content was (`style::fits`),
+    and the click test `panels_resize` checks that this is zero for every kind of object and every tab.
+  - A widget that is too wide also widens every row after it in the same `Ui`: egui moves the layout's right edge.
+  - The 3D view does not take the pointer in the strips along its left and right sides (egui's
+    `resize_grab_radius_side`). The view is added after the panels, and it took the half of each resize handle that
+    lies over it.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
   (`render/icons.rs`), not with a system font. They look the same on every computer.
 - The look is a theme. The themes are data in `theme.rs`; `style.rs` draws everything from the active one.
@@ -872,7 +883,8 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
 - A picture of one panel is cut out of the window's picture. For a tall panel the window is 1060 high.
 - The numbers on `window-tour.png` are drawn by the test (`Pic::marker`). The list under the picture in
   `docs/guide/The-window.md` explains them. No other picture is drawn on.
-- The small pictures of the contents list (`thumb-*.png`) are parts of the same pictures, 240 by 150.
+- The small pictures of the contents list (`thumb-*.png`) are parts of the same pictures, 240 by 150. Most are at
+  half size. Those of a side panel are at two thirds: the panel is 380 wide.
 - The files are PNGs with a palette of 256 colours (`Pic::save`). The 64 most used colours keep their exact values,
   which keeps the window's flat colours right. A median cut shares the rest among the shades of the 3D view.
 - The pointer shows in the pictures of an open menu and of the box select. Elsewhere it leaves the window first.

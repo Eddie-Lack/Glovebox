@@ -23,7 +23,7 @@ Each garib lands on the ground under it.
 
 ## The settings
 
-<img src="img/path-panel.png" alt="The Path panel: place, garib type, every, where, to the side, over the ground" width="480">
+<img src="img/path-panel.png" alt="The Path panel: place, garib type, every, where, to the side, over the ground" width="380">
 
 | Setting | What it does |
 | --- | --- |

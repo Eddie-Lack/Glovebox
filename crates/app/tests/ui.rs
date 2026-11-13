@@ -408,6 +408,22 @@ impl T {
         self.settle();
     }
 
+    /// A drag with the left button between two points of the window.
+    fn drag_window(&mut self, from: egui::Pos2, to: egui::Pos2) {
+        let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::default() };
+        self.h.event(egui::Event::PointerMoved(from));
+        self.h.step();
+        self.h.event(button(from, true));
+        self.h.step();
+        for k in 1..=4 {
+            self.h.event(egui::Event::PointerMoved(from + (to - from) * (k as f32 / 4.0)));
+            self.h.step();
+        }
+        self.h.event(button(to, false));
+        self.h.step();
+        self.settle();
+    }
+
     /// The middle of the text box with this label, in the window.
     fn field_at(&mut self, label: &str) -> Option<egui::Pos2> {
         let role = egui::accesskit::Role::TextInput;
@@ -2088,6 +2104,144 @@ fn small_and_scaled_windows() {
         t.check(&format!("{name}: buttons work"), n == 2);
         t.finish();
     }
+}
+
+/// The side panels start at their default sizes, their contents fit, and a drag on an edge sets a size that stays.
+#[test]
+fn panels_resize() {
+    use glovebox::app::{ADD_WIDTH, INSPECTOR_WIDTH, LEVEL_WIDTH};
+    let near = |a: f32, b: f32| (a - b).abs() <= 1.0;
+    let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
+    let mut t = T::new("panels", Some(backend), [1280.0, 720.0]);
+    t.h.step();
+    let first = t.w().panels;
+    t.detail("panels: the inspector starts at its default width", near(first.inspector.width(), INSPECTOR_WIDTH), format!("{first:?}"));
+    t.detail("panels: the level panel starts at its default width", near(first.level.width(), LEVEL_WIDTH), format!("{first:?}"));
+    t.idle();
+    let (p, view) = (t.w().panels, t.w().view.rect);
+    t.detail("panels: the widths hold once a level is open", near(p.inspector.width(), INSPECTOR_WIDTH) && near(p.level.width(), LEVEL_WIDTH), format!("{p:?}"));
+    t.detail("panels: the 3D view has half of a 1280 wide window", near(view.width(), 1280.0 - LEVEL_WIDTH - INSPECTOR_WIDTH) && view.width() >= 620.0, format!("{view:?}"));
+    t.detail("panels: the checks start at their share of the height", (180.0..=320.0).contains(&p.checks.height()), format!("{:?}", p.checks));
+
+    // Every kind of object in the inspector: nothing is wider than the panel, and the panel keeps its width
+    let mut wide = Vec::new();
+    for i in 0..t.ed().entities.len() {
+        t.ed().select(Some(i), false);
+        t.settle();
+        // A card measures its buttons in its first frame, so the frames after it count
+        glovebox::style::reset_overflow(&t.h.ctx);
+        t.settle();
+        let over = glovebox::style::overflow(&t.h.ctx);
+        if over.0 > 0.5 {
+            wide.push((t.ed().entities[i].label.clone(), over));
+        }
+    }
+    // Many objects, a puzzle, the level's settings, and the tabs a narrow window puts in the inspector's panel
+    let fits = |t: &mut T, name: &str, wide: &mut Vec<(String, (f32, &'static str))>| {
+        t.settle();
+        glovebox::style::reset_overflow(&t.h.ctx);
+        t.settle();
+        let over = glovebox::style::overflow(&t.h.ctx);
+        t.shot(&format!("24-fits-{name}"));
+        if over.0 > 0.5 {
+            wide.push((name.to_string(), over));
+        }
+    };
+    let all: Vec<EntId> = (0..t.ed().entities.len()).collect();
+    t.ed().set_selection(all);
+    fits(&mut t, "many", &mut wide);
+    let trigger = ent(t.ed(), |e| e.kind == "trigger").map(|i| t.ed().entities[i].node);
+    t.ed().set_selection(Vec::new());
+    t.ed().open_puzzle(trigger);
+    fits(&mut t, "puzzle", &mut wide);
+    t.ed().open_puzzle(None);
+    fits(&mut t, "level-settings", &mut wide);
+    t.click("+ Add");
+    for tab in glovebox::palette::TABS {
+        t.click(tab);
+        fits(&mut t, &format!("add-{tab}"), &mut wide);
+    }
+    t.click("+ Add");
+    t.click("Path");
+    fits(&mut t, "path", &mut wide);
+    t.key(Key::Escape);
+    t.ed().set_selection(Vec::new());
+    t.settle();
+    t.detail("panels: every object's rows fit the inspector's default width", wide.is_empty(), format!("{wide:?}"));
+    let p = t.w().panels;
+    t.detail("panels: selections do not widen the inspector", near(p.inspector.width(), INSPECTOR_WIDTH), format!("{p:?}"));
+
+    // Drags on the inspector's edge
+    let y = p.inspector.center().y;
+    let edge = |t: &mut T| egui::pos2(t.w().panels.inspector.left(), y);
+    for (to, want) in [(1280.0 - 320.0, 320.0), (1280.0 - 500.0, 500.0), (1280.0 - 100.0, 300.0), (1280.0 - 900.0, 560.0), (1280.0 - 420.0, 420.0)] {
+        let from = edge(&mut t);
+        t.drag_window(from, egui::pos2(to, y + 5.0));
+        let got = t.w().panels.inspector.width();
+        t.detail(&format!("panels: a drag sets the inspector's width to {want}"), near(got, want), got.to_string());
+    }
+    let enemy = ent(t.ed(), |e| e.kind == "enemy");
+    t.ed().select(enemy, false);
+    t.settle();
+    t.ed().set_selection(Vec::new());
+    t.settle();
+    let (p, view) = (t.w().panels, t.w().view.rect);
+    t.detail("panels: the dragged width stays", near(p.inspector.width(), 420.0) && near(view.right(), p.inspector.left()), format!("{p:?}"));
+
+    // The level panel's edge
+    for (to, want) in [(220.0, 220.0), (350.0, 350.0), (50.0, 200.0), (300.0, 300.0)] {
+        let from = egui::pos2(t.w().panels.level.right(), y);
+        t.drag_window(from, egui::pos2(to, y + 5.0));
+        let got = t.w().panels.level.width();
+        t.detail(&format!("panels: a drag sets the level panel's width to {want}"), near(got, want), got.to_string());
+    }
+    t.settle();
+    let (p, view) = (t.w().panels, t.w().view.rect);
+    t.detail("panels: the view lies between the dragged panels", near(view.left(), 300.0) && near(view.right(), 1280.0 - 420.0), format!("{p:?} {view:?}"));
+
+    // The checks panel's top edge
+    let x = p.checks.center().x;
+    let bottom = p.checks.bottom();
+    for h in [140.0, 300.0, 200.0] {
+        let from = egui::pos2(x, t.w().panels.checks.top());
+        t.drag_window(from, egui::pos2(x + 5.0, bottom - h));
+        let got = t.w().panels.checks.height();
+        t.detail(&format!("panels: a drag sets the checks' height to {h}"), near(got, h), got.to_string());
+    }
+    t.shot("22-panels-dragged");
+    t.finish();
+
+    // A wide window shows "Add to level" in a panel of its own
+    let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
+    let mut t = T::new("panels-wide", Some(backend), [1920.0, 1080.0]);
+    t.idle();
+    t.click("+ Add");
+    t.settle();
+    let p = t.w().panels;
+    t.detail("panels: the add panel starts at its default width", near(p.add.width(), ADD_WIDTH) && near(p.inspector.width(), INSPECTOR_WIDTH), format!("{p:?}"));
+    let mut wide = Vec::new();
+    for tab in ["Enemies", "Models", "Kit", "Presets", "Camera", "Collectables"] {
+        let found = t.click(tab);
+        t.settle();
+        glovebox::style::reset_overflow(&t.h.ctx);
+        t.settle();
+        let over = glovebox::style::overflow(&t.h.ctx);
+        t.shot(&format!("23-add-{tab}"));
+        if !found || over.0 > 0.5 {
+            wide.push((tab, found, over));
+        }
+    }
+    t.detail("panels: every tab of the add panel fits its default width", wide.is_empty(), format!("{wide:?}"));
+    let y = p.add.center().y;
+    for want in [310.0, 480.0, 360.0] {
+        let add = t.w().panels.add;
+        t.drag_window(egui::pos2(add.left(), y), egui::pos2(add.right() - want, y + 5.0));
+        let got = t.w().panels.add.width();
+        t.detail(&format!("panels: a drag sets the add panel's width to {want}"), near(got, want), got.to_string());
+    }
+    let p = t.w().panels;
+    t.detail("panels: the inspector keeps its width beside the add panel", near(p.inspector.width(), INSPECTOR_WIDTH) && near(p.inspector.left(), p.add.right()), format!("{p:?}"));
+    t.finish();
 }
 
 /// The fonts of every theme have every symbol the app's buttons and texts show.

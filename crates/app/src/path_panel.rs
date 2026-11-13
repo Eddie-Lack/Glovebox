@@ -122,10 +122,11 @@ fn vals(p: &[String; 2]) -> Option<(f64, f64)> {
 }
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
-    egui::ScrollArea::vertical().id_salt("path").auto_shrink([false, false]).show(ui, |ui| {
+    let out = egui::ScrollArea::vertical().id_salt("path").auto_shrink([false, false]).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 6.0;
         egui::Frame::new().inner_margin(egui::Margin { left: 4, right: 8, top: 4, bottom: 8 }).show(ui, |ui| body(w, ui));
     });
+    style::fits(ui, "path", &out);
 }
 
 fn body(w: &mut Window, ui: &mut egui::Ui) {

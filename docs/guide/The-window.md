@@ -29,6 +29,9 @@ Tabs at the top switch between `Inspector`, `Add to level` and `Path`.
 
 On a very wide window the Inspector stays, and the other two get a panel of their own.
 
+- Drag the edge of a panel to make it wider or narrower
+- The line over the `Checks` drags too
+
 ---
 
 _[← Getting started](Getting-started.md)_ · _[Contents](README.md)_ · _[Moving around →](Moving-around.md)_

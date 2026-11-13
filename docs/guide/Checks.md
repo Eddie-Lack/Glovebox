@@ -4,7 +4,7 @@ _Back to the [guide](README.md)_
 
 The `Checks` run the game's own level rules on your level, after every edit.
 
-<img src="img/checks-panel.png" alt="The Checks panel: no new problems, and the draw load" width="560">
+<img src="img/checks-panel.png" alt="The Checks panel: no new problems, and the draw load" width="380">
 
 ## Reading it
 

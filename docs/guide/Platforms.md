@@ -27,7 +27,7 @@ The line going up from the lift is its path. Each point on it can be selected an
 
 Select a platform and the Inspector shows its commands, one card each, in the order the game reads them.
 
-<img src="img/platform-commands.png" alt="The Inspector of the lift: the Transform card, then the Platform card with PlatScale and PlatPathPoint inside" width="480">
+<img src="img/platform-commands.png" alt="The Inspector of the lift: the Transform card, then the Platform card with PlatScale and PlatPathPoint inside" width="380">
 
 The small buttons on a card:
 
@@ -45,7 +45,7 @@ The small buttons on a card:
 
 Press `+` on the `Platform` card and pick one.
 
-<img src="img/platform-add-command.png" alt="The list of commands the plus button offers, some of them greyed out" width="480">
+<img src="img/platform-add-command.png" alt="The list of commands the plus button offers, some of them greyed out" width="485">
 
 The grey ones can't go on this platform. Rest the pointer on one to see why.
 

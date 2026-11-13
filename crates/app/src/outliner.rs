@@ -110,7 +110,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let mut act: Option<Act> = None;
     let row_height = 20.0;
     ui.spacing_mut().item_spacing.y = 0.0;
-    egui::ScrollArea::vertical().id_salt("outliner").auto_shrink([false, false]).show_rows(ui, row_height, rows.len(), |ui, range| {
+    let out = egui::ScrollArea::vertical().id_salt("outliner").auto_shrink([false, false]).show_rows(ui, row_height, rows.len(), |ui, range| {
         let mut list_of_head = 0;
         // The index of the list a header stands for: count the headers before the first shown row
         for r in &rows[..range.start] {
@@ -195,5 +195,6 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
+    style::fits(ui, "level", &out);
     acts.extend(act);
 }

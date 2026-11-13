@@ -145,9 +145,14 @@ fn absent(ui: &mut egui::Ui, name: &str, why: &str) {
 
 /// A combo box over (value, text) pairs. Gives the chosen value.
 fn combo<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash + std::fmt::Debug, label: &str, current: &T, items: &[(T, String)]) -> Option<T> {
+    combo_sized(ui, id, label, current, items, 240.0)
+}
+
+/// A combo box at most `max` points wide. A row with more widgets after the box gives it a small `max`.
+fn combo_sized<T: Clone + PartialEq>(ui: &mut egui::Ui, id: impl std::hash::Hash + std::fmt::Debug, label: &str, current: &T, items: &[(T, String)], max: f32) -> Option<T> {
     let shown = items.iter().find(|i| i.0 == *current).map(|i| i.1.clone()).unwrap_or_default();
     let mut pick = None;
-    let width = ui.available_width().clamp(60.0, 240.0);
+    let width = ui.available_width().clamp(max.min(60.0), max);
     let r = egui::ComboBox::from_id_salt(id).icon(style::combo_icon).selected_text(shown).width(width).truncate().height(360.0).show_ui(ui, |ui| {
         for (v, text) in items {
             if ui.selectable_label(v == current, text).clicked() {
@@ -180,10 +185,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         area = area.vertical_scroll_offset(0.0);
     }
     let mut cx = Cx { ed: &w.ed, st: &mut w.inspector, acts: Vec::new() };
-    area.show(ui, |ui| {
+    let out = area.show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 6.0;
         egui::Frame::new().inner_margin(egui::Margin { left: 4, right: 8, top: 4, bottom: 8 }).show(ui, |ui| fill(&mut cx, ui));
     });
+    style::fits(ui, "inspector", &out);
     let acts = cx.acts;
     w.acts.extend(acts);
 }
@@ -1296,7 +1302,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
         });
         row(ui, "rotate by °", |ui| {
             let items = [(0usize, "y".to_string()), (1, "x".to_string()), (2, "z".to_string())];
-            if let Some(a) = combo(ui, "axis", "axis", &st.axis, &items) {
+            if let Some(a) = combo_sized(ui, "axis", "axis", &st.axis, &items, 56.0) {
                 st.axis = a;
             }
             let (r, _) = numfield::bound(ui, egui::Id::unique("rotate by"), &mut st.deg, UNIT, |t| t.desired_width(40.0));

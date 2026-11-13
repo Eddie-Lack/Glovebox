@@ -19,7 +19,7 @@ It comes with a script that type has in a shipped level, moved to the new spot.
 
 Select an enemy and scroll down in the Inspector to `ENEMY SCRIPT`.
 
-<img src="img/enemy-script.png" alt="The script of the first enemy: two normal instructions, two conditional ones and the attack list" width="480">
+<img src="img/enemy-script.png" alt="The script of the first enemy: two normal instructions, two conditional ones and the attack list" width="380">
 
 It has three lists:
 
@@ -44,7 +44,7 @@ Follow, flee and face have a `Target`: the glove, the ball, or the closer one.
 
 `Ready-made` swaps in a whole normal list.
 
-<img src="img/enemy-ready-made.png" alt="The Ready-made menu: Chase the glove, Wander in a box, Patrol between two points, Stand still" width="480">
+<img src="img/enemy-ready-made.png" alt="The Ready-made menu: Chase the glove, Wander in a box, Patrol between two points, Stand still" width="380">
 
 ### A list that runs off its end is an error!
 

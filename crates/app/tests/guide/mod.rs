@@ -77,6 +77,18 @@ impl Pic {
         Pic { w, h, px }
     }
 
+    /// The picture twice as large: each pixel becomes a square of 2 by 2.
+    pub fn doubled(&self) -> Pic {
+        let mut px = Vec::with_capacity(self.px.len() * 4);
+        for y in 0..self.h * 2 {
+            for x in 0..self.w * 2 {
+                let at = ((y / 2) * self.w + x / 2) * 3;
+                px.extend_from_slice(&self.px[at..at + 3]);
+            }
+        }
+        Pic { w: self.w * 2, h: self.h * 2, px }
+    }
+
     /// A round marker with a number from 1 to 9: a disc of the theme's accent with a light ring and digit.
     pub fn marker(&mut self, at: egui::Pos2, n: usize, disc: [u8; 3], ink: [u8; 3]) {
         let r = 13.0f32;
@@ -347,6 +359,24 @@ impl G {
     }
 }
 
+impl G {
+    /// A small picture of a part of a side panel, 240 by 150. The panel is narrower than two thumbs, so the part is
+    /// 360 by 225 and the picture is two thirds of its size.
+    fn thumb_panel(&mut self, name: &str, pic: &Pic, at: egui::Pos2) {
+        let r = egui::Rect::from_min_size(at, egui::vec2(360.0, 225.0));
+        let small = pic.crop(r).doubled().smaller(3);
+        self.save(&format!("thumb-{name}"), &small);
+    }
+
+    /// A small picture of the key hints, 240 by 150: a part of 600 by 375 at two fifths of its size. The hints are
+    /// wider than two thumbs.
+    fn thumb_hints(&mut self, name: &str, pic: &Pic, at: egui::Pos2) {
+        let r = egui::Rect::from_min_size(at, egui::vec2(600.0, 375.0));
+        let small = pic.crop(r).doubled().smaller(5);
+        self.save(&format!("thumb-{name}"), &small);
+    }
+}
+
 const SAGE: [u8; 3] = [0x46, 0x70, 0x52];
 const PAPER: [u8; 3] = [0xff, 0xff, 0xff];
 
@@ -473,7 +503,7 @@ fn start(g: &mut G) {
     g.save("window-tour", &p);
     g.thumb("the-window", &p, egui::pos2(40.0, 25.0), 5);
     // The key hints at the bottom of the view
-    g.thumb("keys", &p, egui::pos2(v.min.x - 15.0, v.max.y - 300.0), 2);
+    g.thumb_hints("keys", &p, egui::pos2(v.min.x + 8.0, v.max.y - 372.0));
 }
 
 fn moving(g: &mut G) {
@@ -559,7 +589,7 @@ fn adding(g: &mut G) {
         let p = g.pic().crop(r);
         g.save(&format!("add-{}", tab.to_lowercase()), &p);
         if tab == "Enemies" {
-            g.thumb("adding", &p, egui::pos2(0.0, 30.0), 2);
+            g.thumb_panel("adding", &p, egui::pos2(10.0, 30.0));
         }
     }
     g.tall(false);
@@ -591,10 +621,12 @@ fn platforms(g: &mut G) {
     let ins = g.inspector();
     let p = g.pic().crop(ins);
     g.save("platform-commands", &p);
-    g.thumb("platforms", &p, egui::pos2(0.0, 90.0), 2);
+    g.thumb_panel("platforms", &p, egui::pos2(10.0, 90.0));
     // The + menu of the platform's card
     g.click("+");
-    let p = g.raw().crop(ins);
+    // The menu is wider than the panel: the picture starts where the menu does
+    let left = g.t.find("<PlatDestructible>", false).iter().map(|n| n.rect().min.x - 14.0).fold(ins.min.x, f32::min);
+    let p = g.raw().crop(egui::Rect::from_min_max(egui::pos2(left, ins.min.y), ins.max));
     g.save("platform-add-command", &p);
     g.t.key(Key::Escape);
 }
@@ -610,7 +642,7 @@ fn enemies(g: &mut G) {
     let top = g.rect_of("ENEMY SCRIPT").map_or(ins.min.y, |r| r.min.y - 10.0);
     let part = egui::Rect::from_min_max(egui::pos2(ins.min.x, top.max(ins.min.y)), ins.max);
     g.save("enemy-script", &p.crop(part));
-    g.thumb("enemies", &p, part.min + egui::vec2(0.0, 60.0), 2);
+    g.thumb_panel("enemies", &p, part.min + egui::vec2(10.0, 60.0));
     g.scroll_to("ENEMY SCRIPT");
     g.click("Ready-made");
     let p = g.raw();
@@ -711,7 +743,7 @@ fn level_settings(g: &mut G) {
     let p = g.pic();
     g.save("level-settings", &p.crop(part));
     let top = g.rect_of("LEVEL SETTINGS").map_or(ins.min.y, |r| r.min.y - 10.0);
-    g.thumb("level-settings", &p, egui::pos2(ins.min.x, top), 2);
+    g.thumb_panel("level-settings", &p, egui::pos2(ins.min.x + 10.0, top));
     g.click("Look");
     let p = g.raw();
     let low = g.t.find("Daylight", false).first().map_or(part.max.y, |n| n.rect().max.y + 40.0);
@@ -733,7 +765,7 @@ fn checks_and_builds(g: &mut G) {
     let r = g.checks();
     let low = g.t.find("Free heap", false).first().map_or(r.max.y, |n| n.rect().max.y + 12.0);
     g.save("checks-panel", &p.crop(egui::Rect::from_min_max(r.min, egui::pos2(r.max.x, low))));
-    g.thumb("checks", &p, egui::pos2(r.min.x, r.min.y - 60.0), 2);
+    g.thumb_panel("checks", &p, egui::pos2(r.min.x + 10.0, r.min.y - 60.0));
     g.t.ed().show_far_plane(None, 0.0);
     // The build row of the toolbar
     let v = g.view();

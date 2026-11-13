@@ -26,7 +26,7 @@ A condition that tests where something is has a shape in the view.
 
 Select a trigger volume and press `Edit its puzzle`.
 
-<img src="img/puzzle-inspector.png" alt="The puzzle of the lift: it fires once, when Glover is inside a box, and starts a platform" width="480">
+<img src="img/puzzle-inspector.png" alt="The puzzle of the lift: it fires once, when Glover is inside a box, and starts a platform" width="380">
 
 - `Fires`: every frame while true, once, or a number of times
 - `Needs`: all conditions, any condition, or at least a number of them
@@ -39,7 +39,7 @@ Note: a puzzle with no limit runs its actions on every frame its conditions hold
 
 With nothing selected, the Inspector lists every puzzle. Click one to open it.
 
-<img src="img/puzzle-list.png" alt="The six puzzles of the level, each on one line" width="480">
+<img src="img/puzzle-list.png" alt="The six puzzles of the level, each on one line" width="380">
 
 `+ New puzzle` starts an empty one.
 
@@ -67,7 +67,7 @@ Move and size the box like any trigger volume.
 
 The `Camera zone` card changes the preset, the heading, the look angle, the distance, the height and the point to fly to.
 
-<img src="img/camera-zone-inspector.png" alt="The Camera zone card with preset, player walks, look, distance, height and fly to" width="480">
+<img src="img/camera-zone-inspector.png" alt="The Camera zone card with preset, player walks, look, distance, height and fly to" width="380">
 
 They work on any ROM. No game mod needed.
 

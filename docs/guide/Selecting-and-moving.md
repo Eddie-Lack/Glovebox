@@ -45,7 +45,7 @@ Not everything can turn or grow. _[What can rotate and scale](../Using-the-edito
 
 ## The number fields
 
-<img src="img/inspector-transform.png" alt="The Transform card with position, rotation and scale fields" width="480">
+<img src="img/inspector-transform.png" alt="The Transform card with position, rotation and scale fields" width="380">
 
 - Click a field to type a number
 - Drag left or right on a field to change it
@@ -56,7 +56,7 @@ Not everything can turn or grow. _[What can rotate and scale](../Using-the-edito
 
 With several objects selected the Inspector has `move by`, `rotate by` and `scale by`. Type a number and press `Apply`.
 
-<img src="img/inspector-many.png" alt="The Transform selection card for ten selected objects" width="480">
+<img src="img/inspector-many.png" alt="The Transform selection card for ten selected objects" width="380">
 
 ## Undo
 

@@ -4,7 +4,7 @@ _Back to the [guide](README.md)_
 
 Select nothing (`Esc`) and the Inspector shows the level's settings.
 
-<img src="img/level-settings.png" alt="The Inspector with nothing selected: the counts, the file name, and the title, music and clock" width="480">
+<img src="img/level-settings.png" alt="The Inspector with nothing selected: the counts, the file name, and the title, music and clock" width="380">
 
 ## Title, music and clock
 
@@ -24,7 +24,7 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 
 `Look` sets the lights and the fog to a preset.
 
-<img src="img/level-settings-look.png" alt="The Look menu: Graveyard violet, Frozen green, Blood red, Rotting green arena, Burning dark, Daylight" width="480">
+<img src="img/level-settings-look.png" alt="The Look menu: Graveyard violet, Frozen green, Blood red, Rotting green arena, Burning dark, Daylight" width="380">
 
 `Daylight (shipped levels)` goes back to a normal day.
 

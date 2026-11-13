@@ -284,7 +284,10 @@ fn fly_step(w: &mut Window, ui: &egui::Ui) {
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let rect = ui.available_rect_before_wrap();
-    let resp = ui.allocate_rect(rect, egui::Sense::click_and_drag());
+    // The view leaves the strips along its sides to the handles that resize the panels next to it
+    let grab = ui.style().interaction.resize_grab_radius_side;
+    ui.allocate_rect(rect, egui::Sense::hover());
+    let resp = ui.interact(rect.shrink2(egui::vec2(grab, 0.0)), ui.scope_id().with("3D view"), egui::Sense::click_and_drag());
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Canvas, true, "3D view"));
     if rect != w.view.rect {
         w.view.rect = rect;
