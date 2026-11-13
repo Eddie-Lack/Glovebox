@@ -288,6 +288,30 @@ mod tests {
         v.as_object().cloned().unwrap_or_default()
     }
 
+    // The game repeats every texture. A texture marked as not repeating (a face, a board with words) must be laid
+    // inside its own picture, or it shows again beside itself. Textures also keep to the converter's limits.
+    #[test]
+    fn no_texture_that_must_not_repeat_is_laid_past_its_edges() {
+        let mut cases: Vec<(String, Params)> = items().as_array().unwrap().iter().map(|it| (it["id"].as_str().unwrap().to_string(), Params::new())).collect();
+        for face in 1..=8 {
+            cases.push(("pumpkin".into(), p(json!({"face": face}))));
+        }
+        cases.push(("grave".into(), p(json!({"text": "A/B/C/D/E", "lean": 15}))));
+        cases.push(("sign".into(), p(json!({"top": "ABCDEFGHIJK", "bottom": "ABCDEFGHIJ"}))));
+        for (item, params) in cases {
+            let soup = build(&item, &params).unwrap();
+            assert!(soup.count() <= crate::custom::MAX_TRIANGLES, "{item}");
+            for (m, im) in soup.mats.iter().enumerate() {
+                assert!(im.w * im.h <= crate::custom::MAX_TEXELS && im.w.max(im.h) <= crate::custom::MAX_SIDE, "{item}: texture {m}");
+            }
+            for t in &soup.tris {
+                if soup.clamp[t.mat] {
+                    assert!(t.uv.iter().flatten().all(|c| (-1e-9..=1.0 + 1e-9).contains(c)), "{item}: texture {} at {:?}", t.mat, t.uv);
+                }
+            }
+        }
+    }
+
     #[test]
     fn the_list_has_every_item_once() {
         let list = items();

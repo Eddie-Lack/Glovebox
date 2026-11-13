@@ -4,6 +4,17 @@ _Back to the [README](../README.md)_
 
 New here? _[The guide](guide/README.md)_ shows how to do things, with pictures. This page is the full list
 
+## The tour
+
+The first time a level opens, the editor asks if you want a quick tour
+
+- `Show me round` starts it, `No thanks` skips it. It only asks once
+- Each step lights up one part of the window and says what it's for
+- `Next` and `Back` (or the arrow keys and `Enter`) move between the steps
+- `Skip` or `Esc` ends it
+- The tour never changes your level. Your selection, panels and camera come back when it ends
+- `Options` > `Take the tour` starts it again any time
+
 ## Moving around
 
 - Pick a level in the list at the top, all 48 load
@@ -296,7 +307,7 @@ Note: the path is only a guide, the level doesn't keep it
 
 ## Options
 
-`Options` in the toolbar holds two things: the theme and the info texts
+`Options` in the toolbar holds three things: the theme, the info texts and `Take the tour`
 
 ### Theme
 
@@ -327,12 +338,12 @@ Don't like the 1998 look? Pick another one under `Theme`
 
 ### Info texts
 
-The small grey texts under titles, fields and check lines explain how the game or the editor works. Know them by heart? Hide them with `Info texts`
+Small grey texts explain how the game or the editor works. They belong to titles, fields and check lines. Want them all on screen? Change `Info texts`
 
 | Choice | What you get |
 | --- | --- |
-| `Shown` | every text in its place (the default) |
-| `On hover` | no texts in the panels, rest the pointer on a title, a field or a line to read its text |
+| `Shown` | every text in its place, under the thing it explains |
+| `On hover` | no texts in the panels, rest the pointer on a title, a field or a line to read its text (the default) |
 | `Off` | no texts at all |
 
 - On hover, a dotted line under a name means it has a text

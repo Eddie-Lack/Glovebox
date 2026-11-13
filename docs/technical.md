@@ -213,7 +213,8 @@ nothing else. The program never runs them.
 - A note is a text that explains how the game or the editor works: the small muted text under a title, a field, a
   group of fields or a row, the second line of a check, the paragraph under a dialog's title, the key hints over
   the view. The Info texts of the Options menu say how notes show: `Shown`, `On hover` or `Off`. The setting is
-  `info` in `settings.ini`; `Window::set_info` writes it and `App::new` reads it.
+  `info` in `settings.ini`; `Window::set_info` writes it and `App::new` reads it. Without a setting the notes are
+  on hover (`Info::DEFAULT`).
   - Every note is drawn by the helpers under "Notes" in `style.rs`: `note`, `note_at`, `note_on`, `card_note`,
     `src_on`, `para`, `para_at`, `para_on`, and the `sub` line of `check_line`. The state is in the egui
     context's data (`style::info`), as the theme is.
@@ -232,6 +233,31 @@ nothing else. The program never runs them.
   - A check's second line joins the check's own tooltip on hover (`tip_with_note`). The key hints over the view
     become a chip "Keys ?" with the hints as its tooltip.
   - A new explanatory text must use one of the note helpers. The test `info_texts` checks the three states.
+  - The click tests read the notes in the panels. Their harness writes `info=shown` into the settings
+    (`T::with_theme`). `info_texts` starts without the setting.
+- The welcome and the tour are in `tour.rs`. The welcome is a dialog with `Show me round` and `No thanks`. It shows
+  the first time a level is open and the settings have no `tour=seen`. An answer, Esc or a click beside it writes
+  `tour=seen`. `Take the tour` of the Options menu starts the tour at any time (`Window::start_tour`).
+  - The steps are data: `tour::STEPS`, each with a title, a text, a `Target` and a `Show`. The last step's text
+    depends on the Info texts setting (`last_text`), and it has the link to the guide.
+  - A `Target` names a part of the window. The toolbar, the panels and the view report their rectangles in every
+    frame with `tour::State::mark`. Several widgets of one target give the rectangle round them all (`Move`,
+    `Rotate` and `Scale`). No position is written in the code. A target that is not in the window has a fallback:
+    the toolbar or the right panel.
+  - A `Show` says what the window shows during the step: nothing selected, one thing near Glover's start selected
+    and framed, or the Add panel open. A step on the inspector also chooses the inspector's tab.
+    `Window::enter_step` sets it when the step opens.
+  - The tour does not edit the level. `Window::end_tour` puts back the selection, the open puzzle, the Add panel
+    and its tab, box select, the fly camera and the camera's place.
+  - The picture: `style::spotlight` dims the window round the target with the colour of the theme's scrim and draws a
+    line in the focus colour. `style::callout` draws the bubble in the colours of the menus, with a pointer.
+    `tour::place` puts the bubble under, over or beside the target, inside the window and never over the target.
+    Beside a target it can be narrower. The bubble's size comes from its texts, which are laid out first.
+  - The tour is an `egui::Modal` over the whole window. Clicks do not reach the window under it.
+    `Window::modal` is true during a dialog, the welcome and the tour: the editor's keys, the view's mouse and
+    dropped files are off. Esc ends the tour, the arrow keys and Enter move between the steps.
+  - The click tests start with `tour=seen` in the settings (`T::with_theme`). The test `welcome_and_tour` starts
+    without it (`T::with_settings`), and walks every step at three window sizes.
 - Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
   takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
   for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
@@ -533,6 +559,14 @@ model ([Import model](Import-model.md)), and it then shows with the imported mod
 - The textures are drawn by `kit/image.rs`, which follows Pillow's drawing rules.
 - The words on gravestones and signs use the kit's own letter shapes (`kit/font.rs`, a stroke font on a 5 by 7 grid).
   The letters sit in cells with the measures of Pillow's built-in font. That font is not copied.
+- The game repeats every texture: the object format has no setting that stops it. A kit texture that must show
+  once (a face, a board with words) is laid inside its own picture, with coordinates from 0 to 1. A unit test in
+  `kit/mod.rs` checks this for every item.
+- The pumpkin's face is a 64 by 32 texture on the four front columns of its body (the side towards +z, as the
+  gravestone's words). The other eight columns repeat a 16 by 32 texture of plain skin, one tile per column.
+  The first pumpkin laid the face texture three times round the body, and the face showed on three sides.
+- A pumpkin placed before this correction keeps its old model, because a converted model is stored under a hash of
+  its file. A pumpkin added now gets the corrected model.
 
 ### Path
 
@@ -829,7 +863,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `shown`), `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `hover`), `tour` (`seen` once the welcome was answered), `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 
@@ -882,6 +916,9 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
   some steps only (the names are in `run`).
 - The test opens the real window at 1280 by 800 in the Sage theme with the fog off, takes the ROM on the setup
   screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the shipped level.
+- The routine sets the Info texts itself. The welcome, the tour's step and `first-level.png` have the notes on
+  hover, as a first start shows them. Every other picture has them shown: the pages explain the panels with their
+  notes. `info-texts-on-hover.png` is the one picture of a panel on hover.
 - A picture of one panel is cut out of the window's picture. For a tall panel the window is 1060 high.
 - The numbers on `window-tour.png` are drawn by the test (`Pic::marker`). The list under the picture in
   `docs/guide/The-window.md` explains them. No other picture is drawn on.
@@ -909,7 +946,7 @@ the split ROM and libgarib's exported files.
 | `rom_reference.rs` | The ROM's regions against libgarib's dump and noclip's split files, the pointer pairs, rebuilt ROMs, ROMs with the mod, the hardware check's findings, BPS patches | The retail ROM |
 | `build_reference.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game and the build scenarios |
 | `custom_reference.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
-| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel | Every kit item with several settings |
+| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel. The pumpkin was corrected after the recordings: its skin triangles' texture, its GLB and its preview are not compared | Every kit item with several settings |
 | `crates/editor/tests/logic_reference.rs` | The vector maths, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
 | `editor_reference.rs` | The editor's state after loading, and the XML after each recorded edit step | All 48 levels |
 | `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean colour difference: two renderers do not give equal pixels |

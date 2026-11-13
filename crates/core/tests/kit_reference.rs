@@ -3,6 +3,13 @@
 //!
 //! Geometry must be equal bit for bit, as float64 in the soup and as float32 in the GLB. Textures without words must
 //! be equal pixel for pixel. Textures with words differ in the letters only, because the kit draws its own font.
+//!
+//! The pumpkin's texturing was corrected after the recordings were made. The recorded pumpkin wraps the face
+//! texture three times round the body and relies on a clamp that the game does not have. The pumpkin now has the
+//! face on its four front columns and a third texture, plain skin, on the other eight. For the pumpkin cases the
+//! test compares what did not change: the settings, the label, every position and normal, the stem's and the face
+//! columns' texture coordinates, and the face and stem textures. It skips the skin triangles' texture and
+//! coordinates, the texture count, the GLB and the preview. Every other item is compared in full.
 
 use glovebox_core::kit::{self, image::Image, Params};
 use serde_json::Value;
@@ -140,6 +147,7 @@ fn every_case_matches_the_reference() {
     let ix = index(&dir);
     let cases = ix["cases"].as_array().unwrap();
     let (mut worst_text, mut worst_preview, mut text_textures, mut exact_textures, mut tris) = (0.0f64, 0.0f64, 0, 0, 0);
+    let mut corrected_cases = 0;
     for c in cases {
         let (name, item) = (c["name"].as_str().unwrap(), c["item"].as_str().unwrap());
         let p = params(&c["params"]);
@@ -147,6 +155,9 @@ fn every_case_matches_the_reference() {
         assert_eq!(Value::Object(cleaned.clone()), c["clean"], "{name}: clean");
         assert_eq!(kit::label(item, &cleaned).unwrap(), c["label"].as_str().unwrap(), "{name}: label");
         let soup = kit::build(item, &p).unwrap();
+        // See the note at the top of the file.
+        let corrected = item == "pumpkin";
+        const PUMPKIN_SKIN: usize = 2;
 
         // The soup: every float64 equal.
         let raw = std::fs::read(dir.join(format!("{name}.soup"))).unwrap();
@@ -155,15 +166,22 @@ fn every_case_matches_the_reference() {
         assert_eq!(soup.tris.len(), n, "{name}: triangle count");
         for (i, t) in soup.tris.iter().enumerate() {
             let got: Vec<f64> = t.p.iter().flatten().chain(t.n.iter().flatten()).chain(t.uv.iter().flatten()).copied().collect();
+            // A skin triangle of the pumpkin has new texture coordinates (values 18 to 23) and a new texture.
+            let reskinned = corrected && t.mat == PUMPKIN_SKIN;
             for (k, g) in got.iter().enumerate() {
                 let want = r.f64();
-                assert!(g.to_bits() == want.to_bits(), "{name}: triangle {i} value {k}: {g:?} != {want:?}");
+                assert!(g.to_bits() == want.to_bits() || (reskinned && k >= 18), "{name}: triangle {i} value {k}: {g:?} != {want:?}");
             }
-            assert_eq!(t.mat as u32, r.u32(), "{name}: triangle {i} material");
+            let want = r.u32();
+            if reskinned {
+                assert_eq!(want, 0, "{name}: triangle {i} was not on the face texture");
+            } else {
+                assert_eq!(t.mat as u32, want, "{name}: triangle {i} material");
+            }
         }
         tris += n;
         let nm = r.u32() as usize;
-        assert_eq!(soup.mats.len(), nm, "{name}: texture count");
+        assert_eq!(soup.mats.len(), if corrected { nm + 1 } else { nm }, "{name}: texture count");
         let has_words = |m: usize| (item == "grave" && m == 0) || (item == "sign" && m == 1);
         for m in 0..nm {
             let (w, h) = (r.u32() as usize, r.u32() as usize);
@@ -186,6 +204,20 @@ fn every_case_matches_the_reference() {
                 exact_textures += 1;
                 assert!(d == 0.0, "{name}: texture {m} differs in {d:.2}% of its pixels");
             }
+        }
+
+        if corrected {
+            // The GLB has a third primitive and the preview has the skin's colours: neither is compared with the
+            // recording. The GLB's pictures must still be the soup's textures.
+            let (rj, rbin) = split_glb(&soup.glb());
+            let images = rj["images"].as_array().unwrap();
+            assert_eq!(images.len(), soup.mats.len(), "{name}: glb pictures");
+            for (k, im) in images.iter().enumerate() {
+                assert!(decode_png(view(&rj, &rbin, im["bufferView"].as_u64().unwrap())) == soup.mats[k], "{name}: glb picture {k}");
+            }
+            assert_eq!(decode_png(&kit::preview_png(item, &cleaned, 128).unwrap()).w, 128);
+            corrected_cases += 1;
+            continue;
         }
 
         // The GLB: the same structure, the same accessor bytes, the same pictures as this soup's.
@@ -216,7 +248,7 @@ fn every_case_matches_the_reference() {
         assert!(d <= limit, "{name}: preview differs in {d:.3}% of its pixels");
     }
     println!(
-        "{} cases, {tris} triangles equal; {exact_textures} textures equal; {text_textures} textures with words, at most {worst_text:.2}% of pixels differ; previews differ by at most {worst_preview:.3}%",
+        "{} cases, {tris} triangles equal; {exact_textures} textures equal; {text_textures} textures with words, at most {worst_text:.2}% of pixels differ; previews differ by at most {worst_preview:.3}%; {corrected_cases} pumpkin cases compared without their skin triangles' texture, GLB and preview",
         cases.len()
     );
 }

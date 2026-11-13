@@ -4,7 +4,7 @@ _Back to the [guide](README.md)_
 
 `Options` is at the end of the toolbar.
 
-![The Options menu: fifteen themes in two columns, and Shown, On hover, Off for the info texts](img/options-menu.png)
+![The Options menu: fifteen themes in two columns, Shown, On hover, Off for the info texts, and Take the tour](img/options-menu.png)
 
 ## Theme
 
@@ -25,7 +25,7 @@ This guide uses `Sage`.
 
 ## Info texts
 
-The small texts under titles and fields explain how the game or the editor works.
+Small texts explain how the game or the editor works. They start `On hover`.
 
 | `Shown` | `On hover` |
 | --- | --- |
@@ -33,13 +33,19 @@ The small texts under titles and fields explain how the game or the editor works
 
 | Choice | What you get |
 | --- | --- |
-| `Shown` | Every text in its place |
-| `On hover` | No texts. Rest the pointer on a title or a field to read its text |
+| `Shown` | Every text in its place, under its title or field |
+| `On hover` | No texts. Rest the pointer on a title or a field to read its text. This is what you start with |
 | `Off` | No texts at all |
 
 - On hover, a dotted line under a name means it has a text
 - Checks, warnings, values and names always stay
 - The editor remembers your choice
+
+## Take the tour
+
+`Take the tour` walks you through the window again, one part at a time.
+
+It's the tour the editor offers on the first start. See _[Getting started](Getting-started.md#take-the-tour)_.
 
 ---
 

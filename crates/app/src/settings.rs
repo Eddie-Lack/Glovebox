@@ -1,5 +1,5 @@
 //! The app's settings file, `settings.ini` in the user folder. It holds `key=value` lines: `scene`, `fog`,
-//! `triggers`, `saveDir`, `emulator`, `exits`, `theme` and `info`.
+//! `triggers`, `saveDir`, `emulator`, `exits`, `theme`, `info` and `tour`.
 
 use glovebox_editor::editor::Settings;
 use std::collections::BTreeMap;

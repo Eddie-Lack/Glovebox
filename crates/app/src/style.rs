@@ -408,12 +408,13 @@ pub fn plaque(painter: &egui::Painter, rect: Rect) {
     border(painter, outer);
 }
 
-/// The spotlight of the tour: the window is dimmed with the theme's scrim, `spot` stays bright and gets a line in
+/// The spotlight of the tour: the window is dimmed with the colour of the theme's scrim, `spot` stays bright and gets a line in
 /// the theme's focus colour. Without a spot the whole window is dimmed.
 pub fn spotlight(painter: &egui::Painter, window: Rect, spot: Option<Rect>) {
     let th = theme(painter.ctx());
-    // Half of a dialog's scrim: the window stays readable
-    let dim = th.scrim.gamma_multiply(0.5);
+    // Lighter than a dialog's scrim, and as strong in every theme: the window stays readable
+    let [r, g, b, _] = th.scrim.to_srgba_unmultiplied();
+    let dim = Color32::from_rgba_unmultiplied(r, g, b, 90);
     let Some(spot) = spot else {
         painter.rect_filled(window, 0.0, dim);
         return;

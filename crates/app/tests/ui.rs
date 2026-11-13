@@ -2709,7 +2709,7 @@ fn walk_tour(t: &mut T, tag: &str) {
 fn welcome_and_tour() {
     use glovebox::tour::STEPS;
     let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
-    let theme = std::env::var("GLOVEBOX_THEME").ok();
+    let theme = std::env::var("GLOVEBOX_THEME").ok().filter(|id| !id.is_empty());
     let first_start = theme.as_ref().map(|id| format!("[General]\ntheme={id}\n")).unwrap_or_default();
     let dir = theme.clone().unwrap_or_else(|| "1998".to_string());
     let mut results = Vec::new();

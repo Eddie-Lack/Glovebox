@@ -26,7 +26,7 @@ New here? Start with _[Getting started](Getting-started.md)_ and go page by page
 | [![The Checks panel with two green ticks](img/thumb-checks.png)](Checks.md) | _[The checks](Checks.md)_ | What the Checks panel tells you |
 | [![The Import model dialog](img/thumb-import-model.png)](Import-your-own-model.md) | _[Import your own model](Import-your-own-model.md)_ | Bring in a model from Blender or another game |
 | [![The Export patch dialog](img/thumb-test-build-share.png)](Test-build-and-share.md) | _[Test, build and share](Test-build-and-share.md)_ | Play your level, build a ROM, make a patch |
-| [![The Options menu, open](img/thumb-options.png)](Options.md) | _[Options](Options.md)_ | Themes and the info texts |
+| [![The Options menu, open](img/thumb-options.png)](Options.md) | _[Options](Options.md)_ | Themes, the info texts and the tour |
 | [![The key hints at the bottom of the view](img/thumb-keys.png)](Keys.md) | _[Keys](Keys.md)_ | Every shortcut in one table |
 
 ## More
@@ -37,6 +37,8 @@ New here? Start with _[Getting started](Getting-started.md)_ and go page by page
 - _[The Expansion Pak game mod](../Game-mod.md)_
 
 Note: the pictures show the `Sage` theme. Yours looks different until you pick it in `Options`.
+
+The pictures also show the info texts in the panels. Yours show when you rest the pointer on a name, until you pick `Shown` in `Options`.
 
 ---
 
