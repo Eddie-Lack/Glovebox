@@ -75,6 +75,26 @@ Opens a palette with a picture of each entry:
 
 Note: boss enemies are tied to their arenas. The palette marks them
 
+### List or Grid
+
+`Enemies`, `Models` and `Kit` have two views. Pick one at the top of the tab
+
+| View | What you get |
+| --- | --- |
+| `List` | a row for each thing: picture, name, notes and its buttons (the default) |
+| `Grid` | just the pictures, as many in a row as fit the panel |
+
+- In `Grid`, click a picture and it's in your level
+- On `Models` the radio buttons over the grid say what a click places: `Scenery`, `Background` or `Platform`
+- On `Kit` they are `Background` and `Scenery`
+- The choice stays until you change it. The editor remembers it, and the view
+- Rest the pointer on a picture for its name, its bank and its notes
+- A corner mark means a boss (on `Enemies`) or one of your own models (on `Models`)
+- A dimmed picture can't be placed that way. Click it and the status bar says why
+- A kit picture with `•••` in its corner has settings. Click the corner, or right-click the picture, and they open over the grid. A click on the picture uses them
+- The search box and the bank list of `Models` work in both views. `Grid` shows every match, `List` the first 150
+- `Tab` and `Enter` work on the pictures too
+
 A model from another level or world is copied in when you build. The import panel shows its size against the level's free memory. The Checks panel lists every import
 
 ## Presets
@@ -307,7 +327,7 @@ Note: the path is only a guide, the level doesn't keep it
 
 ## Options
 
-`Options` in the toolbar holds three things: the theme, the info texts and `Take the tour`
+`Options` in the toolbar holds four things: the theme, the info texts, the panels and `Take the tour`
 
 ### Theme
 
@@ -351,6 +371,30 @@ Small grey texts explain how the game or the editor works. They belong to titles
 - Checks, warnings, values and names always stay
 - The tooltips of the buttons stay too
 - The editor remembers your choice
+
+### Panels
+
+Want the level list on the right, or more room for the view? `Options` > `Panels` arranges the five panels: `Level`, `Inspector`, `Checks`, `Add to level` and `Path`
+
+| In the menu | What it does |
+| --- | --- |
+| the tick box | shows or hides the panel |
+| `Left` / `Right` | puts the panel on that side of the view |
+| `Bottom` | `Checks` only: a strip under the view |
+| `Stacked` / `Tabbed` | how the panels on one side share it: one under the other, or as tabs |
+| `Reset layout` | everything back where it started, sizes too |
+
+- The menu stays open while you click around in it. Click anywhere else to close it
+- Every panel also has a small `▾` menu on its title bar: `Move to left`, `Move to right`, `Hide` (and `Move to bottom` on the `Checks`)
+- On a row of tabs the `▾` belongs to the tab in front
+- The view takes all the room the panels leave. Hide them all and it fills the window
+- `Add to level` and `Path` show while their tool is on: the tick is the same as `+ Add` and `Path`. `A` and `P` open them wherever you put them
+- The `Checks` are never a tab. They sit under the other panels of their side, or under the view
+- Stacked panels have a line between them that drags, like the line over the `Checks`
+- Drag a panel's edge to resize it. The width stays with the panel when you move it
+- On a very wide window (1560 and up) `Add to level` and `Path` get a column of their own next to the tabs, as long as the view keeps 480 of width
+- With the `Inspector` hidden, the status bar says what you selected
+- The editor remembers the layout and the sizes
 
 ## Test level
 

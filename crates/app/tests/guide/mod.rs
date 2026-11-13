@@ -386,8 +386,9 @@ pub fn run(rom: PathBuf, dir: PathBuf) {
     let _ = std::fs::remove_dir_all(&home);
     std::fs::create_dir_all(&home).unwrap();
     // The view shows the level without its fog. The notes are on hover, as on a first start, and the settings do
-    // not say that the welcome was answered.
-    std::fs::write(home.join("settings.ini"), "[General]\ntheme=sage\nfog=off\ninfo=hover\n").unwrap();
+    // not say that the welcome was answered. The panels are in the default layout, and the Add panel shows its list.
+    let layout = glovebox::layout::Layout::default();
+    std::fs::write(home.join("settings.ini"), format!("[General]\ntheme=sage\nfog=off\ninfo=hover\npanels=\"{}\"\nadd_view=list\n", layout.to_text())).unwrap();
     let mut g = G { t: T::open(home, None, [WIDE, HIGH]), dir, saved: Vec::new(), missed: Vec::new() };
     g.t.settle();
 
@@ -401,10 +402,12 @@ pub fn run(rom: PathBuf, dir: PathBuf) {
     assert!(g.t.h.state_mut().window().is_some(), "the setup screen took the ROM");
     g.t.idle();
     assert_eq!(g.t.theme(), "sage");
+    assert_eq!(g.t.w().layout, layout, "the guide's pictures start from the default layout");
     welcome(&mut g);
     let only = std::env::var("GLOVEBOX_GUIDE_ONLY").unwrap_or_default();
-    let steps: [(&str, fn(&mut G)); 12] = [
+    let steps: [(&str, fn(&mut G)); 13] = [
         ("start", start),
+        ("panels", panels),
         ("view", moving),
         ("select", selecting),
         ("add", adding),
@@ -517,7 +520,7 @@ fn start(g: &mut G) {
         egui::pos2(v.min.x - 60.0, v.min.y + 330.0),
         egui::pos2(v.center().x, v.min.y + 90.0),
         egui::pos2(ins.max.x - 60.0, ins.min.y + 11.0),
-        egui::pos2(checks.max.x - 60.0, checks.min.y + 18.0),
+        egui::pos2(checks.max.x - 100.0, checks.min.y + 18.0),
         egui::pos2(v.center().x, (v.max.y + s.y) / 2.0),
     ];
     for (i, at) in spots.into_iter().enumerate() {
@@ -527,6 +530,37 @@ fn start(g: &mut G) {
     g.thumb("the-window", &p, egui::pos2(40.0, 25.0), 5);
     // The key hints at the bottom of the view
     g.thumb_hints("keys", &p, egui::pos2(v.min.x + 8.0, v.max.y - 372.0));
+}
+
+/// The window: the panels in other places, with the Panels menu open. The layout goes back to the default after.
+fn panels(g: &mut G) {
+    beach(g);
+    let e = general(g);
+    g.select(Some(e));
+    g.click("Checks panel menu");
+    g.click("Move to bottom");
+    g.click("Level panel menu");
+    g.click("Move to right");
+    g.click("Inspector");
+    g.click("Inspector panel menu");
+    g.click("Move to left");
+    g.t.w().set_status("Selected generalw (GENERALWU).", "");
+    g.click("Options");
+    g.click("Panels");
+    let p = g.raw();
+    g.save("window-panels", &p);
+    let s = g.size();
+    g.t.click_at(egui::pos2(s.x / 2.0, s.y - 5.0));
+    // A panel's own menu
+    g.click("Level panel menu");
+    let p = g.raw();
+    let b = g.rect_of("Level panel menu").unwrap_or(egui::Rect::NOTHING);
+    g.save("panel-menu", &p.crop(egui::Rect::from_min_max(egui::pos2(b.max.x - 262.0, b.min.y - 8.0), egui::pos2(b.max.x + 8.0, b.max.y + 86.0))));
+    g.t.click_at(egui::pos2(s.x / 2.0, s.y - 5.0));
+    g.t.w().set_layout(glovebox::layout::Layout::default());
+    g.select(None);
+    g.t.settle();
+    assert_eq!(g.t.w().layout, glovebox::layout::Layout::default());
 }
 
 fn moving(g: &mut G) {
@@ -615,6 +649,17 @@ fn adding(g: &mut G) {
             g.thumb_panel("adding", &p, egui::pos2(10.0, 30.0));
         }
     }
+    // The grid view: pictures only
+    g.click("Enemies");
+    g.click("Grid");
+    for (tab, name) in [("Enemies", "add-grid-enemies"), ("Models", "add-grid-models")] {
+        g.click(tab);
+        g.thumbs();
+        let r = g.inspector();
+        let p = g.pic().crop(egui::Rect::from_min_max(r.min, egui::pos2(r.max.x, r.min.y + 470.0)));
+        g.save(name, &p);
+    }
+    g.click("List");
     g.tall(false);
     // A new enemy on the beach
     g.click("Enemies");

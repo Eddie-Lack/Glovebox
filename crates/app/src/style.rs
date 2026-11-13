@@ -857,6 +857,31 @@ pub fn title_bar(ui: &mut Ui, title: &str) -> Response {
     bar(ui, title, 12.0, Margin { left: 8, right: 8, top: 3, bottom: 3 }, Rank::Panel)
 }
 
+/// A panel's title bar with widgets at its right end.
+pub fn title_bar_with(ui: &mut Ui, title: &str, right: impl FnOnce(&mut Ui)) -> Response {
+    let out = egui::Frame::new().inner_margin(Margin { left: 8, right: 4, top: 3, bottom: 3 }).show(ui, |ui| {
+        ui.set_width(ui.available_width());
+        let back = ui.painter().add(egui::Shape::Noop);
+        let row = ui.horizontal(|ui| {
+            let r = bar_label(ui, title, 12.0, false, Rank::Panel);
+            let widgets = ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), right).response.rect;
+            (r, widgets.min.x)
+        });
+        (back, row.inner.0, row.inner.1)
+    });
+    let (back, r, widgets) = out.inner;
+    let th = theme(ui.ctx());
+    let rect = out.response.rect;
+    // A bar with a line beside its letters ends the line before the widgets
+    let shape = match th.bar {
+        Bar::Dimension => bar_shape(th, Rect::from_min_max(rect.min, egui::pos2(widgets, rect.max.y)), r.rect, Rank::Panel),
+        _ => bar_shape(th, rect, r.rect, Rank::Panel),
+    };
+    ui.painter().set(back, shape);
+    anchor(ui, rect, Some((r.rect, bar_color(th, Rank::Panel))));
+    r
+}
+
 pub fn h2(ui: &mut Ui, text: &str) -> Response {
     let th = theme(ui.ctx());
     let r = ui.label(RichText::new(text).font(FontId::new(15.0, bold())).color(th.text));
@@ -1127,6 +1152,17 @@ pub fn mini(ui: &mut Ui, text: &str, tip: &str) -> Response {
 /// little.
 pub fn mini_menu(ui: &mut Ui, text: &str, label: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
     let b = egui::Button::new(RichText::new(text).size(11.0)).small();
+    menu_of(ui, b, label, tip, add);
+}
+
+/// A small button on a panel's title bar that opens a menu: the bar's letter colour, and no frame.
+pub fn bar_menu(ui: &mut Ui, text: &str, label: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
+    let color = bar_color(theme(ui.ctx()), Rank::Panel);
+    let b = egui::Button::new(RichText::new(text).size(12.0).color(color)).small().frame(false);
+    menu_of(ui, b, label, tip, add);
+}
+
+fn menu_of(ui: &mut Ui, b: egui::Button, label: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
     let r = egui::containers::menu::MenuButton::from_button(b).ui(ui, |ui| {
         egui::ScrollArea::vertical().max_height(420.0).show(ui, add);
     });

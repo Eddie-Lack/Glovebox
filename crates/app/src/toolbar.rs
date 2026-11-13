@@ -1,5 +1,5 @@
 //! The two rows of the toolbar: the level list, undo and redo, the tools, the files and builds, and the Options
-//! menu (the theme, the info texts and the tour).
+//! menu (the theme, the info texts, the panels and the tour).
 
 use crate::app::Window;
 use crate::style;
@@ -119,8 +119,8 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     }
 }
 
-/// The Options menu: the look of the window (Theme), how the notes show (Info texts) and `Take the tour`. A
-/// choice works at once and is kept in the settings.
+/// The Options menu: the look of the window (Theme), how the notes show (Info texts), where the panels are (Panels)
+/// and `Take the tour`. A choice works at once and is kept in the settings.
 fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let active = style::theme(ui.ctx());
     let info = style::info(ui.ctx());
@@ -152,13 +152,16 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
         }
         ui.add_space(4.0);
         ui.separator();
+        // The Panels menu stays open while the player arranges the panels
+        let stay = egui::containers::menu::MenuConfig::new().close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
+        egui::containers::menu::SubMenuButton::new("Panels").config(stay).ui(ui, |ui| crate::layout::menu(w, ui));
         if ui.add_enabled(w.ed.has_level && !w.busy, egui::Button::selectable(false, "Take the tour")).on_hover_text("A quick walk through the parts of the window").clicked() {
             tour = true;
             ui.close();
         }
     });
     w.tour.mark(Target::Options, r.rect);
-    r.on_hover_text("The look of the window, how the notes that explain things show, and the tour of the window.");
+    r.on_hover_text("The look of the window, how the notes that explain things show, where the panels are, and the tour of the window.");
     // After the frame: the panels of this frame are drawn in one theme and one state
     if let Some(id) = theme {
         w.acts.push(Box::new(move |w: &mut Window| w.set_theme(id)));

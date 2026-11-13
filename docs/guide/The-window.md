@@ -32,6 +32,27 @@ On a very wide window the Inspector stays, and the other two get a panel of thei
 - Drag the edge of a panel to make it wider or narrower
 - The line over the `Checks` drags too
 
+## Arranging the panels
+
+Every panel can move, and every panel can hide.
+
+`Options` > `Panels` has them all in one place.
+
+![The inspector on the left, the Level panel on the right, the checks under the view, and the Panels menu open](img/window-panels.png)
+
+- The tick box shows or hides a panel
+- `Left` and `Right` pick its side. The `Checks` can also go to the `Bottom`, under the view
+- `Stacked` puts the panels of one side one under the other. `Tabbed` makes them tabs
+- `Reset layout` puts everything back
+
+The small `▾` on a panel's title bar does the same for that one panel.
+
+<img src="img/panel-menu.png" alt="The menu on the Level panel's title bar: Move to left and Hide" width="262">
+
+Hide all of them and the view fills the window. `A` and `P` still open their panels.
+
+The editor remembers your layout.
+
 ---
 
 _[← Getting started](Getting-started.md)_ · _[Contents](README.md)_ · _[Moving around →](Moving-around.md)_

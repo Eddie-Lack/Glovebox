@@ -6,8 +6,8 @@
 //!
 //! The spot is the rectangle of a real widget. The toolbar and the panels report where they are in every frame
 //! (`State::mark`), and a step names its part with a `Target`. A step can also show what it talks about: it selects
-//! something or opens the Add panel. The tour never edits the level, and `Window::end_tour` puts the selection, the
-//! panels and the camera back.
+//! something or opens the Add panel, and it shows a panel the player hid for the step that is about it. The tour never
+//! edits the level, and `Window::end_tour` puts the selection, the panels, the layout and the camera back.
 
 use crate::app::Window;
 use crate::style;
@@ -140,7 +140,8 @@ struct Before {
     selection: Vec<EntId>,
     puzzle: Option<usize>,
     palette_open: bool,
-    side_tab: u8,
+    layout: crate::layout::Layout,
+    front: Vec<crate::layout::PanelId>,
     box_mode: bool,
     fly: bool,
     camera: Camera,
@@ -209,7 +210,8 @@ impl Window {
             selection: ed.selection.clone(),
             puzzle: ed.puzzle_index,
             palette_open: self.palette_open,
-            side_tab: self.palette.side_tab,
+            layout: self.layout.clone(),
+            front: self.front.clone(),
             box_mode: ed.box_mode,
             fly: self.view.fly.on,
             camera: ed.camera.clone(),
@@ -240,7 +242,9 @@ impl Window {
         if self.palette_open != b.palette_open {
             self.toggle_palette(Some(b.palette_open));
         }
-        self.palette.side_tab = b.side_tab;
+        // The tour's own changes to the layout were not written to the settings
+        self.layout = b.layout;
+        self.front = b.front;
         if self.ed.selection != b.selection {
             self.ed.set_selection(b.selection);
         }
@@ -260,12 +264,22 @@ impl Window {
     fn enter_step(&mut self, step: usize) {
         let Some(run) = &self.tour.run else { return };
         let (s, demo) = (&STEPS[step], run.demo.filter(|&d| d < self.ed.entities.len()));
+        // The player's layout, with the panel the step is about shown and in front of its tabs
+        use crate::layout::PanelId;
+        self.layout = run.before.layout.clone();
         let palette = s.show == Show::AddPanel;
         if self.palette_open != palette {
             self.toggle_palette(Some(palette));
         }
-        if s.target == Target::Inspector {
-            self.palette.side_tab = 0;
+        let panel = match s.target {
+            Target::Inspector => Some(PanelId::Inspector),
+            Target::LevelPanel => Some(PanelId::Level),
+            Target::Checks => Some(PanelId::Checks),
+            _ => None,
+        };
+        if let Some(p) = panel {
+            self.layout.set_shown(p, true);
+            self.bring_front(p);
         }
         let selection: Vec<EntId> = if s.show == Show::Selection { demo.into_iter().collect() } else { Vec::new() };
         if self.ed.selection != selection {

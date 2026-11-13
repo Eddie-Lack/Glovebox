@@ -11,6 +11,7 @@ pub mod dialogs;
 pub mod icon;
 pub mod inspector;
 pub mod jobs;
+pub mod layout;
 pub mod numfield;
 pub mod outliner;
 pub mod palette;

@@ -288,7 +288,12 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     // The view leaves the strips along its sides to the handles that resize the panels next to it
     let grab = ui.style().interaction.resize_grab_radius_side;
     ui.allocate_rect(rect, egui::Sense::hover());
-    let resp = ui.interact(rect.shrink2(egui::vec2(grab, 0.0)), ui.scope_id().with("3D view"), egui::Sense::click_and_drag());
+    let mut area = rect.shrink2(egui::vec2(grab, 0.0));
+    // And the strip along its bottom to the handle of the checks, when they are under it
+    if w.panels.checks.is_positive() && w.layout.side(crate::layout::PanelId::Checks) == crate::layout::Side::Bottom {
+        area.max.y -= grab;
+    }
+    let resp = ui.interact(area, ui.scope_id().with("3D view"), egui::Sense::click_and_drag());
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Canvas, true, "3D view"));
     if rect != w.view.rect {
         w.view.rect = rect;

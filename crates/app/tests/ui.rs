@@ -2554,7 +2554,8 @@ fn info_texts() {
 struct Kept {
     selection: Vec<EntId>,
     palette_open: bool,
-    side_tab: u8,
+    front: Vec<glovebox::layout::PanelId>,
+    layout: glovebox::layout::Layout,
     undo: usize,
     xml: String,
     edited: bool,
@@ -2569,7 +2570,8 @@ fn kept(t: &mut T) -> Kept {
     Kept {
         selection: w.ed.selection.clone(),
         palette_open: w.palette_open,
-        side_tab: w.palette.side_tab,
+        front: w.front.clone(),
+        layout: w.layout.clone(),
         undo: w.ed.undo_stack.len(),
         xml: w.ed.serialize(),
         edited: w.ed.is_edited() || !w.edited_levels.is_empty(),
@@ -2623,8 +2625,12 @@ fn walk_tour(t: &mut T, tag: &str) {
             Target::View => Some(view),
             Target::LevelPanel => Some(panels.level),
             Target::Checks => Some(panels.checks),
-            // The inspector is the right panel's part over the Checks panel
-            Target::Inspector => target.filter(|r| panels.inspector.contains_rect(*r) && (r.max.y - panels.checks.min.y).abs() <= 1.0 && r.height() > 100.0),
+            // The inspector is its column's part over the Checks panel, or down to the column's end without them
+            Target::Inspector => {
+                let under = panels.checks.is_positive() && panels.inspector.contains_rect(panels.checks);
+                let bottom = if under { panels.checks.min.y } else { panels.inspector.max.y };
+                target.filter(|r| panels.inspector.contains_rect(*r) && (r.max.y - bottom).abs() <= 1.0 && r.height() > 100.0)
+            }
             Target::Toolbar | Target::RightPanel => None,
         };
         let on_target = match (spot, target, widget) {
@@ -2713,9 +2719,18 @@ fn welcome_and_tour() {
     let first_start = theme.as_ref().map(|id| format!("[General]\ntheme={id}\n")).unwrap_or_default();
     let dir = theme.clone().unwrap_or_else(|| "1998".to_string());
     let mut results = Vec::new();
-    for (k, (name, size, scale)) in [("1500x950", [1500.0, 950.0], 1.0), ("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5)].into_iter().enumerate() {
+    // The last window has the inspector on the left, as a tab beside Level, and no checks
+    let moved = "panels=\"level:left:on,inspector:left:on,checks:right:off,add:right,path:right,left:tabbed,right:tabbed\"\n";
+    for (k, (name, size, scale, layout)) in [("1500x950", [1500.0, 950.0], 1.0, ""), ("1280x720", [1280.0, 720.0], 1.0, ""), ("scale-150", [1920.0, 1080.0], 1.5, ""), ("moved", [1280.0, 720.0], 1.0, moved)].into_iter().enumerate() {
         let tag = format!("{dir}/{name}");
+        let first_start = if layout.is_empty() { first_start.clone() } else { format!("[General]\n{}{layout}", first_start.trim_start_matches("[General]\n")) };
         let mut t = T::with_settings(&format!("tour-{name}"), fixture(), size, &first_start);
+        if !layout.is_empty() {
+            t.idle();
+            let w = t.w();
+            let ok = w.layout.side(glovebox::layout::PanelId::Inspector) == glovebox::layout::Side::Left && !w.layout.shown(glovebox::layout::PanelId::Checks);
+            t.check("moved: the window starts with the inspector on the left and no checks", ok);
+        }
         t.h.set_pixels_per_point(scale);
         // The welcome waits for the level
         let mut early = false;
@@ -2764,7 +2779,7 @@ fn welcome_and_tour() {
             walk_tour(&mut t, &tag);
             t.settle();
             let after = kept(&mut t);
-            t.detail("after the tour the editor is as it was before", after == before && after.drafts == 0 && !after.edited, format!("{:?} {:?} {} {} {:?}", after.selection, after.palette_open, after.side_tab, after.undo, after.mode));
+            t.detail("after the tour the editor is as it was before", after == before && after.drafts == 0 && !after.edited, format!("{:?} {:?} {:?} {} {:?}", after.selection, after.palette_open, after.front, after.undo, after.mode));
         } else {
             let before = kept(&mut t);
             let started = t.click("Show me round") && !t.w().tour.welcome && t.w().tour.run.as_ref().is_some_and(|r| r.step == 0);
@@ -2794,6 +2809,13 @@ fn welcome_and_tour() {
         t.key(Key::R);
         let back = t.ed().mode == Mode::Scale;
         t.check(&format!("{name}: after the tour the editor's keys work"), back);
+        if !layout.is_empty() {
+            // The tour showed the checks for their step, and they are hidden again
+            let w = t.w();
+            let hidden = !w.panels.checks.is_positive() && !w.layout.shown(glovebox::layout::PanelId::Checks);
+            let text = t.settings_text();
+            t.detail("moved: after the tour the checks are hidden as before, and the settings have the player's layout", hidden && text.contains("checks:right:off"), text);
+        }
         results.append(&mut t.results);
         t.finish();
     }
@@ -2824,6 +2846,669 @@ fn welcome_and_tour() {
     }
     let failed: Vec<&(String, bool, String)> = results.iter().filter(|r| !r.1).collect();
     assert!(failed.is_empty(), "failed: {:?}", failed.iter().map(|r| (&r.0, &r.2)).collect::<Vec<_>>());
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+// The grid view of the Add panel, and the layout of the panels
+
+impl T {
+    /// The tile of the Add panel's grid view with this name: a square button.
+    fn tile(&self, name: &str) -> Option<egui::Rect> {
+        self.tile_node(name).map(|n| n.rect())
+    }
+
+    fn tile_node<'a>(&'a self, name: &'a str) -> Option<egui_kittest::Node<'a>> {
+        self.find(name, true).into_iter().find(|n| {
+            let r = n.rect();
+            n.accesskit_node().role() == egui::accesskit::Role::Button && r.width() >= 60.0 && (r.width() - r.height()).abs() < 1.0
+        })
+    }
+
+    /// A real click on a tile, then the jobs it starts.
+    fn click_tile(&mut self, name: &str) -> bool {
+        let found = match self.tile_node(name) {
+            Some(n) => {
+                n.click();
+                true
+            }
+            None => false,
+        };
+        self.settle();
+        self.idle();
+        found
+    }
+
+    /// Turns the wheel over the Add panel until a tile is in view.
+    fn scroll_to_tile(&mut self, name: &str) -> bool {
+        let slot = self.w().panels.slot(glovebox::layout::PanelId::Add);
+        let at = egui::pos2(slot.center().x, slot.center().y + 60.0);
+        for _ in 0..40 {
+            if self.tile(name).is_some_and(|r| r.bottom() <= slot.bottom() - 8.0) {
+                return true;
+            }
+            self.wheel(at, -150.0);
+        }
+        false
+    }
+
+    /// The tiles in view whose names are in `names`.
+    fn tiles(&self, names: &[String]) -> Vec<egui::Rect> {
+        names.iter().filter_map(|n| self.tile(n)).collect()
+    }
+
+    /// How many elements with this tag the level's XML has.
+    fn count_tag(&mut self, tag: &str) -> usize {
+        let xml = self.ed().serialize();
+        xml.match_indices(&format!("<{tag}")).filter(|(i, m)| matches!(xml.as_bytes().get(i + m.len()), Some(b' ' | b'>' | b'/'))).count()
+    }
+
+    fn click_at(&mut self, pos: egui::Pos2) {
+        self.h.event(egui::Event::PointerMoved(pos));
+        self.h.step();
+        for pressed in [true, false] {
+            self.h.event(egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::default() });
+            self.h.step();
+        }
+        self.settle();
+    }
+
+    /// Turns the wheel over a place in the window.
+    fn wheel(&mut self, at: egui::Pos2, dy: f32) {
+        self.h.event(egui::Event::PointerMoved(at));
+        self.h.step();
+        self.h.event(egui::Event::MouseWheel { unit: egui::MouseWheelUnit::Point, delta: egui::vec2(0.0, dy), phase: egui::TouchPhase::Move, source: egui::MouseWheelSource::Wheel, modifiers: Modifiers::default() });
+        for _ in 0..6 {
+            self.h.step();
+        }
+    }
+
+    /// Clicks entries of Options > Panels, then closes the menu with a click on the status line.
+    fn panels_menu(&mut self, entries: &[&str]) -> bool {
+        let mut ok = self.click("Options") && self.click("Panels");
+        for e in entries {
+            ok &= self.click(e);
+        }
+        let window = self.h.ctx.content_rect();
+        self.click_at(egui::pos2(window.center().x, window.bottom() - 5.0));
+        ok && !self.has("Reset layout")
+    }
+
+    /// Clicks an entry of a panel's own menu.
+    fn panel_menu(&mut self, panel: &str, entry: &str) -> bool {
+        let ok = self.click(&format!("{panel} panel menu")) && self.click(entry);
+        self.settle();
+        ok
+    }
+
+    fn settings_text(&self) -> String {
+        std::fs::read_to_string(self.home.join("settings.ini")).unwrap_or_default()
+    }
+
+    /// Waits for the pictures of the Add panel.
+    fn pictures(&mut self) {
+        for _ in 0..3 {
+            self.settle();
+            self.until(60, |w| w.side_jobs.running == 0 && w.palette.thumbs_wanted.is_empty());
+        }
+    }
+}
+
+/// The grid view of the Add panel's Enemies, Models and Kit tabs.
+///
+/// `Grid` shows tiles and no rows, on each of the three tabs. A click on a tile adds the thing: an enemy, a model as
+/// the radio buttons say (the level's XML gets a LandActor, a BackgroundActor or a Platform), a kit item with its
+/// settings as they are. A converted model is refused as a platform. The view and the radio buttons stay through
+/// closing the panel and through a new window. The search narrows the grid, a wider panel has more columns, and a
+/// tile's tooltip has its name.
+///
+/// With `GLOVEBOX_ROM` the Models grid is scrolled through the whole game, and the number of pictures kept stays
+/// under `THUMBS_MAX`. With `GLOVEBOX_SHOTS` it saves the three tabs in four themes in `DIR/grid/`.
+#[test]
+fn add_grid() {
+    use glovebox::palette::THUMBS_MAX;
+    use glovebox_editor::entities::WHY_CUSTOM_PLATFORM;
+    let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
+    let mut t = T::new("grid", fixture(), [1280.0, 720.0]);
+    t.idle();
+    t.click("+ Add");
+
+    // Enemies: rows in List, tiles in Grid, and no radio buttons
+    t.click("Enemies");
+    let rows = t.has("Add dennis") && t.tile("dennis").is_none() && t.has("List") && t.has("Grid") && !t.w().palette.grid;
+    let clicked = t.click("Grid");
+    let virtual_ = t.tile("dennis").is_none();
+    let found = t.scroll_to_tile("dennis");
+    t.detail("grid: a tile far down is not laid out until the grid scrolls to it", virtual_ && found, format!("{virtual_} {found}"));
+    t.pictures();
+    let tiles = t.tile("dennis").is_some() && !t.has("Add dennis") && !t.reads("script from") && !t.has_containing("Place as");
+    let on = t.w().palette.grid;
+    t.detail("grid: Enemies shows tiles and no rows", rows && clicked && tiles && on, format!("{rows} {clicked} {tiles}"));
+    let enemy_tile = t.tile("dennis").unwrap_or(egui::Rect::NOTHING);
+    let n = kinds(t.ed(), "enemy").len();
+    let ok = t.click_tile("dennis");
+    let n2 = kinds(t.ed(), "enemy").len();
+    t.detail("grid: a click on an enemy's tile adds one enemy", ok && n2 == n + 1, format!("{n} {n2}"));
+    // An enemy without a model: its tile is off, and a click says why
+    let types: Vec<String> = t.ed().backend.decomp().get("ksyEnums").and_then(|e| e.get("enemy::enemy_type")).and_then(|e| e.as_object()).map(|o| o.values().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
+    let other = types.iter().find(|n| *n != "dennis" && t.tile(n).is_some()).cloned().unwrap_or_default();
+    let off = t.tile_node(&other).is_some_and(|n| n.accesskit_node().is_disabled());
+    t.click_tile(&other);
+    let (n3, status) = (kinds(t.ed(), "enemy").len(), t.status());
+    t.detail("grid: an enemy without a model is not added", off && n3 == n2 && status.contains("no model"), format!("{other} {off} {n3} {status}"));
+    t.shot("grid/fixture-enemies");
+
+    // Models: the same view, with the radio buttons
+    t.click("Models");
+    t.pictures();
+    let names: Vec<String> = t.ed().catalog.values().map(|c| c.name.clone()).collect();
+    let shown = t.tiles(&names);
+    let radios = t.has("Place as Scenery") && t.has("Place as Background") && t.has("Place as Platform");
+    let tiles = shown.len() == names.len() && !t.has("Scenery sign") && !t.reads("imported at build");
+    t.detail("grid: Models shows a tile for each model, no rows, and the radio buttons", tiles && radios, format!("{} of {} {radios}", shown.len(), names.len()));
+    let same = shown.first().is_some_and(|r| (r.width() - enemy_tile.width()).abs() < 0.5);
+    t.detail("grid: the tiles of Enemies and Models have one size", same, format!("{shown:?} {enemy_tile:?}"));
+    for (radio, tag) in [("", "LandActor"), ("Place as Background", "BackgroundActor"), ("Place as Platform", "Platform"), ("Place as Scenery", "LandActor")] {
+        let picked = radio.is_empty() || t.click(radio);
+        let (n, undo) = (t.count_tag(tag), t.ed().undo_stack.len());
+        let ok = t.click_tile("block");
+        let (n2, undo2) = (t.count_tag(tag), t.ed().undo_stack.len());
+        t.detail(&format!("grid: a click on a model's tile adds one {tag} ({radio})"), picked && ok && n2 == n + 1 && undo2 == undo + 1, format!("{picked} {ok} {n} {n2}"));
+    }
+    t.click("Place as Platform");
+    let saved = t.settings_text();
+    t.detail("grid: the view and the radio button are in the settings", saved.contains("add_view=grid") && saved.contains("add_models_as=platform"), saved);
+
+    // The tooltip has the name and where the model is from
+    if let Some(n) = t.tile_node("sign") {
+        n.hover();
+    }
+    for _ in 0..10 {
+        t.h.step();
+    }
+    let tip = t.reads("sign  0x") && t.reads("OTHER_BANK");
+    t.check("grid: a tile's tooltip has the model's name and its bank", tip);
+    t.shot("grid/fixture-models");
+
+    // The keyboard: Enter on the tile with the focus
+    let n = t.count_tag("Platform");
+    if let Some(node) = t.tile_node("ball") {
+        node.focus();
+    }
+    t.settle();
+    t.key(Key::Enter);
+    let n2 = t.count_tag("Platform");
+    t.detail("grid: Enter on a tile with the focus places it", n2 == n + 1, format!("{n} {n2}"));
+
+    // A wider panel has more columns
+    let cols = t.w().palette.grid_cols;
+    let first_row = |t: &T| {
+        let all = t.tiles(&names);
+        let top = all.iter().map(|r| r.top()).fold(f32::INFINITY, f32::min);
+        all.iter().filter(|r| (r.top() - top).abs() < 1.0).count()
+    };
+    let in_row = first_row(&t);
+    let p = t.w().panels.inspector;
+    t.drag_window(egui::pos2(p.left(), p.center().y), egui::pos2(1280.0 - 560.0, p.center().y + 5.0));
+    let (cols2, in_row2) = (t.w().palette.grid_cols, first_row(&t));
+    t.detail("grid: a wider panel has more columns", cols >= 3 && in_row == cols.min(names.len()) && cols2 > cols && in_row2 == cols2.min(names.len()), format!("{cols} {in_row} {cols2} {in_row2}"));
+    let p = t.w().panels.inspector;
+    t.drag_window(egui::pos2(p.left(), p.center().y), egui::pos2(1280.0 - 380.0, p.center().y + 5.0));
+    let back = t.w().palette.grid_cols == cols;
+    t.check("grid: a narrower panel has fewer columns again", back);
+
+    // The search narrows the grid
+    t.fill("Search models", "sign");
+    let left = t.tiles(&names).len();
+    t.fill("Search models", "no such model");
+    let none = t.tiles(&names).is_empty() && t.reads("No model matches.");
+    t.fill("Search models", "");
+    let all = t.tiles(&names).len();
+    t.detail("grid: the search narrows the grid, and says when nothing matches", left == 1 && none && all == names.len(), format!("{left} {none} {all}"));
+
+    // Closing the panel and opening it again keeps the view and the radio button
+    t.click("+ Add");
+    let closed = !t.w().palette_open && t.tile("sign").is_none();
+    t.click("+ Add");
+    let kept = t.w().palette.grid && t.w().palette.places().0 == "Platform" && t.tile("sign").is_some();
+    t.detail("grid: the view and the radio button stay when the panel closes and opens", closed && kept, format!("{closed} {kept}"));
+
+    // The kit: its own radio buttons, and the settings of an item
+    t.click("Kit");
+    t.until(120, |w| w.side_jobs.running == 0 && w.palette.kit_picture("grave").is_some());
+    let kit: Vec<(String, String)> = t.ed().backend.kit_items().ok().and_then(|v| v.as_array().cloned()).unwrap_or_default().iter().map(|i| (i["id"].as_str().unwrap_or("").to_string(), i["name"].as_str().unwrap_or("").to_string())).collect();
+    let grave = kit.iter().find(|k| k.0 == "grave").map(|k| k.1.clone()).unwrap_or_default();
+    let kit_names: Vec<String> = kit.iter().map(|k| k.1.clone()).collect();
+    let shown = t.tiles(&kit_names);
+    let radios = t.has("Place as Background") && t.has("Place as Scenery") && !t.has("Place as Platform");
+    let same = shown.first().is_some_and(|r| (r.width() - enemy_tile.width()).abs() < 0.5);
+    let no_rows = !t.has(&format!("Background {grave}")) && !t.find("Lean", false).iter().any(|n| n.accesskit_node().role() == egui::accesskit::Role::TextInput);
+    t.detail("grid: Kit shows tiles of the same size, no rows, and its radio buttons", shown.len() >= 4 && radios && same && no_rows, format!("{} {radios} {same} {no_rows}", shown.len()));
+    let customs = |t: &mut T| t.ed().catalog.values().filter(|c| c.custom.is_some()).count();
+    let (n, c) = (t.count_tag("BackgroundActor"), customs(&mut t));
+    let ok = t.click_tile(&grave);
+    let (n2, c2) = (t.count_tag("BackgroundActor"), customs(&mut t));
+    t.detail("grid: a click on a kit tile makes the item and places it as Background", ok && n2 > n && c2 > c, format!("{ok} {n} {n2} {c} {c2}"));
+    // Its settings: the corner opens them, a tile click uses them
+    let opened = t.click(&format!("Settings {grave}")) && t.find("Lean", false).iter().any(|n| n.accesskit_node().role() == egui::accesskit::Role::TextInput);
+    t.fill("Lean", "9");
+    let drawn = t.until(30, |w| w.side_jobs.running == 0 && w.palette.kit_picture("grave").is_some_and(|p| p.0.contains("\"9\"") && p.1));
+    t.shot("grid/fixture-kit-settings");
+    t.click("Place as Scenery");
+    let (n, c) = (t.count_tag("LandActor"), customs(&mut t));
+    t.click_tile(&grave);
+    let (n2, c2) = (t.count_tag("LandActor"), customs(&mut t));
+    t.detail("grid: a kit tile's corner opens its settings, and a click uses them, as Scenery", opened && drawn && n2 > n && c2 > c, format!("{opened} {drawn} {n} {n2} {c} {c2}"));
+    let closed = t.click("Close settings") && t.w().palette.kit_settings.is_none() && t.find("Lean", false).is_empty();
+    if let Some(node) = t.tile_node(&grave) {
+        node.click_secondary();
+    }
+    t.settle();
+    let again = t.w().palette.kit_settings.as_deref() == Some("grave");
+    t.detail("grid: Close closes the settings, and a right-click on the tile opens them", closed && again, format!("{closed} {again}"));
+    t.click("Close settings");
+    t.shot("grid/fixture-kit");
+
+    // A converted model can't be a platform: its tile is off under Platform, and a click says why
+    t.click("Models");
+    let custom = t.ed().catalog.iter().find(|c| c.1.custom.is_some()).map(|c| (c.0.clone(), c.1.name.clone())).unwrap_or_default();
+    t.fill("Search models", &custom.0);
+    t.pictures();
+    let is_platform = t.w().palette.places().0 == "Platform";
+    let off = t.tile_node(&custom.1).is_some_and(|n| n.accesskit_node().is_disabled());
+    let n = t.count_tag("Platform");
+    t.click_tile(&custom.1);
+    let (n2, status) = (t.count_tag("Platform"), t.status());
+    for _ in 0..10 {
+        t.h.step();
+    }
+    let why = t.reads("A platform must use a model from the game");
+    t.shot("grid/fixture-models-platform");
+    t.detail("grid: a converted model is refused as a platform, with the list's reason", is_platform && off && n2 == n && status == WHY_CUSTOM_PLATFORM && why, format!("{custom:?} {is_platform} {off} {n} {n2} {why} {status}"));
+    t.click("Place as Scenery");
+    let on = t.tile_node(&custom.1).is_some_and(|n| !n.accesskit_node().is_disabled());
+    let n = t.count_tag("LandActor");
+    t.click_tile(&custom.1);
+    let n2 = t.count_tag("LandActor");
+    t.detail("grid: the converted model is placed as Scenery", on && n2 == n + 1, format!("{on} {n} {n2}"));
+    t.fill("Search models", "");
+    t.click("Place as Background");
+
+    // A new window on the same folder
+    let home = t.home.clone();
+    let mut results = std::mem::take(&mut t.results);
+    drop(t.h);
+    let mut t = T::open(home, fixture(), [1280.0, 720.0]);
+    t.idle();
+    t.click("+ Add");
+    t.click("Models");
+    t.pictures();
+    let places = t.w().palette.places();
+    let kept = t.w().palette.grid && t.tile("sign").is_some() && !t.has("Scenery sign") && places == ("BackgroundActor", "LandActor");
+    t.detail("grid: a new window has the view and the radio buttons of the last one", kept, format!("{places:?}"));
+    // Back to the list
+    let listed = t.click("List") && t.has("Scenery sign") && t.tile("sign").is_none() && t.settings_text().contains("add_view=list");
+    t.check("grid: List shows the rows again", listed);
+    t.fill("Search models", "no such model");
+    let none = t.reads("No model matches.");
+    t.check("grid: the list says when nothing matches", none);
+    results.append(&mut t.results);
+    t.results = results;
+    t.finish();
+
+    // Pictures: the three tabs in four themes
+    if std::env::var_os("GLOVEBOX_SHOTS").is_some() {
+        for theme in ["1998", "sage", "dark", "crt"] {
+            let mut t = T::with_theme(&format!("grid-{theme}"), fixture(), [1280.0, 720.0], Some(theme));
+            t.idle();
+            t.click("+ Add");
+            t.click("Models");
+            t.click("Grid");
+            for (tab, over) in [("Enemies", "dennis"), ("Models", "sign"), ("Kit", "")] {
+                t.click(tab);
+                t.pictures();
+                t.until(60, |w| w.side_jobs.running == 0);
+                if let Some(n) = t.tile_node(over) {
+                    n.hover();
+                }
+                t.settle();
+                t.shot(&format!("grid/{theme}-{}", tab.to_lowercase()));
+            }
+            t.finish();
+        }
+    }
+
+    // The whole game: the grid scrolls through every model and keeps a bounded number of pictures
+    let Some(rom) = std::env::var_os("GLOVEBOX_ROM").map(PathBuf::from) else {
+        println!("skipped: GLOVEBOX_ROM is not set (the Models grid on the whole game)");
+        return;
+    };
+    let mut t = T::with_theme("grid-rom", None, [1280.0, 800.0], Some("sage"));
+    t.files.0.borrow_mut().open.push_back(rom);
+    t.settle();
+    t.h.get_by_label("Choose the ROM…").click();
+    t.settle();
+    t.idle();
+    t.click("+ Add");
+    t.click("Models");
+    t.click("Grid");
+    t.pictures();
+    let total = t.ed().catalog.len();
+    let cols = t.w().palette.grid_cols.max(1);
+    let slot = t.w().panels.slot(glovebox::layout::PanelId::Add);
+    let at = egui::pos2(slot.center().x, slot.center().y + 60.0);
+    t.shot("grid/rom-sage-models");
+    let visible = |t: &T| -> Vec<(String, i32)> {
+        let mut v: Vec<(String, i32)> = t.h.query_all_by_role(egui::accesskit::Role::Button).filter(|n| slot.contains_rect(n.rect()) && n.rect().width() >= 60.0 && (n.rect().width() - n.rect().height()).abs() < 1.0).map(|n| (n.accesskit_node().label().unwrap_or_default(), n.rect().top() as i32)).collect();
+        v.sort();
+        v
+    };
+    let in_view = visible(&t).len();
+    let (mut most, mut most_tiles, mut turns) = (0, in_view, 0);
+    let mut last = visible(&t);
+    // Each turn of the wheel is about five rows
+    for _ in 0..(total / cols + 20) {
+        t.wheel(at, -450.0);
+        most = most.max(t.w().palette.thumbs.len());
+        let now = visible(&t);
+        most_tiles = most_tiles.max(now.len());
+        if now == last {
+            break;
+        }
+        last = now;
+        turns += 1;
+    }
+    t.pictures();
+    most = most.max(t.w().palette.thumbs.len());
+    let made = t.w().palette.thumbs_made;
+    let rows_in_view = most_tiles.div_ceil(cols);
+    t.detail(
+        "grid: the Models grid scrolls through the whole game with a bounded number of pictures",
+        total > 1000 && turns * 6 >= total / cols && made > THUMBS_MAX && most <= THUMBS_MAX && rows_in_view <= 12,
+        format!("{total} models, {cols} columns, {turns} turns, {made} pictures made, at most {most} kept, at most {most_tiles} tiles in view"),
+    );
+    t.shot("grid/rom-sage-models-end");
+    t.wheel(at, 100000.0);
+    for (theme, tabs) in [("sage", ["Enemies", "Kit"].as_slice()), ("crt", ["Enemies", "Models", "Kit"].as_slice())] {
+        t.w().set_theme(theme);
+        for tab in tabs {
+            t.click(tab);
+            t.pictures();
+            t.until(120, |w| w.side_jobs.running == 0);
+            t.shot(&format!("grid/rom-{theme}-{}", tab.to_lowercase()));
+        }
+    }
+    t.finish();
+}
+
+/// The layout of the panels: which show, on which side, stacked or tabbed.
+///
+/// Every panel is hidden and shown again by clicks: through its own menu and through Options > Panels. The view
+/// takes the room a hidden panel leaves. Level goes to the right and the inspector to the left, the checks go under
+/// the view, and two panels on one side are tabs or a stack with a divider to drag. `Reset layout` gives the first
+/// layout and sizes. The layout and a dragged width come back in a new window, and a damaged setting gives the
+/// default. `A` and `P` open their panels wherever they are. With every panel hidden the view fills the window and
+/// a click in it still selects.
+///
+/// With `GLOVEBOX_SHOTS` it saves four layouts in two themes in `DIR/layout/`, and with `GLOVEBOX_ROM` on a level
+/// of the game.
+#[test]
+fn panel_layout() {
+    use glovebox::app::{INSPECTOR_WIDTH, LEVEL_WIDTH};
+    use glovebox::layout::{Layout, Mode as Sharing, PanelId, Side};
+    let near = |a: f32, b: f32| (a - b).abs() <= 1.0;
+    let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
+    let mut t = T::new("layout", fixture(), [1280.0, 720.0]);
+    t.idle();
+    let (p0, v0) = (t.w().panels, t.w().view.rect);
+    let slots = |t: &mut T| -> Vec<bool> { PanelId::ALL.iter().map(|p| t.w().panels.slot(*p).is_positive()).collect() };
+    let start = t.w().layout == Layout::default() && slots(&mut t) == [true, true, true, false, false] && !t.settings_text().contains("panels");
+    t.detail("layout: the window starts with the default layout", start && near(p0.level.left(), 0.0) && near(p0.inspector.right(), 1280.0) && near(p0.checks.right(), 1280.0), format!("{p0:?}"));
+
+    // Level: hidden by its own menu, shown by the Options menu
+    let hid = t.panel_menu("Level", "Hide");
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    let gone = !p.slot(PanelId::Level).is_positive() && !p.level.is_positive() && !t.has("Level panel menu");
+    t.detail("layout: Hide in the Level panel's menu hides it, and the view takes its room", hid && gone && near(v.left(), 0.0) && near(v.width(), v0.width() + LEVEL_WIDTH), format!("{hid} {gone} {v:?}"));
+    let saved = t.settings_text().contains("level:left:off");
+    let shown = t.panels_menu(&["Show Level"]);
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    t.detail("layout: the tick in Options > Panels shows it again", saved && shown && close(p.slot(PanelId::Level), p0.slot(PanelId::Level)) && close(v, v0), format!("{saved} {shown} {p:?}"));
+
+    // Checks, then the inspector: the right column goes when both are hidden
+    let hid = t.panel_menu("Checks", "Hide");
+    let p = t.w().panels;
+    let grew = !p.checks.is_positive() && near(p.slot(PanelId::Inspector).bottom(), p0.checks.bottom()) && close(t.w().view.rect, v0);
+    t.detail("layout: hiding the checks gives the inspector their room", hid && grew, format!("{hid} {p:?}"));
+    let hid = t.panel_menu("Inspector", "Hide");
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    let gone = !p.inspector.is_positive() && !p.slot(PanelId::Inspector).is_positive() && near(v.right(), 1280.0) && near(v.width(), v0.width() + INSPECTOR_WIDTH);
+    t.detail("layout: hiding the inspector too gives the view the right side", hid && gone, format!("{hid} {p:?} {v:?}"));
+    // A selection does not bring the inspector back, and the status line says what it is
+    let enemy = ent(t.ed(), |e| e.kind == "enemy" && !e.is_handle);
+    let ed = t.ed();
+    let at = enemy.map(|e| px(ed, ed.obj_pos(e))).unwrap_or((100.0, 100.0));
+    t.view_click(at, Modifiers::default());
+    let picked = t.ed().selection.len() == 1;
+    let status = t.status();
+    let still = !t.w().panels.slot(PanelId::Inspector).is_positive();
+    t.detail("layout: a click selects with the inspector hidden, and the status line says what", picked && still && status.starts_with("Selected "), format!("{picked} {still} {status}"));
+    t.ed().set_selection(Vec::new());
+    let shown = t.panels_menu(&["Show Inspector", "Show Checks"]);
+    let p = t.w().panels;
+    let v = t.w().view.rect;
+    t.detail("layout: both ticks bring the right column back", shown && close(p.inspector, p0.inspector) && close(p.checks, p0.checks) && close(v, v0), format!("{shown} {p:?}"));
+
+    // Add to level and Path follow their tools
+    t.key(Key::A);
+    let open = t.w().palette_open && t.w().panels.slot(PanelId::Add).is_positive();
+    let hid = t.panel_menu("Add to level", "Hide");
+    let closed = !t.w().palette_open && !t.w().panels.slot(PanelId::Add).is_positive() && t.w().panels.slot(PanelId::Inspector).is_positive();
+    t.key(Key::A);
+    let again = t.w().palette_open && t.w().panels.slot(PanelId::Add).is_positive();
+    t.detail("layout: Hide closes Add to level, and A shows it again", open && hid && closed && again, format!("{open} {hid} {closed} {again}"));
+    t.key(Key::A);
+    t.key(Key::P);
+    let open = t.ed().path.on && t.w().panels.slot(PanelId::Path).is_positive();
+    let hid = t.panel_menu("Path", "Hide");
+    let closed = !t.ed().path.on && !t.w().panels.slot(PanelId::Path).is_positive();
+    t.key(Key::P);
+    let again = t.ed().path.on && t.w().panels.slot(PanelId::Path).is_positive();
+    t.key(Key::P);
+    t.detail("layout: Hide closes Path, and P shows it again", open && hid && closed && again, format!("{open} {hid} {closed} {again}"));
+    let ticked = t.panels_menu(&["Show Add to level"]) && t.w().palette_open;
+    let unticked = t.panels_menu(&["Show Add to level"]) && !t.w().palette_open;
+    t.detail("layout: the tick of Add to level opens and closes it", ticked && unticked, format!("{ticked} {unticked}"));
+
+    // Sides: Level to the right, the inspector to the left
+    // On one side they are tabs, and the menu is the one of the panel in front
+    let moved = t.panel_menu("Level", "Move to right") && !t.has("Inspector panel menu") && t.click("Inspector") && t.panel_menu("Inspector", "Move to left");
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    let (level, inspector) = (p.slot(PanelId::Level), p.slot(PanelId::Inspector));
+    let sides = near(inspector.left(), 0.0) && near(inspector.right(), v.left()) && near(level.right(), 1280.0) && near(level.left(), v.right());
+    // The checks stayed on the right, under the Level panel
+    let under = near(p.checks.top(), level.bottom()) && near(p.checks.left(), level.left());
+    t.shot("layout/fixture-mirrored");
+    t.detail("layout: Move to right and Move to left swap the panels' sides", moved && sides && under, format!("{moved} {p:?} {v:?}"));
+    let text = t.settings_text();
+    t.detail("layout: the sides are in the settings", text.contains("level:right:on") && text.contains("inspector:left:on"), text);
+    // With the inspector on the left, Add to level is a tab beside it
+    t.key(Key::A);
+    let p = t.w().panels;
+    let right = p.slot(PanelId::Add).is_positive() && near(p.slot(PanelId::Add).right(), 1280.0) && !p.slot(PanelId::Level).is_positive() && t.has("Level") && p.slot(PanelId::Inspector).is_positive();
+    t.detail("layout: Add to level opens as a tab of its own side", right, format!("{p:?}"));
+    let moved = t.panel_menu("Add to level", "Move to left");
+    let p = t.w().panels;
+    let left = near(p.slot(PanelId::Add).left(), 0.0) && p.slot(PanelId::Level).is_positive() && !p.slot(PanelId::Inspector).is_positive();
+    t.detail("layout: Move to left puts Add to level among the left side's tabs", moved && left, format!("{moved} {p:?}"));
+    t.key(Key::A);
+
+    // The checks under the view
+    let moved = t.panel_menu("Checks", "Move to bottom");
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    let under = near(p.checks.top(), v.bottom()) && near(p.checks.left(), v.left()) && near(p.checks.right(), v.right()) && v.height() < v0.height() - 90.0;
+    let tall = near(p.slot(PanelId::Level).bottom(), p.checks.bottom());
+    t.shot("layout/fixture-checks-bottom");
+    t.detail("layout: Move to bottom puts the checks under the view", moved && under && tall, format!("{moved} {p:?} {v:?}"));
+    // A click on a check's line still shows the spot
+    let lines = t.w().checks.iter().filter(|c| c.click.is_some()).count();
+    let high = t.w().panels.checks.height() > 90.0;
+    t.detail("layout: the checks at the bottom show their lines", t.has("CHECKS") && high, format!("{lines}"));
+    let top = t.w().panels.checks.top();
+    let x = t.w().panels.checks.center().x;
+    t.drag_window(egui::pos2(x, top), egui::pos2(x + 5.0, top - 80.0));
+    let now = t.w().panels.checks;
+    t.detail("layout: a drag on the bottom checks' edge changes their height", near(now.top(), top - 80.0), format!("{top} {now:?}"));
+    let back = t.panels_menu(&["Checks on the left"]);
+    let p = t.w().panels;
+    t.detail("layout: the side choice in Options > Panels moves the checks to the left", back && near(p.checks.left(), 0.0) && near(p.checks.top(), p.slot(PanelId::Inspector).bottom()), format!("{back} {p:?}"));
+
+    // Reset layout
+    let reset = t.panels_menu(&["Reset layout"]);
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    let same = t.w().layout == Layout::default() && close(p.level, p0.level) && close(p.inspector, p0.inspector) && close(p.checks, p0.checks) && close(v, v0);
+    t.detail("layout: Reset layout gives the default layout and sizes", reset && same, format!("{reset} {p:?} {p0:?}"));
+
+    // Two panels on one side: tabs, or a stack with a divider
+    let moved = t.panels_menu(&["Level on the right"]);
+    let p = t.w().panels;
+    let (level, inspector) = (p.slot(PanelId::Level), p.slot(PanelId::Inspector));
+    let tabs = level.is_positive() != inspector.is_positive() && near(t.w().view.rect.left(), 0.0) && t.find("Level", true).iter().any(|n| n.accesskit_node().role() == egui::accesskit::Role::Button);
+    let front = t.click("Inspector") && t.w().panels.slot(PanelId::Inspector).is_positive() && !t.w().panels.slot(PanelId::Level).is_positive();
+    t.shot("layout/fixture-tabbed");
+    t.detail("layout: Level and the inspector on one side are tabs", moved && tabs && front, format!("{moved} {tabs} {front} {p:?}"));
+    let stacked = t.panels_menu(&["Right side stacked"]) && t.w().layout.mode(Side::Right) == Sharing::Stacked;
+    let p = t.w().panels;
+    let (level, inspector) = (p.slot(PanelId::Level), p.slot(PanelId::Inspector));
+    let both = level.is_positive() && inspector.is_positive() && near(level.bottom(), inspector.top()) && near(inspector.bottom(), p.checks.top()) && near(level.left(), inspector.left());
+    let titles = t.has("Level panel menu") && t.has("Inspector panel menu");
+    t.shot("layout/fixture-stacked");
+    t.detail("layout: Stacked shows them one under the other", stacked && both && titles, format!("{stacked} {titles} {p:?}"));
+    let y = level.bottom();
+    t.drag_window(egui::pos2(level.center().x, y), egui::pos2(level.center().x + 4.0, y - 60.0));
+    let p = t.w().panels;
+    let dragged = near(p.slot(PanelId::Level).bottom(), y - 60.0) && near(p.slot(PanelId::Inspector).top(), y - 60.0);
+    t.detail("layout: a drag on the divider of a stack changes the heights", dragged, format!("{p:?}"));
+    let tabbed = t.panels_menu(&["Right side tabbed"]) && t.w().panels.slot(PanelId::Level).is_positive() != t.w().panels.slot(PanelId::Inspector).is_positive();
+    t.check("layout: Tabbed shows them as tabs again", tabbed);
+    t.panels_menu(&["Right side stacked"]);
+
+    // A dragged width and the layout come back in a new window
+    let p = t.w().panels.inspector;
+    t.drag_window(egui::pos2(p.left(), 300.0), egui::pos2(1280.0 - 450.0, 305.0));
+    let dragged = near(t.w().panels.inspector.width(), 450.0);
+    let (layout, text) = (t.w().layout.clone(), t.settings_text());
+    let written = text.contains("level:right:on") && text.contains("right:stacked") && text.contains("inspector:450");
+    let home = t.home.clone();
+    let mut results = std::mem::take(&mut t.results);
+    drop(t.h);
+    let mut t = T::open(home, fixture(), [1280.0, 720.0]);
+    t.idle();
+    let p = t.w().panels;
+    let same = t.w().layout == layout && near(p.inspector.width(), 450.0) && p.slot(PanelId::Level).is_positive() && near(p.slot(PanelId::Level).right(), 1280.0) && near(t.w().view.rect.left(), 0.0);
+    t.detail("layout: a new window has the layout and the dragged width", dragged && written && same, format!("{dragged} {written} {text} {p:?}"));
+
+    // Every panel hidden: the view fills the window, and a click in it selects
+    let hidden = t.panels_menu(&["Show Level", "Show Inspector", "Show Checks"]);
+    let (v, window) = (t.w().view.rect, t.h.ctx.content_rect());
+    let full = near(v.left(), 0.0) && near(v.right(), window.right()) && slots(&mut t) == [false; 5] && v.height() > window.height() - 110.0;
+    let enemy = ent(t.ed(), |e| e.kind == "enemy" && !e.is_handle);
+    let ed = t.ed();
+    let at = enemy.map(|e| px(ed, ed.obj_pos(e))).unwrap_or((100.0, 100.0));
+    t.view_click(at, Modifiers::default());
+    let picked = t.ed().selection.len() == 1 && t.status().starts_with("Selected ");
+    t.shot("layout/fixture-view-only");
+    t.detail("layout: with every panel hidden the view fills the window and a click selects", hidden && full && picked, format!("{hidden} {full} {picked} {v:?}"));
+    // A and P still open their panels
+    t.ed().set_selection(Vec::new());
+    t.key(Key::A);
+    let add = t.w().panels.slot(PanelId::Add).is_positive() && t.has("Collectables");
+    t.key(Key::A);
+    t.key(Key::P);
+    let path = t.w().panels.slot(PanelId::Path).is_positive();
+    t.key(Key::P);
+    let none = slots(&mut t) == [false; 5];
+    t.detail("layout: A and P open their panels over a view-only window", add && path && none, format!("{add} {path} {none}"));
+    results.append(&mut t.results);
+    t.results = results;
+    t.finish();
+
+    // A damaged setting gives the default layout
+    for (k, bad) in ["nonsense", "level:top:on,inspector:right:on,checks:right:on,add:right,path:right,left:tabbed,right:tabbed", "level:left:on,inspector:right:on", "level:bottom:on,inspector:right:on,checks:right:on,add:right,path:right,left:tabbed,right:tabbed"].into_iter().enumerate() {
+        let mut t = T::with_settings(&format!("layout-bad-{k}"), fixture(), [1280.0, 720.0], &format!("[General]\ntour=seen\npanels=\"{bad}\"\npanel_sizes=\"right:banana,left:99999\"\n"));
+        t.idle();
+        let p = t.w().panels;
+        let ok = t.w().layout == Layout::default() && near(p.level.width(), LEVEL_WIDTH) && near(p.inspector.width(), INSPECTOR_WIDTH) && near(p.inspector.right(), 1280.0);
+        t.detail(&format!("layout: a damaged setting gives the default layout ({bad})"), ok, format!("{p:?}"));
+        t.finish();
+    }
+    assert_eq!(Layout::from_text(&Layout::default().to_text()), Some(Layout::default()));
+
+    // A wide window: Add to level beside the inspector while the view keeps its least width
+    let mut t = T::new("layout-wide", fixture(), [1920.0, 1080.0]);
+    t.idle();
+    t.click("+ Add");
+    let p = t.w().panels;
+    let beside = p.add.is_positive() && near(p.add.right(), p.inspector.left()) && p.slot(PanelId::Inspector).is_positive();
+    t.h.set_size(egui::vec2(1570.0, 900.0));
+    t.settle();
+    let p = t.w().panels;
+    let still = p.add.is_positive() && t.w().view.rect.width() >= glovebox::layout::MIN_VIEW;
+    // Wider panels would leave the view too little: Add to level goes back among the tabs
+    t.drag_window(egui::pos2(p.inspector.left(), 400.0), egui::pos2(p.inspector.right() - 520.0, 405.0));
+    let (p, v) = (t.w().panels, t.w().view.rect);
+    let tabs = !p.add.is_positive() && p.slot(PanelId::Add).is_positive() && !p.slot(PanelId::Inspector).is_positive() && v.width() >= glovebox::layout::MIN_VIEW;
+    t.detail("layout: Add to level has its own column only while the view keeps its least width", beside && still && tabs, format!("{beside} {still} {tabs} {p:?} {v:?}"));
+    t.finish();
+
+    // Pictures: four layouts in two themes
+    let layouts = [
+        ("default", Layout::default().to_text()),
+        ("mirrored", "level:right:on,inspector:left:on,checks:left:on,add:left,path:left,left:tabbed,right:tabbed".to_string()),
+        ("checks-bottom", "level:left:on,inspector:right:on,checks:bottom:on,add:right,path:right,left:tabbed,right:tabbed".to_string()),
+        ("stacked", "level:right:on,inspector:right:on,checks:left:on,add:left,path:left,left:tabbed,right:stacked".to_string()),
+        ("view-only", "level:left:off,inspector:right:off,checks:right:off,add:right,path:right,left:tabbed,right:tabbed".to_string()),
+    ];
+    if std::env::var_os("GLOVEBOX_SHOTS").is_some() {
+        for theme in ["1998", "sage", "dark", "crt"] {
+            let mut t = T::with_theme(&format!("layout-{theme}"), fixture(), [1280.0, 720.0], Some(theme));
+            t.idle();
+            let enemy = ent(t.ed(), |e| e.kind == "enemy");
+            t.ed().select(enemy, false);
+            for (name, text) in &layouts {
+                let l = Layout::from_text(text).expect("a layout");
+                t.w().set_layout(l);
+                t.settle();
+                t.shot(&format!("layout/{theme}-{name}"));
+            }
+            t.w().set_layout(Layout::default());
+            t.click("Options");
+            t.click("Panels");
+            t.shot(&format!("layout/{theme}-menu"));
+            t.click("Level panel menu");
+            t.shot(&format!("layout/{theme}-panel-menu"));
+            t.finish();
+        }
+    }
+    match (std::env::var_os("GLOVEBOX_ROM").map(PathBuf::from), std::env::var_os("GLOVEBOX_SHOTS")) {
+        (Some(rom), Some(_)) => {
+            let mut t = T::with_theme("layout-rom", None, [1280.0, 800.0], Some("sage"));
+            t.files.0.borrow_mut().open.push_back(rom);
+            t.settle();
+            t.h.get_by_label("Choose the ROM…").click();
+            t.settle();
+            t.idle();
+            let enemy = ent(t.ed(), |e| e.kind == "enemy");
+            t.ed().select(enemy, false);
+            for (name, text) in &layouts {
+                let l = Layout::from_text(text).expect("a layout");
+                t.w().set_layout(l);
+                t.settle();
+                t.shot(&format!("layout/rom-sage-{name}"));
+            }
+            t.finish();
+        }
+        _ => println!("skipped: GLOVEBOX_ROM and GLOVEBOX_SHOTS are not both set (the layouts on a level of the game)"),
+    }
 }
 
 /// The first-run screen: a wrong file is refused with the first-run screen's message.

@@ -3,8 +3,10 @@
 
 use crate::dialogs::{Dialog, FileDialogs};
 use crate::jobs::Jobs;
+pub use crate::layout::{Panels, ADD_WIDTH, INSPECTOR_WIDTH, LEVEL_WIDTH};
+use crate::layout::{Layout, PanelId};
 use crate::settings::{IniSettings, Shared};
-use crate::tour::{self, Target};
+use crate::tour;
 use crate::{inspector, outliner, palette, path_panel, setup, shell, style, viewport};
 use glovebox_core::backend::{Backend, CatalogEntry};
 use glovebox_core::xml::NodeId;
@@ -154,30 +156,21 @@ pub struct Window {
     pub last_saved: Option<PathBuf>,
     /// Where the panels were in the last frame.
     pub panels: Panels,
+    /// Which panels show and where they sit.
+    pub layout: Layout,
+    /// The panels that are tabs, the one chosen last first. A column shows the first of its tabs in this list.
+    pub front: Vec<PanelId>,
+    /// The sizes the player dragged the panels to, by the names of `layout.rs`.
+    pub sizes: BTreeMap<String, f32>,
+    pub(crate) sizes_dirty: bool,
+    /// The sizes of the last frame.
+    pub(crate) sizes_seen: BTreeMap<String, f32>,
+    /// Counts the resets of the layout. It is part of the panels' ids.
+    pub(crate) layout_gen: u32,
     /// The welcome and the tour.
     pub tour: tour::State,
     clock: std::time::Instant,
     pub(crate) ctx: egui::Context,
-}
-
-/// The widths the side panels start with, in points.
-pub const LEVEL_WIDTH: f32 = 270.0;
-pub const INSPECTOR_WIDTH: f32 = 380.0;
-pub const ADD_WIDTH: f32 = 360.0;
-
-/// The rectangles of the side panels in the last frame. `add` is empty when its panel is closed.
-#[derive(Clone, Copy, Debug)]
-pub struct Panels {
-    pub level: egui::Rect,
-    pub inspector: egui::Rect,
-    pub checks: egui::Rect,
-    pub add: egui::Rect,
-}
-
-impl Default for Panels {
-    fn default() -> Self {
-        Panels { level: egui::Rect::NOTHING, inspector: egui::Rect::NOTHING, checks: egui::Rect::NOTHING, add: egui::Rect::NOTHING }
-    }
 }
 
 /// The format of the back end's level table.
@@ -231,6 +224,12 @@ impl Window {
             palette: palette::State::default(),
             palette_open: false,
             panels: Panels::default(),
+            layout: Layout::default(),
+            front: vec![PanelId::Inspector, PanelId::Level, PanelId::Add, PanelId::Path],
+            sizes: BTreeMap::new(),
+            sizes_dirty: false,
+            sizes_seen: BTreeMap::new(),
+            layout_gen: 0,
             path_panel: path_panel::State::default(),
             checks: Vec::new(),
             quickboot: true,
@@ -243,6 +242,10 @@ impl Window {
             clock: std::time::Instant::now(),
             ctx: ctx.clone(),
         };
+        // An unknown or damaged layout gives the default one
+        w.layout = w.settings.get(crate::layout::SETTING).and_then(|t| Layout::from_text(&t)).unwrap_or_default();
+        w.sizes = w.settings.get(crate::layout::SIZES_SETTING).map(|t| crate::layout::sizes_from_text(&t)).unwrap_or_default();
+        w.palette.load(&w.settings);
         w.start();
         w
     }
@@ -368,9 +371,14 @@ impl Window {
             return;
         }
         let mut rebuilt = false;
+        let (mut said, mut selected) = (false, false);
         for e in events {
             match e {
-                Event::Status { message, class } => self.status = (message, class),
+                Event::Status { message, class } => {
+                    said = true;
+                    self.status = (message, class);
+                }
+                Event::SelectionChanged => selected = true,
                 Event::SceneLoaded => self.on_scene_loaded(),
                 Event::Rebuilt => {
                     rebuilt = true;
@@ -379,8 +387,18 @@ impl Window {
                 Event::ImportsChanged => rebuilt = true,
                 Event::Edited => self.edited_levels = self.ed.drafts.list().into_keys().collect(),
                 Event::Loading(t) => self.loading = t,
-                Event::SelectionChanged | Event::ViewChanged | Event::ModeChanged => {}
+                Event::ViewChanged | Event::ModeChanged => {}
             }
+        }
+        // With the inspector hidden, the status line says what was selected
+        if selected && !said && self.tour.run.is_none() && !self.present(PanelId::Inspector) {
+            let sel = &self.ed.selection;
+            let text = match (sel.len(), sel.first().and_then(|i| self.ed.entities.get(*i))) {
+                (1, Some(e)) => format!("Selected {}.", e.label),
+                (0, _) | (_, None) => "Nothing selected.".to_string(),
+                (n, _) => format!("Selected {n} things."),
+            };
+            self.status = (text, String::new());
         }
         if rebuilt && self.ed.has_level {
             self.checks = self.ed.checks();
@@ -397,14 +415,14 @@ impl Window {
         self.palette_open = on.unwrap_or(!self.palette_open);
         self.palette.shown_tab = None;
         if self.palette_open {
-            self.palette.side_tab = 1;
+            self.bring_front(PanelId::Add);
         }
     }
 
     pub fn set_path_mode(&mut self, on: bool) {
         self.ed.set_path_mode(on);
         if on {
-            self.palette.side_tab = 2;
+            self.bring_front(PanelId::Path);
         }
     }
 
@@ -844,65 +862,7 @@ impl Window {
                 });
             });
         });
-        let wide = ui.available_width() >= 1560.0;
-        let side = self.palette_open || self.ed.path.on;
-        let bare = egui::Frame::new().fill(th.bg);
-        let padded = egui::Frame::new().inner_margin(egui::Margin { left: 8, right: 4, top: 4, bottom: 4 });
-        // Each panel's contents go through `style::fixed`: a panel that grows to fit its contents remembers the
-        // larger size, and one wide row then holds the panel at its largest size against every drag.
-        let level = egui::Panel::left("level").frame(bare).default_size(LEVEL_WIDTH).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
-            style::fixed(ui, |ui| {
-                style::ground(ui);
-                panel_title(ui, "Level");
-                padded.show(ui, |ui| outliner::ui(self, ui));
-            });
-        });
-        self.panels.level = level.response.rect;
-        self.tour.mark(Target::LevelPanel, level.response.rect);
-        let inspector = egui::Panel::right("inspector").frame(bare).default_size(INSPECTOR_WIDTH).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
-            style::fixed(ui, |ui| {
-                style::ground(ui);
-                if side && !wide {
-                    side_tabs(self, ui, true);
-                } else {
-                    panel_title(ui, "Inspector");
-                }
-                let tab = if side && !wide { self.palette.side_tab } else { 0 };
-                let total = ui.available_height();
-                let checks_height = (total * 0.36).clamp(180.0, 320.0);
-                let checks = egui::Panel::bottom("checks").frame(padded).default_size(checks_height).size_range(120.0..=(total - 160.0).max(120.0)).resizable(true).show(ui, |ui| {
-                    style::fixed(ui, |ui| crate::checks::ui(self, ui));
-                });
-                self.panels.checks = checks.response.rect;
-                self.tour.mark(Target::Checks, checks.response.rect);
-                if tab == 0 {
-                    self.tour.mark(Target::Inspector, ui.available_rect_before_wrap());
-                }
-                egui::CentralPanel::default().frame(padded).show(ui, |ui| {
-                    style::fixed(ui, |ui| match tab {
-                        1 => palette::ui(self, ui),
-                        2 => path_panel::ui(self, ui),
-                        _ => inspector::ui(self, ui),
-                    });
-                });
-            });
-        });
-        self.panels.inspector = inspector.response.rect;
-        self.tour.mark(Target::RightPanel, inspector.response.rect);
-        self.panels.add = egui::Rect::NOTHING;
-        if side && wide {
-            let add = egui::Panel::right("add").frame(bare).default_size(ADD_WIDTH).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
-                style::fixed(ui, |ui| {
-                    style::ground(ui);
-                    side_tabs(self, ui, false);
-                    padded.show(ui, |ui| match self.palette.side_tab {
-                        2 => path_panel::ui(self, ui),
-                        _ => palette::ui(self, ui),
-                    });
-                });
-            });
-            self.panels.add = add.response.rect;
-        }
+        self.side_panels(ui);
         egui::CentralPanel::default().frame(egui::Frame::new().fill(th.view_color())).show(ui, |ui| {
             viewport::ui(self, ui);
         });
@@ -937,37 +897,6 @@ impl Window {
             ctx.request_repaint_after(std::time::Duration::from_millis(200));
         }
     }
-}
-
-/// Which side panels are open, as tabs. `with_inspector` adds the inspector's tab (a narrow window).
-fn side_tabs(w: &mut Window, ui: &mut egui::Ui, with_inspector: bool) {
-    let mut tabs: Vec<(u8, &str)> = Vec::new();
-    if with_inspector {
-        tabs.push((0, "Inspector"));
-    }
-    if w.palette_open {
-        tabs.push((1, "Add to level"));
-    }
-    if w.ed.path.on {
-        tabs.push((2, "Path"));
-    }
-    if !tabs.iter().any(|t| t.0 == w.palette.side_tab) {
-        w.palette.side_tab = tabs.last().map_or(0, |t| t.0);
-    }
-    egui::Frame::new().fill(style::theme(ui.ctx()).deep).inner_margin(egui::Margin::symmetric(6, 3)).show(ui, |ui| {
-        ui.set_width(ui.available_width());
-        ui.horizontal(|ui| {
-            for (id, name) in tabs {
-                if style::tab(ui, w.palette.side_tab == id, name).clicked() {
-                    w.palette.side_tab = id;
-                }
-            }
-        });
-    });
-}
-
-fn panel_title(ui: &mut egui::Ui, title: &str) {
-    style::title_bar(ui, title);
 }
 
 /// "level is 1234 bytes" in a build's message.
