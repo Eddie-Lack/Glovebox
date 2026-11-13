@@ -218,7 +218,7 @@ OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 ## 7. Rust crates and fonts in the app
 
 The app is built from Rust crates of crates.io. `Cargo.lock` pins their versions. The release archive holds each
-crate's licence files in its `licenses/` folder, in a folder per crate (`tools/licenses.py` collects them). Most are
+crate's licence files in its `licenses/` folder (`tools/licenses.py` collects them; `CRATES.txt` lists them per crate). Most are
 under MIT or Apache 2.0, at the user's choice. The main ones:
 
 | Crate | Used for | Licence |
@@ -234,7 +234,7 @@ under MIT or Apache 2.0, at the user's choice. The main ones:
 | [crc32fast](https://github.com/srijs/rust-crc32fast) | CRC32 for patches | MIT or Apache 2.0 |
 
 egui's font crate (`epaint_default_fonts`) compiles these fonts into the app. Their licence texts are in the
-archive's `licenses/epaint_default_fonts-*` folder.
+archive's `licenses/` folder, in the files that start with `epaint_default_fonts-`.
 
 | Font | Licence |
 | --- | --- |
