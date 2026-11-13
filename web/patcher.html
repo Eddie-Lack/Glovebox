@@ -9,9 +9,7 @@
 <meta name="referrer" content="no-referrer">
 <title>Glover Level Patcher</title>
 <style>
-  /* Styled after a 1998 game web site, like the Glover Practice Rom's patch page: a tiled star background, a
-     ridge-framed table in the middle, a WordArt-style logo, red title bars, grey bevelled boxes and buttons,
-     pixel bullets and system fonts only. Everything is drawn here with CSS and SVG; nothing comes from the ROM. */
+  /* like the Practice Rom's patch page */
   :root {
     --navy: #000080; --deep: #000040; --grey: #c0c0c0; --grey-light: #ffffff; --grey-dark: #808080;
     --red: #cc0000; --yellow: #ffff00; --good: #00c000; --bad: #ff5050; --soft: #c0c0ff;
@@ -23,14 +21,14 @@
     color: #ffffff; font: 13px/1.5 Verdana, Tahoma, Arial, Helvetica, sans-serif;
     padding: 20px 12px 40px;
     background-color: #0000a8;
-    /* A tiled background of little yellow stars, as many 1998 sites had. */
+    /* A tiled background of little yellow stars */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72' shape-rendering='crispEdges'%3E%3Crect width='72' height='72' fill='%230000a8'/%3E%3Cpath d='M18 6l3 7h7l-6 4 2 8-6-5-6 5 2-8-6-4h7z' fill='%23ffff00' stroke='%23c08000'/%3E%3Cpath d='M54 42l2 5h5l-4 3 2 6-5-4-5 4 2-6-4-3h5z' fill='%23ffffff' opacity='.55'/%3E%3Crect x='44' y='12' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='10' y='52' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='64' y='26' width='2' height='2' fill='%23ffff80'/%3E%3C/svg%3E");
   }
   main {
     max-width: 620px; margin: 0 auto; background: var(--navy);
     border: 6px ridge var(--grey); padding: 0 0 14px;
   }
-  /* The logo: thick yellow letters with a red and black hard shadow, as from a 1998 paint program. */
+  /* The logo: thick yellow letters with a red and black hard shadow */
   h1 {
     margin: 0; padding: 16px 8px 12px; text-align: center; background: var(--deep);
     font: italic 900 clamp(26px, 7vw, 44px)/1 "Arial Black", "Arial Bold", Gadget, Impact, sans-serif;
@@ -40,10 +38,10 @@
   h1 .glove { display: inline-block; width: 40px; height: 32px; vertical-align: -4px; margin: 0 8px;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16' shape-rendering='crispEdges'%3E%3Cpath d='M1 5h4V4h2V3h4v2h8v3h-8v2h-1v2h-1v2H4v-2H3v-2H1z' fill='%23ffffff' stroke='%23000000' stroke-width='1'/%3E%3C/svg%3E") no-repeat center / contain; }
   h1 .glove.right { transform: scaleX(-1); }
-  /* The subtitle under the logo: smaller white letters with the same hard shadow. */
+  /* The subtitle under the logo: smaller white letters with the same hard shadow */
   h1 .sub { display: block; margin-top: 10px; font-size: clamp(13px, 3.4vw, 19px); color: #ffffff;
     text-shadow: 1px 1px 0 var(--red), 2px 2px 0 #000000; }
-  /* A rainbow divider, a classic of the time. */
+  /* A rainbow divider, a classic of the time */
   .rainbow { height: 6px; border: 0; margin: 0;
     background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00c000, #0080ff, #8000ff, #ff00ff); }
   a { color: var(--yellow); text-decoration: underline; }
@@ -52,7 +50,7 @@
   a:focus-visible { outline: 2px dotted var(--yellow); outline-offset: 2px; }
 
   .step { margin: 14px 14px 0; }
-  /* The drop box: grey and sunken, like a 1998 form. All of it is one button that opens the file chooser. */
+  /* The drop box: grey and sunken. All of it is one button that opens the file chooser */
   .drop button {
     display: block; width: 100%; padding: 18px 12px; text-align: center; cursor: pointer;
     background: var(--grey); color: #000000; border: 3px inset var(--grey);
@@ -76,11 +74,11 @@
   .know { margin: 0; padding: 0; list-style: none; }
   .know li { padding-left: 18px; margin-top: 4px; position: relative; }
   .know li:first-child { margin-top: 0; }
-  /* A pixel bullet: a small yellow star. */
+  /* A pixel bullet: a small yellow star */
   .know li::before { content: ""; position: absolute; left: 0; top: 5px; width: 9px; height: 9px;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath d='M4 0h1v3h4v1H6v1h1v4H6V7H3v2H2V5h1V4H0V3h4z' fill='%23ffff00'/%3E%3C/svg%3E") no-repeat center / contain; }
 
-  /* A Windows 98 style push button. */
+  /* A Windows 98 style push button */
   button.primary {
     font: bold 13px Arial, Helvetica, sans-serif; color: #000000; background: var(--grey); cursor: pointer;
     border: 2px solid; border-color: var(--grey-light) #404040 #404040 var(--grey-light);
@@ -102,7 +100,7 @@
   .info > div.muted { font-weight: normal; }
   #result { text-align: center; } #result dl { text-align: left; }
 
-  /* The progress bar: a sunken grey trough that fills with navy blocks. */
+  /* The progress bar: a sunken grey trough that fills with navy blocks */
   .bar { height: 18px; background: var(--grey); border: 2px inset var(--grey); overflow: hidden; margin-top: 10px; display: none; }
   .bar i { display: block; height: 100%; width: 0; transition: width .1s;
     background: repeating-linear-gradient(90deg, var(--navy) 0 10px, var(--grey) 10px 12px); }
@@ -110,7 +108,7 @@
 
   input[type=file] { display: none; }
 
-  /* Very narrow windows, such as a phone at 200% zoom: less padding, and each value goes under its label. */
+  /* Very narrow windows, such as a phone at 200% zoom - less padding, and each value goes under its label */
   @media (max-width: 340px) {
     body { padding: 8px 4px 24px; }
     main { border-width: 4px; }
