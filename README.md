@@ -1,35 +1,30 @@
 # Glovebox
 
-A level editor for Glover (N64, USA). It runs on your computer, in its own window
+A level editor for Glover (N64, USA).
 
-Move things, add enemies, garibs and models from any level, import your own models, then test the level in your emulator or share it as a patch
+Move things, add enemies, garibs and models from any level, import your own models, then test the level in your emulator or share it as a patch.
 
 ## You need your own ROM!!
 
-Glover (USA) as a `.z64`, `.v64` or `.n64` file
+Glover (USA) as a `.z64`, `.v64` or `.n64` file.
 
-The editor never includes game data. Everything it shows comes from your ROM and stays on your computer
+The editor itself doesn't have game data. Everything it shows comes from the ROM you provide.
 
-## The desktop app
+## The desktop app (Windows only for now)
 
 1. Get the app for Windows from the _[releases page](https://github.com/Eddie-Lack/Glovebox/releases)_
-2. Unzip it and start `Glovebox.exe`. The editor opens in its own window, in under a second
-3. The first time, it asks for your ROM
-4. That's it. The first level opens right away
-
-You need 64-bit Windows 10 or 11
-
-Any graphics card with Direct3D 12 or Vulkan works. Without one, the editor draws in software
-
-Note: the app isn't signed, so Windows warns you _(see [the app's guide](app/README.txt))_
+2. Unzip it and start `Glovebox.exe`
+3. The first time you open it, it'll ask for your ROM
+   
+Note: the app isn't signed, so a Windows warning will pop up _(see [the app's guide](app/README.txt))_
 
 ## Running it from source
 
-You need [Rust](https://rustup.rs)
+You need [Rust](https://rustup.rs).
 
 `cargo run -p glovebox --release`
 
-It runs on Linux too
+It runs on Linux too.
 
 ## More
 
