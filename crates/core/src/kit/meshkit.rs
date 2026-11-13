@@ -490,6 +490,13 @@ pub fn dome(s: &mut Soup, radius: f64, rings: usize, segs: usize, mat: usize, sq
 /// A surface from a function of u and v in 0 to 1, where u wraps round. Normals come from the surface's slopes.
 /// `flip` reverses the winding.
 pub fn param(s: &mut Soup, f: &dyn Fn(f64, f64) -> V3, nu: usize, nv: usize, mat: usize, uv: &dyn Fn(f64, f64) -> Uv, flip: bool) {
+    param_cols(s, f, nu, nv, &|_, u, v| (mat, uv(u, v)), flip);
+}
+
+/// `param` with a texture per column. A column is the strip between two steps of u, numbered from 0. `skin` takes
+/// the column, u and v, and gives the column's texture and the texture coordinate of that corner. Two columns can
+/// give the corner they share different coordinates.
+pub fn param_cols(s: &mut Soup, f: &dyn Fn(f64, f64) -> V3, nu: usize, nv: usize, skin: &dyn Fn(usize, f64, f64) -> (usize, Uv), flip: bool) {
     let eps = 1e-3;
     let mut grid: Vec<Vec<(V3, V3, Uv)>> = Vec::new();
     for i in 0..=nu {
@@ -507,7 +514,7 @@ pub fn param(s: &mut Soup, f: &dyn Fn(f64, f64) -> V3, nu: usize, nv: usize, mat
             if len(n) < 1e-12 {
                 n = [0.0; 3];
             }
-            col.push((p, n, uv(u, v)));
+            col.push((p, n, [u, v]));
         }
         grid.push(col);
     }
@@ -530,8 +537,10 @@ pub fn param(s: &mut Soup, f: &dyn Fn(f64, f64) -> V3, nu: usize, nv: usize, mat
             let (a, b, c, d) = (grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]);
             let q = if flip { [a, d, c, b] } else { [a, b, c, d] };
             let na: Vec<Option<V3>> = q.iter().map(|x| if len(x.1) > 0.0 { Some(mul(norm(x.1), sgn)) } else { None }).collect();
-            s.tri([q[0].0, q[1].0, q[2].0], [q[0].2, q[1].2, q[2].2], mat, [na[0], na[1], na[2]]);
-            s.tri([q[0].0, q[2].0, q[3].0], [q[0].2, q[2].2, q[3].2], mat, [na[0], na[2], na[3]]);
+            let mat = skin(i, q[0].2[0], q[0].2[1]).0;
+            let t = [0, 1, 2, 3].map(|k| skin(i, q[k].2[0], q[k].2[1]).1);
+            s.tri([q[0].0, q[1].0, q[2].0], [t[0], t[1], t[2]], mat, [na[0], na[1], na[2]]);
+            s.tri([q[0].0, q[2].0, q[3].0], [t[0], t[2], t[3]], mat, [na[0], na[2], na[3]]);
         }
     }
 }

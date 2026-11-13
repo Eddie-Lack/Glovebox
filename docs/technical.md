@@ -93,6 +93,7 @@ nothing else. The program never runs them.
 | `shell`, `main.rs` | The options, the user folder with its marker, lock and log, the ROM copy, the choice of graphics adapter, the self-test. |
 | `app`, `setup` | The application: the first-run screen or the editor's window, opening levels, builds, Test level, the keyboard. |
 | `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
+| `layout` | Which panels show and where: the layout, its settings, the columns round the view, the Panels menu. |
 | `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
 | `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
 | `settings`, `style`, `theme`, `icon` | `settings.ini`, the drawing of the look (the widgets' shapes, title bars, the logo), the themes as data, the app's icon. |
@@ -109,10 +110,45 @@ nothing else. The program never runs them.
   world size, as three.js sprites do.
 - Picking runs on the CPU: a ray against each mesh's triangles, sprites as camera-facing squares, lines
   within 5 pixels.
-- The panels are fixed in place: the outliner on the left, the inspector on the right, the checks under the view, and
-  the Add palette beside the inspector. A colour is picked in the inspector itself, not in a dialog.
-- A panel's size comes from its default (`LEVEL_WIDTH` 270, `INSPECTOR_WIDTH` 380, `ADD_WIDTH` 360 in `app.rs`) and
-  from drags on its edge. Its contents never change it:
+- The player arranges the panels (`layout.rs`). A colour is picked in the inspector itself, not in a dialog.
+  - There are five panels (`PanelId`): Level, Inspector, Checks, Add to level and Path. The view is in the middle and
+    takes the room they leave. With every panel hidden it fills the window.
+  - A `Layout` holds, for each panel, its side (left or right; the checks can also be at the bottom, under the
+    view) and whether it shows, and for each side how its panels share it: `Tabbed` or `Stacked`. The default is
+    Level on the left, and on the right the inspector over the checks, tabbed.
+  - Add to level and Path show while their tool is on. The layout keeps their side only. Hiding one turns its
+    tool off, and `+ Add`, `A`, `Path` and `P` show it again.
+  - Each side is one column (`Window::columns`), an egui side panel. `Tabbed` draws a row of tabs and the panel
+    in front. A column with one panel has a title bar and no tabs. `Stacked` draws the panels one under the other,
+    each with its title bar, as egui top panels with a divider to drag. The checks are never a tab: they are the
+    lowest part of their column, with a divider over them, or a bottom panel under the view.
+  - `Window::front` lists the tabbed panels, the one chosen last first. A column shows the first of its panels in
+    that list. Opening Add to level or Path, a click on a tab and a move bring a panel to the front.
+  - On a tabbed side of a window at least 1560 points wide (`layout::WIDE`), Add to level and Path get a column of
+    their own beside the side's other panels. They stay tabs when that would leave the view less than 480 points
+    (`layout::MIN_VIEW`) at the widths the columns have. No other rule limits the view: on a small window the
+    columns keep their least widths.
+  - The setting `panels` holds the layout as one value, for example
+    `level:left:on,inspector:right:on,checks:right:on,add:right,path:right,left:tabbed,right:tabbed`.
+    `Layout::from_text` wants all seven parts, each once, with known words. Anything else gives the default layout.
+  - The setting `panel_sizes` holds the sizes the player dragged, as `name:points` parts: a column's width under
+    the name of the panel in it that needs the most room (`inspector`, `add`, `path`, `level`, or `checks-column`),
+    the height of the checks (`checks`, `checks-bottom`) and of a stacked panel (`stack-level` and so on). A width
+    stays with its panel when the panel changes sides. A size is written when it changed while a mouse button was
+    down. At the start a kept size is the panel's default size. A part that can't be read is left out.
+  - `Reset layout` removes both settings' effect: the default layout, and new ids for the egui panels
+    (`layout_gen` is part of each id), which drops the sizes egui kept.
+  - The controls: `Options` > `Panels` (`layout::menu`, a submenu that stays open while its entries are clicked)
+    has a tick and a side for each panel, `Stacked` or `Tabbed` for each side, and `Reset layout`. Each title bar,
+    each row of tabs and the checks' heading has a small menu (`panel_menu`): `Move to left`, `Move to right`,
+    `Move to bottom` for the checks, and `Hide`. Panels are not dragged to dock them.
+  - `Window::panels` has the rectangles of the last frame: the columns of Level and of the inspector, the checks,
+    the column the tool panels have for themselves, and each panel's own part of the window (`slots`).
+  - With the inspector hidden, a selection writes what was selected to the status line (`Window::pump`).
+  - `egui_dock` is not used. Its newest release (0.21.1) needs egui 0.36, and the app uses 0.37.
+- A panel's size comes from its default (`LEVEL_WIDTH` 270, `INSPECTOR_WIDTH` 380, `ADD_WIDTH` 360 in `layout.rs`)
+  and from drags on its edge. A column has the default and the limits of the panel in it that needs the most room.
+  Its contents never change it:
   - egui grows a panel to fit its contents and remembers the larger size. A card measures the buttons of its title
     bar in its first frame and is too wide in that frame. Each new selection then widened the inspector, up to its
     largest width, and it went back there after every drag.
@@ -121,7 +157,7 @@ nothing else. The program never runs them.
     and the click test `panels_resize` checks that this is zero for every kind of object and every tab.
   - A widget that is too wide also widens every row after it in the same `Ui`: egui moves the layout's right edge.
   - The 3D view does not take the pointer in the strips along its left and right sides (egui's
-    `resize_grab_radius_side`). The view is added after the panels, and it took the half of each resize handle that
+    `resize_grab_radius_side`), nor in the strip along its bottom when the checks are under it. The view is added after the panels, and it took the half of each resize handle that
     lies over it.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
   (`render/icons.rs`), not with a system font. They look the same on every computer.
@@ -213,7 +249,8 @@ nothing else. The program never runs them.
 - A note is a text that explains how the game or the editor works: the small muted text under a title, a field, a
   group of fields or a row, the second line of a check, the paragraph under a dialog's title, the key hints over
   the view. The Info texts of the Options menu say how notes show: `Shown`, `On hover` or `Off`. The setting is
-  `info` in `settings.ini`; `Window::set_info` writes it and `App::new` reads it.
+  `info` in `settings.ini`; `Window::set_info` writes it and `App::new` reads it. Without a setting the notes are
+  on hover (`Info::DEFAULT`).
   - Every note is drawn by the helpers under "Notes" in `style.rs`: `note`, `note_at`, `note_on`, `card_note`,
     `src_on`, `para`, `para_at`, `para_on`, and the `sub` line of `check_line`. The state is in the egui
     context's data (`style::info`), as the theme is.
@@ -232,6 +269,35 @@ nothing else. The program never runs them.
   - A check's second line joins the check's own tooltip on hover (`tip_with_note`). The key hints over the view
     become a chip "Keys ?" with the hints as its tooltip.
   - A new explanatory text must use one of the note helpers. The test `info_texts` checks the three states.
+  - The click tests read the notes in the panels. Their harness writes `info=shown` into the settings
+    (`T::with_theme`). `info_texts` starts without the setting.
+- The welcome and the tour are in `tour.rs`. The welcome is a dialog with `Show me round` and `No thanks`. It shows
+  the first time a level is open and the settings have no `tour=seen`. An answer, Esc or a click beside it writes
+  `tour=seen`. `Take the tour` of the Options menu starts the tour at any time (`Window::start_tour`).
+  - The steps are data: `tour::STEPS`, each with a title, a text, a `Target` and a `Show`. The last step's text
+    depends on the Info texts setting (`last_text`), and it has the link to the guide.
+  - A `Target` names a part of the window. The toolbar, the panels and the view report their rectangles in every
+    frame with `tour::State::mark`. Several widgets of one target give the rectangle round them all (`Move`,
+    `Rotate` and `Scale`). No position is written in the code. A target that is not in the window has a fallback:
+    the toolbar, or the column of the inspector.
+  - A `Show` says what the window shows during the step: nothing selected, one thing near Glover's start selected
+    and framed, or the Add panel open. `Window::enter_step` sets it when the step opens.
+  - A step on the Level panel, the inspector or the checks shows that panel when the player hid it, and brings it
+    in front of its tabs. Each step starts from the player's layout: a panel shown for one step is hidden again
+    in the next. These changes are not written to the settings.
+  - The tour does not edit the level. `Window::end_tour` puts back the layout and the tabs in front, the selection,
+    the open puzzle, the Add panel
+    and its tab, box select, the fly camera and the camera's place.
+  - The picture: `style::spotlight` dims the window round the target with the colour of the theme's scrim and draws a
+    line in the focus colour. `style::callout` draws the bubble in the colours of the menus, with a pointer.
+    `tour::place` puts the bubble under, over or beside the target, inside the window and never over the target.
+    Beside a target it can be narrower. The bubble's size comes from its texts, which are laid out first.
+  - The tour is an `egui::Modal` over the whole window. Clicks do not reach the window under it.
+    `Window::modal` is true during a dialog, the welcome and the tour: the editor's keys, the view's mouse and
+    dropped files are off. Esc ends the tour, the arrow keys and Enter move between the steps.
+  - The click tests start with `tour=seen` in the settings (`T::with_theme`). The test `welcome_and_tour` starts
+    without it (`T::with_settings`), and walks every step at three window sizes, and once with the inspector on
+    the left and the checks hidden.
 - Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
   takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
   for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
@@ -389,6 +455,27 @@ nothing else. The program never runs them.
       enemy then end up exactly where they do in the control ROM, at the same game frame.
 - **+ Add** (A) opens a palette. Each entry shows a picture of its model, drawn when the entry scrolls into
   view:
+  - The Enemies, Models and Kit tabs have two views, `List` and `Grid` (one choice for the three tabs, the setting
+    `add_view`: `list` or `grid`). `List` has a row for each entry with its name, its notes and a button for each
+    way to place it. `Grid` has the pictures only, as square tiles.
+  - A click on a tile places the entry. On Models and Kit a row of radio buttons over the grid says how: the
+    choices of the list's buttons (`MODELS_AS`, `KIT_AS` in `palette.rs`; the settings `add_models_as`: `scenery`,
+    `background` or `platform`, and `add_kit_as`: `background` or `scenery`). Enemies have one way and no radio
+    buttons. An unknown value of a setting is the list and the first choice.
+  - A tile's tooltip has what its row shows: the name, the id, the bank, the notes. A corner mark flags a boss and
+    one of the player's own models. A tile that can't be placed (a converted model under `Platform`, an enemy
+    without a model) is dimmed, and a click writes the reason to the status line. A tile is a button for the
+    keyboard and for screen readers, named by its entry.
+  - A kit tile is made with the item's settings as they are. The corner with three dots, or a right-click, shows
+    the item's settings in a box over the grid (`kit_settings`).
+  - The grid scrolls virtually (`tile_grid`, egui's `ScrollArea::show_rows`): the columns are as many 80 point
+    tiles as fit the panel, the tiles stretch to fill the row, and only the rows in view are laid out. The Models
+    grid has every model the search leaves. The list stops at 150 rows.
+  - Model pictures are bounded. At most `THUMBS_MAX` (320) are kept: when there are more, the ones that are not in
+    view go, the ones seen longest ago first (`palette::work`). At most 32 models are read at a time. A tile that
+    is still in view asks again in the next frame. A fast scroll never queues the whole game.
+  - The search box has an id of its own. Its clear button comes and goes before it in the row, and an id made by
+    counting moved the keyboard focus to that button after the first letter.
   - **Collectables**: garib types, every powerup (`Pickup` enum), Mr. Tip.
   - **Enemies**: all 52 types. A new enemy copies the shortest script that type has in a shipped level, with
     its absolute points (`home_*`, `destination_*`, `lookat_*`, attention box) moved to the new spot.
@@ -533,6 +620,14 @@ model ([Import model](Import-model.md)), and it then shows with the imported mod
 - The textures are drawn by `kit/image.rs`, which follows Pillow's drawing rules.
 - The words on gravestones and signs use the kit's own letter shapes (`kit/font.rs`, a stroke font on a 5 by 7 grid).
   The letters sit in cells with the measures of Pillow's built-in font. That font is not copied.
+- The game repeats every texture: the object format has no setting that stops it. A kit texture that must show
+  once (a face, a board with words) is laid inside its own picture, with coordinates from 0 to 1. A unit test in
+  `kit/mod.rs` checks this for every item.
+- The pumpkin's face is a 64 by 32 texture on the four front columns of its body (the side towards +z, as the
+  gravestone's words). The other eight columns repeat a 16 by 32 texture of plain skin, one tile per column.
+  The first pumpkin laid the face texture three times round the body, and the face showed on three sides.
+- A pumpkin placed before this correction keeps its old model, because a converted model is stored under a hash of
+  its file. A pumpkin added now gets the corrected model.
 
 ### Path
 
@@ -829,7 +924,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `shown`), `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `hover`), `tour` (`seen` once the welcome was answered), `panels` and `panel_sizes` (the layout of the panels and their dragged sizes), `add_view`, `add_models_as` and `add_kit_as` (the Add panel's view and what a click on a tile places), `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 
@@ -882,6 +977,12 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
   some steps only (the names are in `run`).
 - The test opens the real window at 1280 by 800 in the Sage theme with the fog off, takes the ROM on the setup
   screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the shipped level.
+- Its settings name the default layout of the panels and the list view of the Add panel, and the test checks the
+  layout before the first picture. The step `panels` moves the panels for `window-panels.png` and puts the default
+  layout back. The step `add` switches to the grid for two pictures and back to the list.
+- The routine sets the Info texts itself. The welcome, the tour's step and `first-level.png` have the notes on
+  hover, as a first start shows them. Every other picture has them shown: the pages explain the panels with their
+  notes. `info-texts-on-hover.png` is the one picture of a panel on hover.
 - A picture of one panel is cut out of the window's picture. For a tall panel the window is 1060 high.
 - The numbers on `window-tour.png` are drawn by the test (`Pic::marker`). The list under the picture in
   `docs/guide/The-window.md` explains them. No other picture is drawn on.
@@ -909,7 +1010,7 @@ the split ROM and libgarib's exported files.
 | `rom_reference.rs` | The ROM's regions against libgarib's dump and noclip's split files, the pointer pairs, rebuilt ROMs, ROMs with the mod, the hardware check's findings, BPS patches | The retail ROM |
 | `build_reference.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game and the build scenarios |
 | `custom_reference.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
-| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel | Every kit item with several settings |
+| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel. The pumpkin was corrected after the recordings: its skin triangles' texture, its GLB and its preview are not compared | Every kit item with several settings |
 | `crates/editor/tests/logic_reference.rs` | The vector maths, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
 | `editor_reference.rs` | The editor's state after loading, and the XML after each recorded edit step | All 48 levels |
 | `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean colour difference: two renderers do not give equal pixels |

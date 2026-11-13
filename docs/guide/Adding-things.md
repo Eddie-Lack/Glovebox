@@ -27,6 +27,25 @@ The new thing is selected, ready to move.
 | `Presets` | Ready-made platforms: rings, exits, lifts, buttons |
 | `Camera` | Camera zones |
 
+## List or Grid
+
+`Enemies`, `Models` and `Kit` have a `List` and a `Grid` button at the top.
+
+`Grid` shows just the pictures. Click one and it's in your level.
+
+<img src="img/add-grid-enemies.png" alt="The Enemies tab as a grid of pictures" width="380">
+
+On `Models` the radio buttons say what a click places: `Scenery`, `Background` or `Platform`. On `Kit`: `Background` or `Scenery`.
+
+<img src="img/add-grid-models.png" alt="The Models tab as a grid, with Scenery, Background and Platform over it" width="380">
+
+- Rest the pointer on a picture for its name and its notes
+- A dimmed picture can't be placed that way. Click it and the status bar says why
+- A kit picture with `•••` in its corner has settings. Click the corner to open them
+- The editor remembers the view and the radio buttons
+
+`List` brings the rows back.
+
 ### Collectables
 
 <img src="img/add-collectables.png" alt="The Collectables tab: four kinds of garib, the powerups and Mr. Tip" width="380">

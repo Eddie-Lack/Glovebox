@@ -78,14 +78,24 @@ pub fn stone_soup(lines: &[String], lean: f64, seed: u64) -> Soup {
 // ---------------------------------------------------------------------------------------------
 // Pumpkin
 
-/// The carved face (64x32), lit from inside. `kind` is 0 to 7.
-pub fn pumpkin_face(kind: usize) -> Image {
-    let (w, h) = (64usize, 32usize);
-    let mut rnd = Random::new(11 + kind as u64);
+// Orange pumpkin skin with a dark rib line every 4 texels. Its left and right edges join.
+fn pumpkin_rind(w: usize, h: usize, seed: u64) -> Image {
+    let mut rnd = Random::new(seed);
     let mut im = mk::noise(w, h, &mut rnd, -14, 10, [205, 90, 12]);
     for x in (0..w).step_by(4) {
         im.line(&[(x as f64, 0.0), (x as f64, h as f64)], rgb(150, 60, 8), 1);
     }
+    im
+}
+
+/// The pumpkin's skin without a face (16x32). It repeats round the sides and the back, at the face's scale.
+pub fn pumpkin_skin() -> Image {
+    pumpkin_rind(16, 32, 11)
+}
+
+/// The carved face (64x32), lit from inside, on the same skin. `kind` is 0 to 7.
+pub fn pumpkin_face(kind: usize) -> Image {
+    let mut im = pumpkin_rind(64, 32, 11 + kind as u64);
     let (glow, hot, dark) = (rgb(255, 214, 60), rgb(255, 250, 170), rgb(60, 20, 4));
     match kind {
         0 => {
@@ -177,7 +187,11 @@ pub fn pumpkin_face(kind: usize) -> Image {
     im
 }
 
-/// A jack-o'-lantern, 46 across. `kind` is the face, 0 to 7.
+// The pumpkin's body has 12 columns round it. The face is on these four.
+const PUMPKIN_COLUMNS: usize = 12;
+const PUMPKIN_FRONT: std::ops::Range<usize> = 1..5;
+
+/// A jack-o'-lantern, 46 across. `kind` is the face, 0 to 7. The face is on the front (+z) and nowhere else.
 pub fn build_pumpkin(kind: usize) -> Soup {
     let mut s = Soup::new();
     let face = s.material(pumpkin_face(kind), true, BRIGHT);
@@ -194,8 +208,20 @@ pub fn build_pumpkin(kind: usize) -> Soup {
         let y = hh - hh * t.cos() - if v < 0.93 { 0.0 } else { (v - 0.93) * 12.0 * 1.0 };
         [r * a.cos(), y, r * a.sin()]
     };
-    let uv = |u: f64, v: f64| -> Uv { [(u * 360.0 - 30.0) / 120.0, 1.0 - v] };
-    mk::param(&mut s, &body, 12, 6, face, &uv, true);
+    // The game repeats every texture: the object format has no setting that stops it. The face is therefore on
+    // its own texture, laid exactly once over the four front columns (30 to 150 degrees round the body, with +z
+    // in the middle). The other eight columns repeat the plain skin, one tile each.
+    let skin = s.material(pumpkin_skin(), false, BRIGHT);
+    let wrap = |col: usize, u: f64, v: f64| -> (usize, Uv) {
+        if PUMPKIN_FRONT.contains(&col) {
+            (face, [(u * 360.0 - 30.0) / 120.0, 1.0 - v])
+        } else {
+            // Column 0 comes after column 11, where u starts again from 0.
+            let turn = if col == 0 { 1.0 } else { 0.0 };
+            (skin, [(u + turn) * PUMPKIN_COLUMNS as f64 - 5.0, 1.0 - v])
+        }
+    };
+    mk::param_cols(&mut s, &body, PUMPKIN_COLUMNS, 6, &wrap, true);
     let stem_pts = [[0.0, hh * 2.0 - 6.0, 0.0], [0.0, hh * 2.0 + 2.0, 0.0], [2.0, hh * 2.0 + 8.0, 1.0], [6.0, hh * 2.0 + 12.0, 2.0]];
     mk::tube(&mut s, &stem_pts, &[4.5, 3.6, 3.0, 2.0], 6, stem, Tube::default());
     s
@@ -409,4 +435,91 @@ pub fn build_web() -> Soup {
     s.quad([a, b, c, d], [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]], m, [None; 4]);
     s.quad([b, a, d, c], [[1.0, 1.0], [0.0, 1.0], [0.0, 0.0], [1.0, 0.0]], m, [Some(v3(0.0, 0.0, -1.0)); 4]);
     s
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn middle(t: &mk::Tri) -> V3 {
+        mul(add(add(t.p[0], t.p[1]), t.p[2]), 1.0 / 3.0)
+    }
+
+    // The game repeats every texture. A face laid over more than its own picture would show again.
+    #[test]
+    fn the_pumpkins_face_shows_once_on_the_front() {
+        for kind in 0..8 {
+            let s = build_pumpkin(kind);
+            let (face, stem, skin) = (0, 1, 2);
+            assert_eq!((s.count(), s.mats.len()), (162, 3), "face {kind}");
+            assert_eq!(s.mats[face], {
+                let mut one = Soup::new();
+                one.material(pumpkin_face(kind), true, BRIGHT);
+                one.mats.remove(0)
+            });
+            assert_eq!(((s.mats[face].w, s.mats[face].h), (s.mats[skin].w, s.mats[skin].h)), ((64, 32), (16, 32)));
+            let count = |m: usize| s.tris.iter().filter(|t| t.mat == m).count();
+            assert_eq!((count(face), count(skin), count(stem)), (40, 80, 42), "face {kind}");
+
+            // The face: inside its picture, each part of it on one triangle only, on the front third of the body.
+            let mut seen = std::collections::HashSet::new();
+            let mut area = 0.0;
+            for t in s.tris.iter().filter(|t| t.mat == face) {
+                assert!(t.uv.iter().flatten().all(|c| (0.0..=1.0).contains(c)), "face {kind}: {:?}", t.uv);
+                let (a, b, c) = (t.uv[0], t.uv[1], t.uv[2]);
+                area += ((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])).abs() / 2.0;
+                let mid = [(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0];
+                assert!(seen.insert(((mid[0] * 72.0).round() as i64, (mid[1] * 72.0).round() as i64)), "face {kind}: a part of the face is used twice");
+                let m = middle(t);
+                let turn = m[2].atan2(m[0]).to_degrees();
+                assert!((30.0..=150.0).contains(&turn), "face {kind}: a face triangle at {turn} degrees");
+                assert!(t.n.iter().map(|n| n[2]).sum::<f64>() > 0.0, "face {kind}: a face triangle looks away from the front");
+            }
+            // 4 columns of 6 rows of 2 triangles, less the 8 triangles without area at the two poles.
+            assert!((area - 40.0 / 48.0).abs() < 1e-9, "face {kind}: the face covers {area} of its picture");
+
+            // Everything else on the body is plain skin, the back first of all.
+            for t in s.tris.iter().filter(|t| t.mat != stem) {
+                let m = middle(t);
+                let turn = m[2].atan2(m[0]).to_degrees();
+                assert_eq!(t.mat == face, (30.0..=150.0).contains(&turn), "face {kind}: triangle at {turn} degrees");
+                if m[2] < 0.0 {
+                    assert_eq!(t.mat, skin, "face {kind}: the back");
+                }
+            }
+            assert!(!s.clamp[skin]);
+            let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
+            for uv in s.tris.iter().filter(|t| t.mat == skin).flat_map(|t| t.uv.iter()) {
+                lo = lo.min(uv[0]);
+                hi = hi.max(uv[0]);
+                assert!((0.0..=1.0).contains(&uv[1]));
+            }
+            // Eight columns, one tile each: 16 texels to a column, as on the face (64 texels on 4 columns).
+            assert!(lo.abs() < 1e-9 && (hi - 8.0).abs() < 1e-9, "face {kind}: skin from {lo} to {hi}");
+        }
+    }
+
+    #[test]
+    fn the_pumpkins_skin_matches_the_faces_background() {
+        let skin = pumpkin_skin();
+        let rib = rgb(150, 60, 8);
+        // No carving: only the orange noise and the rib lines, with the ribs where the face has them.
+        let plain = pumpkin_rind(64, 32, 11);
+        let shades: std::collections::HashSet<Rgba> = plain.px.iter().copied().collect();
+        for y in 0..skin.h {
+            for x in 0..skin.w {
+                let c = skin.get(x, y);
+                assert!(shades.contains(&c));
+                assert_eq!(c == rib, x % 4 == 0, "rib at {x},{y}");
+            }
+        }
+        // The face's edges are skin too: its first column is a rib, and its last column is not.
+        for kind in 0..8 {
+            let face = pumpkin_face(kind);
+            for y in 0..face.h {
+                assert_eq!(face.get(0, y), rib, "face {kind} row {y}");
+                assert!(shades.contains(&face.get(63, y)) && face.get(63, y) != rib, "face {kind} row {y}");
+            }
+        }
+    }
 }

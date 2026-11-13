@@ -45,6 +45,21 @@ The editor starts on Atlantis Level 1. Later it starts on the level you had open
 
 Pick another level in the list at the top. All 48 are there.
 
+## Take the tour
+
+The first time, the editor asks if you want a quick tour.
+
+![The welcome: Is this your first time here? Want a quick tour of the editor? With the buttons No thanks and Show me round](img/welcome.png)
+
+`Show me round` walks you through the window, one part at a time.
+
+![A step of the tour: the Level panel is lit, and a bubble next to it explains selecting](img/tour-step.png)
+
+- `Next` and `Back` move between the steps
+- `Skip` or `Esc` ends it
+- It doesn't change your level
+- Said `No thanks`? `Options` > `Take the tour` starts it any time
+
 ![The level list, open, with Atlantis Level 1 chosen](img/level-list.png)
 
 ## Your edits save themselves
