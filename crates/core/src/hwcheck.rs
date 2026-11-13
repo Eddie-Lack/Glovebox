@@ -1,5 +1,5 @@
-//! Checks a built ROM against the rules of real N64 hardware, which an emulator does not enforce. It gives
-//! the findings and texts of the former Python `hw_check.py`.
+//! Checks a built ROM against the rules of real N64 hardware, which an emulator does not enforce. The
+//! reference tests hold the findings and their texts.
 //!
 //! `check_rom` returns a list of problems (empty: all fine). The mod patcher runs it on every ROM it builds and
 //! refuses a ROM with a problem. The rules (docs/technical.md, "Real hardware"):
@@ -118,8 +118,8 @@ impl ObjectBank<'_> {
         }
     }
 
-    /// An object, then its child and everything under it, then its sibling. Each object is visited once. The
-    /// Python code recurses; this keeps its order with a list of the objects still to finish.
+    /// An object, then its child and everything under it, then its sibling. Each object is visited once. A
+    /// list holds the objects still to finish.
     fn walk(&mut self, root: usize, seen: &mut HashSet<usize>) {
         // (object, which of the two links comes next)
         let mut stack: Vec<(usize, u8)> = Vec::new();
@@ -196,7 +196,6 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
             }
         }
         _ => {
-            // Python stops with an exception here
             problems.push("the ROM is too short to hold the code the header CRCs cover".to_string());
             return problems;
         }
@@ -433,7 +432,7 @@ mod tests {
         put(&mut d, 4, 0xF0);
         assert_eq!(obj(&d), ["O: entry 0 points to 0xF0: outside the bank or not aligned"]);
 
-        // The mesh pointer is read twice, as in Python
+        // The mesh pointer is read twice: as an object field and as the mesh
         let mut d = bank();
         put(&mut d, 0x40 + 0x14, 0x82);
         assert_eq!(obj(&d), ["O: object field mesh points to offset 0x82: not 4 byte aligned", "O: mesh points to offset 0x82: not 4 byte aligned"]);

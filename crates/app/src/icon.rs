@@ -1,4 +1,4 @@
-//! The app's icon: a garib (a gold four-pointed star) on a dark round tile. A port of the former Python editor's `appicon.py`.
+//! The app's icon: a garib (a gold four-pointed star) on a dark round tile.
 //! The window uses the picture, and `build.rs` writes it into the `.exe` as an `.ico`.
 
 pub const SIZES: [u32; 7] = [16, 24, 32, 48, 64, 128, 256];

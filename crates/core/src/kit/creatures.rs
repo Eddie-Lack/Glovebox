@@ -1,6 +1,5 @@
 //! The kit's creatures: shade, giant hand, cage, lantern, watching eye, pale face, rag-doll glove, hanging glove and
-//! gallows. A port of the former Python kit's stalker.py, watcher.py, effigy.py and glove_rope.py. Every random number is drawn in the
-//! same order as there.
+//! gallows. The order in which the random numbers are drawn is fixed: it decides each model's shape.
 
 use super::image::{Image, Rgba};
 use super::meshkit::{self as mk, v3, Lathe, Place, Soup, Tube, V3, BRIGHT};
@@ -21,7 +20,7 @@ fn tube_end(s: &mut Soup, pts: &[V3], radii: &[f64], sides: usize, mat: usize) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// stalker.py
+// Stalkers
 
 /// A dark figure, 115 high, with two pale points for eyes.
 pub fn build_shade() -> Soup {
@@ -134,7 +133,7 @@ pub fn build_lantern() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// watcher.py
+// Watchers
 
 /// A bloodshot eye, painted square and stored 64x32.
 pub fn eye_tex() -> Image {
@@ -210,7 +209,7 @@ pub fn build_face() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// effigy.py
+// Effigies
 
 fn patch(seed: u64, base: [i64; 3]) -> Image {
     let mut rnd = Random::new(seed);
@@ -301,7 +300,7 @@ pub fn build_effigy() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// glove_rope.py
+// Glove and rope
 
 fn cloth(seed: u64) -> Image {
     let mut rnd = Random::new(seed);

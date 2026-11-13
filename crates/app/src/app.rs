@@ -1,6 +1,5 @@
 //! The application: the setup screen or the editor's window, and what the window does that is not one panel's
 //! own: starting, opening levels, the editor's events, builds, Test level and the keyboard.
-//! A port of the former Python editor's `window.py`.
 
 use crate::dialogs::{Dialog, FileDialogs};
 use crate::jobs::Jobs;
@@ -930,7 +929,7 @@ fn home_dir() -> Option<PathBuf> {
     std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(PathBuf::from).filter(|p| p.is_dir())
 }
 
-/// Python's `str.title()` for a world's name.
+/// A world's name with a capital at the start of each word and small letters after it.
 pub fn title_case(s: &str) -> String {
     let mut out = String::new();
     let mut start = true;

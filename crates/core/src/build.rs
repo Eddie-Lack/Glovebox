@@ -1,5 +1,4 @@
-//! ROM, patch and level file builds: what `assemble`, `build_levels` and `build_rom` of the former Python back end
-//! and its `Backend.build` and `Backend.build_all` did. Errors are messages for the author.
+//! ROM, patch and level file builds. Errors are messages for the author.
 
 use crate::bps;
 use crate::gamedata::{parse_id, scene, GameData};
@@ -254,7 +253,7 @@ pub struct BuildAllRequest {
     pub created: Option<String>,
 }
 
-/// What a build did for a level's imports (the Python app's `X-Imports`).
+/// What a build did for a level's imports.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ImportFacts {
     pub objects: usize,
@@ -296,7 +295,7 @@ fn check_imports(imports: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-/// A string as Python's `json.dumps` writes it.
+/// A string as JSON text. A character outside ASCII is written as `\u` escapes.
 fn py_json(text: &str) -> String {
     let mut out = String::from("\"");
     for c in text.chars() {
@@ -478,7 +477,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn times_are_written_like_pythons() {
+    fn times_are_written_in_utc() {
         assert_eq!(timestamp(0), "1970-01-01T00:00:00Z");
         assert_eq!(timestamp(951_782_399), "2000-02-28T23:59:59Z");
         assert_eq!(timestamp(951_782_400), "2000-02-29T00:00:00Z");
@@ -486,7 +485,7 @@ mod tests {
     }
 
     #[test]
-    fn json_text_is_pythons() {
+    fn json_text_is_ascii() {
         assert_eq!(py_json("Hub 1"), "\"Hub 1\"");
         assert_eq!(py_json("a\"b\\c\n\u{1}"), "\"a\\\"b\\\\c\\n\\u0001\"");
         assert_eq!(py_json("é\u{1F600}"), "\"\\u00e9\\ud83d\\ude00\"");

@@ -1,4 +1,4 @@
-// The 3D view's shaders: meshes, lines and sprites. A port of the GLSL of the former Python editor's render.py.
+// The 3D view's shaders: meshes, lines and sprites.
 //
 // Lighting follows three.js r160: Lambert's albedo / pi, an ambient light of 0.8 and a sun of 1.4, sRGB output.
 // The shaders write sRGB values themselves. The target is not an sRGB format, and blending happens on the sRGB

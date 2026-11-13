@@ -1,11 +1,11 @@
 //! Draws a scene (`glovebox_editor::scene`) with wgpu: Lambert-shaded meshes with fog, lines (dashed or not) and
-//! sprites. A port of the former Python editor's `render.py`.
+//! sprites.
 //!
 //! The renderer draws into its own colour and depth textures, never into the window. The window shows the colour
 //! texture as an egui image (`Renderer::view`). `read_pixels`, `render_image` and `render_thumbnail` give the
 //! picture as RGBA bytes.
 //!
-//! The order of drawing is Python's: the batches and the other opaque meshes; then blended meshes, lines and
+//! The order of drawing: the batches and the other opaque meshes; then blended meshes, lines and
 //! sprites, far to near; then what ignores depth, by the node's order; then each overlay root (the gizmo) over a
 //! cleared depth buffer. Every material is drawn double-sided. Colours blend by alpha, and alpha itself only
 //! grows.
@@ -590,7 +590,7 @@ impl Renderer {
         let proj = camera.proj_for(f64::from(target.width), f64::from(target.height));
         let view_proj = vec::mat4_mul(&proj, &view);
 
-        // What to draw, in Python's three lists
+        // What to draw, in three lists
         struct Entry<'a> {
             order: i32,
             m: Mat4,
@@ -868,8 +868,7 @@ impl Renderer {
     /// background. The colours are multiplied by the alpha (where the model covers half a pixel, the pixel holds
     /// half the colour and an alpha of a half). None for a model without a vertex.
     ///
-    /// The camera, the light and the framing are the Python editor's. Python drew 128 pixels without
-    /// multisampling and scaled the picture to 64. This draws `size` pixels with the renderer's multisampling.
+    /// It is drawn at `size` pixels with the renderer's multisampling.
     pub fn render_thumbnail(&mut self, model: &Prefab, size: u32) -> Option<Vec<u8>> {
         let mut scene = Scene::new();
         let root = model.instance(&mut scene);

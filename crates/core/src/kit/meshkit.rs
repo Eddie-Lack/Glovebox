@@ -1,10 +1,10 @@
 //! The kit's mesh builder: a triangle soup with textures, the shapes the models are made of, noise textures, and
-//! the binary glTF writer. A port of the former Python kit's meshkit.py.
+//! the binary glTF writer.
 //!
-//! Units are game units and y is up. The numbers must equal the Python kit's, so every sum is written in the same
-//! order. numpy's products of 3 by 3 matrices and its dot products use fused multiply-add on the machine that made
-//! the reference data, and start each sum from +0.0, which turns a -0.0 into 0.0. `dot3`, `mat_mul` and `vec_mat_t`
-//! keep both.
+//! Units are game units and y is up. The same settings must give the same model bit for bit, and the reference
+//! tests hold the expected models. Every sum is written in a fixed order. The products of 3 by 3 matrices and the
+//! dot products use fused multiply-add, as the reference results were computed, and start each sum from +0.0,
+//! which turns a -0.0 into 0.0. `dot3`, `mat_mul` and `vec_mat_t` keep both.
 
 use super::font;
 use super::image::{Image, Rgba};
@@ -30,11 +30,11 @@ pub fn mul(a: V3, k: f64) -> V3 {
 pub fn cross(a: V3, b: V3) -> V3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
-/// numpy's `dot` of two vectors.
+/// The dot product of two vectors, with fused multiply-add.
 pub fn dot3(a: V3, b: V3) -> f64 {
     a[2].mul_add(b[2], a[1].mul_add(b[1], a[0].mul_add(b[0], 0.0)))
 }
-/// numpy's `linalg.norm` of a vector.
+/// The length of a vector.
 pub fn len(a: V3) -> f64 {
     dot3(a, a).sqrt()
 }
@@ -43,7 +43,7 @@ pub fn norm(v: V3) -> V3 {
     let n = len(v);
     if n > 1e-12 { [v[0] / n, v[1] / n, v[2] / n] } else { v }
 }
-/// numpy's `a @ b` for two 3 by 3 matrices.
+/// The product `a b` of two 3 by 3 matrices.
 pub fn mat_mul(a: &[V3; 3], b: &[V3; 3]) -> [V3; 3] {
     let mut c = [[0.0; 3]; 3];
     for i in 0..3 {
@@ -53,7 +53,7 @@ pub fn mat_mul(a: &[V3; 3], b: &[V3; 3]) -> [V3; 3] {
     }
     c
 }
-/// numpy's `rows @ m.T` for three row vectors.
+/// Three row vectors, each multiplied by the transpose of `m`.
 pub fn rows_mat_t(rows: &[V3; 3], m: &[V3; 3]) -> [V3; 3] {
     let mut c = [[0.0; 3]; 3];
     for i in 0..3 {
@@ -63,7 +63,7 @@ pub fn rows_mat_t(rows: &[V3; 3], m: &[V3; 3]) -> [V3; 3] {
     }
     c
 }
-/// numpy's `v @ m.T` for one vector. The order of the sum differs from the matrix product's.
+/// One row vector multiplied by the transpose of `m`. The order of the sum differs from the matrix product's.
 pub fn vec_mat_t(v: V3, m: &[V3; 3]) -> V3 {
     let mut c = [0.0; 3];
     for j in 0..3 {
