@@ -1,8 +1,8 @@
-//! The native back end (`gamedata`, `imports`, `build`, `backend`) against the Python app, on the whole game.
+//! The back end (`gamedata`, `imports`, `build`, `backend`) against the reference dumps, on the whole game.
 //!
-//! `GLOVEBOX_ROM` names the ROM, `GLOVEBOX_ORACLE` the folder of dumps and `GLOVEBOX_PYHOME` the Python app's
-//! folder. `gamedata/` in the dump folder is written by `gamedata/gen.py`. Without the three variables every test
-//! here prints that it was skipped and passes.
+//! `GLOVEBOX_ROM` names the ROM, `GLOVEBOX_REFERENCE` the folder of reference dumps and `GLOVEBOX_REFHOME` a folder
+//! with the split ROM and exported models. Without the three variables every test here prints that it was skipped
+//! and passes.
 
 use glovebox_core::backend::{Backend, GameBackend, ModelRef};
 use glovebox_core::build::{BuildAllEntry, BuildAllRequest, BuildRequest, Built, Info};
@@ -17,8 +17,8 @@ use std::time::Instant;
 
 struct Env {
     game: Arc<GameData>,
-    oracle: PathBuf,
-    pyhome: PathBuf,
+    reference: PathBuf,
+    refhome: PathBuf,
 }
 
 /// The game's data, opened once for all the tests.
@@ -26,12 +26,12 @@ fn env(test: &str) -> Option<&'static Env> {
     static ENV: OnceLock<Option<Env>> = OnceLock::new();
     let e = ENV.get_or_init(|| {
         let var = |name: &str| std::env::var_os(name).map(PathBuf::from);
-        let (rom, oracle, pyhome) = (var("GLOVEBOX_ROM")?, var("GLOVEBOX_ORACLE")?, var("GLOVEBOX_PYHOME")?);
+        let (rom, reference, refhome) = (var("GLOVEBOX_ROM")?, var("GLOVEBOX_REFERENCE")?, var("GLOVEBOX_REFHOME")?);
         let game = GameData::open(read(&rom)).unwrap();
-        Some(Env { game: Arc::new(game), oracle, pyhome })
+        Some(Env { game: Arc::new(game), reference, refhome })
     });
     if e.is_none() {
-        println!("{test}: skipped, GLOVEBOX_ROM, GLOVEBOX_ORACLE and GLOVEBOX_PYHOME are not all set");
+        println!("{test}: skipped, GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not all set");
     }
     e.as_ref()
 }
@@ -57,18 +57,18 @@ fn string_set(v: &Value) -> BTreeSet<String> {
 }
 
 fn backend(e: &Env) -> Arc<dyn Backend> {
-    // No folder of imported models: the Python app that made the reference data had none
-    Arc::new(GameBackend::new(e.game.clone(), e.oracle.join("gamedata/no-home"), Some(PathBuf::from("rom.z64"))))
+    // No folder of imported models: the reference data was made without one
+    Arc::new(GameBackend::new(e.game.clone(), e.reference.join("gamedata/no-home"), Some(PathBuf::from("rom.z64"))))
 }
 
 #[test]
-fn levels_are_pythons() {
-    let Some(e) = env("levels_are_pythons") else { return };
-    let misc = json_file(&e.oracle.join("gamedata/misc.json"));
+fn levels_match_the_reference() {
+    let Some(e) = env("levels_match_the_reference") else { return };
+    let misc = json_file(&e.reference.join("gamedata/misc.json"));
     for s in gamedata::scenes() {
-        let want = read(&e.oracle.join(format!("levels/{}.xml", s.id)));
+        let want = read(&e.reference.join(format!("levels/{}.xml", s.id)));
         assert!(e.game.level_xml(&s.id).unwrap().as_bytes() == want, "level {}: the XML differs", s.id);
-        assert_eq!(e.game.level_file(&s.id).unwrap(), read(&e.oracle.join(format!("levels/{}.lev", s.id))), "{}", s.id);
+        assert_eq!(e.game.level_file(&s.id).unwrap(), read(&e.reference.join(format!("levels/{}.lev", s.id))), "{}", s.id);
         assert_eq!(e.game.orig_lev_size(&s.id).map(|n| n as u64), misc["origLevSize"][&s.id].as_u64(), "{}", s.id);
     }
     assert_eq!(e.game.orig_lev_size("zz"), None);
@@ -76,9 +76,9 @@ fn levels_are_pythons() {
 }
 
 #[test]
-fn the_catalog_is_pythons() {
-    let Some(e) = env("the_catalog_is_pythons") else { return };
-    let want = json_file(&e.oracle.join("catalog.json"));
+fn the_catalog_matches_the_reference() {
+    let Some(e) = env("the_catalog_matches_the_reference") else { return };
+    let want = json_file(&e.reference.join("catalog.json"));
     let want = want.as_object().unwrap();
     let got = e.game.catalog();
     assert_eq!(hex_set(got.keys().copied()), want.keys().cloned().collect::<BTreeSet<_>>());
@@ -92,7 +92,7 @@ fn the_catalog_is_pythons() {
         // The catalog's model is the model of the first scene
         assert!(e.game.model(&m.first_scene, *id).unwrap().is_some(), "{}", hex(*id));
     }
-    // The same through the back end, with a model reference where the Python app had a path
+    // The same through the back end, by model reference
     let b = backend(e);
     let cat = b.catalog().unwrap();
     assert_eq!(cat.len(), want.len());
@@ -107,24 +107,24 @@ fn the_catalog_is_pythons() {
             assert_eq!(image.rgba.len(), (image.width * image.height * 4) as usize);
         }
     }
-    println!("the_catalog_is_pythons: {} models", want.len());
+    println!("the_catalog_matches_the_reference: {} models", want.len());
 }
 
 #[test]
-fn ids_are_pythons() {
-    let Some(e) = env("ids_are_pythons") else { return };
-    let loaded = json_file(&e.oracle.join("loaded_ids.json"));
+fn ids_match_the_reference() {
+    let Some(e) = env("ids_match_the_reference") else { return };
+    let loaded = json_file(&e.reference.join("loaded_ids.json"));
     assert_eq!(loaded.as_object().unwrap().len(), 48);
     for s in gamedata::scenes() {
         assert_eq!(hex_set(e.game.loaded_ids(&s.id).unwrap()), string_set(&loaded[&s.id]), "loaded {}", s.id);
     }
-    let tex = json_file(&e.oracle.join("texture_ids.json"));
+    let tex = json_file(&e.reference.join("texture_ids.json"));
     let banks: Vec<&str> = e.game.all_texture_banks().collect();
     assert_eq!(banks, tex.as_object().unwrap().keys().map(|k| k.as_str()).collect::<BTreeSet<_>>().into_iter().collect::<Vec<_>>());
     for b in &banks {
         assert_eq!(hex_set(e.game.texture_ids(b).iter().copied()), string_set(&tex[*b]), "{b}");
     }
-    let objtex = json_file(&e.oracle.join("object_texture_ids.json"));
+    let objtex = json_file(&e.reference.join("object_texture_ids.json"));
     let objtex = objtex.as_object().unwrap();
     assert_eq!(objtex.len(), e.game.catalog().len());
     for (id, want) in objtex {
@@ -133,26 +133,26 @@ fn ids_are_pythons() {
     }
     assert!(e.game.object_texture_ids(0xDEADBEEF).is_none());
     // The bank numbers are compiled in
-    assert_eq!(*glovebox_core::tables::bank_numbers(), json_file(&e.oracle.join("bank_numbers.json")));
-    println!("ids_are_pythons: 48 levels, {} texture banks, {} models", banks.len(), objtex.len());
+    assert_eq!(*glovebox_core::tables::bank_numbers(), json_file(&e.reference.join("bank_numbers.json")));
+    println!("ids_match_the_reference: 48 levels, {} texture banks, {} models", banks.len(), objtex.len());
 }
 
 #[test]
-fn enemy_templates_are_pythons() {
-    let Some(e) = env("enemy_templates_are_pythons") else { return };
-    let want = json_file(&e.pyhome.join("web/enemy_templates.json"));
+fn enemy_templates_match_the_reference() {
+    let Some(e) = env("enemy_templates_match_the_reference") else { return };
+    let want = json_file(&e.refhome.join("web/enemy_templates.json"));
     let got = e.game.enemy_templates_json();
     assert_eq!(got, want);
     // The same order of types as in the file
     assert_eq!(got.as_object().unwrap().keys().collect::<Vec<_>>(), want.as_object().unwrap().keys().collect::<Vec<_>>());
     assert_eq!(backend(e).templates(), &want);
-    println!("enemy_templates_are_pythons: {} types", want.as_object().unwrap().len());
+    println!("enemy_templates_match_the_reference: {} types", want.as_object().unwrap().len());
 }
 
 #[test]
-fn backdrops_models_and_faces_are_pythons() {
-    let Some(e) = env("backdrops_models_and_faces_are_pythons") else { return };
-    let misc = json_file(&e.oracle.join("gamedata/misc.json"));
+fn backdrops_models_and_faces_match_the_reference() {
+    let Some(e) = env("backdrops_models_and_faces_match_the_reference") else { return };
+    let misc = json_file(&e.reference.join("gamedata/misc.json"));
     let b = backend(e);
     let mut models = 0;
     for s in gamedata::scenes() {
@@ -179,7 +179,7 @@ fn backdrops_models_and_faces_are_pythons() {
     let info = b.mod_info();
     assert_eq!(json!({"heapExtraBytes": info.heap_extra_bytes, "modBytes": info.mod_bytes}), misc["modInfo"]);
     assert_eq!(b.scenes().as_array().unwrap().len(), 48);
-    println!("backdrops_models_and_faces_are_pythons: {models} models in 48 levels, {} face counts", faces.len());
+    println!("backdrops_models_and_faces_match_the_reference: {models} models in 48 levels, {} face counts", faces.len());
 }
 
 /// Compares one outcome of the reference data with a plan or an error.
@@ -198,15 +198,15 @@ fn same_plan(what: &str, got: Result<Plan, String>, want: &Value) {
             Some(theirs) => assert_eq!(json!(message), *theirs, "{what}"),
             None => assert!(want.get("crash").is_some(), "{what}"),
         },
-        (Ok(_), None) => panic!("{what}: Python refuses with {want}"),
-        (Err(message), Some(_)) => panic!("{what}: refused with {message:?}, Python has a plan"),
+        (Ok(_), None) => panic!("{what}: the reference refuses with {want}"),
+        (Err(message), Some(_)) => panic!("{what}: refused with {message:?}, the reference has a plan"),
     }
 }
 
 #[test]
-fn plans_are_pythons() {
-    let Some(e) = env("plans_are_pythons") else { return };
-    let cases = json_file(&e.oracle.join("gamedata/plans.json"));
+fn plans_match_the_reference() {
+    let Some(e) = env("plans_match_the_reference") else { return };
+    let cases = json_file(&e.reference.join("gamedata/plans.json"));
     let cases = cases.as_array().unwrap();
     assert!(cases.len() >= 480);
     let none = Customs::default();
@@ -225,7 +225,7 @@ fn plans_are_pythons() {
         }
     }
     assert!(plans > 300 && refused > 40, "{plans} {refused}");
-    println!("plans_are_pythons: {} import lists, {plans} planned, {refused} refused", cases.len());
+    println!("plans_match_the_reference: {} import lists, {plans} planned, {refused} refused", cases.len());
 }
 
 fn info(v: &Value) -> Option<Info> {
@@ -237,14 +237,14 @@ fn info(v: &Value) -> Option<Info> {
     })
 }
 
-/// The `created` time of a patch the Python app made.
+/// The `created` time in a patch's metadata.
 fn created_of(patch: &[u8]) -> Option<String> {
     let meta: Value = serde_json::from_slice(bps::metadata_of(patch)?).ok()?;
     meta["created"].as_str().map(String::from)
 }
 
 fn run(b: &dyn Backend, e: &Env, c: &Value, created: Option<String>) -> Result<Built, String> {
-    let xml = |name: &Value| String::from_utf8(read(&e.oracle.join("gamedata/xml").join(name.as_str().unwrap()))).unwrap();
+    let xml = |name: &Value| String::from_utf8(read(&e.reference.join("gamedata/xml").join(name.as_str().unwrap()))).unwrap();
     let kw = &c["kw"];
     let flag = |key: &str| kw[key].as_bool().unwrap_or(false);
     let format = c["fmt"].as_str().unwrap().to_string();
@@ -280,7 +280,7 @@ fn run(b: &dyn Backend, e: &Env, c: &Value, created: Option<String>) -> Result<B
     built.map_err(|err| err.0)
 }
 
-/// The facts of a build as the Python app's dict of headers.
+/// The facts of a build as the reference dumps hold them: a JSON object of headers.
 fn headers(built: &Built, several: bool) -> Value {
     let mut h = json!({"X-Needs-Mod": if built.needs_mod { "1" } else { "0" }, "filename": built.filename});
     if let Some(n) = built.lev_size {
@@ -301,7 +301,7 @@ fn headers(built: &Built, several: bool) -> Value {
     h
 }
 
-/// Runs the builds of a reference file and compares each with the Python app's. Returns the numbers of ROMs,
+/// Runs the builds of a reference file and compares each with the recorded output. Returns the numbers of ROMs,
 /// patches, level files and refused builds, and the slowest build.
 fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usize, usize, usize, usize, (f64, String)) {
     let (mut roms, mut patches, mut levs, mut refused) = (0, 0, 0, 0);
@@ -310,12 +310,12 @@ fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usi
         let name = c["name"].as_str().unwrap();
         assert!(c.get("crash").is_none(), "{name}: the reference build crashed");
         let Some(sha1) = c["sha1"].as_str() else {
-            let message = run(b, e, c, None).err().unwrap_or_else(|| panic!("{name}: built, Python refuses"));
+            let message = run(b, e, c, None).err().unwrap_or_else(|| panic!("{name}: built, the reference refuses"));
             assert_eq!(json!(message), c["error"], "{name}");
             refused += 1;
             continue;
         };
-        let theirs = read(&e.oracle.join("gamedata/out").join(format!("{prefix}{name}")));
+        let theirs = read(&e.reference.join("gamedata/out").join(format!("{prefix}{name}")));
         assert_eq!(n64::sha1_hex(&theirs), sha1);
         let format = c["fmt"].as_str().unwrap();
         let created = if format == "bps" { created_of(&theirs) } else { None };
@@ -328,7 +328,7 @@ fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usi
         }
         if built.data != theirs {
             let at = built.data.iter().zip(&theirs).position(|(a, b)| a != b);
-            panic!("{name}: {} bytes, Python {} bytes, first difference at {:x?}", built.data.len(), theirs.len(), at);
+            panic!("{name}: {} bytes, the reference {} bytes, first difference at {:x?}", built.data.len(), theirs.len(), at);
         }
         assert_eq!(headers(&built, c["call"] == "build_all"), c["headers"], "{name}");
         match format {
@@ -353,9 +353,9 @@ fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usi
 }
 
 #[test]
-fn builds_are_pythons() {
-    let Some(e) = env("builds_are_pythons") else { return };
-    let cases = json_file(&e.oracle.join("gamedata/builds.json"));
+fn builds_match_the_reference() {
+    let Some(e) = env("builds_match_the_reference") else { return };
+    let cases = json_file(&e.reference.join("gamedata/builds.json"));
     let cases = cases.as_array().unwrap();
     let b = backend(e);
     let (roms, patches, levs, refused, slowest) = check_builds(b.as_ref(), e, cases, "");
@@ -365,18 +365,18 @@ fn builds_are_pythons() {
     let now = created_of(&run(b.as_ref(), e, first, None).unwrap().data).unwrap();
     assert!(now.len() == 20 && now.ends_with('Z') && now.as_str() > "2026-01-01", "{now}");
     println!(
-        "builds_are_pythons: {roms} ROMs, {patches} patches and {levs} level files equal; {refused} refused with the \
+        "builds_match_the_reference: {roms} ROMs, {patches} patches and {levs} level files equal; {refused} refused with the \
          same message; slowest {:.2}s ({})",
         slowest.0, slowest.1
     );
 }
 
-/// Imported models. The Python app made three in `gamedata/pyhome/custom`: a kit model and two reskinned models.
+/// Imported models. The reference data has three in `gamedata/pyhome/custom`: a kit model and two reskinned models.
 #[test]
-fn imported_models_are_pythons() {
-    let Some(e) = env("imported_models_are_pythons") else { return };
-    let want = json_file(&e.oracle.join("gamedata/custom.json"));
-    let home = e.oracle.join("gamedata/pyhome");
+fn imported_models_match_the_reference() {
+    let Some(e) = env("imported_models_match_the_reference") else { return };
+    let want = json_file(&e.reference.join("gamedata/custom.json"));
+    let home = e.reference.join("gamedata/pyhome");
     let b: Arc<dyn Backend> = Arc::new(GameBackend::new(e.game.clone(), &home, None));
     // The catalog's entries
     let cat = b.catalog().unwrap();
@@ -387,7 +387,7 @@ fn imported_models_are_pythons() {
         let x = c.custom.as_ref().unwrap();
         let mine = json!({"name": c.name, "bank": c.bank, "bytes": c.bytes, "custom": x.set, "piece": x.piece,
                           "offset": x.offset, "textures": x.textures, "texBank": x.tex_bank, "reskinFrom": x.reskin_from});
-        // The Python app's reskinned models have whole numbers as offsets
+        // The reference's reskinned models have whole numbers as offsets
         let mut w = w.clone();
         w["offset"] = json!(w["offset"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<_>>());
         assert_eq!(mine, w, "{id}");
@@ -415,12 +415,12 @@ fn imported_models_are_pythons() {
     let (roms, patches, _, refused, _) = check_builds(b.as_ref(), e, want["builds"].as_array().unwrap(), "custom-");
     assert!(roms >= 4 && patches >= 2 && refused >= 1);
 
-    // Making the same models again in an empty folder gives the Python app's files
+    // Making the same models again in an empty folder gives the reference's files
     let fresh = Path::new(env!("CARGO_TARGET_TMPDIR")).join("gamedata-custom-home");
     let _ = std::fs::remove_dir_all(&fresh);
     let maker = GameBackend::new(e.game.clone(), &fresh, None);
-    // The Python app cut a model's bank out with `objbank-tool split`, which orders the parts of a bank differently
-    // from run to run. Packed again, its bank is the bank made here.
+    // The reference's bank of a model was cut out with libgarib's `objbank-tool split`, which orders the parts of a
+    // bank differently from run to run. Packed again, it is the bank made here.
     let same_files = |set: &str, id: &str| {
         let file = |home: &Path, name: &str| read(&home.join("custom").join(set).join(name));
         let (mine, theirs) = (file(&fresh, &format!("{id}.obj.bin")), file(&home, &format!("{id}.obj.bin")));
@@ -429,7 +429,7 @@ fn imported_models_are_pythons() {
         assert!(mine == glovebox_core::objbank::pack(&theirs, &none).unwrap(), "{set}/{id}.obj.bin differs");
         assert!(file(&fresh, "textures.tex.bin") == file(&home, "textures.tex.bin"), "{set}/textures.tex.bin differs");
     };
-    // A kit model is converted by `custom` from the glTF file `kit` writes. Those bytes are not the Python app's, so
+    // A kit model is converted by `custom` from the glTF file `kit` writes. Those bytes are not the reference's, so
     // the set and its ids differ. The model itself is the same.
     let made = maker.make_kit(want["kit"]["item"].as_str().unwrap(), &json!({})).unwrap();
     for key in ["name", "scale", "triangles", "size"] {
@@ -467,7 +467,7 @@ fn imported_models_are_pythons() {
     assert_eq!(&png[..4], b"\x89PNG");
     let _ = std::fs::remove_dir_all(&fresh);
     println!(
-        "imported_models_are_pythons: {} pieces, {} plans, {roms} ROMs and {patches} patches equal, {refused} refused; \
+        "imported_models_match_the_reference: {} pieces, {} plans, {roms} ROMs and {patches} patches equal, {refused} refused; \
          {} reskinned models made again are the same files; a kit model made here builds into a ROM",
         theirs.len(),
         plans.len() * 3,

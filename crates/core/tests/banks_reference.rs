@@ -1,8 +1,8 @@
-//! The object bank and texture bank code against the Python app's outputs, on all the game's banks.
+//! The object bank and texture bank code against the reference dumps, on all the game's banks.
 //!
-//! `GLOVEBOX_PYHOME` names the Python app's folder (its `data/Glover` holds the split ROM, its `cache` the files
-//! libgarib's tools wrote). `GLOVEBOX_ORACLE` names the folder of dumps; `banks/` in it is written by the scripts
-//! next to it. Without the two variables every test here prints that it was skipped and passes.
+//! `GLOVEBOX_REFHOME` names a folder: its `data/Glover` holds the split ROM, its `cache` the files libgarib's tools
+//! wrote. `GLOVEBOX_REFERENCE` names the folder of reference dumps. These tests read its `banks/` folder. Without
+//! the two variables every test here prints that it was skipped and passes.
 
 use glovebox_core::model::{AlphaMode, Model, Wrap};
 use glovebox_core::objbank::{self, Bank};
@@ -14,10 +14,10 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 fn dirs(test: &str) -> Option<(PathBuf, PathBuf)> {
-    match (std::env::var_os("GLOVEBOX_PYHOME"), std::env::var_os("GLOVEBOX_ORACLE")) {
-        (Some(home), Some(oracle)) => Some((PathBuf::from(home), PathBuf::from(oracle))),
+    match (std::env::var_os("GLOVEBOX_REFHOME"), std::env::var_os("GLOVEBOX_REFERENCE")) {
+        (Some(home), Some(reference)) => Some((PathBuf::from(home), PathBuf::from(reference))),
         _ => {
-            println!("{test}: skipped, GLOVEBOX_PYHOME and GLOVEBOX_ORACLE are not set");
+            println!("{test}: skipped, GLOVEBOX_REFHOME and GLOVEBOX_REFERENCE are not set");
             None
         }
     }
@@ -78,8 +78,8 @@ fn png_rgba(path: &Path) -> (u32, u32, Vec<u8>) {
 
 #[test]
 fn texture_ids_and_pixels() {
-    let Some((home, oracle)) = dirs("texture_ids_and_pixels") else { return };
-    let want_ids = json(&oracle.join("texture_ids.json"));
+    let Some((home, reference)) = dirs("texture_ids_and_pixels") else { return };
+    let want_ids = json(&reference.join("texture_ids.json"));
     let banks = banks_with(&home, ".tex.fla");
     assert_eq!(banks.len(), want_ids.as_object().unwrap().len());
     let (mut textures, mut formats) = (0, BTreeMap::new());
@@ -111,8 +111,8 @@ fn texture_ids_and_pixels() {
 
 #[test]
 fn texture_banks_written() {
-    let Some((home, oracle)) = dirs("texture_banks_written") else { return };
-    let dir = oracle.join("banks/tex");
+    let Some((home, reference)) = dirs("texture_banks_written") else { return };
+    let dir = reference.join("banks/tex");
     let cases = json(&dir.join("cases.json"));
     let mut datas: HashMap<String, Vec<u8>> = HashMap::new();
     for file in banks_with(&home, ".tex.fla") {
@@ -126,7 +126,7 @@ fn texture_banks_written() {
         for pair in case["textures"].as_array().unwrap() {
             let (id, source) = (unhex(pair[0].as_str().unwrap()), pair[1].as_str().unwrap());
             let records = texbank::records(&datas[source]).unwrap();
-            // Python makes a dict of the records: the last record of an id wins.
+            // The last record of an id wins.
             let rec = records.records.iter().rev().find(|(i, _)| *i == id).unwrap();
             extra.push((id, rec.1.to_vec()));
         }
@@ -138,24 +138,24 @@ fn texture_banks_written() {
         assert!(got == want, "{name}");
         n += 1;
     }
-    println!("texture_banks_written: {n} banks equal the Python app's");
+    println!("texture_banks_written: {n} banks equal the reference's");
 }
 
 #[test]
 fn split_all_banks() {
-    let Some((home, oracle)) = dirs("split_all_banks") else { return };
-    let faces = json(&oracle.join("banks/faces.json"));
+    let Some((home, reference)) = dirs("split_all_banks") else { return };
+    let faces = json(&reference.join("banks/faces.json"));
     let (mut objects, mut same_as_cache) = (0, 0);
     let mut uncached: Vec<String> = Vec::new();
     for file in banks_with(&home, ".obj.fla") {
         let stem = file.strip_suffix(".obj.fla").unwrap();
         let cached = home.join("cache/split").join(stem);
         if !cached.is_dir() {
-            // No scene loads the bank, so the Python app never split it. It must still split.
+            // No scene loads the bank, so the reference has no split of it. It must still split.
             uncached.push(format!("{stem} ({})", objbank::split(&bank(&home, &file)).unwrap().len()));
             continue;
         }
-        let relinked = oracle.join("banks/relink").join(stem);
+        let relinked = reference.join("banks/relink").join(stem);
         // The compressed file and its data give the same result.
         let raw = read(&home.join("data/Glover").join(&file));
         let singles = objbank::split(&raw).unwrap();
@@ -176,17 +176,17 @@ fn split_all_banks() {
     }
     println!(
         "split_all_banks: {objects} objects equal libgarib's relink of the cached file; {same_as_cache} also equal \
-         the cached file byte for byte (its segment order is that of a Python set); banks the Python app has no \
+         the cached file byte for byte (libgarib's segment order changes from run to run); banks the reference has no \
          split of (objects): {uncached:?}"
     );
 }
 
 #[test]
 fn pack_cases() {
-    let Some((home, oracle)) = dirs("pack_cases") else { return };
-    let dir = oracle.join("banks/pack");
+    let Some((home, reference)) = dirs("pack_cases") else { return };
+    let dir = reference.join("banks/pack");
     let cases = json(&dir.join("cases.json"));
-    let (mut same, mut python_failed) = (0, 0);
+    let (mut same, mut tool_failed) = (0, 0);
     for case in cases.as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let base = read(&home.join("data/Glover").join(format!("{}.obj.fla", case["target"].as_str().unwrap())));
@@ -207,10 +207,10 @@ fn pack_cases() {
         } else {
             // objbank-tool reads a file that starts with '{' as glTF and fails. An object id may start with 0x7B.
             assert!(cached.iter().any(|c| c[0] == b'{'), "{name}");
-            python_failed += 1;
+            tool_failed += 1;
         }
     }
-    println!("pack_cases: {same} packed banks equal objbank-tool's; {python_failed} more that objbank-tool fails on");
+    println!("pack_cases: {same} packed banks equal objbank-tool's; {tool_failed} more that objbank-tool fails on");
 }
 
 /// The sizes of the textures of these banks. A later bank wins, as in libgarib's texture database.
@@ -227,9 +227,9 @@ fn sizes(home: &Path, banks: &[String]) -> HashMap<u32, (u16, u16)> {
 
 #[test]
 fn object_texture_ids() {
-    let Some((home, oracle)) = dirs("object_texture_ids") else { return };
-    let want = json(&oracle.join("object_texture_ids.json"));
-    let catalog = json(&oracle.join("catalog.json"));
+    let Some((home, reference)) = dirs("object_texture_ids") else { return };
+    let want = json(&reference.join("object_texture_ids.json"));
+    let catalog = json(&reference.join("catalog.json"));
     let known = sizes(&home, &banks_with(&home, ".tex.fla"));
     let lookup = |id: u32| known.get(&id).copied();
     let mut by_bank: BTreeMap<String, Vec<String>> = BTreeMap::new();
@@ -377,7 +377,7 @@ fn compare(model: &Model, glb: &Glb, what: &str, tally: &mut Tally) {
             parents[*c as usize] = Some(i as u32);
         }
         assert_eq!(n.mesh.map(u64::from), g["mesh"].as_u64(), "{at}: mesh");
-        // The numbers in the file are Python floats. serde_json reads a number to within one unit in the last
+        // The numbers in the file are doubles. serde_json reads a number to within one unit in the last
         // place unless its float_roundtrip feature is on, so that much is allowed here.
         assert!(close(&n.translation, &floats(&g["translation"], &[0.0; 3])), "{at}: translation");
         assert!(close(&n.rotation, &floats(&g["rotation"], &[0.0, 0.0, 0.0, 1.0])), "{at}: rotation");
@@ -536,7 +536,7 @@ fn models_equal_gltf_export() {
 
 #[test]
 fn timings() {
-    let Some((home, oracle)) = dirs("timings") else { return };
+    let Some((home, reference)) = dirs("timings") else { return };
     let obj: Vec<(String, Vec<u8>)> =
         banks_with(&home, ".obj.fla").into_iter().map(|f| (f.clone(), read(&home.join("data/Glover").join(f)))).collect();
     let tex: Vec<Vec<u8>> =
@@ -589,7 +589,7 @@ fn timings() {
         }
     }
     let level = t.elapsed();
-    let _ = oracle;
+    let _ = reference;
     println!(
         "timings: decompress all banks {unpack:?}; parse {} object banks and {} texture banks {parse:?}; build {models} \
          models ({triangles} triangles) with bounds {build:?}; decode every texture ({pixels} pixels) {decode:?}; split \

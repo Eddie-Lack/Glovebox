@@ -5,6 +5,8 @@ A level editor for Glover (Nintendo 64, USA version)
 
 It runs on your computer, in its own window
 
+A guide with pictures: https://github.com/Eddie-Lack/Glovebox/tree/main/docs/guide
+
 
 You need your own ROM!
 ----------------------

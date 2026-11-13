@@ -1,11 +1,10 @@
-//! The editor's kit: props made by code, some with settings such as a gravestone's words. A port of the former
-//! Python kit (`kit.py` and its model files).
+//! The editor's kit: props made by code, some with settings such as a gravestone's words.
 //!
 //! `items` lists the kit, `clean` checks an item's settings, `build` makes the model as a `Soup`, `Soup::glb` writes
 //! the binary glTF that goes through the same converter as an imported model, and `preview_png` draws the small
 //! picture for the list. The same settings always give the same model.
 //!
-//! Settings are a JSON object, as the Python kit took a dict: the window sends every value as text.
+//! Settings are a JSON object. The window sends every value as text.
 
 pub mod creatures;
 pub mod font;
@@ -91,7 +90,7 @@ pub fn items() -> Value {
     )
 }
 
-// Python's repr() of a string, for the usual cases.
+// A string in quotes, with the quote and the control characters escaped.
 fn py_repr(s: &str) -> String {
     let q = if s.contains('\'') && !s.contains('"') { '"' } else { '\'' };
     let mut out = String::from(q);
@@ -113,7 +112,7 @@ fn py_repr(s: &str) -> String {
     out
 }
 
-// Python's str() of a setting's value.
+// A setting's value as text. True, false and null are written True, False and None.
 fn py_str(v: &Value) -> String {
     match v {
         Value::String(s) => s.clone(),
@@ -130,7 +129,7 @@ fn py_str(v: &Value) -> String {
     }
 }
 
-// Python's float() of a setting's value.
+// A setting's value as a number.
 fn py_float(v: &Value) -> Option<f64> {
     match v {
         Value::String(s) => pyfmt::parse_float(s),
@@ -265,7 +264,7 @@ pub fn label(item: &str, params: &Params) -> Result<String, String> {
     let mut words = words.join(" ");
     if item == "pumpkin" {
         let face = params.get("face").and_then(py_float).filter(|f| f.is_finite()).ok_or("The setting face is missing")?;
-        // Python counts a list from the end for a negative number.
+        // A number below 1 counts from the end of the list.
         let i = (face as i64 - 1).rem_euclid(8) as usize;
         if !(-7.0..9.0).contains(&face) {
             return Err("Face must be from 1 to 8".into());
@@ -276,7 +275,7 @@ pub fn label(item: &str, params: &Params) -> Result<String, String> {
     Ok(full.chars().take(40).collect())
 }
 
-/// The small picture for the kit list, as a PNG file. The Python kit drew it 128 pixels wide.
+/// The small picture for the kit list, as a PNG file.
 pub fn preview_png(item: &str, params: &Params, size: usize) -> Result<Vec<u8>, String> {
     Ok(preview::render(&build(item, params)?, size).png_rgb())
 }

@@ -114,7 +114,7 @@ pub fn flags_value(s: Option<&str>, enum_: Option<&Map<String, Value>>) -> i128 
     for part in s.split('|') {
         let part = part.trim();
         if let Some(en) = enum_ {
-            // The last value with this name counts, as in a Python dict built from the pairs
+            // The last value with this name counts
             if let Some((k, _)) = en.iter().rev().find(|(_, v)| v.as_str() == Some(part)) {
                 out |= k.trim().parse::<i128>().unwrap_or(0);
             }

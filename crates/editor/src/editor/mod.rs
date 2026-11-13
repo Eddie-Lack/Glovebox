@@ -1,13 +1,13 @@
 //! The editor's state and every edit, without the widgets: loading a level, selection, the transform engine, undo,
 //! autosave, adding and removing things, the checks, imports and the memory budget, the path tool and building.
 //!
-//! A port of the former Python editor's `editor.py`. Every edit is a change to the level XML with an undo snapshot.
-//! The entities and their scene nodes are then built again from the XML. The window draws this state and calls
-//! these methods.
-//! What replaces the Qt parts:
+//! Every edit is a change to the level XML with an undo snapshot. The entities and their scene nodes are then
+//! built again from the XML. The window draws this state and calls these methods.
+//!
+//! How it talks to the window:
 //! - Signals are a queue of [`Event`]s. The window drains it each frame with [`Editor::drain_events`].
 //! - The two debounce timers (draft save, import plan) are deadlines. [`Editor::tick`] checks them. Without
-//!   [`Editor::delays`] both run at once, as the Python editor did without a window.
+//!   [`Editor::delays`] both run at once.
 //! - Background work is a value with a `run` method: [`BuildJob`], [`PlanJob`], [`LevelJob`]. The window runs it
 //!   on a thread and hands the result back. The `Editor` itself is used from one thread.
 //! - Entities are named by their index in [`Editor::entities`]. The indices change with every rebuild.
@@ -118,7 +118,7 @@ pub fn look_name(tag: &str) -> Option<&'static str> {
     LOOK.iter().find(|(t, _)| *t == tag).map(|(_, n)| *n)
 }
 
-/// What the Python editor sent as Qt signals.
+/// What the editor tells the window.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Event {
     /// A message for the status line. `class` is "ok", "err" or "".
@@ -137,7 +137,7 @@ pub enum Event {
     ModeChanged,
 }
 
-/// The app's settings store (Python's QSettings). The editor uses the keys "scene", "triggers" and "exits". The window
+/// The app's settings store. The editor uses the keys "scene", "triggers" and "exits". The window
 /// also keeps "fog", "saveDir" and "emulator" there.
 pub trait Settings {
     fn value(&self, key: &str) -> Option<String>;
@@ -165,7 +165,7 @@ pub struct Delays {
 }
 
 impl Default for Delays {
-    /// The Python window's timers: 400 ms and 250 ms.
+    /// 400 ms and 250 ms.
     fn default() -> Delays {
         Delays { draft: 0.4, plan: 0.25 }
     }
@@ -543,7 +543,7 @@ impl Editor {
         ModelIndex { models: &self.models, loaded: &self.loaded, catalog: &self.catalog }
     }
 
-    /// Where the model of an object id comes from (Python's `model_url`).
+    /// Where the model of an object id comes from.
     pub fn model_ref(&self, oid: &str) -> Option<ModelRef> {
         self.index().model_ref(oid)
     }

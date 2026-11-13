@@ -3,9 +3,8 @@
 //! A vector is `[x, y, z]`. A quaternion is `[x, y, z, w]`. A matrix is row-major and acts on column vectors
 //! (`M · [x, y, z, 1]`). The game's rotation order is R = Ry·Rz·Rx, three.js's Euler order 'YZX'.
 //!
-//! The formulas are the ones of the Python editor (`vec.py`), in the same order of operations. Where Python
-//! called numpy's dot products, the sums here are fused in the order the reference machine's numpy used, and the
-//! results are the same doubles.
+//! The order of operations is fixed, and the dot products use fused multiply-add, as the reference results were
+//! computed. The results are the same doubles.
 
 pub type V3 = [f64; 3];
 pub type Quat = [f64; 4];
@@ -32,22 +31,22 @@ pub fn div(a: V3, s: f64) -> V3 {
     [a[0] / s, a[1] / s, a[2] / s]
 }
 
-/// The dot product, summed as numpy's `a @ b` sums it.
+/// The dot product, with fused multiply-add.
 pub fn dot(a: V3, b: V3) -> f64 {
     a[2].mul_add(b[2], a[1].mul_add(b[1], a[0] * b[0]))
 }
 
-/// The length, as numpy's `linalg.norm` computes it.
+/// The length.
 pub fn norm(a: V3) -> f64 {
     dot(a, a).sqrt()
 }
 
-/// numpy's `cross(a, b)`.
+/// The cross product.
 pub fn cross(a: V3, b: V3) -> V3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
-/// A 3x3 matrix times a vector, summed as numpy's `m @ v` sums it.
+/// A 3x3 matrix times a vector, with fused multiply-add.
 pub fn mat3_mul_v(m: &Mat3, v: V3) -> V3 {
     let row = |r: &[f64; 3]| r[2].mul_add(v[2], r[0].mul_add(v[0], r[1] * v[1]));
     [row(&m[0]), row(&m[1]), row(&m[2])]
@@ -94,7 +93,7 @@ pub fn quat_to_mat3(q: Quat) -> Mat3 {
     ]
 }
 
-/// Python's `max(-1.0, min(1.0, v))`. A NaN gives 1.0, as in Python.
+/// The value kept between -1.0 and 1.0. A NaN gives 1.0.
 pub fn clamp1(v: f64) -> f64 {
     let m = if v < 1.0 { v } else { 1.0 };
     if m > -1.0 {
@@ -188,13 +187,13 @@ pub fn decompose_scale(m: &Mat4) -> V3 {
     [col(0), col(1), col(2)]
 }
 
-/// A 4x4 matrix times a 4-vector, summed as numpy's `m @ v` sums it.
+/// A 4x4 matrix times a 4-vector. Each row is summed in pairs: columns 0 and 2, then 1 and 3.
 pub fn mat4_mul_v(m: &Mat4, v: [f64; 4]) -> [f64; 4] {
     let row = |r: &[f64; 4]| (r[0] * v[0] + r[2] * v[2]) + (r[1] * v[1] + r[3] * v[3]);
     [row(&m[0]), row(&m[1]), row(&m[2]), row(&m[3])]
 }
 
-/// The product a·b of two 4x4 matrices, summed as numpy's `a @ b` sums it.
+/// The product a·b of two 4x4 matrices.
 pub fn mat4_mul(a: &Mat4, b: &Mat4) -> Mat4 {
     let mut m = [[0.0; 4]; 4];
     for i in 0..4 {
@@ -226,7 +225,7 @@ pub fn perspective(fov_deg: f64, aspect: f64, near: f64, far: f64) -> Mat4 {
     m
 }
 
-/// Python's `math.radians`: the value times (pi / 180).
+/// Degrees as radians: the value times (pi / 180).
 pub fn radians(deg: f64) -> f64 {
     deg * (std::f64::consts::PI / 180.0)
 }
@@ -334,9 +333,9 @@ impl Box3 {
 
     pub fn add_point(&mut self, p: V3) -> &mut Box3 {
         for i in 0..3 {
-            // numpy's minimum and maximum keep a NaN
-            self.min[i] = np_min(self.min[i], p[i]);
-            self.max[i] = np_max(self.max[i], p[i]);
+            // A NaN is kept
+            self.min[i] = nan_min(self.min[i], p[i]);
+            self.max[i] = nan_max(self.max[i], p[i]);
         }
         self
     }
@@ -351,8 +350,8 @@ impl Box3 {
     pub fn add_box(&mut self, other: &Box3) -> &mut Box3 {
         if !other.empty() {
             for i in 0..3 {
-                self.min[i] = np_min(self.min[i], other.min[i]);
-                self.max[i] = np_max(self.max[i], other.max[i]);
+                self.min[i] = nan_min(self.min[i], other.min[i]);
+                self.max[i] = nan_max(self.max[i], other.max[i]);
             }
         }
         self
@@ -387,7 +386,7 @@ impl Box3 {
     }
 }
 
-fn np_min(a: f64, b: f64) -> f64 {
+fn nan_min(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() {
         f64::NAN
     } else if b < a {
@@ -397,7 +396,7 @@ fn np_min(a: f64, b: f64) -> f64 {
     }
 }
 
-fn np_max(a: f64, b: f64) -> f64 {
+fn nan_max(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() {
         f64::NAN
     } else if b > a {

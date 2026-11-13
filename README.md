@@ -28,6 +28,7 @@ It runs on Linux too.
 
 ## More
 
+- [The guide, with pictures](docs/guide/README.md)
 - [Using the editor](docs/Using-the-editor.md)
 - [Sharing levels](docs/Sharing-levels.md)
 - [Import model](docs/Import-model.md)

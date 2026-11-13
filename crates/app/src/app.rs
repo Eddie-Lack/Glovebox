@@ -1,6 +1,5 @@
 //! The application: the setup screen or the editor's window, and what the window does that is not one panel's
 //! own: starting, opening levels, the editor's events, builds, Test level and the keyboard.
-//! A port of the former Python editor's `window.py`.
 
 use crate::dialogs::{Dialog, FileDialogs};
 use crate::jobs::Jobs;
@@ -152,8 +151,30 @@ pub struct Window {
     pub after_load: Option<(String, Act)>,
     /// The last file written by Build ROM, Export and the like.
     pub last_saved: Option<PathBuf>,
+    /// Where the panels were in the last frame.
+    pub panels: Panels,
     clock: std::time::Instant,
     ctx: egui::Context,
+}
+
+/// The widths the side panels start with, in points.
+pub const LEVEL_WIDTH: f32 = 270.0;
+pub const INSPECTOR_WIDTH: f32 = 380.0;
+pub const ADD_WIDTH: f32 = 360.0;
+
+/// The rectangles of the side panels in the last frame. `add` is empty when its panel is closed.
+#[derive(Clone, Copy, Debug)]
+pub struct Panels {
+    pub level: egui::Rect,
+    pub inspector: egui::Rect,
+    pub checks: egui::Rect,
+    pub add: egui::Rect,
+}
+
+impl Default for Panels {
+    fn default() -> Self {
+        Panels { level: egui::Rect::NOTHING, inspector: egui::Rect::NOTHING, checks: egui::Rect::NOTHING, add: egui::Rect::NOTHING }
+    }
 }
 
 /// The format of the back end's level table.
@@ -206,6 +227,7 @@ impl Window {
             inspector: inspector::State::default(),
             palette: palette::State::default(),
             palette_open: false,
+            panels: Panels::default(),
             path_panel: path_panel::State::default(),
             checks: Vec::new(),
             quickboot: true,
@@ -815,43 +837,54 @@ impl Window {
         let side = self.palette_open || self.ed.path.on;
         let bare = egui::Frame::new().fill(th.bg);
         let padded = egui::Frame::new().inner_margin(egui::Margin { left: 8, right: 4, top: 4, bottom: 4 });
-        egui::Panel::left("level").frame(bare).default_size(270.0).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
-            ui.set_min_size(ui.available_size());
-            style::ground(ui);
-            panel_title(ui, "Level");
-            padded.show(ui, |ui| outliner::ui(self, ui));
-        });
-        egui::Panel::right("inspector").frame(bare).default_size(380.0).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
-            ui.set_min_size(ui.available_size());
-            style::ground(ui);
-            if side && !wide {
-                side_tabs(self, ui, true);
-            } else {
-                panel_title(ui, "Inspector");
-            }
-            let tab = if side && !wide { self.palette.side_tab } else { 0 };
-            let total = ui.available_height();
-            let checks_height = (total * 0.36).clamp(180.0, 320.0);
-            egui::Panel::bottom("checks").frame(padded).default_size(checks_height).size_range(120.0..=(total - 160.0).max(120.0)).resizable(true).show(ui, |ui| {
-                ui.set_min_size(ui.available_size());
-                crate::checks::ui(self, ui);
-            });
-            egui::CentralPanel::default().frame(padded).show(ui, |ui| match tab {
-                1 => palette::ui(self, ui),
-                2 => path_panel::ui(self, ui),
-                _ => inspector::ui(self, ui),
-            });
-        });
-        if side && wide {
-            egui::Panel::right("add").frame(bare).default_size(360.0).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
-                ui.set_min_size(ui.available_size());
+        // Each panel's contents go through `style::fixed`: a panel that grows to fit its contents remembers the
+        // larger size, and one wide row then holds the panel at its largest size against every drag.
+        let level = egui::Panel::left("level").frame(bare).default_size(LEVEL_WIDTH).size_range(200.0..=420.0).resizable(true).show(ui, |ui| {
+            style::fixed(ui, |ui| {
                 style::ground(ui);
-                side_tabs(self, ui, false);
-                padded.show(ui, |ui| match self.palette.side_tab {
-                    2 => path_panel::ui(self, ui),
-                    _ => palette::ui(self, ui),
+                panel_title(ui, "Level");
+                padded.show(ui, |ui| outliner::ui(self, ui));
+            });
+        });
+        self.panels.level = level.response.rect;
+        let inspector = egui::Panel::right("inspector").frame(bare).default_size(INSPECTOR_WIDTH).size_range(300.0..=560.0).resizable(true).show(ui, |ui| {
+            style::fixed(ui, |ui| {
+                style::ground(ui);
+                if side && !wide {
+                    side_tabs(self, ui, true);
+                } else {
+                    panel_title(ui, "Inspector");
+                }
+                let tab = if side && !wide { self.palette.side_tab } else { 0 };
+                let total = ui.available_height();
+                let checks_height = (total * 0.36).clamp(180.0, 320.0);
+                let checks = egui::Panel::bottom("checks").frame(padded).default_size(checks_height).size_range(120.0..=(total - 160.0).max(120.0)).resizable(true).show(ui, |ui| {
+                    style::fixed(ui, |ui| crate::checks::ui(self, ui));
+                });
+                self.panels.checks = checks.response.rect;
+                egui::CentralPanel::default().frame(padded).show(ui, |ui| {
+                    style::fixed(ui, |ui| match tab {
+                        1 => palette::ui(self, ui),
+                        2 => path_panel::ui(self, ui),
+                        _ => inspector::ui(self, ui),
+                    });
                 });
             });
+        });
+        self.panels.inspector = inspector.response.rect;
+        self.panels.add = egui::Rect::NOTHING;
+        if side && wide {
+            let add = egui::Panel::right("add").frame(bare).default_size(ADD_WIDTH).size_range(300.0..=520.0).resizable(true).show(ui, |ui| {
+                style::fixed(ui, |ui| {
+                    style::ground(ui);
+                    side_tabs(self, ui, false);
+                    padded.show(ui, |ui| match self.palette.side_tab {
+                        2 => path_panel::ui(self, ui),
+                        _ => palette::ui(self, ui),
+                    });
+                });
+            });
+            self.panels.add = add.response.rect;
         }
         egui::CentralPanel::default().frame(egui::Frame::new().fill(th.view_color())).show(ui, |ui| {
             viewport::ui(self, ui);
@@ -930,7 +963,7 @@ fn home_dir() -> Option<PathBuf> {
     std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(PathBuf::from).filter(|p| p.is_dir())
 }
 
-/// Python's `str.title()` for a world's name.
+/// A world's name with a capital at the start of each word and small letters after it.
 pub fn title_case(s: &str) -> String {
     let mut out = String::new();
     let mut start = true;

@@ -1,8 +1,8 @@
-//! The ROM side of the back end against the Python tools, on the real ROM.
+//! The ROM side of the back end against the reference dumps, on the real ROM.
 //!
-//! `GLOVEBOX_ROM` is the ROM's path. `GLOVEBOX_ORACLE` is the folder with the Python outputs: its `rom/` folder is
-//! made by `rom/gen.py`, `rom/ptrs.py` and the Python app's ROM dump. Without the two variables every test here
-//! prints that it was skipped and passes.
+//! `GLOVEBOX_ROM` is the ROM's path. `GLOVEBOX_REFERENCE` is the folder of reference dumps: these tests read its
+//! `rom/` folder. Two tests also read `GLOVEBOX_REFHOME`, a folder with the split ROM (`data/Glover`) and libgarib's
+//! ROM dump (`cache/romdump`). Without its variables a test prints that it was skipped and passes.
 
 use glovebox_core::rom::{Key, Qol, Rom};
 use glovebox_core::{bps, hwcheck, modpatch, n64, rom, tables};
@@ -12,17 +12,26 @@ use std::path::{Path, PathBuf};
 
 struct Env {
     rom: Vec<u8>,
-    oracle: PathBuf,
+    reference: PathBuf,
 }
 
 fn env(test: &str) -> Option<Env> {
-    match (std::env::var("GLOVEBOX_ROM"), std::env::var("GLOVEBOX_ORACLE")) {
-        (Ok(rom), Ok(oracle)) => Some(Env { rom: std::fs::read(&rom).expect("GLOVEBOX_ROM can be read"), oracle: PathBuf::from(oracle).join("rom") }),
+    match (std::env::var("GLOVEBOX_ROM"), std::env::var("GLOVEBOX_REFERENCE")) {
+        (Ok(rom), Ok(reference)) => Some(Env { rom: std::fs::read(&rom).expect("GLOVEBOX_ROM can be read"), reference: PathBuf::from(reference).join("rom") }),
         _ => {
-            println!("{}: skipped (GLOVEBOX_ROM and GLOVEBOX_ORACLE are not both set)", test);
+            println!("{}: skipped (GLOVEBOX_ROM and GLOVEBOX_REFERENCE are not both set)", test);
             None
         }
     }
+}
+
+/// The folder `GLOVEBOX_REFHOME` names.
+fn refhome(test: &str) -> Option<PathBuf> {
+    let home = std::env::var_os("GLOVEBOX_REFHOME").map(PathBuf::from);
+    if home.is_none() {
+        println!("{}: skipped (GLOVEBOX_REFHOME is not set)", test);
+    }
+    home
 }
 
 fn read(path: &Path) -> Vec<u8> {
@@ -41,7 +50,7 @@ fn unhex(s: &str) -> Vec<u8> {
 fn same(name: &str, got: &[u8], want: &[u8]) {
     if got != want {
         let at = got.iter().zip(want).position(|(a, b)| a != b).unwrap_or(got.len().min(want.len()));
-        panic!("{}: {} bytes, Python has {} bytes; the first difference is at 0x{:X}", name, got.len(), want.len(), at);
+        panic!("{}: {} bytes, the reference has {} bytes; the first difference is at 0x{:X}", name, got.len(), want.len(), at);
     }
 }
 
@@ -51,11 +60,11 @@ impl Env {
         if name == "retail" {
             return self.rom.clone();
         }
-        read(&self.oracle.join("build").join(format!("{}.z64", name.trim_end_matches(".z64"))))
+        read(&self.reference.join("build").join(format!("{}.z64", name.trim_end_matches(".z64"))))
     }
 
     fn input(&self, name: &str) -> Vec<u8> {
-        read(&self.oracle.join("inputs").join(name))
+        read(&self.reference.join("inputs").join(name))
     }
 }
 
@@ -92,7 +101,7 @@ fn the_rom_is_the_supported_one() {
 #[test]
 fn pointer_pairs_decode_like_the_emulation() {
     let Some(e) = env("pointer_pairs_decode_like_the_emulation") else { return };
-    let list = json(&e.oracle.join("ptrs.json"));
+    let list = json(&e.reference.join("ptrs.json"));
     let list = list.as_array().unwrap();
     assert_eq!(list.len(), 280);
     for p in list {
@@ -129,14 +138,14 @@ fn dump_manifest(dir: &Path) -> Vec<(String, Option<usize>, String)> {
 #[test]
 fn regions_are_libgaribs_dump() {
     let Some(e) = env("regions_are_libgaribs_dump") else { return };
+    let Some(home) = refhome("regions_are_libgaribs_dump") else { return };
     let rom = Rom::parse(&e.rom).unwrap();
     assert!(rom.is_retail_checksum());
     assert_eq!(rom.regions().len(), 143);
     assert_eq!(rom.level_count(), 48);
     assert!(rom.regions().windows(2).all(|w| w[0].offset() <= w[1].offset()));
 
-    // The dump the Python app made (cache/romdump): every region's bytes, by the key in its manifest
-    let home = e.oracle.parent().unwrap().parent().unwrap().join("gbhome-py");
+    // libgarib's dump of the ROM (cache/romdump): every region's bytes, by the key in its manifest
     let dump = home.join("cache/romdump");
     let dir = std::fs::read_dir(&dump).unwrap().next().unwrap().unwrap().path();
     let manifest = dump_manifest(&dir);
@@ -162,8 +171,8 @@ fn regions_are_libgaribs_dump() {
     let elements: usize = rom.regions().iter().map(|r| if r.is_array() { r.elements().len() } else { 1 }).sum();
     assert_eq!(files, elements);
 
-    // rom_keys.json: the bank name to key table the Python app derives from that manifest
-    let keys = json(&e.oracle.parent().unwrap().join("rom_keys.json"));
+    // rom_keys.json: the bank name to key table derived from that manifest
+    let keys = json(&e.reference.parent().unwrap().join("rom_keys.json"));
     for (name, key_text) in keys.as_object().unwrap() {
         let (key, _) = Key::parse(key_text.as_str().unwrap()).unwrap();
         let bank = rom.bank(&key.data_type, name).unwrap_or_else(|| panic!("no bank {}", name));
@@ -174,8 +183,9 @@ fn regions_are_libgaribs_dump() {
 #[test]
 fn regions_hold_noclips_split_files() {
     let Some(e) = env("regions_hold_noclips_split_files") else { return };
+    let Some(home) = refhome("regions_hold_noclips_split_files") else { return };
     let rom = Rom::parse(&e.rom).unwrap();
-    let data = e.oracle.parent().unwrap().parent().unwrap().join("gbhome-py/data/Glover");
+    let data = home.join("data/Glover");
     let mut names: Vec<String> = std::fs::read_dir(&data).unwrap().map(|f| f.unwrap().file_name().into_string().unwrap()).collect();
     names.sort();
     assert_eq!(names.len(), 122);
@@ -201,7 +211,7 @@ fn regions_hold_noclips_split_files() {
         }
     }
     assert_eq!((levels, objs, texs), (48, 56, 18));
-    // LEVELEND_TEX_BANK is two banks. noclip's file is number 14; a build replaces number 1, as the Python app does.
+    // LEVELEND_TEX_BANK is two banks. noclip's file is number 14; a build replaces number 1.
     assert_eq!(rom.texture_bank("LEVELEND_TEX_BANK"), rom.bytes(&Key::num("texbank", 14)));
     assert_eq!(rom.bank("texbank", "LEVELEND_TEX_BANK").unwrap().key(), &Key::num("texbank", 1));
     assert_ne!(rom.bytes(&Key::num("texbank", 1)), rom.bytes(&Key::num("texbank", 14)));
@@ -224,9 +234,9 @@ fn regions_hold_noclips_split_files() {
 // rom: building
 
 #[test]
-fn built_roms_are_pythons() {
-    let Some(e) = env("built_roms_are_pythons") else { return };
-    let cases = json(&e.oracle.join("build.json"));
+fn built_roms_match_the_reference() {
+    let Some(e) = env("built_roms_match_the_reference") else { return };
+    let cases = json(&e.reference.join("build.json"));
     let cases = cases.as_array().unwrap();
     assert!(cases.len() >= 12);
     let parsed = Rom::parse(&e.rom).unwrap();
@@ -361,9 +371,9 @@ fn run_steps(e: &Env, base: &[u8], steps: &Value) -> Result<Vec<u8>, modpatch::M
 }
 
 #[test]
-fn modded_roms_are_pythons() {
-    let Some(e) = env("modded_roms_are_pythons") else { return };
-    let cases = json(&e.oracle.join("mod.json"));
+fn modded_roms_match_the_reference() {
+    let Some(e) = env("modded_roms_match_the_reference") else { return };
+    let cases = json(&e.reference.join("mod.json"));
     let cases = cases.as_array().unwrap();
     assert!(cases.len() >= 49);
     let (mut good, mut bad) = (0, 0);
@@ -380,13 +390,16 @@ fn modded_roms_are_pythons() {
                 good += 1;
             }
             (Err(err), Some(want)) => {
-                // The Python patcher named its hardware check by its file, which is gone
-                let want = want.replace("(tools/hw_check.py)", "(hwcheck)");
+                // The reference texts name the hardware check by a file path. The patcher names it `hwcheck`.
+                let want = match want.find("(tools/").and_then(|a| Some((a, a + want[a..].find(')')? + 1))) {
+                    Some((a, b)) => format!("{}(hwcheck){}", &want[..a], &want[b..]),
+                    None => want.to_string(),
+                };
                 assert_eq!(err.0, want, "{}", name);
                 bad += 1;
             }
-            (Ok(_), Some(want)) => panic!("{}: Python refuses with {:?}", name, want),
-            (Err(err), None) => panic!("{}: refused with {:?}, Python builds a ROM", name, err.0),
+            (Ok(_), Some(want)) => panic!("{}: the reference refuses with {:?}", name, want),
+            (Err(err), None) => panic!("{}: refused with {:?}, the reference builds a ROM", name, err.0),
         }
     }
     assert!(good >= 20 && bad >= 25, "{} good, {} refused", good, bad);
@@ -421,9 +434,9 @@ fn changed_info(changes: &Value) -> Value {
 }
 
 #[test]
-fn hardware_findings_are_pythons() {
-    let Some(e) = env("hardware_findings_are_pythons") else { return };
-    let spec = json(&e.oracle.join("hw.json"));
+fn hardware_findings_match_the_reference() {
+    let Some(e) = env("hardware_findings_match_the_reference") else { return };
+    let spec = json(&e.reference.join("hw.json"));
     let mut roms: BTreeMap<String, Vec<u8>> = BTreeMap::new();
     for (name, file) in spec["files"].as_object().unwrap() {
         let rom = if name == "retail" { e.rom.clone() } else { e.named_rom(file.as_str().unwrap()) };
@@ -465,7 +478,7 @@ fn hardware_findings_are_pythons() {
 #[test]
 fn the_self_test_finds_every_break() {
     let Some(e) = env("the_self_test_finds_every_break") else { return };
-    let spec = json(&e.oracle.join("selftest.json"));
+    let spec = json(&e.reference.join("selftest.json"));
     for (name, s) in spec.as_object().unwrap() {
         let rom = e.named_rom(&format!("mod_{}", name));
         assert!(hwcheck::check_rom(&rom).is_empty());
@@ -494,10 +507,10 @@ fn the_self_test_finds_every_break() {
 // bps
 
 #[test]
-fn patches_are_pythons() {
-    let Some(e) = env("patches_are_pythons") else { return };
-    let spec = json(&e.oracle.join("bps.json"));
-    let dir = e.oracle.join("bps");
+fn patches_match_the_reference() {
+    let Some(e) = env("patches_match_the_reference") else { return };
+    let spec = json(&e.reference.join("bps.json"));
+    let dir = e.reference.join("bps");
     let cases = spec["create"].as_array().unwrap();
     assert!(cases.len() >= 26);
     for c in cases {
@@ -537,8 +550,8 @@ fn patches_are_pythons() {
         match (got, c["error"].as_str()) {
             (Ok(out), None) => assert_eq!(out, unhex(c["ok"].as_str().unwrap()), "{}", name),
             (Err(err), Some(want)) => assert_eq!(err.0, want, "{}", name),
-            (Ok(_), Some(want)) => panic!("{}: Python refuses with {:?}", name, want),
-            (Err(err), None) => panic!("{}: refused with {:?}, Python applies it", name, err.0),
+            (Ok(_), Some(want)) => panic!("{}: the reference refuses with {:?}", name, want),
+            (Err(err), None) => panic!("{}: refused with {:?}, the reference applies it", name, err.0),
         }
     }
 }

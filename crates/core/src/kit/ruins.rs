@@ -1,5 +1,5 @@
-//! The kit's ruins and barriers: a signpost, rubble, a scorch mark, thorns and two gates. A port of
-//! the former Python kit's ruins.py and barrier.py. Every random number is drawn in the same order as there.
+//! The kit's ruins and barriers: a signpost, rubble, a scorch mark, thorns and two gates. The order
+//! in which the random numbers are drawn is fixed: it decides each model's shape.
 
 use super::font;
 use super::image::{Image, Rgba};
@@ -13,7 +13,7 @@ fn rgb(r: i64, g: i64, b: i64) -> Rgba {
 }
 
 // ---------------------------------------------------------------------------------------------
-// ruins.py
+// Ruins
 
 /// A painted board (64x32): the name in peeling white, a red word under it, and rot.
 pub fn board_tex(top: &str, bottom: &str, size: u32, seed: u64) -> Image {
@@ -119,7 +119,7 @@ pub fn build_rubble() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// barrier.py
+// Barriers
 
 /// Black thorn bark with dark red veins (16x16).
 pub fn bark(seed: u64) -> Image {

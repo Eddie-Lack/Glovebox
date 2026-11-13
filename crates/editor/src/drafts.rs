@@ -1,7 +1,7 @@
 //! Autosaved level drafts, kept as files in the user folder (`drafts/<level id>.json`).
 //!
-//! A draft is the edited level XML for one level id plus when it was saved. The files have the layout the Python
-//! editor wrote: `{"id": "0a", "xml": "...", "savedAt": 1700000000.5}`. The caller validates a draft with the same
+//! A draft is the edited level XML for one level id plus when it was saved. A file's layout:
+//! `{"id": "0a", "xml": "...", "savedAt": 1700000000.5}`. The caller validates a draft with the same
 //! checks as an imported file before it is used.
 //!
 //! `info.json` in the same folder holds each level's name, music and bonus clock for the game's level table. They
@@ -45,7 +45,7 @@ pub struct Drafts {
     pub folder: PathBuf,
 }
 
-/// A string as Python's `json.dump` writes it: ASCII only, with `\uXXXX` for the rest.
+/// A string as JSON text: ASCII only, with `\uXXXX` for the rest.
 fn json_string(s: &str, out: &mut String) {
     out.push('"');
     for c in s.chars() {
@@ -132,7 +132,7 @@ impl Drafts {
         let xml = r.get("xml")?.as_str()?.to_string();
         let saved_at = match r.get("savedAt")? {
             Value::Number(n) => n.as_f64()?,
-            // Python counts a boolean as a number
+            // A boolean counts as 0 or 1
             Value::Bool(b) => *b as u8 as f64,
             _ => return None,
         };

@@ -9,7 +9,7 @@ formats/glover.lev.ksy, and commit both files. It needs PyYAML.
 
 formats/glover.lev.ksy is libgarib's description of the level file (github.com/naclomi/libgarib, commit cf87929, MIT
 licence), with Glovebox's change: SetActorRotation and SetActorScale may also sit in a Platform, Enemy, Powerup or
-Water. The JSON holds two sets of nesting rules because libgarib's Python tools used two:
+Water. The JSON holds two sets of nesting rules because libgarib's tools use two:
 
   - "declares", "modifies", "groups_into": from the changed file. libgarib's XML schema was made from these. They say
     which element may sit in which.

@@ -8,6 +8,8 @@ built ROM has to keep on a console.
 
 - **Never commit the ROM** or anything made from it: `.z64`, `.bps`, `.lev`, extracted models or textures, the
   user folder, test dumps, savestates, emulator screenshots. The editor reads the player's own ROM.
+- The one exception, allowed by the owner: the editor's own screenshots for the guide, in `docs/guide/img/`. Nothing
+  else from the ROM goes in: no ROM, levels, models, textures, patches or emulator screenshots.
 - **Never use leaked original source code.** Facts about the game come from the
   [gloveworld](https://github.com/Eddie-Lack/gloveworld) decompilation, the ROM's own code, or tests in an emulator.
 - **A rule that fires on a shipped level is wrong.** Every check the editor makes must pass on all 48 shipped levels.
@@ -71,10 +73,10 @@ cargo run -p glovebox-core --example gbtool -- hwcheck ROM     # a built ROM aga
 - With `GLOVEBOX_ROM`, the test `the_rom` goes through the first-run screen, opens all 48 levels, runs the checks on
   them, builds a ROM, runs the hardware check on it and exports a patch.
 - A test that lacks its data prints that it was skipped, and passes.
-- The comparison tests (`*_oracle.rs` and a few others) compare the Rust code with outputs of the last Python
-  version of the editor, on the whole game. They need dumps made by that version (`GLOVEBOX_ORACLE`, and for some
-  `GLOVEBOX_PYHOME`). The dumps hold game data and are not in the repository, so these tests skip themselves on any
-  machine that has not made the dumps again. docs/technical.md, "Equal to the Python app", says what they proved.
+- The comparison tests (`*_reference.rs` and a few others) compare the Rust code with recorded reference outputs, on
+  the whole game. They need the reference dumps (`GLOVEBOX_REFERENCE`, and for some `GLOVEBOX_REFHOME`). The dumps hold
+  game data and are not in the repository. Without them these tests skip themselves. docs/technical.md, "Reference
+  tests", says what they check.
 - `gbtool` (`crates/core/examples/gbtool.rs`) is the back end on the command line: `gbtool xml ROM LEVEL` prints a
   level's XML, `gbtool build ROM LEVEL XML OUT [--quickboot] [--expansion] [--bps]` builds a ROM or a patch.
 - The game itself is tested in gloveworld's emulator harness (`tools/emu/emu.py SCRIPT.py --rom ROM`, set up with its

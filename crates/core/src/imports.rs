@@ -1,5 +1,4 @@
-//! Which banks an edited level needs for the models it imports, and the enlarged banks a build writes
-//! (`plan_imports`, `plan_runtime` and `build_import_banks` of the former Python back end).
+//! Which banks an edited level needs for the models it imports, and the enlarged banks a build writes.
 //!
 //! Ids are text here, as the editor keeps them: `0x73DB3DE3`. A texture bank is named by its file name in noclip's
 //! data set (`HUB_TEX_BANK.tex.fla`), or `custom:<set>` for the texture bank of an imported model.
@@ -14,7 +13,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
-/// One piece of an imported model (an entry of `custom_catalog` of the former Python back end).
+/// One piece of an imported model.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct CustomModel {
     /// The name the catalog shows: the model's name, with `2/3` after it when the model has several pieces
@@ -139,7 +138,7 @@ fn pairs(list: &[(String, String)]) -> Value {
 }
 
 impl Plan {
-    /// The plan as the Python app's dict.
+    /// The plan as a JSON object.
     pub fn to_json(&self) -> Value {
         let mut v = json!({"objects": self.objects, "targetBank": self.target_bank, "textures": pairs(&self.textures),
                            "targetTexBank": self.target_tex_bank, "objectBytes": self.object_bytes});
@@ -160,7 +159,7 @@ impl Plan {
     }
 }
 
-/// A texture bank's data, not compressed (`raw_bank` of the former Python back end).
+/// A texture bank's data, not compressed. A `custom:` bank is an imported set's.
 fn raw_bank<'a>(gd: &'a GameData, customs: &'a Customs, bank: &str) -> Result<Cow<'a, [u8]>, String> {
     match bank.strip_prefix("custom:") {
         Some(set) => match customs.tex_banks.get(set) {
@@ -209,7 +208,7 @@ impl<'a> RecordCache<'a> {
     }
 }
 
-/// The size of the records of a plan's textures, as the Python app's `texBytes`.
+/// The size of the records of a plan's textures (`texBytes` in a plan).
 pub fn tex_bytes(gd: &GameData, customs: &Customs, textures: &[(String, String)]) -> Result<u64, String> {
     RecordCache::new(gd, customs).size(textures)
 }
@@ -402,7 +401,7 @@ pub fn build_import_banks(
             singles.push(bank.ok_or_else(|| format!("Object {o} has no bank"))?);
         }
         let base = gd.raw_bank(&format!("{target_bank}.obj.fla")).map_err(|e| e.0)?;
-        let packed = objbank::pack(base, &singles).map_err(|e| format!("objbank-tool.py failed:\n{}", e.0))?;
+        let packed = objbank::pack(base, &singles).map_err(|e| format!("Packing the object bank failed:\n{}", e.0))?;
         let key = gd.object_bank_key(target_bank).ok_or_else(|| format!("The ROM has no object bank {target_bank}"))?;
         out.banks.push((key, packed));
     }
@@ -430,7 +429,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_plan_prints_as_pythons_dict() {
+    fn a_plan_prints_as_json() {
         let mut plan = Plan {
             objects: vec!["0x00000001".into()],
             target_bank: "A".into(),

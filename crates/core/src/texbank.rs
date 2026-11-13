@@ -270,7 +270,7 @@ pub fn ids(data: &[u8]) -> Result<Vec<u32>, TexError> {
     Ok(TexBank::parse(data)?.textures.iter().map(|t| t.id).collect())
 }
 
-/// A bank's records and names, as `texbank_records` of the former Python back end.
+/// A bank's records and names.
 pub struct Records<'a> {
     /// Each texture's id and its whole record. A record whose size was not a multiple of 8 has zeros at its end
     /// and a corrected size field.
@@ -351,7 +351,7 @@ pub fn import_bank(target: &[u8], extra: &[(u32, &[u8])]) -> Result<Vec<u8>, Tex
     Ok(write_bank(&recs, &names))
 }
 
-/// A bank of these records alone, each named by `png_name`, as `reskin` of the former Python back end writes a model's texture bank.
+/// A bank of these records alone, each named by `png_name`. A reskinned model's texture bank is written this way.
 pub fn bank_of(records: &[(u32, &[u8])]) -> Vec<u8> {
     let recs: Vec<&[u8]> = records.iter().map(|(_, r)| *r).collect();
     let names: Vec<Vec<u8>> = records.iter().map(|(id, _)| png_name(*id)).collect();

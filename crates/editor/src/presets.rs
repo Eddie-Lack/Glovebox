@@ -36,7 +36,7 @@ enum Val<'a> {
     F(f64),
     I(i64),
     S(&'a str),
-    /// A platform tag. Python writes "None" when there is none.
+    /// A platform tag. It is written "None" when there is none.
     Tag(Option<i64>),
 }
 
@@ -78,7 +78,7 @@ fn platform(doc: &mut Doc, model: Model, p: [f64; 3], scale: Option<[f64; 3]>, p
     n
 }
 
-/// Python's `round(v, 4)`.
+/// Rounds to four decimals, by the exact value of the double. A half goes to the even neighbour.
 fn round4(v: f64) -> f64 {
     if !v.is_finite() {
         return v;
@@ -387,7 +387,7 @@ mod tests {
     }
 
     #[test]
-    fn python_round() {
+    fn rounds_to_four_decimals() {
         assert_eq!(round4(0.03125), 0.0312);
         assert_eq!(round4(2.71828), 2.7183);
         assert_eq!(round4(-0.00004), -0.0);

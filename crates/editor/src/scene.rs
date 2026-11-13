@@ -1,15 +1,13 @@
 //! A small scene graph for the 3D view: nodes with transforms, and the meshes, lines and sprites they draw.
 //!
-//! It is plain data, a port of the former Python editor's `scene.py` and of what its `gltf.py` built from a model.
-//! The renderer in the app crate draws it. This module also finds what a ray hits (picking, the ground under a
-//! point) and the boxes around things, on the CPU. Transforms and picking use `f64`, as numpy did. Vertex data is
-//! `f32`.
+//! It is plain data. The renderer in the app crate draws it. This module also finds what a ray hits (picking, the ground under a
+//! point) and the boxes around things, on the CPU. Transforms and picking use `f64`. Vertex data is `f32`.
 //!
-//! How it differs from the Python module in shape:
-//! - Nodes live in a [`Scene`] and are named by a [`NodeId`]. Python held them by reference.
-//! - A node that leaves the tree stays alive until [`Scene::delete`] frees it. Python's garbage collector did that.
+//! Its shape:
+//! - Nodes live in a [`Scene`] and are named by a [`NodeId`].
+//! - A node that leaves the tree stays alive until [`Scene::delete`] frees it.
 //! - Geometry, materials and textures are shared with `Arc`. Two meshes use "the same material" when they hold the
-//!   same `Arc` (Python compared object identity). [`make_batches`] groups by that.
+//!   same `Arc`. [`make_batches`] groups by that.
 //! - A hit names its item by the item's index in the node's `items`.
 
 use crate::camera::Camera;
@@ -98,7 +96,7 @@ fn to64(p: [f32; 3]) -> V3 {
 }
 
 /// RGBA pixels, 8 bits each, `width * height * 4` bytes in rows. Row 0 is at v = 0. For a model that is the top
-/// of the picture. For a sprite it is the bottom of the square (the Python editor flipped its icons for OpenGL).
+/// of the picture. For a sprite it is the bottom of the square.
 #[derive(Debug, Clone)]
 pub struct Texture {
     pub id: u64,
@@ -131,7 +129,7 @@ pub struct Material {
     pub opacity: f64,
     pub depth_write: bool,
     pub depth_test: bool,
-    /// Kept from the Python class. The renderer draws every material double-sided, as Python did.
+    /// Not used: the renderer draws every material double-sided.
     pub double_sided: bool,
     /// How the texture repeats along s and t.
     pub wrap: (Wrap, Wrap),
@@ -402,7 +400,7 @@ impl Scene {
         NodeId { index: self.slots.len() as u32 - 1, generation: 0 }
     }
 
-    /// Adds a detached, empty node (Python's `Node(name)`).
+    /// Adds a detached, empty node.
     pub fn node(&mut self, name: &str) -> NodeId {
         self.insert(Node::new(name))
     }
@@ -446,7 +444,7 @@ impl Scene {
         self[child].parent = None;
     }
 
-    /// Python's `parent.remove(child)`: detaches `child` when it is a child of `parent`.
+    /// Detaches `child` when it is a child of `parent`.
     pub fn remove(&mut self, parent: NodeId, child: NodeId) {
         if self.get(child).and_then(|n| n.parent) == Some(parent) {
             self.detach(child);
@@ -470,8 +468,7 @@ impl Scene {
         }
     }
 
-    /// Frees everything under the node. (Python's `clear` detached the children and the garbage collector freed
-    /// them.)
+    /// Frees everything under the node.
     pub fn clear(&mut self, id: NodeId) {
         let Some(n) = self.get(id) else { return };
         for c in n.children.clone() {
@@ -571,7 +568,7 @@ impl Scene {
         out
     }
 
-    /// `walk` with world matrices. A hidden parent above `id` does not hide it here (as in Python).
+    /// `walk` with world matrices. A hidden parent above `id` does not hide it here.
     pub fn world_walk(&self, id: NodeId, visible_only: bool) -> Vec<(NodeId, Mat4)> {
         match self.get(id) {
             Some(_) => self.walk(id, Some(self.world_matrix(id)), visible_only),
@@ -580,7 +577,6 @@ impl Scene {
     }
 
     /// The world box around everything under the node, hidden or not (three.js `Box3.setFromObject`).
-    /// Python's `Node.box`.
     pub fn bounds(&self, id: NodeId) -> Box3 {
         let mut b = Box3::new();
         for (n, m) in self.world_walk(id, false) {
@@ -637,7 +633,7 @@ impl Scene {
 
     /// Every mesh triangle and sprite the ray meets under `roots`, nearest first. Hidden nodes are left out.
     /// A mesh gives its nearest triangle only, and both faces count. Its material does not matter: a translucent
-    /// fill is hit like any mesh, as in Python. Sprites count as squares that face the camera. Lines count when
+    /// fill is hit like any mesh. Sprites count as squares that face the camera. Lines count when
     /// they pass within `line_px` pixels on screen.
     pub fn raycast(&self, roots: &[NodeId], origin: V3, direction: V3, o: &RayOptions) -> Vec<Hit> {
         let direction = vec::div(direction, vec::norm(direction));
@@ -674,7 +670,7 @@ impl Scene {
                 }
             }
         }
-        // A stable sort, as Python's
+        // A stable sort: hits at the same distance keep their order
         hits.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(std::cmp::Ordering::Equal));
         hits
     }
@@ -763,14 +759,14 @@ pub fn ray_triangle(origin: V3, direction: V3, tri: &[V3; 3]) -> f64 {
     }
 }
 
-/// True when the ray meets the box (the slab test, with numpy's handling of a ray along a face).
+/// True when the ray meets the box (the slab test). An axis the ray runs along a face of is skipped.
 pub fn ray_box(origin: V3, direction: V3, b: &Box3) -> bool {
     let (mut tmin, mut tmax) = (f64::NAN, f64::NAN);
     for i in 0..3 {
         let inv = 1.0 / direction[i];
         let t1 = (b.min[i] - origin[i]) * inv;
         let t2 = (b.max[i] - origin[i]) * inv;
-        // numpy's minimum and maximum give NaN when either is NaN. nanmax and nanmin then skip that axis.
+        // 0 times infinity gives NaN for a ray along a face. That axis is skipped.
         if t1.is_nan() || t2.is_nan() {
             continue;
         }
@@ -858,7 +854,7 @@ pub fn boxes_edges(boxes: &[Box3]) -> Vec<[f32; 3]> {
     out
 }
 
-/// Python's default is `sphere_geometry(1, 24, 16)`.
+/// A sphere. The usual one is `sphere_geometry(1, 24, 16)`.
 pub fn sphere_geometry(r: f64, ws: u32, hs: u32) -> Geometry {
     use std::f64::consts::PI;
     let (mut pts, mut idx): (Vec<V3>, Vec<u32>) = (Vec::new(), Vec::new());
@@ -880,7 +876,7 @@ pub fn sphere_geometry(r: f64, ws: u32, hs: u32) -> Geometry {
     Geometry::from_f64(&pts, Some(&idx)).with(Some(normals), None, None)
 }
 
-/// A cylinder along Y with both ends closed. Python's default is `cylinder_geometry(1, 1, 32)`.
+/// A cylinder along Y with both ends closed. The usual one is `cylinder_geometry(1, 1, 32)`.
 pub fn cylinder_geometry(r: f64, h: f64, n: u32) -> Geometry {
     use std::f64::consts::PI;
     let (mut pts, mut idx): (Vec<V3>, Vec<u32>) = (Vec::new(), Vec::new());
@@ -910,8 +906,8 @@ pub fn octahedron_geometry(r: f64) -> Geometry {
     Geometry::from_f64(&p, Some(&idx)).with(Some(normals), None, None)
 }
 
-/// `n` points of a unit circle about the axis ('x', 'y' or anything else for z), `offset` along it. Python's
-/// default is 48 points.
+/// `n` points of a unit circle about the axis ('x', 'y' or anything else for z), `offset` along it. The
+/// usual number is 48 points.
 pub fn ring_points(axis: char, offset: f64, n: usize) -> Vec<V3> {
     (0..n)
         .map(|i| {
@@ -938,7 +934,7 @@ struct PrefabNode {
     children: Vec<usize>,
 }
 
-/// A model ready to place: a node tree to copy into a scene, in the editor's static pose (Python's `gltf.Model`).
+/// A model ready to place: a node tree to copy into a scene, in the editor's static pose.
 /// Every copy shares the geometry and the materials.
 pub struct Prefab {
     nodes: Vec<PrefabNode>,
@@ -950,12 +946,11 @@ pub struct Prefab {
 }
 
 impl Prefab {
-    /// Builds the scene data of a model as the former Python editor's `gltf.py` did from the model's glTF file. `texture` gives the
-    /// pixels of a texture id, or none when they are missing (the material is then drawn without a texture).
+    /// Builds the scene data of a model. `texture` gives the pixels of a texture id, or none when they are missing (the material is then drawn without a texture).
     ///
-    /// The material follows gltf.py: the base colour and its alpha as opacity, `Blend` as transparent, the
+    /// The material: the base colour and its alpha as opacity, `Blend` as transparent, the
     /// cutoff of `Mask` as the alpha test, and an alpha test of 0.3 for any other textured material. It is
-    /// always lit and double-sided: gltf.py did not read `unlit`, `billboard` or `inherit_rotation`.
+    /// always lit and double-sided: `unlit`, `billboard` and `inherit_rotation` are not read.
     pub fn from_model(model: &Model, texture: &mut dyn FnMut(u32) -> Option<Arc<Texture>>) -> Prefab {
         let mut textures: HashMap<u32, Option<Arc<Texture>>> = HashMap::new();
         let mut materials: HashMap<(u32, bool), Arc<Material>> = HashMap::new();
@@ -1174,8 +1169,8 @@ pub struct Dump {
     pub json: serde_json::Value,
 }
 
-/// Reads a scene that the Python editor dumped (the reference script `render/dump.py`, not in this repository): a
-/// JSON file that names arrays in a file of raw little-endian numbers. The tests replay Python scenes with it.
+/// Reads a scene from the reference dumps: a JSON file that names arrays in a file of raw little-endian numbers.
+/// The tests replay the recorded scenes with it.
 /// `keep(node)` says whether to take the node's items. A node without them is still made.
 pub fn load_dump(json: &[u8], blob: &[u8], keep: &dyn Fn(&serde_json::Value) -> bool) -> Result<Dump, String> {
     use serde_json::Value;
@@ -1369,7 +1364,7 @@ mod tests {
         let b = box_geometry(1.0, 2.0, 3.0);
         assert_eq!((b.positions.len(), b.triangle_count()), (24, 12));
         assert_eq!((b.bounds().min, b.bounds().max), ([-0.5, -1.0, -1.5], [0.5, 1.0, 1.5]));
-        // every face winds the same way: inwards, as the Python box does (it is drawn double-sided)
+        // every face winds the same way: inwards (it is drawn double-sided)
         for i in 0..12 {
             let t = b.triangle(i);
             let n = vec::cross(vec::sub(t[1], t[0]), vec::sub(t[2], t[0]));
@@ -1598,12 +1593,12 @@ mod tests {
         assert!((n[0][2] + 1.0).abs() < 1e-6, "{:?}", n[0]);
     }
 
-    /// Replays the scenes that the reference script `render/picks.py` built with the Python scene graph: every node's
-    /// world matrix and box, and every pick ray's hits.
+    /// Replays the scenes of the reference dump `render/out/picks.json`: every node's world matrix and box, and
+    /// every pick ray's hits.
     #[test]
-    fn python_scenes_replay() {
-        let Ok(dir) = std::env::var("GLOVEBOX_ORACLE") else {
-            println!("skipped: GLOVEBOX_ORACLE is not set");
+    fn scenes_replay_the_reference() {
+        let Ok(dir) = std::env::var("GLOVEBOX_REFERENCE") else {
+            println!("skipped: GLOVEBOX_REFERENCE is not set");
             return;
         };
         let read = |name: &str| std::fs::read(format!("{dir}/render/out/{name}")).unwrap();

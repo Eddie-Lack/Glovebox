@@ -60,7 +60,7 @@ impl Default for Scatter {
     }
 }
 
-/// Python's `round(x, digits)`.
+/// Rounds to `digits` decimals, by the exact value of the double. A half goes to the even neighbour.
 fn round_to(x: f64, digits: usize) -> f64 {
     if !x.is_finite() {
         return x;
@@ -68,7 +68,7 @@ fn round_to(x: f64, digits: usize) -> f64 {
     format!("{:.*}", digits, x).parse().unwrap_or(x)
 }
 
-/// Python's `a % b` for floats.
+/// The remainder of `a / b` with the sign of `b`.
 fn py_mod(a: f64, b: f64) -> f64 {
     let r = a % b;
     if r != 0.0 && (r < 0.0) != (b < 0.0) {
@@ -78,7 +78,7 @@ fn py_mod(a: f64, b: f64) -> f64 {
     }
 }
 
-/// Python's `random.choices(range(n), weights)[0]`.
+/// A random index, each with its weight (CPython's `random.choices(range(n), weights)[0]`).
 fn choice(rnd: &mut Random, weights: &[f64]) -> usize {
     let mut cum = Vec::with_capacity(weights.len());
     let mut total = 0.0;
@@ -319,7 +319,7 @@ impl Editor {
 
     /// Camera zones over a stretch of the path (`start` and `end` are fractions of its length): boxes around the
     /// path, each split off at most `split` long. The box is level with the axes, so a diagonal stretch gets a
-    /// bigger box: split it. The Python defaults are 0, 1, 140, 300, 400 and 600.
+    /// bigger box: split it. The usual values are 0, 1, 140, 300, 400 and 600.
     #[allow(clippy::too_many_arguments)]
     pub fn path_zones(&mut self, key: &str, start: f64, end: f64, margin: f64, below: f64, above: f64, split: f64) {
         let samples = self.path_samples(20.0);

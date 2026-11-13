@@ -1,8 +1,8 @@
 //! A small RGBA picture and the drawing the kit's textures need: points, lines, rectangles, ellipses, arcs, polygons,
 //! one resize and PNG output.
 //!
-//! The Python kit draws with Pillow. The shapes here follow Pillow 13's rules (libImaging/Draw.c and Resample.c,
-//! licence MIT-CMU), so the textures come out the same: coordinates are cut to whole numbers toward zero, a line of
+//! The shapes follow Pillow 13's rules (libImaging/Draw.c and Resample.c, licence MIT-CMU), and the reference
+//! tests hold the textures they give: coordinates are cut to whole numbers toward zero, a line of
 //! width 1 is Bresenham's, a wide line and a polygon are filled by scan lines with Pillow's rounding, and an ellipse
 //! is traced on a grid of half pixels.
 

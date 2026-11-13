@@ -219,7 +219,7 @@ impl Key {
     }
 }
 
-/// The key as Python prints the tuple: `('objbank', 12)`.
+/// The key as libgarib's ROM tool prints it, a Python tuple: `('objbank', 12)`.
 impl std::fmt::Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match &self.id {
@@ -406,7 +406,7 @@ impl Rom {
             };
             regions.push(Region { key, name: m.name.clone(), offset: start, kind, start_pointers, end_pointers, data });
         }
-        // A stable sort, like Python's: regions with the same offset keep the order of the map.
+        // A stable sort: regions with the same offset keep the order of the map.
         regions.sort_by_key(|r| r.offset);
         Ok(Rom { regions, checksum })
     }
@@ -469,7 +469,7 @@ impl Rom {
     }
 
     /// The region a build replaces for a bank ("objbank" or "texbank") named like this in the map. Two texture
-    /// banks are named LEVELEND_TEX_BANK (1 and 14): the lower number wins, as in the Python app's table of keys.
+    /// banks are named LEVELEND_TEX_BANK (1 and 14): the lower number wins.
     pub fn bank(&self, data_type: &str, name: &str) -> Option<&Region> {
         self.banks(data_type, name).into_iter().min_by_key(|b| b.0).map(|b| b.1)
     }

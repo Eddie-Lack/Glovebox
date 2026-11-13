@@ -1,6 +1,6 @@
 //! The transform gizmo: arrows to move, rings to rotate and handles to scale an invisible pivot.
 //!
-//! A port of the former Python editor's `gizmo.py`. It only changes the pivot (`pos`, `quat`, `scale`). The editor works out the edit
+//! It only changes the pivot (`pos`, `quat`, `scale`). The editor works out the edit
 //! from the pivot's change since the drag began. Handles are picked on screen, within a few pixels. `node` builds
 //! the scene nodes the renderer draws on top of everything, at a constant size on screen.
 
@@ -658,12 +658,12 @@ mod tests {
         assert_eq!((ring.geometry.positions.len(), ring.geometry.triangle_count()), (384, 768));
     }
 
-    /// Replays the reference script `render/gizmo.py`: what the Python gizmo picked, how its drags moved the pivot,
-    /// and the meshes it drew.
+    /// Replays the reference dump `render/out/gizmo.json`: what each click picks, how each drag moves the pivot,
+    /// and the meshes drawn.
     #[test]
-    fn python_gizmo_replays() {
-        let Ok(dir) = std::env::var("GLOVEBOX_ORACLE") else {
-            println!("skipped: GLOVEBOX_ORACLE is not set");
+    fn gizmo_replays_the_reference() {
+        let Ok(dir) = std::env::var("GLOVEBOX_REFERENCE") else {
+            println!("skipped: GLOVEBOX_REFERENCE is not set");
             return;
         };
         let text = std::fs::read(format!("{dir}/render/out/gizmo.json")).unwrap();

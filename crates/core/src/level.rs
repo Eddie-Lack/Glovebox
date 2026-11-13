@@ -812,7 +812,7 @@ impl<'a> Assembler<'a> {
                         _ => return err(format!("{} is not a number", what())),
                     };
                     let bits = if x.is_nan() {
-                        // Python's struct keeps the sign of a NaN
+                        // libgarib keeps the sign of a NaN
                         0x7FC0_0000 | if x.is_sign_negative() { 0x8000_0000u32 } else { 0 }
                     } else {
                         let y = x as f32;
@@ -1164,8 +1164,8 @@ pub fn parse_level_xml(xml: &[u8]) -> Result<Doc, LevelError> {
     Ok(doc)
 }
 
-/// `parse_level_xml`, the schema check and `assemble` in one step, as `assemble` of the former Python back end did:
-/// the level file, and whether it needs the game mod.
+/// `parse_level_xml`, the schema check and `assemble` in one step. It gives the level file,
+/// and whether it needs the game mod.
 pub fn assemble_xml(xml: &[u8]) -> Result<(Vec<u8>, bool), LevelError> {
     let doc = parse_level_xml(xml)?;
     let problems = validate(&doc);
@@ -1367,7 +1367,7 @@ mod tests {
         );
         let doc = level(body);
         let f = format();
-        // Skip the test's exact field names when the format changes; the oracle tests cover real levels.
+        // Skip the test's exact field names when the format changes; the reference tests cover real levels.
         let rest = f.type_by_tag("EnemyInstructionRest").unwrap();
         let enemy = f.type_by_tag("Enemy").unwrap();
         let ids: Vec<&str> = rest.fields.iter().map(|x| x.id.as_str()).collect();

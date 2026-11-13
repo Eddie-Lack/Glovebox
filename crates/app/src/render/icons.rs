@@ -1,9 +1,9 @@
 //! The round icons that stand for things without a model: a disc in the kind's colour with a black rim and a dark
 //! glyph, as a 64 by 64 texture for a sprite.
 //!
-//! The Python editor drew them with Qt's painter and the system font. Here the glyphs are shapes drawn by this
-//! module (stars, a heart, a hand, a note and so on), so the icons look the same on every computer. Letters,
-//! digits, '?' and '!' use the kit's stroke font. A glyph this module does not know is drawn as a dot.
+//! The glyphs are shapes drawn by this module (stars, a heart, a hand, a note and so on). The icons look the same
+//! on every computer. Letters, digits, '?' and '!' use the kit's stroke font. A glyph this module does not know is
+//! drawn as a dot.
 
 use glovebox_core::kit::font;
 use glovebox_editor::scene::Texture;
@@ -140,7 +140,7 @@ pub fn icon_rgba(glyph_: &str, color: [u8; 3]) -> Vec<u8> {
                 for sx in 0..SUB {
                     let p = (x as f32 + (sx as f32 + 0.5) / SUB as f32, y as f32 + (sy as f32 + 0.5) / SUB as f32);
                     let r = (p.0 - 32.0).hypot(p.1 - 32.0);
-                    // Qt's pen of width 4 on a circle of radius 26, and a glyph in #111
+                    // A rim of width 4 on a circle of radius 26, and a glyph in #111
                     let c = if r > 28.0 {
                         continue;
                     } else if r >= 24.0 {
@@ -178,7 +178,7 @@ pub fn hex_rgb(s: &str) -> [u8; 3] {
     }
 }
 
-/// The icons' textures, one for each glyph and colour (Python's `Icons`).
+/// The icons' textures, one for each glyph and colour.
 #[derive(Default)]
 pub struct Icons {
     cache: HashMap<(String, [u8; 3]), Arc<Texture>>,

@@ -1,7 +1,7 @@
 //! A JPEG decoder that gives the pixels libjpeg-turbo gives, which is what Pillow reads.
 //!
-//! Import model names a texture by a hash of its pixels, so a picture must decode to the same bytes as in the
-//! Python app. This follows libjpeg's defaults step by step: Huffman decoding (baseline and progressive), the
+//! Import model names a texture by a hash of its pixels, so a picture must decode to the same bytes on
+//! every computer. This follows libjpeg's defaults step by step: Huffman decoding (baseline and progressive), the
 //! accurate integer inverse DCT (`jidctint.c`), "fancy" chroma upsampling (`jdsample.c`) and the fixed point
 //! colour conversion (`jdcolor.c`). Arithmetic coding, lossless, 12-bit and CMYK files are refused.
 

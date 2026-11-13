@@ -1,6 +1,6 @@
 //! Reads a glTF 2.0 model for Import model: a `.glb` file, or a `.gltf` file with its data in data URIs.
 //!
-//! It reads what the former Python converter read. It takes the triangles of the default scene in world space, with
+//! It takes the triangles of the default scene in world space, with
 //! normals, texture coordinates and the material of each. The file is untrusted. Every read is checked.
 
 use serde_json::Value;
@@ -34,7 +34,7 @@ fn not_gltf<T>(why: impl std::fmt::Display) -> Result<T, ModelError> {
     err(format!("Not a glTF model: {why}"))
 }
 
-/// Python's `base64.b64decode`: characters outside the alphabet are skipped, and the padding must be right.
+/// Decodes base64. Characters outside the alphabet are skipped, and the padding must be right.
 pub fn base64(text: &str) -> Option<Vec<u8>> {
     let mut out = Vec::with_capacity(text.len() / 4 * 3);
     let (mut acc, mut bits, mut pad, mut count) = (0u32, 0u32, 0usize, 0usize);
@@ -115,7 +115,7 @@ impl Gltf {
                 let Some(size) = le32(data, at) else { return not_gltf("a chunk is cut short") };
                 let Some(kind) = data.get(at + 4..at + 8) else { return not_gltf("a chunk is cut short") };
                 at += 8;
-                // Python's slices stop at the end of the data
+                // A chunk that runs past the end of the data is cut short
                 let body = &data[at.min(data.len())..at.saturating_add(size).min(data.len())];
                 match kind {
                     b"JSON" => json = Some(body),
@@ -282,7 +282,7 @@ impl Gltf {
         let pbr = mat.get("pbrMetallicRoughness").filter(|p| p.is_object());
         let factor = pbr.and_then(|p| floats(p, "baseColorFactor"));
         let texture = pbr.and_then(|p| p.get("baseColorTexture")).filter(|t| t.is_object()).map(|t| int(t, "index"));
-        // A texture entry without an index is an index of None in Python, which is no texture
+        // A texture entry without an index is no texture
         (factor, texture.flatten(), mat.get("alphaMode").and_then(Value::as_str))
     }
 
@@ -375,7 +375,7 @@ fn det3(m: &Mat3) -> f64 {
         + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
 }
 
-/// The inverse, by the steps LAPACK takes (`getrf`, then `getri`), which is what `numpy.linalg.inv` runs.
+/// The inverse, by the steps LAPACK takes (`getrf`, then `getri`).
 fn inverse(m: &Mat3) -> Option<Mat3> {
     let mut a = *m;
     let mut piv = [0usize; 3];
@@ -450,10 +450,10 @@ fn sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-/// A vector divided by its length, as numpy does it: the length is never taken as less than 1e-9.
+/// A vector divided by its length. The length is never taken as less than 1e-9.
 fn unit(v: [f64; 3]) -> [f64; 3] {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt().max(1e-9);
-    // numpy.maximum gives NaN when the length is NaN
+    // A NaN in the vector gives NaN, not the least length
     let len = if v.iter().any(|c| c.is_nan()) { f64::NAN } else { len };
     [v[0] / len, v[1] / len, v[2] / len]
 }

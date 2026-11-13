@@ -1,9 +1,8 @@
 //! The kit's own letters: a small stroke font for the words on gravestones and signs.
 //!
-//! The Python kit drew words with Pillow's built-in font in 1-bit mode. That font is not copied here. Each letter is a
-//! few strokes on a grid 5 wide and 7 high, written below, and drawn into a cell of the size the old letter had. The
-//! table holds the old layout as numbers only (advances and cell boxes, measured by a script outside the repository
-//! in the port's test data), so words sit where they did.
+//! Each letter is a few strokes on a grid 5 wide and 7 high, written below, and drawn into a cell. The table holds
+//! the layout as numbers: advances and cell boxes. They are the measures of Pillow's built-in font at sizes 7 to 10
+//! in 1-bit mode. That font is not copied here.
 
 use super::image::{Image, Rgba};
 
@@ -167,7 +166,7 @@ pub fn draw_text(im: &mut Image, x: f64, y: f64, text: &str, colour: Rgba, size:
     }
     let first = text.chars().next().map(|c| metrics(size, c)[6]).unwrap_or(0);
     let shift = inked.iter().map(|m| m[3]).min().unwrap_or(0) - inked.iter().map(|m| m[7]).min().unwrap_or(0);
-    // Pillow rounds the pen's half pixel up.
+    // The pen's half pixel is rounded up.
     let mut pen = x as i32 + if x - x.trunc() >= 0.5 { 1 } else { 0 } + first;
     let top = y as i32 + if y - y.trunc() >= 0.5 { 1 } else { 0 };
     for c in text.chars() {

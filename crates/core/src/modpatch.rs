@@ -1,6 +1,6 @@
 //! Adds the Expansion Pak game mod (`mod/mod.json` and `mod/mod.bin`) to a built ROM, and the two small patches
-//! every built ROM can get: Easy's controls and the rows of the level table. It writes the
-//! ROM bytes and the error texts of the former Python patcher.
+//! every built ROM can get: Easy's controls and the rows of the level table. The
+//! reference tests hold the ROM bytes and the error texts.
 //!
 //! `apply_mod` checks every word it replaces, writes the loader and the hooks into the game's code, stores the mod
 //! at 12 MiB (past anything the ROM builder writes), and recomputes the header CRCs. The mod needs the Expansion
@@ -53,8 +53,8 @@ fn to_hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
-/// A string the way Python's `%r` prints it. Characters outside ASCII are kept as they are, which is what Python
-/// does for every printable one.
+/// A string in quotes for an error text, with the quote and the control characters escaped. Characters outside
+/// ASCII are kept as they are.
 fn py_repr(s: &str) -> String {
     let quote = if s.contains('\'') && !s.contains('"') { '"' } else { '\'' };
     let mut out = String::new();
@@ -412,7 +412,7 @@ pub fn apply_mod_with(
     for r in info["regions"].as_array().map_or_else(bad_json, Ok)? {
         let (off, new) = (hex(&r["rom"])?, hex_bytes(&r["new"])?);
         let (ram, why) = (r["ram"].as_str().unwrap_or("?"), r["why"].as_str().unwrap_or("?"));
-        // Python hashes what is left of a ROM that ends early, which never matches
+        // A ROM that ends early never matches
         let old = n64::bytes_at(&out, off, new.len()).ok().map(n64::sha1_hex);
         if old.as_deref() != r["old_sha1"].as_str() || old.is_none() {
             return err(format!("the ROM's code at {} isn't what the mod expects ({})", ram, why));
@@ -524,7 +524,7 @@ mod tests {
     }
 
     #[test]
-    fn python_repr() {
+    fn strings_are_quoted() {
         assert_eq!(py_repr("abc"), "'abc'");
         assert_eq!(py_repr("it's"), "\"it's\"");
         assert_eq!(py_repr("a'b\"c"), "'a\\'b\"c'");

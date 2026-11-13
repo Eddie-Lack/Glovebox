@@ -144,8 +144,8 @@ pub fn apply(ctx: &egui::Context, th: &'static Theme) {
         v.panel_fill = th.bg;
         v.window_fill = th.popup;
         v.window_stroke = Stroke::new(th.popup_edge.0, th.popup_edge.1);
-        v.window_corner_radius = CornerRadius::ZERO;
-        v.menu_corner_radius = CornerRadius::ZERO;
+        v.window_corner_radius = CornerRadius::same(th.round);
+        v.menu_corner_radius = CornerRadius::same(th.round);
         v.popup_shadow = Shadow { offset: [3, 3], blur: 0, spread: 0, color: th.popup_shadow };
         v.window_shadow = v.popup_shadow;
         v.extreme_bg_color = th.trough;
@@ -167,7 +167,7 @@ pub fn apply(ctx: &egui::Context, th: &'static Theme) {
             state.weak_bg_fill = face;
             state.bg_stroke = Stroke::new(1.0, th.line);
             state.fg_stroke = Stroke::new(1.0, th.text);
-            state.corner_radius = CornerRadius::ZERO;
+            state.corner_radius = CornerRadius::same(th.round.min(5));
             state.expansion = 0.0;
         }
         w.hovered.fg_stroke = Stroke::new(1.0, th.hover_text);
@@ -238,7 +238,7 @@ impl StyleProvider<ButtonStyle> for Look {
                 (false, true) => (th.hover.fill, th.hover.text),
                 (false, false) => (Color32::TRANSPARENT, th.text),
             };
-            let frame = egui::Frame { fill, inner_margin: margin, ..Default::default() };
+            let frame = egui::Frame { fill, inner_margin: margin, corner_radius: CornerRadius::same(row_radius(th) as u8), ..Default::default() };
             return body(frame, color, if selected { bold() } else { FontFamily::Proportional });
         }
         // A push button
@@ -319,6 +319,11 @@ impl StyleProvider<SeparatorStyle> for Look {
     }
 }
 
+/// The corner radius of the band of a chosen row and of the row under the pointer.
+pub fn row_radius(th: &Theme) -> f32 {
+    th.round.min(4) as f32
+}
+
 /// The arrow of a combo box, in the colour of its button's text.
 pub fn combo_icon(ui: &Ui, rect: Rect, visuals: &egui::style::WidgetVisuals, open: bool) {
     let th = theme(ui.ctx());
@@ -381,7 +386,7 @@ pub fn border(painter: &egui::Painter, rect: Rect) {
         }
         Border::Lines(lines) => {
             for (i, (inset, width)) in lines.iter().enumerate() {
-                painter.rect_stroke(rect.shrink(*inset), 0.0, Stroke::new(*width, c[i.min(3)]), egui::StrokeKind::Inside);
+                painter.rect_stroke(rect.shrink(*inset), (th.round as f32 - inset).max(0.0), Stroke::new(*width, c[i.min(3)]), egui::StrokeKind::Inside);
             }
         }
     }
@@ -390,7 +395,7 @@ pub fn border(painter: &egui::Painter, rect: Rect) {
 /// A box in the theme's frame: the setup screen and the dialogs use it.
 pub fn framed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
     let th = theme(ui.ctx());
-    let out = egui::Frame::new().fill(th.bg).inner_margin(Margin::same(RIDGE as i8)).show(ui, add);
+    let out = egui::Frame::new().fill(th.bg).corner_radius(th.round).inner_margin(Margin::same(RIDGE as i8)).show(ui, add);
     border(ui.painter(), out.response.rect);
     out.inner
 }
@@ -398,11 +403,43 @@ pub fn framed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
 /// A filled box with the theme's frame round it: the note in the middle of the 3D view.
 pub fn plaque(painter: &egui::Painter, rect: Rect) {
     let outer = rect.expand(RIDGE);
-    painter.rect_filled(outer, 0.0, theme(painter.ctx()).bg);
+    let th = theme(painter.ctx());
+    painter.rect_filled(outer, th.round as f32, th.bg);
     border(painter, outer);
 }
 
 /// The theme's fine grid behind a panel's content, when it has one.
+/// Shows a panel's contents in the room the panel has now. The contents cannot make the panel larger: what
+/// does not fit is clipped. A panel's size then comes from its default and from drags on its edge only.
+pub fn fixed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
+    let rect = ui.available_rect_before_wrap();
+    ui.set_min_size(rect.size());
+    let mut child = ui.new_child(egui::UiBuilder::new().id_salt("fixed").max_rect(rect).layout(egui::Layout::top_down(egui::Align::Min)));
+    child.shrink_clip_rect(rect);
+    add(&mut child)
+}
+
+/// Notes how much wider than its room a scroll area's content was. `overflow` gives the largest so far.
+pub fn fits<R>(ui: &Ui, name: &'static str, out: &egui::scroll_area::ScrollAreaOutput<R>) {
+    let over = out.content_size.x - out.inner_rect.width();
+    let id = egui::Id::unique("panel overflow");
+    ui.data_mut(|d| {
+        let worst = d.get_temp_mut_or(id, (0.0f32, ""));
+        if over > worst.0 {
+            *worst = (over, name);
+        }
+    });
+}
+
+/// The largest overflow `fits` saw since the last `reset_overflow`, in points, and the scroll area's name.
+pub fn overflow(ctx: &egui::Context) -> (f32, &'static str) {
+    ctx.data(|d| d.get_temp(egui::Id::unique("panel overflow"))).unwrap_or((0.0, ""))
+}
+
+pub fn reset_overflow(ctx: &egui::Context) {
+    ctx.data_mut(|d| d.insert_temp(egui::Id::unique("panel overflow"), (0.0f32, "")));
+}
+
 pub fn ground(ui: &Ui) {
     if let Some((fine, coarse)) = theme(ui.ctx()).grid {
         let rect = ui.max_rect();
@@ -678,6 +715,15 @@ fn bar_shape(th: &Theme, rect: Rect, text: Rect, rank: Rank) -> egui::Shape {
         Bar::Solid => {
             shapes.extend([fill(rect, th.bar_fill), fill(rows(rect.min.y, rect.min.y + 1.0), light), fill(rows(rect.max.y - 1.0, rect.max.y), dark)]);
         }
+        Bar::Soft => match rank {
+            Rank::Panel => shapes.extend([fill(rect, th.bar_fill), fill(rows(rect.max.y - 1.0, rect.max.y), dark)]),
+            Rank::Card => {
+                // The strip is inside the card's line
+                let r = th.round.saturating_sub(1);
+                shapes.push(egui::Shape::rect_filled(rect, CornerRadius { nw: r, ne: r, sw: 0, se: 0 }, th.bar_fill));
+            }
+            Rank::Small => shapes.push(fill(rows(rect.max.y - 1.0, rect.max.y), light)),
+        },
         Bar::Plate => {
             shapes.push(fill(rect, th.bar_fill));
             if rank == Rank::Panel {
@@ -1065,13 +1111,21 @@ pub fn tick_box(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32
             bevel(painter, square, th.bevel, !r.is_pointer_button_down_on());
         } else {
             let line = if r.hovered() { th.hover_text } else { th.button.edge };
-            painter.rect_filled(square, th.radius as f32, if checked { lit } else { th.field_tone.fill });
-            painter.rect_stroke(square, th.radius as f32, Stroke::new(1.0, line), egui::StrokeKind::Inside);
+            let radius = th.radius.min(4) as f32;
+            painter.rect_filled(square, radius, if checked { lit } else { th.field_tone.fill });
+            painter.rect_stroke(square, radius, Stroke::new(1.0, line), egui::StrokeKind::Inside);
         }
         if checked {
-            // The tick: black on a light box, white on a dark one
+            // The tick: black on a light box, white on a dark one. A box in the colour of the main action takes
+            // the colour of that button's letters.
             let c = square.center();
-            let dark = if lit.r() as u32 + lit.g() as u32 + lit.b() as u32 > 200 { Color32::BLACK } else { Color32::WHITE };
+            let dark = if lit == th.primary.fill {
+                th.primary.text
+            } else if lit.r() as u32 + lit.g() as u32 + lit.b() as u32 > 200 {
+                Color32::BLACK
+            } else {
+                Color32::WHITE
+            };
             let pts = vec![c + egui::vec2(-3.5, 0.0), c + egui::vec2(-1.0, 2.5), c + egui::vec2(3.5, -3.0)];
             painter.add(egui::Shape::line(pts, Stroke::new(2.0, dark)));
         }
@@ -1162,7 +1216,7 @@ fn mark(painter: &egui::Painter, th: &Theme, level: &str, at: Rect) {
 /// when it was clicked.
 pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: Option<&(String, String)>, sub: Option<&str>, title: Option<&str>) -> bool {
     let th = theme(ui.ctx());
-    let frame = egui::Frame::new().fill(th.panel).stroke(Stroke::new(1.0, th.card_edge)).inner_margin(Margin { left: 22, right: 8, top: 4, bottom: 4 });
+    let frame = egui::Frame::new().fill(th.panel).stroke(Stroke::new(1.0, th.card_edge)).corner_radius(th.round).inner_margin(Margin { left: 22, right: 8, top: 4, bottom: 4 });
     let out = frame.show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.spacing_mut().item_spacing.y = 2.0;
@@ -1196,7 +1250,7 @@ pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: O
         let whole = ui.interact(rect, ui.scope_id().with(("chk", rect.min.y as i32, text.len())), egui::Sense::click());
         clicked |= whole.clicked();
         if whole.hovered() {
-            ui.painter().rect_stroke(rect, 0.0, Stroke::new(1.0, th.hover_text), egui::StrokeKind::Inside);
+            ui.painter().rect_stroke(rect, th.round as f32, Stroke::new(1.0, th.hover_text), egui::StrokeKind::Inside);
         }
         // The tooltip is on the area that takes the click: it lies over the box
         let whole = whole.on_hover_cursor(egui::CursorIcon::PointingHand);
@@ -1222,12 +1276,12 @@ pub fn meter(ui: &mut Ui, ratio: f32, over: bool) {
 
 /// The frame of a box that is not a card: the same fill and line.
 pub fn boxed(th: &Theme, fill: Color32) -> egui::Frame {
-    egui::Frame::new().fill(fill).stroke(Stroke::new(1.0, th.card_edge))
+    egui::Frame::new().fill(fill).stroke(Stroke::new(1.0, th.card_edge)).corner_radius(th.round)
 }
 
 /// The frame of a chip over the 3D view. An edited level's chip has a line in the colour of "edited".
 pub fn chip(th: &Theme, edited: bool) -> egui::Frame {
-    egui::Frame::new().fill(th.chip.fill).stroke(Stroke::new(1.0, if edited { th.chip_edited } else { th.chip.edge }))
+    egui::Frame::new().fill(th.chip.fill).stroke(Stroke::new(1.0, if edited { th.chip_edited } else { th.chip.edge })).corner_radius(th.round)
 }
 
 /// The width a row of buttons with these texts takes.
@@ -1361,7 +1415,7 @@ pub fn name(r: &Response, label: &str) {
     }
 }
 
-/// Python's float(): a number, or None.
+/// The text as a number, or None.
 pub fn parse_f64(s: &str) -> Option<f64> {
     glovebox_core::pyfmt::parse_float(s.trim())
 }

@@ -1,5 +1,5 @@
 //! What is around the window: the options, the user folder with its marker, lock and log, the ROM copy, the
-//! graphics adapter and the self-test. It does what the former Python app's launcher did.
+//! graphics adapter and the self-test.
 //!
 //! The user folder holds `rom/glover.z64` (the checked copy of the player's ROM), `drafts/`, `custom/`,
 //! `settings.ini`, `test/` and `editor.log`. The app only uses a new or empty folder, or one it marked before
@@ -142,19 +142,6 @@ pub fn message(text: &str) {
     log(text);
     if std::env::var_os("GLOVEBOX_NO_MESSAGE_BOX").is_none() {
         let _ = rfd::MessageDialog::new().set_title("Glovebox").set_description(text).set_buttons(rfd::MessageButtons::Ok).show();
-    }
-}
-
-/// Deletes what only the Python app made in the user folder.
-pub fn remove_python_leftovers(home: &Path) {
-    for d in ["data", "cache", "web"] {
-        if home.join(d).is_dir() {
-            log(&format!("Removing {d}/ of an older version of the app."));
-            let _ = std::fs::remove_dir_all(home.join(d));
-        }
-    }
-    for f in ["config.json", "prepared.json"] {
-        let _ = std::fs::remove_file(home.join(f));
     }
 }
 

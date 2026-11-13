@@ -8,7 +8,7 @@
  * MTX_RESERVE free (the opaque pass draws the nearest first, so the far ones go; the glove and the ball may use the reserve), and a
  * shadow or footprint when none is free.
  * modPeakMatrices is the most matrices a frame asked for (the skipped ones included), modSkippedDraws the draws skipped;
- * tools/draw_load_check.py reads both (mod.json).
+ * mod.json has the addresses of both, for tests in the emulator.
  *
  * Its hooks are installed at run time by Mod_InitGuard, only with an Expansion Pak. The ROM's code does not change for them. The call
  * sites come from tools/build_mod.py (sites.h).

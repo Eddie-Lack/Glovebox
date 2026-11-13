@@ -1,6 +1,5 @@
-//! The kit's graveyard props: gravestone, pumpkin, candles, coffin, fence, dead trees and cobweb. A port of the former Python kit's
-//! gravestone.py, pumpkin.py, candles.py, coffin.py, fence.py, tree.py and web.py. Every random number is drawn
-//! in the same order as there.
+//! The kit's graveyard props: gravestone, pumpkin, candles, coffin, fence, dead trees and cobweb. The order in
+//! which the random numbers are drawn is fixed: it decides each model's shape.
 
 use super::image::{Image, Rgba};
 use super::meshkit::{self as mk, add, mul, norm, v3, Lathe, Place, Soup, Tube, Uv, V3, BRIGHT};
@@ -17,7 +16,7 @@ fn pts(p: &[(i32, i32)]) -> Vec<(f64, f64)> {
 }
 
 // ---------------------------------------------------------------------------------------------
-// gravestone.py
+// Gravestone
 
 /// The front of a gravestone (32x64): stone, a border, a crack, the words and blood drips.
 pub fn grave_front(lines: &[String], seed: u64) -> Image {
@@ -77,7 +76,7 @@ pub fn stone_soup(lines: &[String], lean: f64, seed: u64) -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// pumpkin.py
+// Pumpkin
 
 /// The carved face (64x32), lit from inside. `kind` is 0 to 7.
 pub fn pumpkin_face(kind: usize) -> Image {
@@ -203,7 +202,7 @@ pub fn build_pumpkin(kind: usize) -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// candles.py
+// Candles
 
 /// Three melted candles with flames and a pool of wax.
 pub fn build_candles() -> Soup {
@@ -227,7 +226,7 @@ pub fn build_candles() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// coffin.py
+// Coffin
 
 const COFFIN: [(f64, f64); 6] = [(-9.0, -6.0), (9.0, -6.0), (15.0, 14.0), (8.0, 62.0), (-8.0, 62.0), (-15.0, 14.0)];
 
@@ -255,7 +254,7 @@ pub fn build_coffin() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// fence.py
+// Fence
 
 /// A broken fence, 150 long along x.
 pub fn build_fence() -> Soup {
@@ -304,7 +303,7 @@ pub fn build_fence() -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// tree.py
+// Dead trees
 
 fn tree_bark(seed: u64) -> Image {
     let mut rnd = Random::new(seed);
@@ -377,7 +376,7 @@ pub fn build_tree(seed: u64, height: f64, crooked: f64) -> Soup {
 }
 
 // ---------------------------------------------------------------------------------------------
-// web.py
+// Cobweb
 
 /// A cobweb: white thread on a clear picture (32x32).
 pub fn web_tex() -> Image {

@@ -61,7 +61,6 @@ pub fn run(args: shell::Args) -> i32 {
     if args.reset {
         shell::reset(&home);
     }
-    shell::remove_python_leftovers(&home);
 
     let backend: Option<Arc<dyn glovebox_core::backend::Backend>> = args.fixture.then(|| Arc::new(glovebox_editor::fixture::FixtureBackend::new()) as _);
     let (w, h) = (256, 256);

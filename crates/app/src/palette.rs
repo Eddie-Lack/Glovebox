@@ -12,6 +12,8 @@ use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
+const NEW_OBJECTS: &str = "New objects appear where the view’s centre meets the ground.";
+
 pub const TABS: [&str; 6] = ["Collectables", "Enemies", "Models", "Kit", "Presets", "Camera"];
 
 #[derive(Default)]
@@ -195,10 +197,15 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     });
     let strip = strip.response.rect;
     let mut px = Px { w, acts: Vec::new(), intro: None };
-    // Room for the note under the list
-    let foot = if style::info(ui.ctx()) == style::Info::Shown { 26.0 } else { 0.0 };
+    // Room for the note under the list. A narrow panel wraps it.
+    let foot = if style::info(ui.ctx()) == style::Info::Shown {
+        let galley = ui.painter().layout(NEW_OBJECTS.to_string(), egui::TextStyle::Body.resolve(ui.style()), egui::Color32::PLACEHOLDER, ui.available_width());
+        galley.size().y + ui.spacing().item_spacing.y + 4.0
+    } else {
+        0.0
+    };
     let tab = px.w.palette.tab;
-    egui::ScrollArea::vertical().id_salt(("palette", tab)).auto_shrink([false, false]).max_height((ui.available_height() - foot).max(60.0)).show(ui, |ui| {
+    let out = egui::ScrollArea::vertical().id_salt(("palette", tab)).auto_shrink([false, false]).max_height((ui.available_height() - foot).max(60.0)).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 6.0;
         egui::Frame::new().inner_margin(egui::Margin { left: 2, right: 8, top: 2, bottom: 4 }).show(ui, |ui| match tab {
             0 => collect(&mut px, ui),
@@ -228,11 +235,12 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             }
         });
     });
+    style::fits(ui, "palette", &out);
     // The tab's note belongs to its button, the note about new objects to the row of tabs
     if let Some(text) = px.intro {
         style::para_on(ui, open, None, text);
     }
-    style::para_on(ui, strip, None, "New objects appear where the view’s centre meets the ground.");
+    style::para_on(ui, strip, None, NEW_OBJECTS);
     px.w.palette.shown_tab = Some(tab);
     let acts = px.acts;
     w.acts.extend(acts);
@@ -548,12 +556,18 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
                         let Some(vals) = px.w.palette.kit_vals.get_mut(&id) else { return };
                         for p in &params {
                             let (pkey, label) = (st(p, "key"), st(p, "label"));
-                            ui.horizontal(|ui| {
-                                style::fieldname(ui, &label);
+                            let line = ui.available_width();
+                            ui.horizontal_wrapped(|ui| {
+                                // A name longer than the line wraps
+                                ui.add(egui::Label::new(RichText::new(&label).monospace().size(12.0).color(style::theme(ui.ctx()).muted)).wrap());
+                                // The field takes the room the name leaves, up to 130 points. After a long name it
+                                // goes on a line of its own.
+                                let left = ui.max_rect().right() - ui.cursor().left() - 10.0;
+                                let room = if left >= 60.0 { left.min(130.0) } else { (line - 10.0).clamp(40.0, 130.0) };
                                 if st(p, "kind") == "choice" {
                                     let labels: Vec<String> = p.get("extra").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default();
                                     let cur = vals.get(&pkey).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).and_then(|v| v.parse::<usize>().ok()).unwrap_or(1);
-                                    let r = egui::ComboBox::from_id_salt(&pkey).icon(style::combo_icon).selected_text(labels.get(cur.saturating_sub(1)).cloned().unwrap_or_default()).width(130.0).show_ui(ui, |ui| {
+                                    let r = egui::ComboBox::from_id_salt(&pkey).icon(style::combo_icon).selected_text(labels.get(cur.saturating_sub(1)).cloned().unwrap_or_default()).width(room).truncate().show_ui(ui, |ui| {
                                         for (i, l) in labels.iter().enumerate() {
                                             if ui.selectable_label(cur == i + 1, l).clicked() {
                                                 vals.insert(pkey.clone(), Value::String((i + 1).to_string()));
@@ -568,9 +582,9 @@ fn kit_tab(px: &mut Px, ui: &mut egui::Ui) {
                                     // A number changes by dragging too. A text is typed only.
                                     let (r, edited) = if st(p, "kind") == "number" {
                                         let spec = crate::numfield::Spec::for_text(&text);
-                                        crate::numfield::bound(ui, ui.scope_id().with(&pkey), &mut text, spec, |t| t.desired_width(130.0))
+                                        crate::numfield::bound(ui, ui.scope_id().with(&pkey), &mut text, spec, |t| t.desired_width(room))
                                     } else {
-                                        let r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(130.0));
+                                        let r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(room));
                                         let edited = r.changed();
                                         (r, edited)
                                     };

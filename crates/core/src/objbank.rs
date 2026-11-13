@@ -481,7 +481,7 @@ pub struct GeometryParts<'a> {
 pub struct Linker<'a> {
     segs: Vec<Segment<'a>>,
     order: [Vec<SegId>; 8],
-    /// The directory: object ids and their actor segments, in the order of a Python dict
+    /// The directory: object ids and their actor segments, in the order they were added
     actors: Vec<(u32, SegId)>,
 }
 
@@ -1048,7 +1048,7 @@ fn geometry_prims(
 /// The model of one parsed object, as libgarib's glTF export with a scale of 1 gives it. `data` is the bank the
 /// object was parsed from. `textures` gives the size of a texture the level's texture banks hold, or none.
 ///
-/// An error means libgarib does not export the object, and the Python editor had no model for it: a mesh without
+/// An error means libgarib does not export the object, and the editor has no model for it: a mesh without
 /// a display list uses a texture that `textures` does not know, or the object lacks a part the export needs.
 pub fn object_model(
     data: &[u8],
@@ -1210,7 +1210,7 @@ pub fn model(
 /// size of a texture that some texture bank of the game holds, or none.
 ///
 /// The set is empty when libgarib does not export the object with those textures (see `object_model`): the
-/// Python editor read the ids from the exported model. A display list or a sprite may name a texture that no
+/// ids are those of the exported model. A display list or a sprite may name a texture that no
 /// bank holds; that id is in the set.
 pub fn texture_ids(
     bank: &Bank,

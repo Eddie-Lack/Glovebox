@@ -1,6 +1,5 @@
-//! The app's settings file, `settings.ini` in the user folder. It holds the keys the Python app kept in its
-//! QSettings file: `scene`, `fog`, `triggers`, `saveDir` and `emulator`, as `key=value` lines. `exits`, `theme`
-//! and `info` are new here.
+//! The app's settings file, `settings.ini` in the user folder. It holds `key=value` lines: `scene`, `fog`,
+//! `triggers`, `saveDir`, `emulator`, `exits`, `theme` and `info`.
 
 use glovebox_editor::editor::Settings;
 use std::collections::BTreeMap;
@@ -11,7 +10,7 @@ pub struct IniSettings {
     values: BTreeMap<String, String>,
 }
 
-/// Qt writes a backslash as two, and quotes a value with spaces or commas.
+/// Reads a value `escape` wrote: a backslash is written as two, and a value with spaces or commas is in quotes.
 fn unescape(v: &str) -> String {
     let v = v.trim();
     let v = v.strip_prefix('"').and_then(|x| x.strip_suffix('"')).unwrap_or(v);

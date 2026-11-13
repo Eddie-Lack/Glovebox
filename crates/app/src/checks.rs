@@ -21,7 +21,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     if !w.ed.has_level {
         return;
     }
-    egui::ScrollArea::vertical().id_salt("checks").auto_shrink([false, false]).show(ui, |ui| {
+    let out = egui::ScrollArea::vertical().id_salt("checks").auto_shrink([false, false]).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 4.0;
         style::h4(ui, "CHECKS");
         let mut click: Option<Click> = None;
@@ -35,6 +35,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         }
         imports(w, ui);
     });
+    style::fits(ui, "checks", &out);
 }
 
 /// A bar that fills with the share of the free memory the imports take.

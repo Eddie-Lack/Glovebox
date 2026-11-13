@@ -117,7 +117,7 @@ impl Editor {
         }
     }
 
-    /// The mean of the entities' positions, summed as Python's `sum` did.
+    /// The mean of the entities' positions, summed in the order of `set`.
     pub(crate) fn centre_of(&self, set: &[EntId]) -> V3 {
         let mut c = [0.0; 3];
         for &i in set {

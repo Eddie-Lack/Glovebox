@@ -1,5 +1,4 @@
-//! The editor on the fixture, without a ROM: the checks of the former Python editor's test that need no widgets, under
-//! the same names.
+//! The editor on the fixture, without a ROM: the checks that need no widgets.
 
 use glovebox_core::backend::Backend;
 use glovebox_editor::drafts::Drafts;
