@@ -134,7 +134,8 @@ nothing else. The program never runs them.
     hairline under a small heading). A switch that is on is a tint of the main colour with a line and bold letters
     in it. The main action and the chosen row are filled with the main colour. A ticked box is too, with a tick in
     the colour of the main action's letters. Good, warning and bad are a green, an amber and a red that suit the
-    palette. Coral's bad is a crimson, apart from its coral.
+    palette. Coral's bad is a crimson, apart from its coral. The 3D view of a level without fog is a dark tone
+    of the palette.
   - `Theme::disabled` is how much of a control that cannot be used is left (egui's `disabled_alpha`). The styled
     themes have 0.55. The plain ones have 0.6 or 0.62 and the palette ones 0.6 to 0.71: their disabled text keeps a
     contrast of 4.5.

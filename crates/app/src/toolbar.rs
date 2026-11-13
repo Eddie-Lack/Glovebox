@@ -114,7 +114,7 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let info = style::info(ui.ctx());
     let (mut theme, mut notes) = (None, None);
     let (r, _) = egui::containers::menu::MenuButton::new("Options").ui(ui, |ui| {
-        ui.set_min_width(150.0);
+        ui.set_width(238.0);
         style::h4(ui, "Theme");
         // Two columns: the default, the plain and the styled themes, then the palette themes
         use crate::theme::{PALETTES, THEMES};
