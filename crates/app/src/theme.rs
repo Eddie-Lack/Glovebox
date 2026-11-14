@@ -48,7 +48,7 @@ pub enum Shape {
     Bevel,
     /// A molded key: a line around it and a thick lip under it. The lip goes while it is held or on.
     Key,
-    /// A hairline round a flat face.
+    /// A hairline around a flat face.
     Outline,
 }
 
@@ -195,7 +195,7 @@ pub struct Theme {
     pub deep: Color32,
     /// Wells: the pictures of the palette.
     pub well: Color32,
-    /// The line round a card. `NONE` for no line.
+    /// The line around a card. `NONE` for no line.
     pub card_edge: Color32,
     /// A hairline under each line of the Checks panel, for a theme without boxes.
     pub ruled: Color32,

@@ -92,7 +92,7 @@ pub const STEPS: [Step; 12] = [
     Step { title: "Selecting", text: "Click a thing in the view, or in this list. Its numbers show in the Inspector on the right", target: Target::LevelPanel, show: Show::Selection },
     Step { title: "Move, Rotate, Scale", text: "W, E and R pick the tool. Drag its handles in the view, or drag a number in the Inspector sideways", target: Target::Tools, show: Show::Selection },
     Step { title: "+ Add", text: "Collectables, enemies, models from any level and the kit. Pick one and it's in your level. A opens this too", target: Target::Add, show: Show::AddPanel },
-    Step { title: "The Inspector", text: "What you selected, on cards: a platform's commands, an enemy's script. Select nothing for the level's settings and its puzzles", target: Target::Inspector, show: Show::Selection },
+    Step { title: "The Inspector", text: "What you selected, on cards: a platform's commands, an enemy's script. Deselect everything for the level's settings and its puzzles", target: Target::Inspector, show: Show::Selection },
     Step { title: "Checks", text: "The game's own rules, checked after every edit. Click a line to see the spot", target: Target::Checks, show: Show::Plain },
     Step { title: "Test level and Build ROM", text: "Test level opens your level in your emulator. Build ROM saves a ROM. With boot here it starts in this level", target: Target::Build, show: Show::Plain },
     Step { title: "Export patch", text: "A patch is how you share a level. Patcher ↗ at the end of the row opens the page players patch their ROM with", target: Target::Patch, show: Show::Plain },
