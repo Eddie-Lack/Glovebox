@@ -771,7 +771,7 @@ impl Editor {
             let n = format_of(be.decomp()).make(&mut ed.doc, tag, &attrs);
             ed.insert_first(&[n]);
         });
-        self.set_status(&format!("Added {}. Its fields are in the Level settings list (with nothing selected).", what), "ok");
+        self.set_status(&format!("Added {}. Its fields are in the Level settings list (deselect everything to see it).", what), "ok");
     }
 
     /// A platform tag no platform has. The mod reads 77 (rings) and 99 (the entry zone).
