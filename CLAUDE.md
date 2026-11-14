@@ -91,7 +91,7 @@ cargo run -p glovebox-core --example gbtool -- hwcheck ROM     # a built ROM aga
   `make`. Make the ROM to test with `gbtool build`. Give every new ROM a new file name: the harness keeps data for a
   ROM by its name. Use angrylion (the default) for screenshots; rice sometimes draws black, and is fine for reading
   memory.
-- The emulator always has the Expansion Pak, and it forgives what a console refuses.
+- The emulator always has the Expansion Pak. It also runs ROMs that freeze a console (docs/technical.md, "Real hardware").
 
 ## Building
 
@@ -102,7 +102,7 @@ cargo build --release -p glovebox                                # the app: targ
 ```
 
 - The app is one program with everything compiled in: the tables in `crates/core/data/`, `mod/mod.bin` and
-  `mod/mod.json`. `APP_VERSION` sets the version it reports (`--version`); without it, Cargo.toml's.
+  `mod/mod.json`. `APP_VERSION` sets the version it reports (`--version`); without it, the app reports the version in Cargo.toml.
 - `build_mod.py` needs a built gloveworld and `mips-linux-gnu` binutils. Commit its two outputs with the change.
 - The tables in `crates/core/data/` are committed. Developer tools in `tools/` write them again after a change to
   their sources: `gen_formats.py` and `gen_rom_map.py` (from `formats/`), `build_xref.py --gloveworld DIR` and

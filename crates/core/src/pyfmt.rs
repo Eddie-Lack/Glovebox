@@ -1,4 +1,4 @@
-//! Numbers as text, the way the level XML has always written and read them.
+//! Numbers as text, the way libgarib's level XML writes and reads them.
 //!
 //! libgarib, a Python library, defined the level XML. Its floats are Python's `repr` of a double ("1.0",
 //! "0.05000000074505806", "1e-05"), and its integers above 10000 are hex. These functions write and read the same text.

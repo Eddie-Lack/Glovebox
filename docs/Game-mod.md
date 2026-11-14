@@ -2,9 +2,9 @@ _Back to [README](../README.md)_
 
 # The Expansion Pak game mod
 
-Automatically added if your level uses any of the things below
+The editor adds the mod by itself when your level uses any of the things below
 
-## What it does
+## What the mod adds
 
 - Rotation and scale for enemies, platforms, powerups and water (the retail game only does it for landscape and background actors)
 - A bigger heap: 3,968 KB more memory for the level
@@ -13,7 +13,7 @@ Automatically added if your level uses any of the things below
 
 Note: animated textures in those extra banks don't animate
 
-## When you get it
+## When the editor adds it
 
 `Build ROM` and `Export patch` add the mod when your level:
 
@@ -22,7 +22,9 @@ Note: animated textures in those extra banks don't animate
 - has more scenery than the game's own memory holds
 - is an extra level
 
-The checks panel, the import panel and the export dialog will say when it gets added, and other levels are built like normal
+`Checks` and the export dialog will say when it gets added
+
+Other levels are built like normal
 
 ## Extra levels
 
@@ -37,14 +39,14 @@ The glove going into the entry zone takes you to the Space way room, with your e
 
 - Progress in the extra levels is saved apart from the shipped Space levels
 - Every other portal takes you back to the shipped game
-- Checkpoint rings you add after checking `Extra level` count when the ball rolls through them
+- A checkpoint ring that you add after you check `Extra level` counts when the ball rolls through it
 
-Note: the entry zone only works once the hub's portals do
+Note: the entry zone only works once the hub's portals work
 
 ## Limits
 
 - Garibs and Mr. Tip are flat sprites. Spawn points are points. None of them rotate
 - Boss enemies are tied to their arenas
-- Bullets and other projectiles of an enemy from another world can sometimes be invisible
+- Bullets and other projectiles of an enemy from another world are sometimes invisible
 
 _See [Technical notes](technical.md) for how it works_

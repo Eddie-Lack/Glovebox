@@ -337,7 +337,7 @@ impl Window {
     fn on_scene_loaded(&mut self) {
         let ed = &self.ed;
         let name = ed.scene.as_ref().map(|x| s(x, "name").to_string()).unwrap_or_default();
-        self.hud_level = format!("{} — {}", name, ed.doc.attr(ed.doc.root(), "name"));
+        self.hud_level = format!("{} · {}", name, ed.doc.attr(ed.doc.root(), "name"));
         self.status_size = ed.orig_lev_size.map(|n| format!("{n} B .lev (original)")).unwrap_or_default();
         self.view.forget_level();
         self.inspector = inspector::State::default();
@@ -556,9 +556,9 @@ impl Window {
         let imports = self.ed.current_imports();
         if matches!(fmt_, "rom" | "bps") {
             let what = if imports.is_empty() {
-                "Assembling the level and patching the ROM with libgarib".to_string()
+                "Assembling the level and patching the ROM".to_string()
             } else {
-                format!("Importing {} model(s) and patching the ROM with libgarib", imports.len())
+                format!("Importing {} model(s) and patching the ROM", imports.len())
             };
             self.set_status(&format!("{what}{}", if fmt_ == "bps" { ", then diffing it against the original…" } else { "…" }), "");
         }

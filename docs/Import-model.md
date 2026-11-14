@@ -4,7 +4,7 @@ _Back to the [README](../README.md)_
 
 `Import model…` (in `+ Add`, `Models`) turns a model from another game or a 3D program into Glover models
 
-Glover can draw it and stand on it
+The game draws it and Glover can stand on it
 
 ## What you need
 
@@ -14,11 +14,11 @@ Glover can draw it and stand on it
 - Textures can be PNG or JPEG
 - A map from another N64 game has to be ripped first, for example from an emulator or its decompilation
 
-## How it goes
+## Importing a model
 
 1. Choose the file, name it and set the scale
 2. The dialog shows the triangles, how many pieces it becomes and its size next to the level
-3. Press `Import and place`
+3. Click `Import and place`
 4. All the pieces appear as Scenery at the center of the view, in one undo step
 
 - A model over 1,500 triangles is cut into pieces along its longest side
@@ -29,13 +29,13 @@ Glover can draw it and stand on it
 
 Each piece is also in the model list, for use as Background or Platform
 
-Imported models are kept in the editor's user folder (`custom/`) and are in every level
+Imported models are kept in the editor's user folder (`custom/`) and you can use them in every level
 
 ## Limits
 
 - 200,000 triangles and 64 MB per file
 - No vertex colors, animation, skinning, or more than one texture per material
-- A few rare kinds of JPEG are refused: arithmetic-coded, CMYK and 12-bit ones. Save the texture as PNG instead
+- The editor can't read a few rare kinds of JPEG: arithmetic-coded, CMYK and 12-bit ones. Save the texture as PNG instead
 - Enemies, doors, water and scripts from another game don't carry over. Rebuild them with Glover's objects and puzzles
 - A big map can need more memory than the game has, even with the Expansion Pak. The budget under `Checks` shows it
 - On a real console, don't use an imported model as a Platform. Use Scenery or Background

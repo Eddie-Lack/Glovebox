@@ -172,9 +172,9 @@ fn read_xml(w: &Window, d: &mut ImportXml, path: &Path) {
     for i in &ids {
         let name = ed.scenes.iter().find(|x| s(x, "id") == i).map(|x| s(x, "name")).unwrap_or("");
         let why = if matches.contains(i) {
-            " — matches this file"
+            " · matches this file"
         } else if *i == here {
-            " — current level"
+            " · current level"
         } else {
             ""
         };
@@ -209,7 +209,7 @@ pub fn open_patch_dialog(w: &mut Window) {
     } else if game > 0 {
         lines.push(("note", format!("Uses {game} model(s) from other levels. The patch then contains this level’s rebuilt model bank ({obj_bank}) and texture bank ({tex_bank}) in full, game data included. It is much larger than a plain edit.")));
     } else if custom == 0 {
-        lines.push(("ok", "No imported models: the patch is a true diff and contains only what your edits add.".to_string()));
+        lines.push(("ok", "No imported models: the patch contains only what your edits add.".to_string()));
     }
     if !ed.mod_users().is_empty() {
         lines.push(("note", "Rotates or scales enemies, platforms, powerups or water. The patch adds the Expansion Pak game mod (about 5 KB). Players need the Expansion Pak; without one the game skips those rotations and scales.".to_string()));

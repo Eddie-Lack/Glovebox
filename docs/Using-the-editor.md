@@ -37,14 +37,14 @@ Note: while you fly, those keys move the camera. Use the toolbar for Move and + 
 - `B` (or `Box select`) drags a box
 - `Ctrl+A` selects everything visible except landscape
 - `W` `E` `R` switch the gizmo between move, rotate and scale
-- The inspector has number fields. With several objects it has "move / rotate / scale by"
+- The inspector has number fields. With several objects selected it has `move by`, `rotate by` and `scale by`
 - Drag left or right on a number field to change it. Hold `Shift` for finer steps, `Ctrl` for bigger ones. `Esc` puts the old number back
 - Click a number field to type in it
 - `Pivot` is the group's center or each object's own origin
 - Shift+click the ground to drop a garib
 - Undo, redo, duplicate and delete work on the whole selection
 
-An object's enemy script points and platform paths move with it
+An enemy's script points and a platform's path move with it
 
 ## What can rotate and scale
 
@@ -88,14 +88,14 @@ Note: boss enemies are tied to their arenas. The palette marks them
 - On `Models` the radio buttons over the grid say what a click places: `Scenery`, `Background` or `Platform`
 - On `Kit` they are `Background` and `Scenery`
 - The choice stays until you change it. The editor remembers it, and the view
-- Rest the pointer on a picture for its name, its bank and its notes
+- Hover over a picture for its name, its bank and its notes
 - A corner mark means a boss (on `Enemies`) or one of your own models (on `Models`)
 - A dimmed picture can't be placed that way. Click it and the status bar says why
-- A kit picture with `•••` in its corner has settings. Click the corner, or right-click the picture, and they open over the grid. A click on the picture uses them
+- A kit picture with `•••` in its corner has settings. Click the corner, or right-click the picture, and they open over the grid. Click the picture to place it with those settings
 - The search box and the bank list of `Models` work in both views. `Grid` shows every match, `List` the first 150
 - `Tab` and `Enter` work on the pictures too
 
-A model from another level or world is copied in when you build. The import panel shows its size against the level's free memory. The Checks panel lists every import
+A model from another level or world is copied in when you build. `Checks` shows its size against the level's free memory, and lists every import
 
 ## Presets
 
@@ -116,7 +116,7 @@ Ready-made platforms, with their commands in the order the game reads them
 
 Moving platform, spinner, conveyor and ice use the selected object's model if you've selected one
 
-Note: platforms always use the game's own models. A platform with an imported model crashes a console
+Note: give a platform one of the game's own models. A platform with an imported model crashes a console
 
 ## Commands
 
@@ -210,7 +210,7 @@ Drawn as see-through shapes, one per puzzle condition that tests where something
 
 Move and resize them with the gizmo or the inspector
 
-Duplicate and delete take the whole puzzle when it has only that one volume. A volume of a puzzle with several can't be duplicated or deleted on its own
+Duplicate and delete take the whole puzzle when it has only that one volume. When a puzzle has several volumes, you can't duplicate or delete one of them on its own
 
 The `Triggers` button shows or hides them. The `Fog` button shows or hides the level's fog in the editor only (to change the game's fog, edit `FogConfiguration` in the inspector)
 
@@ -218,9 +218,9 @@ The `Triggers` button shows or hides them. The `Fog` button shows or hides the l
 
 ## Exit triggers
 
-Every exit is a platform with an `Exit` command. The game doesn't care what the model looks like: it tests a sphere around the platform's position
+Every exit is a platform with an `Exit` command. The game tests a sphere around the platform's position, whatever the model looks like
 
-The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model. The sphere is how you see their real size
+The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model.
 
 The `Exits` button in the toolbar shows or hides the spheres. The `Exit triggers` layer in the list on the left is the same switch
 
@@ -236,7 +236,7 @@ Who has to get inside the sphere:
 | Anything in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1 | Glover |
 | Everything else | The ball |
 
-It's the center of Glover or the ball that counts, not the edge
+The center of Glover or the ball has to be inside the sphere
 
 Select the platform and the inspector's `Exit trigger` block tells you the radius, who has to touch it and what else the game wants for that exit type
 
@@ -292,7 +292,7 @@ After that it's listed with your imported models, and it's copied into the level
 Select a piece of scenery with a model from the game, then use `New look` in the inspector:
 
 1. Check the worlds to take textures from
-2. Press `Apply`. `Try another` picks again, `Original` goes back
+2. Click `Apply`. `Try another` picks again, `Original` goes back
 
 The new look is kept with your imported models and copied into the level when you build
 
@@ -303,17 +303,17 @@ The new look is kept with your imported models and copied into the level when yo
 1. Click the ground to add points. `Backspace` takes the last one off
 2. Pick `garibs`, or `copies of the selection` (scenery, kit props, enemies, powerups, Mr. Tip)
 3. Set how far apart they go, and whether they go on the path or to one side or both
-4. Press `Place`
+4. Click `Place`
 
 Each one lands on the ground under it. `random turn` spins each copy of a single model
 
-`Scatter` (under Scatter the selection) puts copies of the selected scenery beside the path:
+`Scatter` (under `Scatter the selection`) puts copies of the selected scenery beside the path:
 
 - Random spacing, distance, height, scale and facing, in the ranges you set
 - Select a few models and each copy picks one of them
 - `Try another` takes it back and tries the next seed
 
-`Add zones` (under Camera zone over the path) covers a stretch of the path with camera zones. Long stretches get split into shorter boxes
+`Add zones` (under `Camera zone over the path`) covers a stretch of the path with camera zones. Long stretches get split into shorter boxes
 
 Note: the path is only a guide, the level doesn't keep it
 
@@ -327,7 +327,7 @@ Note: the path is only a guide, the level doesn't keep it
 
 ## Options
 
-`Options` in the toolbar holds four things: the theme, the info texts, the panels and `Take the tour`
+`Options` in the toolbar has the theme, the info texts, the panels and `Take the tour`
 
 ### Theme
 
@@ -354,16 +354,16 @@ Don't like the 1998 look? Pick another one under `Theme`
 - The list has two columns: the color themes (`Sage` to `Plum`) are in the right one
 - The window changes right away, no restart
 - The editor remembers your theme, the setup screen uses it too
-- Only the look changes: every button stays where it is
+- Every button stays where it is
 
 ### Info texts
 
-Small gray texts explain how the game or the editor works. They belong to titles, fields and check lines. Want them all on screen? Change `Info texts`
+Small gray texts explain how the game or the editor works. They belong to titles, fields and check lines. `Info texts` puts them all on screen, or hides them
 
 | Choice | What you get |
 | --- | --- |
 | `Shown` | every text in its place, under the thing it explains |
-| `On hover` | no texts in the panels, rest the pointer on a title, a field or a line to read its text (the default) |
+| `On hover` | no texts in the panels, hover over a title, a field or a line to read its text (the default) |
 | `Off` | no texts at all |
 
 - On hover, a dotted line under a name means it has a text
@@ -374,7 +374,7 @@ Small gray texts explain how the game or the editor works. They belong to titles
 
 ### Panels
 
-Want the level list on the right, or more room for the view? `Options` > `Panels` arranges the five panels: `Level`, `Inspector`, `Checks`, `Add to level` and `Path`
+`Options` > `Panels` arranges the five panels: `Level`, `Inspector`, `Checks`, `Add to level` and `Path`
 
 | In the menu | What it does |
 | --- | --- |

@@ -413,7 +413,7 @@ nothing else. The program never runs them.
     animate.
   - **Which builds add the mod.** Build ROM and Export patch add it whenever the level rotates or scales one of those
     objects or imports models (unless "Copy the models into the ROM instead" is on and the copies fit the
-    game's own heap). The checks panel, the import panel and the export dialog say so. Other levels are built
+    game's own heap). The checks panel and the export dialog say so. Other levels are built
     without the mod.
   - **Where the mod is stored and runs.**
     - The mod is about 5 KB of code, built from C against the gloveworld decomp. It is stored in the ROM at 12 MiB,
@@ -489,7 +489,7 @@ nothing else. The program never runs them.
 - **Imports**: a model from another level's bank is imported when you press Build ROM. By default the game mod
   loads it from the player's ROM at run time (see "Models from other banks" above). The editor picks the
   banks: each model's own bank, and the texture banks that hold the textures the level's banks lack,
-  preferring the model's own world. The import panel shows their size against this level's free heap plus
+  preferring the model's own world. The checks panel shows their size against this level's free heap plus
   the Expansion Pak's. With "Copy the models into the ROM instead", the build splits the model
   out of its bank and packs it into the bank the game loads last for this level (`levelInfo[level].objBank`
   in `LoadLevel`, e.g. `ATLANTIS_L1`); textures it needs are

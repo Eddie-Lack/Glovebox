@@ -21,7 +21,7 @@ Note: only share levels that use models you have the right to share
 1. Open it in a browser
 2. Choose your Glover (USA) ROM (`.z64`, `.v64` or `.n64`)
 3. Choose the `.bps` patch
-4. Press `Create patched ROM`
+4. Click `Create patched ROM`
 
 - Your ROM never leaves the page
 - It refuses a wrong ROM or a damaged patch
