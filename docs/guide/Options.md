@@ -8,20 +8,13 @@ _Back to the [guide](README.md)_
 
 ## Theme
 
-Pick a look. The window changes right away.
-
+There's 15 themes to pick from. This guide uses `Sage`.
 | | | |
 | --- | --- | --- |
 | ![The editor in the 1998 theme: navy with red title bars](img/theme-1998.png) | ![The editor in the Dark theme](img/theme-dark.png) | ![The editor in the Blueprint theme: white lines on blue](img/theme-blueprint.png) |
 | `1998` | `Dark` | `Blueprint` |
 | ![The editor in the Sage theme: muted greens](img/theme-sage.png) | ![The editor in the Sand theme: warm sand](img/theme-sand.png) | ![The editor in the Slate theme: dark blue-grey](img/theme-slate.png) |
 | `Sage` | `Sand` | `Slate` |
-
-- There are 15 of them
-- The editor remembers your theme
-- Only the look changes. Every button stays where it is
-
-This guide uses `Sage`.
 
 ## Info texts
 
@@ -31,21 +24,19 @@ Small texts explain how the game or the editor works. They start `On hover`.
 | --- | --- |
 | ![The Transform card with a line of explanation under its fields](img/info-texts-shown.png) | ![The same card without the explanations](img/info-texts-on-hover.png) |
 
-| Choice | What you get |
+| Option | What it do |
 | --- | --- |
-| `Shown` | Every text in its place, under its title or field |
-| `On hover` | No texts. Rest the pointer on a title or a field to read its text. This is what you start with |
-| `Off` | No texts at all |
+| `Shown` | Every info text in its place, under its title or field. |
+| `On hover` | No info text. Hover over a title or a field to read its text. This is what you start with. |
+| `Off` | No info text at all. |
 
-- On hover, a dotted line under a name means it has a text
-- Checks, warnings, values and names always stay
-- The editor remembers your choice
+- On hover, a dotted line under a name means it has info text.
+- Checks, warnings, values and names always stay.
+- The editor remembers your choice.
 
 ## Take the tour
 
-`Take the tour` walks you through the window again, one part at a time.
-
-It's the tour the editor offers on the first start. See _[Getting started](Getting-started.md#take-the-tour)_.
+`Take the tour` walks you through the first start tour again. See _[Getting started](Getting-started.md#take-the-tour)_.
 
 ---
 

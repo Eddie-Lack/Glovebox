@@ -4,15 +4,15 @@ _Back to the [guide](README.md)_
 
 ## Place one
 
-1. Look at the spot
-2. `+ Add`, then `Enemies`
-3. Press `Add` next to the enemy
+1. Look at the spot.
+2. `+ Add`, then `Enemies`.
+3. Click `Add` next to the enemy.
 
-It comes with a script that type has in a shipped level, moved to the new spot.
+It comes with a script it has in a vanilla level, moved to the new spot.
 
 ## Turn and size
 
-- Turning it about Y sets the way it faces at the start
+- Turning it on the Y axis sets the way it faces at the start.
 - Tilting it, and scaling it, need the game mod _(see [The Expansion Pak game mod](../Game-mod.md))_
 
 ## The script
@@ -23,20 +23,20 @@ Select an enemy and scroll down in the Inspector to `ENEMY SCRIPT`.
 
 It has three lists:
 
-| List | When it runs | At most |
+| List | When it runs | Maximum |
 | --- | --- | --- |
-| `NORMAL` | All the time, from #0 | 30 |
-| `CONDITIONAL` | When its condition holds. It interrupts the normal list | 10 |
-| `ATTACK` | When an instruction starts the attack list | 30 |
+| `NORMAL` | All the time, from #0. | 30 |
+| `CONDITIONAL` | When its condition holds. It interrupts the normal list. | 10 |
+| `ATTACK` | When an instruction starts the attack list. | 30 |
 
 The buttons on each instruction:
 
-| Button | Does |
+| Button | What it do |
 | --- | --- |
-| `+ Add` | Adds an instruction to that list |
-| `…` | Shows or hides the instruction's fields |
-| `↑` `↓` | Move it. "Go to" targets follow |
-| `×` | Removes it |
+| `+ Add` | Adds an instruction to that list. |
+| `…` | Shows or hides the instruction's fields. |
+| `↑` `↓` | Move it. "Go to" targets follow. |
+| `×` | Removes it. |
 
 Follow, flee and face have a `Target`: the glove, the ball, or the closer one.
 

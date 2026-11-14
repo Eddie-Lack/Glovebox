@@ -2,7 +2,7 @@
 
 _Back to the [guide](README.md)_
 
-Select nothing (`Esc`) and the Inspector shows the level's settings.
+With nothing selected (`Esc`), the Inspector shows the level's settings.
 
 <img src="img/level-settings.png" alt="The Inspector with nothing selected: the counts, the file name, and the title, music and clock" width="380">
 
@@ -10,15 +10,13 @@ Select nothing (`Esc`) and the Inspector shows the level's settings.
 
 | Field | What it sets |
 | --- | --- |
-| `title` | The name in the level select |
-| `music` | The level's music |
-| `clock` | A countdown, like a bonus level's |
+| `title` | The name in the level select. |
+| `music` | The level's music. |
+| `clock` | A countdown, like a bonus level's. |
 
-They go into the ROM when you build.
+Note: at 0, the clock says TIME UP, then sends you back to the way room.
 
-Note: at 0 the clock says TIME UP and sends you to the way room.
-
-Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays its own music, not yours.
+Note: if you set it to boot straight into the level (`boot here`, `Test level`), it'll play its vanilla music, not yours.
 
 ## Look
 
@@ -42,7 +40,7 @@ To see less fog while you edit, use `Fog` in the toolbar. That one only changes 
 
 ### Keep the file name 7 letters long!
 
-A name with an even number of letters crashes a console.
+A name with an even number of letters crashes a console. Lol yea
 
 ---
 

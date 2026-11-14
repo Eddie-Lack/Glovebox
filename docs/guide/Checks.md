@@ -8,11 +8,11 @@ The `Checks` run the game's own level rules on your level, after every edit.
 
 ## Reading it
 
-- A tick means fine
-- A problem says what's wrong and on which object
-- Click a row that names an object to select it and look at it
-- Many rows link to the place in the game's code that makes the rule
-- Problems the shipped level already has are labelled. Those aren't yours
+- A tick means all good.
+- Problems will say what's wrong and on which object.
+- Click a row that names an object to select it and look at it.
+- Many rows link to the place in the game's code that makes the rule.
+- Problems the vanilla level already has are labelled. (those ones aren't yours)
 
 In the `Level` panel, the name of an object with an error changes colour.
 
@@ -30,9 +30,9 @@ Too much at once and it lags. Past 256 it stops.
 | 190 to 239 | It slows down |
 | 240 or more | At or near the limit |
 
-Click the row. The view goes to the busiest spot and draws the far plane round it.
+Click the row. The view goes to the busiest spot and draws the far plane around it.
 
-![The whole of Atlantis Level 1 inside the rings of its far plane](img/checks-draw-load.png)
+![The whole of Atlantis 1 inside the rings of its far plane](img/checks-draw-load.png)
 
 Everything inside the rings is drawn when Glover stands in the middle.
 
@@ -48,4 +48,4 @@ When you add models from other levels it lists each import, and shows a bar of t
 
 ---
 
-_[← Level settings](Level-settings.md)_ · _[Contents](README.md)_ · _[Import your own model →](Import-your-own-model.md)_
+_[← Level settings](Level-settings.md)_ · _[Contents](README.md)_ · _[Import your own model →](Import-your-own-model-(untested).md)_

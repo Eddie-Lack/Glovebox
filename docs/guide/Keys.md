@@ -6,20 +6,20 @@ The line at the bottom of the view shows the main ones.
 
 ## The mouse
 
-| You do | What happens |
+| Action | What happens |
 | --- | --- |
 | Click | Selects |
 | `Ctrl`+click | Adds to the selection, or takes away |
 | `Shift`+click the ground | Drops a garib |
 | Drag | Turns the camera |
-| Right-drag | Pans |
-| Wheel, or middle-drag | Zooms |
+| Right-click+drag | Pans |
+| Scroll wheel, or middle-click+drag | Zooms |
 | `Ctrl`+`Alt`+drag | Box select |
 | Drag on a number field | Changes the number. `Shift` is finer, `Ctrl` is bigger |
 
 ## The keys
 
-| Key | Does |
+| Key | What it do |
 | --- | --- |
 | `W` | Move |
 | `E` | Rotate |
@@ -35,23 +35,23 @@ The line at the bottom of the view shows the main ones.
 | `Del` or `Backspace` | Delete |
 | `Ctrl+Z` | Undo |
 | `Ctrl+Shift+Z` or `Ctrl+Y` | Redo |
-| `Esc` | Leaves the tool you're in. With no tool on, selects nothing |
+| `Esc` | Leaves the tool you're in. With no tool on, de-selects everything |
 
 On a Mac, `Cmd` works for `Ctrl`.
 
 ## While you fly
 
-| Key | Does |
+| Key | What it do |
 | --- | --- |
 | `W` `A` `S` `D` | Move along the view |
 | `Space` | Up |
 | `Shift` | Down |
-| Wheel | Speed |
+| Scroll wheel | Speed |
 | `C` or `Esc` | Stop flying |
 
 ## In the Path tool
 
-| Key | Does |
+| Key | What it do |
 | --- | --- |
 | Click the ground | Adds a point |
 | `Backspace` | Takes the last point off |

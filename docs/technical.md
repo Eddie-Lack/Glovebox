@@ -28,6 +28,7 @@ process. Nothing is installed, unpacked or run next to it. It builds on three pr
 | `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
 | `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. After editing the page's script, run `tools/build_patcher.py` to pin the new hash. |
 | `tools/licenses.py` | Collects the licences of the Rust crates and fonts in the program, for the release archive. |
+| `tools/wiki.py` | Copies the guide between `docs/guide` and a checkout of the GitHub wiki, in either direction. |
 | `app/README.txt` | The guide for players that goes into the release archive. |
 | `docs/guide/` | The guide with pictures for players: one Markdown page for each job, and the pictures in `img/` (see "The guide's pictures"). |
 | `.github/workflows/app.yml` | Tests, the Windows build, the archive and the release. |
@@ -964,6 +965,13 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   their licences and files.
 - The app is released for Windows. It also builds and runs on Linux from source (`cargo run -p glovebox --release`).
 
+## The guide and the wiki
+
+The GitHub wiki holds a copy of `docs/guide`. `python3 tools/wiki.py to-wiki DIR` writes the guide into a checkout of
+the wiki, and `from-wiki DIR` brings wiki edits back. The wiki's home page is `Home.md`, its links have no `.md`, and
+its pictures and its links to other docs are full addresses. The owner edits the wiki's wording himself: bring his
+edits back with `from-wiki` before changing a guide page, and keep his wording.
+
 ## The guide's pictures
 
 The pictures in `docs/guide/img/` are made by the test `guide_shots` (`crates/app/tests/guide/mod.rs`, a part of
@@ -985,7 +993,7 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
   notes. `info-texts-on-hover.png` is the one picture of a panel on hover.
 - A picture of one panel is cut out of the window's picture. For a tall panel the window is 1060 high.
 - The numbers on `window-tour.png` are drawn by the test (`Pic::marker`). The list under the picture in
-  `docs/guide/The-window.md` explains them. No other picture is drawn on.
+  `docs/guide/The-editor.md` explains them. No other picture is drawn on.
 - The small pictures of the contents list (`thumb-*.png`) are parts of the same pictures, 240 by 150. Most are at
   half size. Those of a side panel are at two thirds: the panel is 380 wide.
 - The files are PNGs with a palette of 256 colours (`Pic::save`). The 64 most used colours keep their exact values,

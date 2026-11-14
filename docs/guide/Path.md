@@ -6,8 +6,8 @@ _Back to the [guide](README.md)_
 
 ## Lay the path
 
-1. Press `Path`
-2. Click the ground, point after point
+1. Click `Path`.
+2. Click the ground, point after point.
 
 ![A path of five points across the sand](img/path-laid.png)
 
@@ -15,7 +15,7 @@ _Back to the [guide](README.md)_
 
 ## Place garibs
 
-3. Press `Place`
+3. Click `Place`.
 
 ![Garibs placed along the path, with the Path panel on the right](img/path-garibs.png)
 
@@ -41,15 +41,15 @@ Each garib lands on the ground under it.
 
 `Scatter` puts copies of the selected scenery beside the path, at random.
 
-- Set the ranges for spacing, distance, scale and height
-- Select a few models and each copy picks one of them
-- `Try another` takes it back and tries again
+- Set the ranges for spacing, distance, scale and height.
+- Select a few models and each copy picks one of them.
+- `Try another` takes it back and tries again.
 
 ## Camera zones over the path
 
 `Add zones` covers a stretch of the path with camera zones. A long stretch gets several boxes.
 
-Note: the path is only a guide. The level doesn't keep it.
+Note: the path is only a guide.
 
 ---
 

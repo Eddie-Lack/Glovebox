@@ -1,14 +1,16 @@
+I dunno how to use blender so I never actually tested this at all lol. Good luck!
+
 # Import your own model
 
 _Back to the [guide](README.md)_
 
 You need one `.glb` file with its textures inside. Blender exports these.
 
-1. `+ Add`, then `Models`
-2. Press `Import model…`
-3. Press `Choose .glb…` and pick the file
-4. Give it a name and a scale
-5. Press `Import and place`
+1. `+ Add`, then `Models`.
+2. Click `Import model…`.
+3. Click `Choose .glb…` and pick the file.
+4. Give it a name and a scale.
+5. Click `Import and place`.
 
 ![The Import model dialog with a file chosen, its name, its scale and its size](img/import-model.png)
 
