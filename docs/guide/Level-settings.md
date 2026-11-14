@@ -24,7 +24,7 @@ Note: if you set it to boot straight into the level (`boot here`, `Test level`),
 
 <img src="img/level-settings-look.png" alt="The Look menu: Graveyard violet, Frozen green, Blood red, Rotting green arena, Burning dark, Daylight" width="380">
 
-`Daylight (shipped levels)` goes back to a normal day.
+`Daylight (vanilla levels)` goes back to a normal day.
 
 ## Fog, lights and more
 

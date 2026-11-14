@@ -110,7 +110,7 @@ pub const LOOKS: [LookPreset; 6] = [
     LookPreset { name: "Blood red", ambient: [150, 110, 120], lights: &[(240, 120, 110, 0.0, 3.7), (150, 110, 200, 4.28, 0.0)], fog: [40, 6, 8, 860, 1150] },
     LookPreset { name: "Rotting green arena", ambient: [160, 175, 150], lights: &[(200, 235, 170, 0.0, 3.7), (235, 110, 90, 4.28, 0.0)], fog: [10, 30, 16, 980, 1900] },
     LookPreset { name: "Burning dark", ambient: [150, 120, 110], lights: &[(250, 160, 80, 0.0, 3.7), (150, 90, 200, 4.28, 0.0)], fog: [34, 16, 6, 860, 1150] },
-    LookPreset { name: "Daylight (shipped levels)", ambient: [110, 110, 150], lights: &[(160, 160, 160, 0.0, 3.7)], fog: [40, 40, 60, 996, 1500] },
+    LookPreset { name: "Daylight (vanilla levels)", ambient: [110, 110, 150], lights: &[(160, 160, 160, 0.0, 3.7)], fog: [40, 40, 60, 996, 1500] },
 ];
 
 /// The name the Level settings list shows for a level-wide command.
