@@ -8,7 +8,7 @@ New here? _[The guide](guide/README.md)_ shows how to do things, with pictures. 
 
 The first time a level opens, the editor asks if you want a quick tour
 
-- `Show me round` starts it, `No thanks` skips it. It only asks once
+- `Show me around` starts it, `No thanks` skips it. It only asks once
 - Each step lights up one part of the window and says what it's for
 - `Next` and `Back` (or the arrow keys and `Enter`) move between the steps
 - `Skip` or `Esc` ends it
@@ -40,7 +40,7 @@ Note: while you fly, those keys move the camera. Use the toolbar for Move and + 
 - The inspector has number fields. With several objects it has "move / rotate / scale by"
 - Drag left or right on a number field to change it. Hold `Shift` for finer steps, `Ctrl` for bigger ones. `Esc` puts the old number back
 - Click a number field to type in it
-- `Pivot` is the group's centre or each object's own origin
+- `Pivot` is the group's center or each object's own origin
 - Shift+click the ground to drop a garib
 - Undo, redo, duplicate and delete work on the whole selection
 
@@ -122,7 +122,7 @@ Note: platforms always use the game's own models. A platform with an imported mo
 
 Every object's card in the inspector has buttons:
 
-- `+` adds a command inside it. The ones it can't take are greyed out, hover to see why
+- `+` adds a command inside it. The ones it can't take are grayed out, hover to see why
 - `↑` `↓` move a command. A move the game would read wrong is refused
 - `×` removes it, and anything that only worked with it
 - `Tidy` (on platforms) puts commands the game would read wrong back in order
@@ -157,7 +157,7 @@ The checks show an error when a list could run off its end. End it with `Go to i
 
 With nothing selected you get the level's settings:
 
-- `Look` sets the lights and fog to a preset: dark, coloured moods or daylight
+- `Look` sets the lights and fog to a preset: dark, colored moods or daylight
 - `File name` is the name inside the level file. Keep it 7 letters: an even length crashes a console
 - `Title, music and clock`: the title in the level select, the music, and a countdown like a bonus level's
 - `+ Add` adds fog, lights, a backdrop, gravity or an ambient sound
@@ -180,7 +180,7 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - `fog_distance` of 1000 or more
 - Platforms made from your own models _(a console stops on them)_
 
-Each check links to the game's code. Problems a shipped level already has are labelled
+Each check links to the game's code. Problems a shipped level already has are labeled
 
 ### Draw load
 
@@ -218,7 +218,7 @@ The `Triggers` button shows or hides them. The `Fog` button shows or hides the l
 
 ## Exit triggers
 
-Every exit is a platform with an `Exit` command. The game doesn't care what the model looks like: it tests a sphere round the platform's position
+Every exit is a platform with an `Exit` command. The game doesn't care what the model looks like: it tests a sphere around the platform's position
 
 The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model. The sphere is how you see their real size
 
@@ -236,7 +236,7 @@ Who has to get inside the sphere:
 | Anything in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1 | Glover |
 | Everything else | The ball |
 
-It's the centre of Glover or the ball that counts, not the edge
+It's the center of Glover or the ball that counts, not the edge
 
 Select the platform and the inspector's `Exit trigger` block tells you the radius, who has to touch it and what else the game wants for that exit type
 
@@ -249,7 +249,7 @@ Select the platform and the inspector's `Exit trigger` block tells you the radiu
 
 The game measures the platform when it reads its position. An `Exit` of type `loading_zone` that comes before the position stops that, and the radius stays 0
 
-The editor always adds the `Exit` after the position. `Checks` warns you when an imported level has it the other way round
+The editor always adds the `Exit` after the position. `Checks` warns you when an imported level has it the other way around
 
 ## Camera zones
 
@@ -261,7 +261,7 @@ A box where the camera moves while Glover is inside it. When he leaves, the came
 | --- | --- |
 | `Behind` | turns to look the way you go |
 | `High` | rises and looks down on Glover |
-| `Side` and `Other side` | swings round to the right or the left |
+| `Side` and `Other side` | swings around to the right or the left |
 | `Front` | faces Glover, so you can't see where you're going |
 | `Low` | drops to Glover's height and comes close |
 | `Far` | stands far back and high |
@@ -291,7 +291,7 @@ After that it's listed with your imported models, and it's copied into the level
 
 Select a piece of scenery with a model from the game, then use `New look` in the inspector:
 
-1. Tick the worlds to take textures from
+1. Check the worlds to take textures from
 2. Press `Apply`. `Try another` picks again, `Original` goes back
 
 The new look is kept with your imported models and copied into the level when you build
@@ -335,30 +335,30 @@ Don't like the 1998 look? Pick another one under `Theme`
 
 | Theme | Looks like |
 | --- | --- |
-| `1998` | the patcher page: navy, grey buttons, red title bars |
-| `Light` | a plain desktop program: greys, white fields, one blue |
-| `Dark` | the same, in dark greys |
+| `1998` | the patcher page: navy, gray buttons, red title bars |
+| `Light` | a plain desktop program: grays, white fields, one blue |
+| `Dark` | the same, in dark grays |
 | `High contrast` | white on black, with yellow and cyan |
 | `Sage` | a calm phone app in muted greens |
 | `Sand` | the same in warm sand and caramel |
-| `Ocean` | pale blue-grey with a deep teal |
+| `Ocean` | pale blue-gray with a deep teal |
 | `Lavender` | soft lilac with violet |
 | `Coral` | blush pink with coral red |
-| `Slate` | dark blue-grey with a soft teal |
+| `Slate` | dark blue-gray with a soft teal |
 | `Plum` | dark purple with rose |
-| `Cartridge` | a grey console and its controller |
+| `Cartridge` | a gray console and its controller |
 | `Blueprint` | a drafting sheet: white lines on blue |
 | `Paper` | a printed manual: black and red ink on off-white paper |
 | `CRT` | a debug monitor: green on black |
 
-- The list has two columns: the colour themes (`Sage` to `Plum`) are in the right one
+- The list has two columns: the color themes (`Sage` to `Plum`) are in the right one
 - The window changes right away, no restart
 - The editor remembers your theme, the setup screen uses it too
 - Only the look changes: every button stays where it is
 
 ### Info texts
 
-Small grey texts explain how the game or the editor works. They belong to titles, fields and check lines. Want them all on screen? Change `Info texts`
+Small gray texts explain how the game or the editor works. They belong to titles, fields and check lines. Want them all on screen? Change `Info texts`
 
 | Choice | What you get |
 | --- | --- |
@@ -378,7 +378,7 @@ Want the level list on the right, or more room for the view? `Options` > `Panels
 
 | In the menu | What it does |
 | --- | --- |
-| the tick box | shows or hides the panel |
+| the checkbox | shows or hides the panel |
 | `Left` / `Right` | puts the panel on that side of the view |
 | `Bottom` | `Checks` only: a strip under the view |
 | `Stacked` / `Tabbed` | how the panels on one side share it: one under the other, or as tabs |
@@ -388,7 +388,7 @@ Want the level list on the right, or more room for the view? `Options` > `Panels
 - Every panel also has a small `▾` menu on its title bar: `Move to left`, `Move to right`, `Hide` (and `Move to bottom` on the `Checks`)
 - On a row of tabs the `▾` belongs to the tab in front
 - The view takes all the room the panels leave. Hide them all and it fills the window
-- `Add to level` and `Path` show while their tool is on: the tick is the same as `+ Add` and `Path`. `A` and `P` open them wherever you put them
+- `Add to level` and `Path` show while their tool is on: the checkbox is the same as `+ Add` and `Path`. `A` and `P` open them wherever you put them
 - The `Checks` are never a tab. They sit under the other panels of their side, or under the view
 - Stacked panels have a line between them that drags, like the line over the `Checks`
 - Drag a panel's edge to resize it. The width stays with the panel when you move it

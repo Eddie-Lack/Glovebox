@@ -9,7 +9,7 @@ use super::image::{Image, Rgba};
 /// The letters the kit allows, in the table's order.
 pub const LETTERS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.,'- ";
 
-// Per size 7 to 10 and per letter: the advance that centres a line, the advance used when drawing, the cell's left
+// Per size 7 to 10 and per letter: the advance that centers a line, the advance used when drawing, the cell's left
 // and the top of its outline box from the pen, the cell's width and height, how far the whole line moves when the
 // letter comes first, and the top of the letter's bitmap. A line is placed by the highest outline box and drawn from
 // the highest bitmap. The two tops differ for a few letters.
@@ -159,7 +159,7 @@ pub fn glyph(c: char, w: usize, h: usize) -> Vec<Vec<bool>> {
 }
 
 /// Draws one line of text with its pen at (x, y), as `ImageDraw.text` placed it in 1-bit mode.
-pub fn draw_text(im: &mut Image, x: f64, y: f64, text: &str, colour: Rgba, size: u32) {
+pub fn draw_text(im: &mut Image, x: f64, y: f64, text: &str, color: Rgba, size: u32) {
     let inked: Vec<[i32; 8]> = text.chars().filter(|c| *c != ' ' && index(*c).is_some()).map(|c| metrics(size, c)).collect();
     if inked.is_empty() {
         return;
@@ -172,7 +172,7 @@ pub fn draw_text(im: &mut Image, x: f64, y: f64, text: &str, colour: Rgba, size:
     for c in text.chars() {
         let m = metrics(size, c);
         if m[4] > 0 && m[5] > 0 {
-            im.stamp(pen + m[2], top + m[7] + shift, &glyph(c, m[4] as usize, m[5] as usize), colour);
+            im.stamp(pen + m[2], top + m[7] + shift, &glyph(c, m[4] as usize, m[5] as usize), color);
         }
         pen += m[1];
     }

@@ -106,7 +106,7 @@ fn texture_ids_and_pixels() {
             textures += 1;
         }
     }
-    println!("texture_ids_and_pixels: {} banks, {textures} textures equal their PNG; (colour, size) counts {formats:?}", banks.len());
+    println!("texture_ids_and_pixels: {} banks, {textures} textures equal their PNG; (color, size) counts {formats:?}", banks.len());
 }
 
 #[test]
@@ -464,7 +464,7 @@ fn compare(model: &Model, glb: &Glb, what: &str, tally: &mut Tally) {
         assert_eq!((u64::from(m.wrap_s.gl()), u64::from(m.wrap_t.gl())), wrap, "{at}: wrap");
         let _ = Wrap::Repeat;
         let color: Vec<f64> = m.base_color.iter().map(|c| f64::from(*c)).collect();
-        assert_eq!(color, floats(&pbr["baseColorFactor"], &[1.0; 4]), "{at}: base colour");
+        assert_eq!(color, floats(&pbr["baseColorFactor"], &[1.0; 4]), "{at}: base color");
         let mode = match g["alphaMode"].as_str().unwrap_or("OPAQUE") {
             "OPAQUE" => AlphaMode::Opaque,
             "MASK" => AlphaMode::Mask,
@@ -523,7 +523,7 @@ fn models_equal_gltf_export() {
     }
     println!(
         "models_equal_gltf_export: {dirs_done} folders, {} models equal their .glb ({} nodes, {} with a mesh, {} \
-         primitives, {} vertices, {} triangles; primitives with normals {}, colours {}, texture coordinates {}; \
+         primitives, {} vertices, {} triangles; primitives with normals {}, colors {}, texture coordinates {}; \
          sprites {}); {} objects have no .glb and no model here; {} models have animations in the .glb ({} in all), \
          which the model does not carry; {} primitives have no index list in the .glb (sprites); {} have a second \
          texture coordinate set (face flags), not carried; {} primitives of meshes without a display list have all \

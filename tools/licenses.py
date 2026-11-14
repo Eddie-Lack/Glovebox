@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collects the licences of the Rust crates and the fonts compiled into the app.
+"""Collects the licenses of the Rust crates and the fonts compiled into the app.
 
     python3 tools/licenses.py OUT [--target x86_64-pc-windows-msvc]
 
@@ -7,11 +7,11 @@ It asks `cargo metadata` for the crates the `glovebox` program links for the tar
 Build and test dependencies are left out, and so are procedural macro crates: they run in the compiler and are not
 in the program.
 
-OUT gets `CRATES.txt`, one entry per crate (name, version, the licence as Cargo.toml states it, source, its files),
-and each distinct licence text once. A text that several crates share word for word, such as the Apache License,
+OUT gets `CRATES.txt`, one entry per crate (name, version, the license as Cargo.toml states it, source, its files),
+and each distinct license text once. A text that several crates share word for word, such as the Apache License,
 is one file. A text of one crate keeps the crate's name. The workflow puts OUT into the release archive as
-`licenses/`. Some crates (egui's among them) pack no licence file; their entry names the licence, and
-`Apache-2.0.txt` holds that text. The tool fails when a crate states no licence and has no licence file.
+`licenses/`. Some crates (egui's among them) pack no license file; their entry names the license, and
+`Apache-2.0.txt` holds that text. The tool fails when a crate states no license and has no license file.
 
 It needs cargo and Python 3 only. cargo downloads the crates it lacks.
 """
@@ -46,7 +46,7 @@ while todo:
         if any(k["kind"] is None for k in dep["dep_kinds"]):
             todo.append(dep["pkg"])
 
-# Every licence file of every crate, grouped by its text (line ends and outer blank space aside)
+# Every license file of every crate, grouped by its text (line ends and outer blank space aside)
 crates, texts, missing = [], {}, []
 for pid in sorted(seen, key=lambda i: (packages[i]["name"], packages[i]["version"])):
     p = packages[pid]
@@ -69,7 +69,7 @@ for pid in sorted(seen, key=lambda i: (packages[i]["name"], packages[i]["version
         missing.append(p["name"])
     crates.append((p, keys))
 if missing:
-    sys.exit("no licence found for: " + ", ".join(missing))
+    sys.exit("no license found for: " + ", ".join(missing))
 
 apache = next((k for k, t in texts.items() if "Apache License" in t["text"] and "Version 2.0, January 2004" in t["text"]
                and "END OF TERMS AND CONDITIONS" in t["text"] and len(t["text"]) < 12000), None)
@@ -96,10 +96,10 @@ for key, t in texts.items():
     with open(os.path.join(a.out, names[key]), "w", encoding="utf-8", newline="\n") as f:
         f.write(t["text"])
 with open(os.path.join(a.out, "CRATES.txt"), "w", encoding="utf-8", newline="\n") as f:
-    f.write("The Rust crates compiled into Glovebox.exe, with the licence each one states and its licence files in this folder.\n")
-    f.write("A crate without files packs none: the licence it names applies, and Apache-2.0.txt holds that text.\n\n")
+    f.write("The Rust crates compiled into Glovebox.exe, with the license each one states and its license files in this folder.\n")
+    f.write("A crate without files packs none: the license it names applies, and Apache-2.0.txt holds that text.\n\n")
     for p, keys in crates:
-        f.write("%s %s\n  Licence: %s\n  Source: %s\n" % (p["name"], p["version"], p.get("license") or "see its files",
+        f.write("%s %s\n  License: %s\n  Source: %s\n" % (p["name"], p["version"], p.get("license") or "see its files",
                                                        p.get("repository") or p.get("homepage") or "https://crates.io/crates/" + p["name"]))
         if keys:
             f.write("  Files: %s\n" % ", ".join(dict.fromkeys(names[k] for k in keys)))

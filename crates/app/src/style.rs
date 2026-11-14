@@ -1,6 +1,6 @@
 //! The app's look, and the small widgets the panels share.
 //!
-//! Everything here is drawn from the active theme (`theme.rs`): the colours, the shapes of the controls, the fonts
+//! Everything here is drawn from the active theme (`theme.rs`): the colors, the shapes of the controls, the fonts
 //! and the details. `apply` sets a theme for a whole window. `theme` gives the active one. `Look` gives egui's
 //! buttons, text boxes and separators their shapes. Title bars, checkboxes, the logo, the dividers, the frames
 //! and the setup screen's background are drawn here, each in the variants the themes name.
@@ -37,7 +37,7 @@ pub fn logo_family() -> FontFamily {
     FontFamily::Name("logo".into())
 }
 
-/// "#rrggbb" as a colour.
+/// "#rrggbb" as a color.
 pub fn hex(s: &str) -> Color32 {
     let v = u32::from_str_radix(s.trim_start_matches('#'), 16).unwrap_or(0xffffff);
     Color32::from_rgb((v >> 16) as u8, (v >> 8) as u8, v as u8)
@@ -159,7 +159,7 @@ pub fn apply(ctx: &egui::Context, th: &'static Theme) {
         v.selection.stroke = Stroke::new(1.0, th.text_sel.1);
         v.text_cursor.stroke = Stroke::new(2.0, th.field_tone.text);
         v.disabled_alpha = th.disabled;
-        // egui's own widgets take the text colour in every state. `Look` gives the buttons and the fields theirs.
+        // egui's own widgets take the text color in every state. `Look` gives the buttons and the fields theirs.
         // The fills here are the handle of a scroll bar. None may be clear: a clear one marks a menu's entries.
         let w = &mut v.widgets;
         for (state, face) in [(&mut w.noninteractive, th.bg), (&mut w.inactive, th.scroll[0]), (&mut w.hovered, th.scroll[1]), (&mut w.active, th.scroll[2]), (&mut w.open, th.scroll[1])] {
@@ -293,7 +293,7 @@ impl StyleProvider<TextEditStyle> for Look {
         let read_only = classes.has_class(&egui::TextEdit::CLASS_READ_ONLY);
         let tone = th.field_tone;
         let active = *state == WidgetState::Active;
-        // With the keyboard in it, the box's line is thicker and has the colour of the focus
+        // With the keyboard in it, the box's line is thicker and has the color of the focus
         let line = if active { Stroke::new(2.0, th.focus) } else { Stroke::new(1.0, tone.edge) };
         let boxed = egui::Frame { fill: tone.fill, inner_margin: Margin::symmetric(5, 3), corner_radius: CornerRadius::same(th.radius), ..Default::default() };
         let frame = match th.field {
@@ -324,10 +324,10 @@ pub fn row_radius(th: &Theme) -> f32 {
     th.round.min(4) as f32
 }
 
-/// The arrow of a combo box, in the colour of its button's text.
+/// The arrow of a combo box, in the color of its button's text.
 pub fn combo_icon(ui: &Ui, rect: Rect, visuals: &egui::style::WidgetVisuals, open: bool) {
     let th = theme(ui.ctx());
-    // egui hands over the colours of the button's state. The pointer is on the button when they are the lit ones.
+    // egui hands over the colors of the button's state. The pointer is on the button when they are the lit ones.
     let lit = open || visuals.fg_stroke.color == th.hover_text;
     let rect = Rect::from_center_size(rect.center(), egui::vec2(rect.width() * 0.7, rect.height() * 0.45));
     ui.painter().add(egui::Shape::rotated_triangle(rect, 0.0, if lit { th.button_hover.text } else { th.button.text }));
@@ -400,7 +400,7 @@ pub fn framed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
     out.inner
 }
 
-/// A filled box with the theme's frame round it: the note in the middle of the 3D view.
+/// A filled box with the theme's frame around it: the note in the middle of the 3D view.
 pub fn plaque(painter: &egui::Painter, rect: Rect) {
     let outer = rect.expand(RIDGE);
     let th = theme(painter.ctx());
@@ -408,8 +408,8 @@ pub fn plaque(painter: &egui::Painter, rect: Rect) {
     border(painter, outer);
 }
 
-/// The spotlight of the tour: the window is dimmed with the colour of the theme's scrim, `spot` stays bright and gets a line in
-/// the theme's focus colour. Without a spot the whole window is dimmed.
+/// The spotlight of the tour: the window is dimmed with the color of the theme's scrim, `spot` stays bright and gets a line in
+/// the theme's focus color. Without a spot the whole window is dimmed.
 pub fn spotlight(painter: &egui::Painter, window: Rect, spot: Option<Rect>) {
     let th = theme(painter.ctx());
     // Lighter than a dialog's scrim, and as strong in every theme: the window stays readable
@@ -436,7 +436,7 @@ pub fn spotlight(painter: &egui::Painter, window: Rect, spot: Option<Rect>) {
 /// The length of a callout's pointer.
 pub const POINTER: f32 = 9.0;
 
-/// The bubble of the tour: a box in the colours of the theme's menus, with a pointer whose tip is `tip`. The
+/// The bubble of the tour: a box in the colors of the theme's menus, with a pointer whose tip is `tip`. The
 /// pointer leaves the side of the box that is nearest to the tip.
 pub fn callout(painter: &egui::Painter, rect: Rect, tip: Option<egui::Pos2>) {
     let th = theme(painter.ctx());
@@ -617,7 +617,7 @@ pub fn logo(ui: &mut Ui, text: &str, size: f32) -> Response {
     let step = (size / 14.0).round().max(1.0);
     let galley = ui.fonts_mut(|f| f.layout_job(job(front)));
     let text_size = galley.size();
-    // The room round the letters, and where the letters start in it
+    // The room around the letters, and where the letters start in it
     let (extra, at) = match th.logo {
         Logo::WordArt => (egui::vec2(2.0 * step + 2.0, 2.0 * step), egui::Vec2::ZERO),
         Logo::Label => (egui::vec2(6.0 * step + apart, 2.0 * step + 1.0), egui::vec2(3.0 * step, 0.0)),
@@ -711,9 +711,9 @@ fn stars(painter: &egui::Painter, rect: Rect, bright: Color32, faint: Color32, d
     let mut mesh = egui::Mesh::default();
     let star = |mesh: &mut egui::Mesh, at: egui::Vec2, pts: &[(f32, f32); 10], color: Color32| {
         let n = pts.len() as f32;
-        let centre = egui::pos2(pts.iter().map(|p| p.0).sum::<f32>() / n, pts.iter().map(|p| p.1).sum::<f32>() / n);
+        let center = egui::pos2(pts.iter().map(|p| p.0).sum::<f32>() / n, pts.iter().map(|p| p.1).sum::<f32>() / n);
         let base = mesh.vertices.len() as u32;
-        mesh.colored_vertex(centre + at, color);
+        mesh.colored_vertex(center + at, color);
         for p in pts {
             mesh.colored_vertex(egui::pos2(p.0, p.1) + at, color);
         }
@@ -977,7 +977,7 @@ pub struct Anchor {
 }
 
 /// Names a thing the next `note` belongs to: a title, a row, a checkbox. `hover` is the place of the tooltip.
-/// `cue` is the place of its letters and their colour.
+/// `cue` is the place of its letters and their color.
 pub fn anchor(ui: &Ui, hover: Rect, cue: Option<(Rect, Color32)>) {
     if info(ui.ctx()) == Info::Hover {
         let pass = ui.ctx().cumulative_pass_nr();
@@ -1061,7 +1061,7 @@ pub fn note_at(ui: &mut Ui, at: Option<Anchor>, text: &str) {
     explain(ui, text, Some(12.0), at.map(|m| (m.hover, m.cue)));
 }
 
-/// A small note about what is in `hover`. The cue goes under `cue`, in the colour of muted text.
+/// A small note about what is in `hover`. The cue goes under `cue`, in the color of muted text.
 pub fn note_on(ui: &mut Ui, hover: Rect, cue: Option<Rect>, text: &str) {
     let color = theme(ui.ctx()).muted;
     explain(ui, text, Some(12.0), Some((hover, cue.map(|c| (c, color)))));
@@ -1155,7 +1155,7 @@ pub fn mini_menu(ui: &mut Ui, text: &str, label: &str, tip: &str, add: impl FnOn
     menu_of(ui, b, label, tip, add);
 }
 
-/// A small button on a panel's title bar that opens a menu: the bar's letter colour, and no frame.
+/// A small button on a panel's title bar that opens a menu: the bar's letter color, and no frame.
 pub fn bar_menu(ui: &mut Ui, text: &str, label: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
     let color = bar_color(theme(ui.ctx()), Rank::Panel);
     let b = egui::Button::new(RichText::new(text).size(12.0).color(color)).small().frame(false);
@@ -1175,13 +1175,13 @@ fn menu_of(ui: &mut Ui, b: egui::Button, label: &str, tip: &str, add: impl FnOnc
     }
 }
 
-/// A checkbox: a box in the theme's shape, filled with a tick when it is on.
+/// A checkbox: a box in the theme's shape, filled with a check mark when it is on.
 pub fn checkbox(ui: &mut Ui, on: &mut bool, text: impl Into<egui::WidgetText>) -> Response {
     let lit = theme(ui.ctx()).check;
     tick_box(ui, on, text.into(), lit)
 }
 
-/// A checkbox whose box takes a colour when it is on: a layer of the level list.
+/// A checkbox whose box takes a color when it is on: a layer of the level list.
 pub fn tick_box(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32) -> Response {
     const SIDE: f32 = 14.0;
     let th = theme(ui.ctx());
@@ -1217,8 +1217,8 @@ pub fn tick_box(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32
             painter.rect_stroke(square, radius, Stroke::new(1.0, line), egui::StrokeKind::Inside);
         }
         if checked {
-            // The tick: black on a light box, white on a dark one. A box in the colour of the main action takes
-            // the colour of that button's letters.
+            // The check mark: black on a light box, white on a dark one. A box in the color of the main action takes
+            // the color of that button's letters.
             let c = square.center();
             let dark = if lit == th.primary.fill {
                 th.primary.text
@@ -1238,7 +1238,7 @@ pub fn tick_box(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32
     r
 }
 
-/// The colour of a check's mark.
+/// The color of a check's mark.
 pub fn level_color(th: &Theme, level: &str) -> Color32 {
     th.marks[["ok", "err", "warn", "imp"].iter().position(|l| *l == level).unwrap_or(4)]
 }
@@ -1313,7 +1313,7 @@ fn mark(painter: &egui::Painter, th: &Theme, level: &str, at: Rect) {
     }
 }
 
-/// A line of the Checks panel or of a dialog's report: a box with the theme's mark in the level's colour. True
+/// A line of the Checks panel or of a dialog's report: a box with the theme's mark in the level's color. True
 /// when it was clicked.
 pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: Option<&(String, String)>, sub: Option<&str>, title: Option<&str>) -> bool {
     let th = theme(ui.ctx());
@@ -1364,7 +1364,7 @@ pub fn check_line(ui: &mut Ui, level: &str, text: &str, clickable: bool, link: O
     clicked
 }
 
-/// A bar that fills from the left by `ratio`, in the colour for "too much" when `over`.
+/// A bar that fills from the left by `ratio`, in the color for "too much" when `over`.
 pub fn meter(ui: &mut Ui, ratio: f32, over: bool) {
     let th = theme(ui.ctx());
     let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 10.0), egui::Sense::hover());
@@ -1380,7 +1380,7 @@ pub fn boxed(th: &Theme, fill: Color32) -> egui::Frame {
     egui::Frame::new().fill(fill).stroke(Stroke::new(1.0, th.card_edge)).corner_radius(th.round)
 }
 
-/// The frame of a chip over the 3D view. An edited level's chip has a line in the colour of "edited".
+/// The frame of a chip over the 3D view. An edited level's chip has a line in the color of "edited".
 pub fn chip(th: &Theme, edited: bool) -> egui::Frame {
     egui::Frame::new().fill(th.chip.fill).stroke(Stroke::new(1.0, if edited { th.chip_edited } else { th.chip.edge })).corner_radius(th.round)
 }

@@ -88,11 +88,11 @@ pub fn soot(seed: u64) -> Image {
     im
 }
 
-/// A flat black disc of soot, 280 across.
+/// A flat black disk of soot, 280 across.
 pub fn build_scorch() -> Soup {
     let mut s = Soup::new();
     let m = s.material(soot(3), true, 1.2);
-    mk::disc(&mut s, [0.0; 3], 140.0, 14, m);
+    mk::disk(&mut s, [0.0; 3], 140.0, 14, m);
     s
 }
 

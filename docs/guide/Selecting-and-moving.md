@@ -20,7 +20,7 @@ Press `B` (or `Box select`), then drag a box in the viewer to select everything 
 ![A box being dragged over the garibs and the enemy on the sand](img/box-select.png)
 
 - Hold `Shift` and the box will add to what's already selected.
-- The landscape isn't selected. Tick `box select includes landscape` in the `Level` panel to select it too.
+- The landscape isn't selected. Check `box select includes landscape` in the `Level` panel to select it too.
 - `Ctrl`+`Alt`+drag to draw a box without the tool.
 
 ## Move, rotate, scale
@@ -41,7 +41,7 @@ Not everything can turn or grow - see _[What can rotate and scale](../Using-the-
 ![The top row of the toolbar, with Move, Rotate, Scale, Pivot and Snap](img/toolbar-edit-row.png)
 
 - `Snap` moves in steps of `1`, `10` or `50`, turns in steps of 15°, and scales in steps of 0.05.
-- `Pivot` is for several objects: `group centre` turns them around their middle, `each origin` turns each one on its own spot.
+- `Pivot` is for several objects: `group center` turns them around their middle, `each origin` turns each one on its own spot.
 
 ## The number fields
 

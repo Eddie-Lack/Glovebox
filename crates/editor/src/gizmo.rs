@@ -30,7 +30,7 @@ pub enum Space {
     Local,
 }
 
-/// A handle: one axis, a plane of two axes, or the centre.
+/// A handle: one axis, a plane of two axes, or the center.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Handle {
     X,
@@ -219,12 +219,12 @@ pub fn cone(base: V3, tip: V3, radius: f64, sides: u32) -> Geometry {
     Geometry::from_f64(&pts, Some(&idx))
 }
 
-pub fn cube(centre: V3, half: f64) -> Geometry {
+pub fn cube(center: V3, half: f64) -> Geometry {
     let mut p = Vec::new();
     for x in [-1.0, 1.0] {
         for y in [-1.0, 1.0] {
             for z in [-1.0, 1.0] {
-                p.push([x * half + centre[0], y * half + centre[1], z * half + centre[2]]);
+                p.push([x * half + center[0], y * half + center[1], z * half + center[2]]);
             }
         }
     }
@@ -620,7 +620,7 @@ mod tests {
         g.drag_to(&c, x1, y1);
         assert!((g.scale[1] - 2.0).abs() < 1e-9 && g.scale[0] == 1.0 && g.scale[2] == 1.0);
         g.end();
-        // the centre scales all three by the mouse's way up and right
+        // the center scales all three by the mouse's way up and right
         assert!(g.begin(&c, 400.0, 300.0));
         g.drag_to(&c, 430.0, 280.0);
         assert_eq!(g.scale, [1.5; 3]);

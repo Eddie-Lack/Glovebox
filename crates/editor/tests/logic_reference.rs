@@ -36,6 +36,15 @@ fn q4(v: &Value) -> [f64; 4] {
     let a = fs(v);
     [a[0], a[1], a[2], a[3]]
 }
+/// The wording was changed to American English after the recordings were made. A recorded text goes through this
+/// table (old words, new words) before it is compared.
+const AMERICAN: [(&str, &str); 3] =
+    [("Turns about its centre", "Turns about its center"), ("fly towards a point", "fly toward a point"), ("swings round to", "swings around to")];
+
+fn american(text: &str) -> String {
+    AMERICAN.iter().fold(text.to_string(), |t, (old, new)| t.replace(old, new))
+}
+
 fn s(v: &Value) -> &str {
     v.as_str().expect("text")
 }
@@ -84,7 +93,7 @@ fn format() -> &'static Format<'static> {
 }
 
 #[test]
-fn vec_maths() {
+fn vec_math() {
     let Some(o) = reference("vec.json") else { return };
     for r in list(&o["euler"]) {
         let e = v3(&r["e"]);
@@ -263,7 +272,7 @@ fn puzzles_and_scripts() {
         assert_eq!(got.len(), want.len(), "{}", what);
         for p in list(&l["puzzles"]) {
             let n = doc.node_at(&path(&p["path"])).unwrap();
-            assert_eq!(puzzles::summary(&doc, n), s(&p["summary"]), "{}", what);
+            assert_eq!(puzzles::summary(&doc, n), american(s(&p["summary"])), "{}", what);
             assert_eq!(puzzles::fires(&doc, n), p["fires"].as_i64(), "{}", what);
             let lg = puzzles::logic(&doc, n);
             assert_eq!(serde_json::json!([lg.name(), lg.count()]), p["logic"], "{}", what);
@@ -366,7 +375,7 @@ fn presets_xml() {
     let Some(o) = reference("presets.json") else { return };
     for (key, want) in o["presets"].as_object().unwrap() {
         let p = presets::preset(key).unwrap();
-        assert_eq!(serde_json::json!([p.name, p.about, [p.model.0, p.model.1]]), *want);
+        assert_eq!(serde_json::json!([p.name, p.about, [p.model.0, p.model.1]]), serde_json::json!([want[0], american(s(&want[1])), want[2]]));
     }
     assert_eq!(o["presets"].as_object().unwrap().len(), presets::PRESETS.len());
     let ground = |q: [f64; 3]| q[0] * 0.01 + q[2] * 0.02 + 5.0;
@@ -604,9 +613,9 @@ fn entities_of_every_level() {
         let root = d4.root();
         for (i, p) in d4.kids(root, "Puzzle").into_iter().enumerate() {
             if let Some(z) = entities::camera_zone(&d4, p) {
-                let centre = entities::zone_centre(&d4, z.vol.unwrap());
+                let center = entities::zone_center(&d4, z.vol.unwrap());
                 let key = entities::CAM_PRESETS[i % entities::CAM_PRESETS.len()].0;
-                let mut new = entities::preset_zone(key, 0.37 * i as f64 - 4.0, centre).unwrap();
+                let mut new = entities::preset_zone(key, 0.37 * i as f64 - 4.0, center).unwrap();
                 if i % 3 == 0 {
                     new = z.clone();
                     if i % 2 == 1 {
@@ -620,7 +629,7 @@ fn entities_of_every_level() {
     }
     println!("{} entities of {} levels are the same", count, list(&o["levels"]).len());
     for (r, p) in list(&o["presets"]).iter().zip(entities::CAM_PRESETS.iter().flat_map(|p| [p; 4])) {
-        assert_eq!((s(&r["key"]), s(&r["name"]), s(&r["note"])), *p);
+        assert_eq!((s(&r["key"]), s(&r["name"]), american(s(&r["note"])).as_str()), *p);
         let z = entities::preset_zone(p.0, f(&r["facing"]), [10.0, 20.0, -30.0]).unwrap();
         let got = serde_json::json!({"look": z.look, "speed": z.speed, "distance": z.distance, "height": z.height, "fly": z.fly});
         for (k, v) in got.as_object().unwrap() {

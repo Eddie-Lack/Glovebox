@@ -15,7 +15,7 @@ _Back to the [guide](README.md)_
 ## The Level panel
 
 - Type in `Filter entities…` to find something by name
-- The tick boxes show and hide a whole type: garibs, enemies, platforms, etc.
+- The checkboxes show and hide a whole type: garibs, enemies, platforms, etc.
 - Click a group's title to fold it
 - `all` selects the whole group
 
@@ -38,7 +38,7 @@ Every panel can move and be hidden.
 
 ![The inspector on the left, the Level panel on the right, the checks under the view, and the Panels menu open](img/window-panels.png)
 
-- The tick box shows or hides a panel
+- The checkbox shows or hides a panel
 - `Left` and `Right` pick its side. The `Checks` can also go to the `Bottom`, under the view
 - `Stacked` puts the panels of one side one under the other. `Tabbed` makes them tabs
 - `Reset layout` puts everything back

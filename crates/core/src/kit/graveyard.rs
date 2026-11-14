@@ -88,7 +88,7 @@ fn pumpkin_rind(w: usize, h: usize, seed: u64) -> Image {
     im
 }
 
-/// The pumpkin's skin without a face (16x32). It repeats round the sides and the back, at the face's scale.
+/// The pumpkin's skin without a face (16x32). It repeats around the sides and the back, at the face's scale.
 pub fn pumpkin_skin() -> Image {
     pumpkin_rind(16, 32, 11)
 }
@@ -187,7 +187,7 @@ pub fn pumpkin_face(kind: usize) -> Image {
     im
 }
 
-// The pumpkin's body has 12 columns round it. The face is on these four.
+// The pumpkin's body has 12 columns around it. The face is on these four.
 const PUMPKIN_COLUMNS: usize = 12;
 const PUMPKIN_FRONT: std::ops::Range<usize> = 1..5;
 
@@ -209,7 +209,7 @@ pub fn build_pumpkin(kind: usize) -> Soup {
         [r * a.cos(), y, r * a.sin()]
     };
     // The game repeats every texture: the object format has no setting that stops it. The face is therefore on
-    // its own texture, laid exactly once over the four front columns (30 to 150 degrees round the body, with +z
+    // its own texture, laid exactly once over the four front columns (30 to 150 degrees around the body, with +z
     // in the middle). The other eight columns repeat the plain skin, one tile each.
     let skin = s.material(pumpkin_skin(), false, BRIGHT);
     let wrap = |col: usize, u: f64, v: f64| -> (usize, Uv) {

@@ -3,7 +3,7 @@
 use glovebox_core::backend::Backend;
 use glovebox_editor::drafts::Drafts;
 use glovebox_editor::editor::{Button, Editor, MemorySettings, Mods, Scatter};
-use glovebox_editor::entities::{camera_zone, preset_zone, set_camera_zone, zone_centre, Ent, EntId};
+use glovebox_editor::entities::{camera_zone, preset_zone, set_camera_zone, zone_center, Ent, EntId};
 use glovebox_editor::fixture::{FixtureBackend, SIGN};
 use glovebox_editor::gizmo::{Handle, Mode};
 use glovebox_editor::presets::PRESETS;
@@ -153,8 +153,8 @@ fn editor_on_the_fixture() {
     let y = vec::euler_yzx_from_quat(grave.get_quat(&ed.doc).unwrap())[1];
     t.check("rotation survives a scale", (y - 0.6).abs() < 1e-3);
 
-    // Group rotation about the group centre
-    let centre = |ed: &Editor| {
+    // Group rotation about the group center
+    let center = |ed: &Editor| {
         let g = kinds(ed, "garib");
         let mut c = [0.0; 3];
         for &i in &g {
@@ -164,11 +164,11 @@ fn editor_on_the_fixture() {
     };
     let garibs = kinds(&ed, "garib");
     ed.set_selection(garibs);
-    let c0 = centre(&ed);
+    let c0 = center(&ed);
     ed.apply_transform(None, Some(90.0), 1, None);
-    let c1 = centre(&ed);
+    let c1 = center(&ed);
     t.check(
-        "a group rotation keeps the centre and moves the garibs",
+        "a group rotation keeps the center and moves the garibs",
         (0..3).all(|k| (c0[k] - c1[k]).abs() < 0.01) && ed.selection.len() == 3,
     );
 
@@ -219,7 +219,7 @@ fn editor_on_the_fixture() {
     let znode = ed.entities[zone].node;
     ed.edit(|ed| {
         let vol = camera_zone(&ed.doc, znode).unwrap().vol.unwrap();
-        let z = preset_zone("high", 0.0, zone_centre(&ed.doc, vol)).unwrap();
+        let z = preset_zone("high", 0.0, zone_center(&ed.doc, vol)).unwrap();
         set_camera_zone(&mut ed.doc, znode, &z);
     });
     let z = camera_zone(&ed.doc, ed.entities[ent(&ed, |e| e.zone).unwrap()].node).unwrap();
@@ -631,7 +631,7 @@ fn exit_triggers_on_the_fixture() {
     // The block is a cube of 100. At a scale of 0.3 its corners are 15 * sqrt(3) from the middle.
     let t = ed.exit_trigger(goal).unwrap();
     let corner = f64::from((3.0f32 * 15.0 * 15.0).sqrt());
-    assert_eq!((t.exit_type, t.centre, t.rule.who, t.zero.clone()), (1, [380.0, 120.0, -60.0], Who::Ball, None));
+    assert_eq!((t.exit_type, t.center, t.rule.who, t.zero.clone()), (1, [380.0, 120.0, -60.0], Who::Ball, None));
     assert!((t.radius.unwrap() - corner).abs() < 1e-4, "{:?}", t.radius);
     assert!(!t.dead() && !has_check(&mut ed, None, "can never fire"));
     // The other platforms have no exit and no sphere
@@ -641,16 +641,16 @@ fn exit_triggers_on_the_fixture() {
     // The sphere: in the world at the platform, as large as the radius, outside the entity's box
     let sphere = ed.nodes[goal].exit.unwrap();
     let node = &ed.graph[sphere];
-    assert!(node.visible && node.pos == t.centre && (node.scale[0] - corner).abs() < 1e-4);
+    assert!(node.visible && node.pos == t.center && (node.scale[0] - corner).abs() < 1e-4);
     let (obj_box, sphere_box) = (ed.obj_box(goal), ed.graph.bounds(sphere));
     assert!(sphere_box.max[0] - sphere_box.min[0] > obj_box.max[0] - obj_box.min[0] + 10.0);
     // A click on the sphere, beside the block, selects what is behind it: nothing here, or the ground
     let none = Mods::default();
     let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
-    let beside = px(&ed, vec::add(t.centre, vec::scale(across, (corner - 3.0) / vec::norm(across))));
+    let beside = px(&ed, vec::add(t.center, vec::scale(across, (corner - 3.0) / vec::norm(across))));
     click(&mut ed, beside, none);
     assert!(!ed.selection.contains(&goal), "{:?}", ed.selection);
-    let on = px(&ed, t.centre);
+    let on = px(&ed, t.center);
     click(&mut ed, on, none);
     assert_eq!(ed.selection, [goal]);
 

@@ -78,7 +78,7 @@ fn platform(doc: &mut Doc, model: Model, p: [f64; 3], scale: Option<[f64; 3]>, p
     n
 }
 
-/// Rounds to four decimals, by the exact value of the double. A half goes to the even neighbour.
+/// Rounds to four decimals, by the exact value of the double. A half goes to the even neighbor.
 fn round4(v: f64) -> f64 {
     if !v.is_finite() {
         return v;
@@ -192,7 +192,7 @@ pub const PRESETS: &[Preset] = &[
     Preset { key: "lift", name: "Lift", about: "Rises once when Glover walks onto it. A puzzle with a box around it nudges it", model: LIFT },
     Preset { key: "button", name: "Slam button", about: "Goes down when Glover slams it with the ball. Use its tag in a puzzle condition", model: GLOVEBU },
     Preset { key: "mover", name: "Moving platform", about: "Goes back and forth along two points. Uses the selected object's model, or a deck", model: LIFT },
-    Preset { key: "spinner", name: "Spinner", about: "Turns about its centre all the time. Uses the selected object's model, or a deck", model: LIFT },
+    Preset { key: "spinner", name: "Spinner", about: "Turns about its center all the time. Uses the selected object's model, or a deck", model: LIFT },
     Preset { key: "conveyor", name: "Conveyor", about: "Pushes what stands on it along the view's direction. 7.5 a frame stops a walking ball", model: LIFT },
     Preset { key: "ice", name: "Ice floor", about: "The ball keeps its speed on it", model: LIFT },
     Preset { key: "spike", name: "Spike", about: "An invisible point that hurts Glover and bursts the ball. Put any model on it as the visible part", model: BALLBIT },
@@ -341,7 +341,7 @@ pub fn build(
         }
         "entry" => {
             // mod/slots.c: a SPACE_EXIT (11) loading zone with the entry tag sets the flag for the extra levels.
-            // The game tests the glove's centre against the ballbit's radius, 43.8.
+            // The game tests the glove's center against the ballbit's radius, 43.8.
             let n = platform(doc, BALLBIT, [p[0], p[1] + 30.0, p[2]], None, true);
             add(doc, n, "SetExit", &[("behavior", Val::I(11)), ("type", Val::S("loading_zone"))]);
             add(doc, n, "PlatSetTag", &[("tag", Val::I(99))]);

@@ -44,7 +44,7 @@ pub struct Material {
     pub alpha_cutoff: f32,
     /// Only billboards are marked double-sided. The editor draws every material double-sided.
     pub double_sided: bool,
-    /// The game draws the mesh with its vertex colours and without lights.
+    /// The game draws the mesh with its vertex colors and without lights.
     pub unlit: bool,
     pub wrap_s: Wrap,
     pub wrap_t: Wrap,
@@ -71,7 +71,7 @@ impl Primitive {
         self.indices.len() / 3
     }
 
-    /// The normals the editor uses when the primitive has none: for each vertex, the normalised sum of the
+    /// The normals the editor uses when the primitive has none: for each vertex, the normalized sum of the
     /// cross products of its triangles.
     pub fn computed_normals(&self) -> Vec<[f32; 3]> {
         let mut sum = vec![[0f32; 3]; self.positions.len()];

@@ -29,7 +29,7 @@ fn inside(p: [f64; 2], poly: &[[f64; 2]]) -> bool {
     on
 }
 
-/// The colour and cover of a point of the unit square.
+/// The color and cover of a point of the unit square.
 fn sample(p: [f64; 2], star: &[[f64; 2]]) -> Option<[f64; 3]> {
     let d = (p[0] - 0.5).hypot(p[1] - 0.5);
     if d > 0.46 {

@@ -23,7 +23,7 @@ New here? Start with _[Getting started](Getting-started.md)_.
 | [![The exit of Atlantis 1 with its green sphere](img/thumb-exits.png)](Exits.md) | _[Exits](Exits.md)_ |
 | [![A path on the sand with garibs along it](img/thumb-path.png)](Path.md) | _[The Path tool](Path.md)_ |
 | [![The level settings in the Inspector](img/thumb-level-settings.png)](Level-settings.md) | _[Level settings](Level-settings.md)_ |
-| [![The Checks panel with two green ticks](img/thumb-checks.png)](Checks.md) | _[The checks](Checks.md)_ |
+| [![The Checks panel with two green check marks](img/thumb-checks.png)](Checks.md) | _[The checks](Checks.md)_ |
 | [![The Import model dialog](img/thumb-import-model.png)](Import-your-own-model-(untested).md) | _[Import your own model](Import-your-own-model-(untested).md)_ |
 | [![The Export patch dialog](img/thumb-test-build-share.png)](Test-build-and-share.md) | _[Test, build and share](Test-build-and-share.md)_ |
 | [![The Options menu, open](img/thumb-options.png)](Options.md) | _[Options](Options.md)_ |

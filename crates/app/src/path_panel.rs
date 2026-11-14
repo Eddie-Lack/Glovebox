@@ -67,7 +67,7 @@ const WHAT: [(&str, &str); 2] = [("garib", "garibs"), ("copy", "copies of the se
 const GARIBS: [(&str, &str); 4] = [("garib", "garib"), ("bang_500pt", "500-point bang"), ("extra_life", "extra life"), ("mad_garib", "mad garib")];
 const SIDES: [(f64, &str); 4] = [(0.0, "on the path"), (1.0, "right side"), (-1.0, "left side"), (2.0, "both sides")];
 const SC_SIDES: [(&[f64], &str); 3] = [(&[1.0, -1.0], "both sides"), (&[1.0], "right side"), (&[-1.0], "left side")];
-const SC_TURNS: [(&str, &str); 3] = [("free", "any way"), ("player", "towards the path"), ("path", "along the path")];
+const SC_TURNS: [(&str, &str); 3] = [("free", "any way"), ("player", "toward the path"), ("path", "along the path")];
 
 fn row(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui)) {
     let r = ui.horizontal(|ui| {

@@ -49,7 +49,7 @@ Pick another level in the list at the top.
 
 The first time, the editor asks if you want a quick tour.
 
-![The welcome: Is this your first time here? Want a quick tour of the editor? With the buttons No thanks and Show me round](img/welcome.png)
+![The welcome: Is this your first time here? Want a quick tour of the editor? With the buttons No thanks and Show me around](img/welcome.png)
 
 ![A step of the tour: the Level panel is lit, and a bubble next to it explains selecting](img/tour-step.png)
 

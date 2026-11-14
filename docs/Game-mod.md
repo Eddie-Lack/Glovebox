@@ -29,7 +29,7 @@ The checks panel, the import panel and the export dialog will say when it gets a
 A Space level (1, 2, 3, the boss or the bonus) can be an extra level instead of replacing the shipped one
 
 1. Open the Space level and edit it
-2. With nothing selected, tick `Extra level (Expansion Pak)` under `Title, music and clock`
+2. With nothing selected, check `Extra level (Expansion Pak)` under `Title, music and clock`
 3. Open a hub, `+ Add`, `Presets`, `Extra levels entry`, and put it where you want the way in
 4. `Build all…` both levels into one ROM or patch
 
@@ -37,7 +37,7 @@ The glove going into the entry zone takes you to the Space way room, with your e
 
 - Progress in the extra levels is saved apart from the shipped Space levels
 - Every other portal takes you back to the shipped game
-- Checkpoint rings you add after ticking `Extra level` count when the ball rolls through them
+- Checkpoint rings you add after checking `Extra level` count when the ball rolls through them
 
 Note: the entry zone only works once the hub's portals do
 

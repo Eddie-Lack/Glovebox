@@ -1,7 +1,7 @@
 # Third party notices
 
 This repository uses, bundles or builds on the projects below. Each section names the source, where it is used, its
-licence and the licence text or a link to it. This file does not set a licence for Glovebox itself.
+license and the license text or a link to it. This file does not set a license for Glovebox itself.
 
 The editor never includes game data. Nothing here is copied from a Glover ROM.
 
@@ -20,7 +20,7 @@ The editor never includes game data. Nothing here is copied from a Glover ROM.
 ## 1. libgarib
 
 - Source: https://github.com/naclomi/libgarib (by naclomi), at commit `cf879296afc5108867de03facbca428923618f29`
-- Licence: MIT, copyright (c) 2021 Naomi Alterman
+- License: MIT, copyright (c) 2021 Naomi Alterman
 - Use:
   - `formats/glover.lev.ksy` (its description of the level file, with one change of ours) and
     `formats/map.0x8e6e01ff.0xccb4f948.yaml` (its map of the retail ROM) are copies of its files. The tables
@@ -29,7 +29,7 @@ The editor never includes game data. Nothing here is copied from a Glover ROM.
     (`fla2.rs`), object banks and their models (`objbank.rs`, `model.rs`), texture banks (`texbank.rs`), the ROM
     tools with the quickboot and copyskip patches (`rom.rs`), and packing a model into an object bank
     (`custom/pack.rs`).
-  - Our changes to it are under the same licence.
+  - Our changes to it are under the same license.
 - The text below is its `LICENSE.md` at that commit.
 
 ```text
@@ -67,7 +67,7 @@ SOFTWARE.
 ## 2. noclip.website
 
 - Source: https://github.com/magcius/noclip.website, at commit `fd973ff240233c63883750a557c62baf6ff2a6c7`
-- Licence: MIT, copyright (c) 2018 Jasper St. Pierre. The licence file also says that some of its game
+- License: MIT, copyright (c) 2018 Jasper St. Pierre. The license file also says that some of its game
   implementations were reverse engineered and are not clean-room work.
 - Use:
   - `crates/core/data/scenes.json` is made from its Glover scene table (`src/Glover/scenes.ts`: level names, level
@@ -119,8 +119,8 @@ SOFTWARE.
 ## 3. three.js
 
 - Source: https://github.com/mrdoob/three.js
-- Licence: MIT, copyright (c) 2010-2023 three.js authors
-- Use: the editor's maths (`crates/editor/src/vec.rs`: Euler angles, quaternions, look-at) follows three.js's
+- License: MIT, copyright (c) 2010-2023 three.js authors
+- Use: the editor's math (`crates/editor/src/vec.rs`: Euler angles, quaternions, look-at) follows three.js's
   formulas and conventions, and the lighting of the 3D view (`crates/app/src/render/shaders.wgsl`) follows its
   Lambert material. three.js itself is not included.
 
@@ -151,7 +151,7 @@ THE SOFTWARE.
 ## 4. gloveworld
 
 - Source: https://github.com/Eddie-Lack/gloveworld, a matching decompilation of Glover (USA)
-- Licence: the checkout has no licence file. It is a project of the same owner as this repository. The owner
+- License: the checkout has no license file. It is a project of the same owner as this repository. The owner
   decides how its files may be reused.
 - Use, by file:
   - `crates/core/data/decomp.json` is built by `tools/build_xref.py` from gloveworld's sources: the names of
@@ -166,7 +166,7 @@ THE SOFTWARE.
 ## 5. Pillow
 
 - Source: https://github.com/python-pillow/Pillow
-- Licence: MIT-CMU (HPND)
+- License: MIT-CMU (HPND)
 - Use: two files follow Pillow's C code, written again in Rust, because the pictures must come out pixel for pixel
   as Pillow makes them. `crates/core/src/kit/image.rs` follows its drawing rules and resize (`libImaging/Draw.c`,
   `Resample.c`). `crates/core/src/custom/image.rs` follows its Lanczos resize (`Resample.c`). Pillow itself is not
@@ -208,20 +208,20 @@ OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 
 - Sources: the Independent JPEG Group's libjpeg (https://ijg.org) and libjpeg-turbo
   (https://github.com/libjpeg-turbo/libjpeg-turbo)
-- Licence: the IJG licence. Full text: https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/README.ijg
+- License: the IJG license. Full text: https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/README.ijg
   (copyright (C) 1991-2020, Thomas G. Lane, Guido Vollbeding)
 - Use: `crates/core/src/custom/jpeg.rs` is a JPEG decoder written in Rust that follows libjpeg's method step by step
-  (Huffman decoding, the integer inverse DCT of `jidctint.c`, the upsampling of `jdsample.c`, the colour conversion of
+  (Huffman decoding, the integer inverse DCT of `jidctint.c`, the upsampling of `jdsample.c`, the color conversion of
   `jdcolor.c`), because a picture must decode to the pixels libjpeg-turbo gives. No libjpeg code is included.
 - This software is based in part on the work of the Independent JPEG Group.
 
 ## 7. Rust crates and fonts in the app
 
 The app is built from Rust crates of crates.io. `Cargo.lock` pins their versions. The release archive holds each
-crate's licence files in its `licenses/` folder (`tools/licenses.py` collects them; `CRATES.txt` lists them per crate). Most are
+crate's license files in its `licenses/` folder (`tools/licenses.py` collects them; `CRATES.txt` lists them per crate). Most are
 under MIT or Apache 2.0, at the user's choice. The main ones:
 
-| Crate | Used for | Licence |
+| Crate | Used for | License |
 | --- | --- | --- |
 | [egui, eframe, egui-wgpu](https://github.com/emilk/egui) | The window and its widgets | MIT or Apache 2.0 |
 | [wgpu](https://github.com/gfx-rs/wgpu) | Drawing, through Direct3D 12 or Vulkan | MIT or Apache 2.0 |
@@ -233,24 +233,24 @@ under MIT or Apache 2.0, at the user's choice. The main ones:
 | [sha1, sha2](https://github.com/RustCrypto/hashes) | Hashes | MIT or Apache 2.0 |
 | [crc32fast](https://github.com/srijs/rust-crc32fast) | CRC32 for patches | MIT or Apache 2.0 |
 
-egui's font crate (`epaint_default_fonts`) compiles these fonts into the app. Their licence texts are in the
+egui's font crate (`epaint_default_fonts`) compiles these fonts into the app. Their license texts are in the
 archive's `licenses/` folder, in the files that start with `epaint_default_fonts-`.
 
-| Font | Licence |
+| Font | License |
 | --- | --- |
 | Ubuntu-Light | Ubuntu Font Licence 1.0 |
-| Hack-Regular | MIT, with the Bitstream Vera licence for the glyphs it takes from that font |
+| Hack-Regular | MIT, with the Bitstream Vera license for the glyphs it takes from that font |
 | NotoEmoji-Regular | SIL Open Font License 1.1 |
 | emoji-icon-font, and egui-icons (a subset of it) | MIT |
 
 ## 8. mupen64plus
 
 - Source: https://github.com/mupen64plus/mupen64plus-core
-- Licence: GNU GPL version 2 or later. Full text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+- License: GNU GPL version 2 or later. Full text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 - Use: `tools/measure_heap.py` runs the game in mupen64plus through gloveworld's `tools/emu`. Nothing from mupen64plus is
   included.
 - It can also use the angrylion RDP plugin, which `gloveworld/tools/emu/setup.sh` fetches and builds. It is
-  under the MAME licence (https://github.com/ata4/angrylion-rdp-plus, file `MAME License.txt`). It is not included.
+  under the MAME license (https://github.com/ata4/angrylion-rdp-plus, file `MAME License.txt`). It is not included.
 
 ## 9. Tools used but not included
 

@@ -178,7 +178,7 @@ pub struct PathTool {
     pub pts: Vec<V3>,
 }
 
-/// Makes the picture of an icon: a glyph on a round badge of a colour like "#f2c14e".
+/// Makes the picture of an icon: a glyph on a round badge of a color like "#f2c14e".
 pub type IconMaker = Box<dyn FnMut(&str, &str) -> Option<Arc<Texture>>>;
 
 /// A `Format` that is either the shared one or built for another table.
@@ -289,7 +289,7 @@ pub struct Editor {
     /// The motion preview is on.
     pub preview: bool,
     pub show_fog: bool,
-    /// (colour, start, end) of the level's fog as the view draws it.
+    /// (color, start, end) of the level's fog as the view draws it.
     pub level_fog: Option<([f64; 3], f64, f64)>,
     pub background: [f64; 3],
     pub ambient: [f64; 3],

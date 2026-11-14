@@ -16,8 +16,8 @@ pub struct Rgba {
 }
 
 impl Rgba {
-    pub fn filled(w: usize, h: usize, colour: [u8; 4]) -> Rgba {
-        Rgba { w, h, px: colour.repeat(w * h) }
+    pub fn filled(w: usize, h: usize, color: [u8; 4]) -> Rgba {
+        Rgba { w, h, px: color.repeat(w * h) }
     }
 }
 
@@ -56,12 +56,12 @@ fn decode_png(data: &[u8]) -> Result<Rgba, String> {
     let (w, h) = (reader.info().width as u64, reader.info().height as u64);
     check_size(w, h)?;
     let source = (reader.info().color_type, reader.info().bit_depth);
-    // Pillow reads 16-bit grey as numbers up to 65535 and cuts them off at 255
-    let grey16 = source == (ColorType::Grayscale, BitDepth::Sixteen);
-    if grey16 {
+    // Pillow reads 16-bit gray as numbers up to 65535 and cuts them off at 255
+    let gray16 = source == (ColorType::Grayscale, BitDepth::Sixteen);
+    if gray16 {
         reader = open(Transformations::EXPAND)?;
     }
-    // The transparent colour of a picture without a palette. A 16-bit grey picture has none in Pillow.
+    // The transparent color of a picture without a palette. A 16-bit gray picture has none in Pillow.
     // The png crate keeps one byte for each part when the picture has 8 bits or fewer
     let key: Option<[u32; 3]> = match (source.0, reader.info().trns.as_deref()) {
         (ColorType::Grayscale, Some([v])) => Some([*v as u32; 3]),
@@ -78,14 +78,14 @@ fn decode_png(data: &[u8]) -> Result<Rgba, String> {
         (ColorType::Rgb, BitDepth::Eight) => buf.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
         (ColorType::GrayscaleAlpha, BitDepth::Eight) => buf.chunks_exact(2).flat_map(|p| [p[0], p[0], p[0], p[1]]).collect(),
         (ColorType::Grayscale, BitDepth::Eight) => buf.iter().flat_map(|&p| [p, p, p, 255]).collect(),
-        (ColorType::Grayscale | ColorType::GrayscaleAlpha, BitDepth::Sixteen) if grey16 => {
+        (ColorType::Grayscale | ColorType::GrayscaleAlpha, BitDepth::Sixteen) if gray16 => {
             let step = if info.color_type == ColorType::Grayscale { 2 } else { 4 };
             buf.chunks_exact(step).flat_map(|p| [if p[0] != 0 { 255 } else { p[1] }; 3].into_iter().chain([255])).collect()
         }
         _ => return Err("the image has a format that is not supported".into()),
     };
     if let Some(key) = key {
-        // Pillow packs the transparent colour into one number without cutting each part to 8 bits, and a pixel
+        // Pillow packs the transparent color into one number without cutting each part to 8 bits, and a pixel
         // that equals the number is transparent
         let packed = key[0] | key[1] << 8 | key[2] << 16 | 255 << 24;
         for p in px.chunks_exact_mut(4) {

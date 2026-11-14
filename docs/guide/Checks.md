@@ -8,13 +8,13 @@ The `Checks` run the game's own level rules on your level, after every edit.
 
 ## Reading it
 
-- A tick means all good.
+- A check mark means all good.
 - Problems will say what's wrong and on which object.
 - Click a row that names an object to select it and look at it.
 - Many rows link to the place in the game's code that makes the rule.
-- Problems the vanilla level already has are labelled. (those ones aren't yours)
+- Problems the vanilla level already has are labeled. (those ones aren't yours)
 
-In the `Level` panel, the name of an object with an error changes colour.
+In the `Level` panel, the name of an object with an error changes color.
 
 _[The reference](../Using-the-editor.md#checks)_ lists what gets checked.
 

@@ -11,7 +11,7 @@
 <style>
   /* like the Practice Rom's patch page */
   :root {
-    --navy: #000080; --deep: #000040; --grey: #c0c0c0; --grey-light: #ffffff; --grey-dark: #808080;
+    --navy: #000080; --deep: #000040; --gray: #c0c0c0; --gray-light: #ffffff; --gray-dark: #808080;
     --red: #cc0000; --yellow: #ffff00; --good: #00c000; --bad: #ff5050; --soft: #c0c0ff;
     color-scheme: dark;
   }
@@ -26,7 +26,7 @@
   }
   main {
     max-width: 620px; margin: 0 auto; background: var(--navy);
-    border: 6px ridge var(--grey); padding: 0 0 14px;
+    border: 6px ridge var(--gray); padding: 0 0 14px;
   }
   /* The logo: thick yellow letters with a red and black hard shadow */
   h1 {
@@ -50,17 +50,17 @@
   a:focus-visible { outline: 2px dotted var(--yellow); outline-offset: 2px; }
 
   .step { margin: 14px 14px 0; }
-  /* The drop box: grey and sunken. All of it is one button that opens the file chooser */
+  /* The drop box: gray and sunken. All of it is one button that opens the file chooser */
   .drop button {
     display: block; width: 100%; padding: 18px 12px; text-align: center; cursor: pointer;
-    background: var(--grey); color: #000000; border: 3px inset var(--grey);
+    background: var(--gray); color: #000000; border: 3px inset var(--gray);
     font: 12px/1.5 Verdana, Tahoma, Arial, Helvetica, sans-serif;
   }
   .drop strong { display: block; font: bold clamp(15px, 4.6vw, 20px)/1.3 Arial, Helvetica, sans-serif; color: var(--navy); text-transform: uppercase; }
   .drop.over button, .drop button:hover { background: #d8d8d8; }
   .drop.over button { border-style: outset; }
   .drop button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
-  /* A green pixel tick before the words once the file is accepted. */
+  /* A green pixel check mark before the words once the file is accepted. */
   .step.done .drop strong::before { content: ""; display: inline-block; width: 7px; height: 13px; margin: 0 12px 2px 0;
     border: solid #007000; border-width: 0 4px 4px 0; transform: rotate(45deg); }
 
@@ -80,14 +80,14 @@
 
   /* A Windows 98 style push button */
   button.primary {
-    font: bold 13px Arial, Helvetica, sans-serif; color: #000000; background: var(--grey); cursor: pointer;
-    border: 2px solid; border-color: var(--grey-light) #404040 #404040 var(--grey-light);
-    box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf;
+    font: bold 13px Arial, Helvetica, sans-serif; color: #000000; background: var(--gray); cursor: pointer;
+    border: 2px solid; border-color: var(--gray-light) #404040 #404040 var(--gray-light);
+    box-shadow: inset -1px -1px 0 var(--gray-dark), inset 1px 1px 0 #dfdfdf;
     display: block; margin: 0 auto; padding: 6px 22px; max-width: 100%;
   }
-  button.primary:active:not(:disabled) { border-color: #404040 var(--grey-light) var(--grey-light) #404040; box-shadow: inset 1px 1px 0 var(--grey-dark); }
-  button.primary:disabled { color: #4c4c4c; text-shadow: 1px 1px 0 var(--grey-light); cursor: default; }
-  button.primary:focus-visible { outline: 1px dotted #000000; outline-offset: -5px; box-shadow: inset -1px -1px 0 var(--grey-dark), inset 1px 1px 0 #dfdfdf, 0 0 0 2px var(--yellow); }
+  button.primary:active:not(:disabled) { border-color: #404040 var(--gray-light) var(--gray-light) #404040; box-shadow: inset 1px 1px 0 var(--gray-dark); }
+  button.primary:disabled { color: #4c4c4c; text-shadow: 1px 1px 0 var(--gray-light); cursor: default; }
+  button.primary:focus-visible { outline: 1px dotted #000000; outline-offset: -5px; box-shadow: inset -1px -1px 0 var(--gray-dark), inset 1px 1px 0 #dfdfdf, 0 0 0 2px var(--yellow); }
 
   .info { margin-top: 8px; font-size: 12px; }
   .info:empty { display: none; }
@@ -100,10 +100,10 @@
   .info > div.muted { font-weight: normal; }
   #result { text-align: center; } #result dl { text-align: left; }
 
-  /* The progress bar: a sunken grey trough that fills with navy blocks */
-  .bar { height: 18px; background: var(--grey); border: 2px inset var(--grey); overflow: hidden; margin-top: 10px; display: none; }
+  /* The progress bar: a sunken gray trough that fills with navy blocks */
+  .bar { height: 18px; background: var(--gray); border: 2px inset var(--gray); overflow: hidden; margin-top: 10px; display: none; }
   .bar i { display: block; height: 100%; width: 0; transition: width .1s;
-    background: repeating-linear-gradient(90deg, var(--navy) 0 10px, var(--grey) 10px 12px); }
+    background: repeating-linear-gradient(90deg, var(--navy) 0 10px, var(--gray) 10px 12px); }
   @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 
   input[type=file] { display: none; }

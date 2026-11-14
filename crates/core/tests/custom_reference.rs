@@ -396,7 +396,7 @@ fn damaged_files_do_not_panic() {
     println!("{tried} damaged files: {failed} refused, {} read", tried - failed);
 }
 
-/// A made-up model, without the reference sets: two triangles with a colour, as `.gltf` text with a data URI and
+/// A made-up model, without the reference sets: two triangles with a color, as `.gltf` text with a data URI and
 /// as `.glb`. Both convert, load back, and differ only in what comes from the hash of the file.
 #[test]
 fn made_up_model_converts() {
@@ -451,7 +451,7 @@ fn made_up_model_converts() {
         assert_eq!(set.pieces.len(), 1);
         assert_eq!(set.pieces[0].name, "Flattile");
         assert_eq!(set.pieces[0].offset, [20.0, 2.0, 10.0]);
-        // The colour becomes an 8 by 8 texture of 16-bit pixels
+        // The color becomes an 8 by 8 texture of 16-bit pixels
         assert_eq!(set.textures.len(), 1);
         assert_eq!(set.textures[0].1, texbank::HEADER + 8 * 8 * 2);
         let bank = texbank::TexBank::parse(&set.texture_bank).unwrap();

@@ -30,12 +30,16 @@ built ROM has to keep on a console.
   defined on first use. No em dashes. No AI model names.
 - Do not end sentences with a purpose clause that explains why the preceding detail matters, such as "so that
   X instead of Y". State the fact and stop.
+- Write American English in all prose, in the app's texts and in identifiers: color, center, license, gray, "period"
+  for the dot that ends a sentence, "check" and "checkbox" for a check mark.
+- Exceptions: names that belong to something else (the game, gloveworld, libgarib, a crate, a file format), names that
+  stored data depends on (settings, drafts, model set ids), quoted license texts and proper names keep their spelling.
 
 ## Docs for players
 
 Write pages for players (the README, `docs/` except technical.md, `app/README.txt`) in the owner's style. The style
 is written out in the practice ROM's CLAUDE.md, "Writing style for docs" (github.com/Eddie-Lack/Glover-Practice-Rom).
-In short: talk to the player as "you", casually; one fact per line; no full stop at the end of table cells, bullets or
+In short: talk to the player as "you", casually; one fact per line; no period at the end of table cells, bullets or
 one-line paragraphs; links in italics; choices in backticks; important warnings in headings with "!".
 
 The owner edits `README.md` and `app/README.txt` himself. They are the model for this style: match them, and keep his

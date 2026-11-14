@@ -107,7 +107,7 @@ fn pow2_at_most(n: usize, cap: usize) -> usize {
     p
 }
 
-/// A picture no larger than `MAX_TEXELS` texels with power-of-two sides, tinted by the material's colour.
+/// A picture no larger than `MAX_TEXELS` texels with power-of-two sides, tinted by the material's color.
 fn n64_texture(im: &Rgba, factor: &[f64]) -> Result<Rgba, ModelError> {
     let (mut w, mut h) = (pow2_at_most(im.w, MAX_SIDE), pow2_at_most(im.h, MAX_SIDE));
     while w * h > MAX_TEXELS {
@@ -120,7 +120,7 @@ fn n64_texture(im: &Rgba, factor: &[f64]) -> Result<Rgba, ModelError> {
     let mut out = image::resize(im, w, h);
     if factor.iter().any(|f| (f - 1.0).abs() > 1e-3) {
         if factor.len() != 4 && factor.len() != 1 {
-            return err("A material of the model has a colour that is not four numbers");
+            return err("A material of the model has a color that is not four numbers");
         }
         for p in out.px.chunks_exact_mut(4) {
             for (c, v) in p.iter_mut().enumerate() {
@@ -217,7 +217,7 @@ fn near_zero(uv: &mut [[[f64; 2]; 3]], m: &[i64], materials: &BTreeMap<i64, Mate
     }
 }
 
-/// Cuts a list of triangles into groups of at most `limit`, across the longest side of their centres.
+/// Cuts a list of triangles into groups of at most `limit`, across the longest side of their centers.
 fn split(centroids: &[[f64; 3]], order: Vec<usize>, limit: usize, out: &mut Vec<Vec<usize>>) {
     if order.len() <= limit {
         out.push(order);
@@ -243,7 +243,7 @@ fn split(centroids: &[[f64; 3]], order: Vec<usize>, limit: usize, out: &mut Vec<
     split(centroids, second, limit, out);
 }
 
-/// Rounds to one decimal. A half goes to the even neighbour.
+/// Rounds to one decimal. A half goes to the even neighbor.
 fn round1(v: f64) -> f64 {
     (v * 10.0).round_ties_even() / 10.0
 }
@@ -357,8 +357,8 @@ pub fn convert(
     let (lo, hi) = bounds(p.iter());
     for (i, sel) in groups.iter().enumerate() {
         let (plo, phi) = bounds(sel.iter().map(|t| &p[*t]));
-        let centre = [0, 1, 2].map(|a| round1((plo[a] + phi[a]) / 2.0));
-        if sel.iter().flat_map(|t| p[*t]).any(|v| (0..3).any(|a| (v[a] - centre[a]).abs() > 32000.0)) {
+        let center = [0, 1, 2].map(|a| round1((plo[a] + phi[a]) / 2.0));
+        if sel.iter().flat_map(|t| p[*t]).any(|v| (0..3).any(|a| (v[a] - center[a]).abs() > 32000.0)) {
             return err("Part of the model is more than 64,000 units across at this scale, more than a Glover model \
                         holds. Use a smaller scale.");
         }
@@ -394,7 +394,7 @@ pub fn convert(
                 uv: Vec::new(),
             });
             for c in 0..3 {
-                prim.pos.push([0, 1, 2].map(|a| (p[*t][c][a] - centre[a]) as f32));
+                prim.pos.push([0, 1, 2].map(|a| (p[*t][c][a] - center[a]) as f32));
                 prim.nrm.push(n[*t][c].map(|v| v as f32));
                 prim.uv.push(piece_uv[k][c].map(|v| v as f32));
             }
@@ -409,7 +409,7 @@ pub fn convert(
         pieces.push(Piece {
             id: oid,
             name: pname,
-            offset: centre,
+            offset: center,
             triangles: sel.len(),
             size: [0, 1, 2].map(|a| round1(phi[a] - plo[a])),
             textures: piece_textures,

@@ -12,14 +12,14 @@ Glover can draw it and stand on it
 - Blender exports these, and so do most model rippers
 - A `.gltf` text file works too, if its data and images are embedded in it (not in files next to it)
 - Textures can be PNG or JPEG
-- A map from another N64 game needs ripping first, for example from an emulator or its decompilation
+- A map from another N64 game has to be ripped first, for example from an emulator or its decompilation
 
 ## How it goes
 
 1. Choose the file, name it and set the scale
 2. The dialog shows the triangles, how many pieces it becomes and its size next to the level
 3. Press `Import and place`
-4. All the pieces appear as Scenery at the centre of the view, in one undo step
+4. All the pieces appear as Scenery at the center of the view, in one undo step
 
 - A model over 1,500 triangles is cut into pieces along its longest side
 - Each texture becomes a small N64 texture (at most 2,048 pixels, power-of-two sides)
@@ -34,7 +34,7 @@ Imported models are kept in the editor's user folder (`custom/`) and are in ever
 ## Limits
 
 - 200,000 triangles and 64 MB per file
-- No vertex colours, animation, skinning, or more than one texture per material
+- No vertex colors, animation, skinning, or more than one texture per material
 - A few rare kinds of JPEG are refused: arithmetic-coded, CMYK and 12-bit ones. Save the texture as PNG instead
 - Enemies, doors, water and scripts from another game don't carry over. Rebuild them with Glover's objects and puzzles
 - A big map can need more memory than the game has, even with the Expansion Pak. The budget under `Checks` shows it

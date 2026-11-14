@@ -38,7 +38,7 @@ const ITEMS: [(&str, &str, &str, &str); 23] = [
     ("tree2", "Crooked tree", "Graveyard", "A short twisted trunk"),
     ("web", "Cobweb", "Graveyard", "A flat web, 40 across, both sides drawn"),
     ("rubble", "Rubble", "Ruins", "A heap of broken stone"),
-    ("scorch", "Scorch mark", "Ruins", "A burnt patch for the ground"),
+    ("scorch", "Scorch mark", "Ruins", "A burned patch for the ground"),
     ("thorns", "Thorns", "Ruins", "A clump of thorny vines (solid when placed as Scenery)"),
     ("gate_atl", "Bone gate", "Ruins", "Bone bars and iron crossbars over a wall of glowing runes; place it as Scenery to bar a way"),
     ("gate_cave", "Flesh gate", "Ruins", "A stitched curtain with eyes behind thorn vines, 150 wide; place it as Scenery to bar a way"),
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn clean_fills_defaults_and_drops_unknown_keys() {
-        let c = clean("grave", &p(json!({"text": "boo", "colour": "red"}))).unwrap();
+        let c = clean("grave", &p(json!({"text": "boo", "color": "red"}))).unwrap();
         assert_eq!(Value::Object(c), json!({"text": "boo", "lean": 6}));
         assert!(clean("web", &p(json!({"x": 1}))).unwrap().is_empty());
     }

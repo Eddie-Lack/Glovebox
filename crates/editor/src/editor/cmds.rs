@@ -467,7 +467,7 @@ impl Editor {
     // Layers
 
     /// Shows or hides a kind of entity in the view. Hidden entities can't be picked, and leave the selection.
-    /// "exit" is the layer of the exit triggers: the spheres round the platforms with a SetExit.
+    /// "exit" is the layer of the exit triggers: the spheres around the platforms with a SetExit.
     pub fn set_layer(&mut self, kind: &str, on: bool) {
         if on {
             self.hidden.remove(kind);

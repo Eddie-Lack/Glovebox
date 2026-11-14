@@ -1,4 +1,4 @@
-//! The round icons that stand for things without a model: a disc in the kind's colour with a black rim and a dark
+//! The round icons that stand for things without a model: a disk in the kind's color with a black rim and a dark
 //! glyph, as a 64 by 64 texture for a sprite.
 //!
 //! The glyphs are shapes drawn by this module (stars, a heart, a hand, a note and so on). The icons look the same
@@ -19,8 +19,8 @@ enum Shape {
     Poly(Vec<(f32, f32)>),
     /// A line through the points, of the given width, with round ends
     Stroke(Vec<(f32, f32)>, f32),
-    Disc(f32, f32, f32),
-    /// A circle line: centre, radius, width
+    Disk(f32, f32, f32),
+    /// A circle line: center, radius, width
     Ring(f32, f32, f32, f32),
 }
 
@@ -45,13 +45,13 @@ impl Shape {
                 inside
             }
             Shape::Stroke(pts, w) => pts.windows(2).any(|s| seg_dist(p, s[0], s[1]) <= w / 2.0),
-            Shape::Disc(x, y, r) => (p.0 - x).hypot(p.1 - y) <= *r,
+            Shape::Disk(x, y, r) => (p.0 - x).hypot(p.1 - y) <= *r,
             Shape::Ring(x, y, r, w) => ((p.0 - x).hypot(p.1 - y) - r).abs() <= w / 2.0,
         }
     }
 }
 
-/// A star around the icon's centre: `points` tips at `outer`, the notches between them at `inner`.
+/// A star around the icon's center: `points` tips at `outer`, the notches between them at `inner`.
 fn star(points: usize, outer: f32, inner: f32) -> Shape {
     Shape::Poly(
         (0..points * 2)
@@ -73,8 +73,8 @@ fn glyph(g: &str) -> Vec<Shape> {
         "★" => vec![star(5, 15.0, 6.3)],
         "✦" => vec![star(4, 16.0, 5.0)],
         "✸" => vec![star(8, 15.0, 7.5)],
-        "●" => vec![Shape::Disc(32.0, 32.0, 10.0)],
-        "◉" => vec![Shape::Ring(32.0, 32.0, 11.0, 3.0), Shape::Disc(32.0, 32.0, 5.5)],
+        "●" => vec![Shape::Disk(32.0, 32.0, 10.0)],
+        "◉" => vec![Shape::Ring(32.0, 32.0, 11.0, 3.0), Shape::Disk(32.0, 32.0, 5.5)],
         "◇" => vec![Shape::Stroke(vec![(32.0, 18.0), (46.0, 32.0), (32.0, 46.0), (18.0, 32.0), (32.0, 18.0)], 3.0)],
         "♥" => vec![Shape::Poly(
             (0..48)
@@ -87,7 +87,7 @@ fn glyph(g: &str) -> Vec<Shape> {
                 .collect(),
         )],
         "♪" => vec![
-            Shape::Disc(27.0, 42.0, 5.5),
+            Shape::Disk(27.0, 42.0, 5.5),
             Shape::Stroke(vec![(31.0, 42.0), (31.0, 19.0)], 3.0),
             Shape::Stroke(vec![(31.0, 20.0), (40.0, 26.0)], 4.0),
         ],
@@ -119,7 +119,7 @@ fn glyph(g: &str) -> Vec<Shape> {
                 }
             }
             if out.is_empty() {
-                out.push(Shape::Disc(32.0, 32.0, 6.0));
+                out.push(Shape::Disk(32.0, 32.0, 6.0));
             }
             out
         }
@@ -127,14 +127,14 @@ fn glyph(g: &str) -> Vec<Shape> {
 }
 
 /// The icon's pixels: 64 rows of 64 RGBA pixels, the bottom row first (the order a sprite's texture has).
-/// `color` is the disc's colour.
+/// `color` is the disk's color.
 pub fn icon_rgba(glyph_: &str, color: [u8; 3]) -> Vec<u8> {
     let shapes = glyph(glyph_);
     let mut out = vec![0u8; SIZE * SIZE * 4];
     const SUB: usize = 4;
     for y in 0..SIZE {
         for x in 0..SIZE {
-            // Straight colour and alpha, averaged over the pixel's samples
+            // Straight color and alpha, averaged over the pixel's samples
             let (mut rgb, mut alpha) = ([0.0f32; 3], 0.0f32);
             for sy in 0..SUB {
                 for sx in 0..SUB {
@@ -178,7 +178,7 @@ pub fn hex_rgb(s: &str) -> [u8; 3] {
     }
 }
 
-/// The icons' textures, one for each glyph and colour.
+/// The icons' textures, one for each glyph and color.
 #[derive(Default)]
 pub struct Icons {
     cache: HashMap<(String, [u8; 3]), Arc<Texture>>,
@@ -189,7 +189,7 @@ impl Icons {
         Icons::default()
     }
 
-    /// The texture of a glyph on a disc of the colour "#rrggbb". Make a sprite of it with
+    /// The texture of a glyph on a disk of the color "#rrggbb". Make a sprite of it with
     /// `scene::Sprite::new(texture, size)`; the editor's sizes are 10 to 18 world units.
     pub fn texture(&mut self, glyph: &str, color: &str) -> Arc<Texture> {
         let rgb = hex_rgb(color);
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn colours_and_the_cache() {
+    fn colors_and_the_cache() {
         assert_eq!(hex_rgb("#ff8ad8"), [255, 138, 216]);
         assert_eq!(hex_rgb("nonsense"), [255; 3]);
         assert_eq!(hex_rgb("#é8ad8"), [255; 3]);

@@ -17,7 +17,7 @@ use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
-const NEW_OBJECTS: &str = "New objects appear where the view’s centre meets the ground.";
+const NEW_OBJECTS: &str = "New objects appear where the view’s center meets the ground.";
 
 pub const TABS: [&str; 6] = ["Collectables", "Enemies", "Models", "Kit", "Presets", "Camera"];
 
@@ -497,7 +497,7 @@ struct Tile {
     texture: Option<egui::TextureHandle>,
     /// The thing has no picture: the tile shows its name.
     blank: bool,
-    /// The colour of the mark in the tile's corner.
+    /// The color of the mark in the tile's corner.
     mark: Option<egui::Color32>,
     /// Why a click does not place the thing.
     refuse: Option<&'static str>,

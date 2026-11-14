@@ -147,7 +147,7 @@ fn plain(color: [f32; 3], texture: Option<u32>) -> Material {
     }
 }
 
-/// A hilly square of `cells` by `cells` squares, 1200 across, with a chequered texture.
+/// A hilly square of `cells` by `cells` squares, 1200 across, with a checkered texture.
 fn ground(cells: usize) -> Made {
     let size = 1200.0;
     let at = |r: usize, c: usize| {
@@ -177,7 +177,7 @@ fn ground(cells: usize) -> Made {
     one_mesh(pos, uv, plain([1.0, 1.0, 1.0], Some(1)), 1.0, vec![checker])
 }
 
-/// A cube 100 across in one colour.
+/// A cube 100 across in one color.
 fn cube(color: [f32; 3]) -> Made {
     let mut pos = Vec::new();
     for axis in 0..3 {

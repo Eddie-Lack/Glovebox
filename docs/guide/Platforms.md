@@ -45,13 +45,13 @@ The small buttons on a card:
 
 Click `+` on the `Platform` card and pick one.
 
-<img src="img/platform-add-command.png" alt="The list of commands the plus button offers, some of them greyed out" width="485">
+<img src="img/platform-add-command.png" alt="The list of commands the plus button offers, some of them grayed out" width="485">
 
-The grey ones can't go on this platform. Hover over one to see why.
+The gray ones can't go on this platform. Hover over one to see why.
 
 ## Things that spin and move
 
-- `Spinner` turns about its centre all the time
+- `Spinner` turns about its center all the time
 - `Moving platform` goes back and forth between two points
 - `Conveyor` pushes what stands on it
 - `Ice floor` lets the ball keep its speed

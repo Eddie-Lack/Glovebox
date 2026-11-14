@@ -13,7 +13,7 @@ There's 15 themes to pick from. This guide uses `Sage`.
 | --- | --- | --- |
 | ![The editor in the 1998 theme: navy with red title bars](img/theme-1998.png) | ![The editor in the Dark theme](img/theme-dark.png) | ![The editor in the Blueprint theme: white lines on blue](img/theme-blueprint.png) |
 | `1998` | `Dark` | `Blueprint` |
-| ![The editor in the Sage theme: muted greens](img/theme-sage.png) | ![The editor in the Sand theme: warm sand](img/theme-sand.png) | ![The editor in the Slate theme: dark blue-grey](img/theme-slate.png) |
+| ![The editor in the Sage theme: muted greens](img/theme-sage.png) | ![The editor in the Sand theme: warm sand](img/theme-sand.png) | ![The editor in the Slate theme: dark blue-gray](img/theme-slate.png) |
 | `Sage` | `Sand` | `Slate` |
 
 ## Info texts

@@ -89,14 +89,14 @@ impl Pic {
         Pic { w: self.w * 2, h: self.h * 2, px }
     }
 
-    /// A round marker with a number from 1 to 9: a disc of the theme's accent with a light ring and digit.
-    pub fn marker(&mut self, at: egui::Pos2, n: usize, disc: [u8; 3], ink: [u8; 3]) {
+    /// A round marker with a number from 1 to 9: a disk of the theme's accent with a light ring and digit.
+    pub fn marker(&mut self, at: egui::Pos2, n: usize, disk: [u8; 3], ink: [u8; 3]) {
         let r = 13.0f32;
         for y in (at.y - r - 3.0) as i64..=(at.y + r + 3.0) as i64 {
             for x in (at.x - r - 3.0) as i64..=(at.x + r + 3.0) as i64 {
                 let d = ((x as f32 + 0.5 - at.x).powi(2) + (y as f32 + 0.5 - at.y).powi(2)).sqrt();
                 self.blend(x, y, ink, (r + 2.0 - d).clamp(0.0, 1.0));
-                self.blend(x, y, disc, (r - d).clamp(0.0, 1.0));
+                self.blend(x, y, disk, (r - d).clamp(0.0, 1.0));
             }
         }
         let Some(rows) = DIGITS.get(n.wrapping_sub(1)) else { return };
@@ -115,7 +115,7 @@ impl Pic {
         }
     }
 
-    /// Several pictures side by side on a ground colour, with a gap between them.
+    /// Several pictures side by side on a ground color, with a gap between them.
     pub fn row(pics: &[Pic], gap: usize, ground: [u8; 3]) -> Pic {
         let w = pics.iter().map(|p| p.w).sum::<usize>() + gap * pics.len().saturating_sub(1);
         let h = pics.iter().map(|p| p.h).max().unwrap_or(0);
@@ -131,19 +131,19 @@ impl Pic {
         out
     }
 
-    /// Saves the picture as a PNG with a palette of at most 256 colours. The colours the window uses most (its
+    /// Saves the picture as a PNG with a palette of at most 256 colors. The colors the window uses most (its
     /// flat grounds and its text) keep their exact values. The rest, the shades of the 3D view, share what is left.
     pub fn save(&self, path: &std::path::Path) {
         let mut count: HashMap<[u8; 3], u32> = HashMap::new();
         for p in self.px.chunks_exact(3) {
             *count.entry([p[0], p[1], p[2]]).or_default() += 1;
         }
-        let mut colours: Vec<([u8; 3], u32)> = count.into_iter().collect();
-        colours.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
-        let kept = if colours.len() <= 256 { colours.len() } else { 64 };
-        let mut palette: Vec<[u8; 3]> = colours[..kept].iter().map(|c| c.0).collect();
+        let mut colors: Vec<([u8; 3], u32)> = count.into_iter().collect();
+        colors.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+        let kept = if colors.len() <= 256 { colors.len() } else { 64 };
+        let mut palette: Vec<[u8; 3]> = colors[..kept].iter().map(|c| c.0).collect();
         // Median cut: the box with the longest side is cut in two at the middle of its pixels
-        let mut boxes = vec![colours[kept..].to_vec()];
+        let mut boxes = vec![colors[kept..].to_vec()];
         boxes.retain(|b| !b.is_empty());
         while !boxes.is_empty() && boxes.len() < 256 - kept {
             let span = |b: &[([u8; 3], u32)], k: usize| b.iter().map(|c| c.0[k]).max().unwrap() - b.iter().map(|c| c.0[k]).min().unwrap();
@@ -172,7 +172,7 @@ impl Pic {
             let d = |p: &[u8; 3]| (0..3).map(|k| (i32::from(p[k]) - i32::from(c[k])).pow(2)).sum::<i32>();
             (0..palette.len()).min_by_key(|&i| d(&palette[i])).unwrap_or(0) as u8
         };
-        let index: HashMap<[u8; 3], u8> = colours.iter().map(|c| (c.0, near(c.0))).collect();
+        let index: HashMap<[u8; 3], u8> = colors.iter().map(|c| (c.0, near(c.0))).collect();
         let data: Vec<u8> = self.px.chunks_exact(3).map(|p| index[&[p[0], p[1], p[2]]]).collect();
         let file = std::io::BufWriter::new(std::fs::File::create(path).unwrap());
         let mut e = png::Encoder::new(file, self.w as u32, self.h as u32);
@@ -438,10 +438,10 @@ pub fn run(rom: PathBuf, dir: PathBuf) {
 /// the notes in the panels, so the Info texts are `Shown` from here on.
 fn welcome(g: &mut G) {
     assert!(g.t.w().tour.welcome, "the first start has the welcome");
-    let r = g.dialog("first time", "Show me round").shrink2(egui::vec2(60.0, 0.0));
+    let r = g.dialog("first time", "Show me around").shrink2(egui::vec2(60.0, 0.0));
     let p = g.pic();
     g.save("welcome", &p.crop(r));
-    g.click("Show me round");
+    g.click("Show me around");
     g.click("Next");
     g.click("Next");
     assert_eq!(g.t.w().tour.run.as_ref().map(|r| r.step), Some(2));
@@ -770,7 +770,7 @@ fn puzzles_and_zones(g: &mut G) {
 
 fn exit_triggers(g: &mut G) {
     let x = g.find_ent("exit", |ed, i| ed.exit_trigger(i).is_some());
-    let c = g.t.ed().exit_trigger(x).unwrap().centre;
+    let c = g.t.ed().exit_trigger(x).unwrap().center;
     g.select(Some(x));
     g.look(vec::add(c, [0.0, 10.0, 0.0]), 14.0, 16.0, 330.0);
     g.scroll_to("Glover then spins");
