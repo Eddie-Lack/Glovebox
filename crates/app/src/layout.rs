@@ -629,7 +629,7 @@ pub fn menu(w: &mut Window, ui: &mut egui::Ui) {
         });
     }
     ui.add_space(4.0);
-    style::h4(ui, "Panels on one side").on_hover_text("Stacked: one under the other, with a divider to drag. Tabbed: a row of tabs, one panel shows. The checks are never a tab");
+    style::h4(ui, "Panels on one side").on_hover_text("Stacked puts one panel under the other, with a divider to drag. Tabbed shows one panel at a time, with a row of tabs. Checks is never a tab");
     for (side, name) in [(Side::Left, "Left side"), (Side::Right, "Right side")] {
         ui.horizontal(|ui| {
             ui.label(name);
@@ -647,7 +647,7 @@ pub fn menu(w: &mut Window, ui: &mut egui::Ui) {
         });
     }
     ui.separator();
-    if ui.add(egui::Button::selectable(false, "Reset layout")).on_hover_text("The panels in the places and sizes the editor starts with").clicked() {
+    if ui.add(egui::Button::selectable(false, "Reset layout")).on_hover_text("Put the panels back in their starting places and sizes").clicked() {
         act = Some(Box::new(|w: &mut Window| w.reset_layout()));
     }
     w.acts.extend(act);

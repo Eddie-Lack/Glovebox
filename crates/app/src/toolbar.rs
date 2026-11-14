@@ -48,14 +48,14 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     });
     combo.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Level"));
     w.tour.mark(Target::LevelList, combo.response.rect);
-    combo.response.on_hover_text("Level (from noclip.website's scene table)");
+    combo.response.on_hover_text("Pick the level to edit");
     if let Some(sid) = pick {
         w.load_scene(&sid);
     }
     sep(ui);
 
     let edited = w.ed.has_level && w.ed.is_edited();
-    let r = ui.add_enabled(edited, egui::Button::new("Reset level")).on_hover_text("Discard all edits to this level and its autosave (undoable)");
+    let r = ui.add_enabled(edited, egui::Button::new("Reset level")).on_hover_text("Discard all edits to this level and its autosave. Undo brings them back");
     w.tour.mark(Target::Undo, r.rect);
     if r.clicked() {
         w.reset_level();
@@ -73,7 +73,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
     sep(ui);
     let add = if w.palette_open { style::toggle(ui, true, "+ Add", "") } else { ui.add(style::accent("+ Add")) };
     w.tour.mark(Target::Add, add.rect);
-    if add.on_hover_text("Add objects, enemies, collectables and models from any level (A)").clicked() {
+    if add.on_hover_text("Add collectables, enemies and models from any level (A)").clicked() {
         w.toggle_palette(None);
     }
     for (m, text, key) in [(Mode::Translate, "Move", "W"), (Mode::Rotate, "Rotate", "E"), (Mode::Scale, "Scale", "R")] {
@@ -94,7 +94,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         }
     });
     r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
-    r.response.on_hover_text("Where a multi-object rotation or scale is centered");
+    r.response.on_hover_text("Pick the center for rotating or scaling several objects");
     ui.label(RichText::new(" Snap").color(style::theme(ui.ctx()).muted));
     let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
     let shown = snaps.iter().find(|x| x.1 == w.ed.snap).map_or("off", |x| x.0);
@@ -107,7 +107,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         }
     });
     r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Snap"));
-    r.response.on_hover_text("Snap: grid for moves, 15° for rotation, 0.05 for scale");
+    r.response.on_hover_text("Snap: moves snap to the grid, rotation to 15°, scale to 0.05");
     if ui.button("Duplicate").on_hover_text("Duplicate selection (Ctrl+D)").clicked() {
         w.ed.duplicate();
     }
@@ -144,7 +144,7 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
             }
         });
         ui.add_space(4.0);
-        style::h4(ui, "Info texts").on_hover_text("The notes under titles, fields and rows that explain the game and the editor");
+        style::h4(ui, "Info texts").on_hover_text("Info texts explain the game and the editor. They belong to titles, fields and rows");
         for i in style::Info::ALL {
             if ui.selectable_label(i == info, i.name()).clicked() {
                 notes = Some(i);
@@ -155,13 +155,13 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
         // The Panels menu stays open while the player arranges the panels
         let stay = egui::containers::menu::MenuConfig::new().close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
         egui::containers::menu::SubMenuButton::new("Panels").config(stay).ui(ui, |ui| crate::layout::menu(w, ui));
-        if ui.add_enabled(w.ed.has_level && !w.busy, egui::Button::selectable(false, "Take the tour")).on_hover_text("A quick walk through the parts of the window").clicked() {
+        if ui.add_enabled(w.ed.has_level && !w.busy, egui::Button::selectable(false, "Take the tour")).on_hover_text("Take a quick tour of the window").clicked() {
             tour = true;
             ui.close();
         }
     });
     w.tour.mark(Target::Options, r.rect);
-    r.on_hover_text("The look of the window, how the notes that explain things show, where the panels are, and the tour of the window.");
+    r.on_hover_text("Change the theme, the info texts and the panels, or take the tour");
     // After the frame: the panels of this frame are drawn in one theme and one state
     if let Some(id) = theme {
         w.acts.push(Box::new(move |w: &mut Window| w.set_theme(id)));
@@ -175,13 +175,13 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
 }
 
 fn files_row(w: &mut Window, ui: &mut egui::Ui) {
-    if style::toggle(ui, w.ed.box_mode, "Box select", "Box select (B). Ctrl+click toggles, Ctrl+A selects all").clicked() {
+    if style::toggle(ui, w.ed.box_mode, "Box select", "Drag a box to select (B). Ctrl+click toggles one object, Ctrl+A selects all").clicked() {
         w.ed.set_box_mode(!w.ed.box_mode);
     }
-    if style::toggle(ui, w.view.fly.on, "Fly", "Fly camera (C): WASD moves, Space and Shift go up and down, drag to look, the wheel sets the speed").clicked() {
+    if style::toggle(ui, w.view.fly.on, "Fly", "Fly the camera (C). WASD moves, Space and Shift go up and down, drag looks around, and the wheel sets the speed").clicked() {
         w.set_fly(!w.view.fly.on);
     }
-    if style::toggle(ui, w.ed.path.on, "Path", "Path (P): click the ground to lay a path, then place garibs or copies of the selection along it").clicked() {
+    if style::toggle(ui, w.ed.path.on, "Path", "Lay a path (P). Click the ground to add points, then place garibs or copies of the selection along it").clicked() {
         w.set_path_mode(!w.ed.path.on);
     }
     if style::toggle(ui, w.ed.preview, "Motion", "Animate spinning platforms").clicked() {
@@ -189,21 +189,21 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         w.ed.set_preview(!w.ed.preview, now);
         w.view.dirty = true;
     }
-    if style::toggle(ui, w.ed.show_fog, "Fog", "Show the level's fog in the editor view. Turning it off only affects the editor; to change the fog in the game, edit the level's FogConfiguration (fog_enabled).").clicked() {
+    if style::toggle(ui, w.ed.show_fog, "Fog", "Show the level's fog in the view. This only changes the editor. To change the fog in the game, edit the level's FogConfiguration (fog_enabled)").clicked() {
         w.toggle_fog(!w.ed.show_fog);
     }
     let triggers = !w.ed.hidden.contains("trigger");
-    if style::toggle(ui, triggers, "Triggers", "Show the puzzle trigger volumes (the areas a puzzle condition tests). Hiding them only affects the editor view; the level keeps them.").clicked() {
+    if style::toggle(ui, triggers, "Triggers", "Show the puzzle trigger volumes: the areas a puzzle condition tests. Hiding them only changes the view").clicked() {
         w.ed.set_layer("trigger", !triggers);
     }
     let shown = !w.ed.hidden.contains(exits::LAYER);
-    if style::toggle(ui, shown, "Exits", "Show the exit triggers: the sphere around each platform with an exit, at the size the game tests. Glover or the ball must come inside it. Hiding them only affects the editor view.").clicked() {
+    if style::toggle(ui, shown, "Exits", "Show the exit triggers: the sphere around each exit platform, at the size the game tests. Glover or the ball must come inside it. Hiding them only changes the view").clicked() {
         w.ed.set_layer(exits::LAYER, !shown);
     }
     sep(ui);
     let ready = w.ed.has_level && !w.busy;
     ui.add_enabled_ui(ready, |ui| {
-        if ui.button("Import XML").on_hover_text("Import a libgarib level XML (checked here first; dropping a file on the window also works)").clicked() {
+        if ui.button("Import XML").on_hover_text("Import a level from a libgarib XML file. The editor checks the file first. You can also drop a file on the window").clicked() {
             crate::dialogs::open_import_dialog(w, None);
         }
         if ui.button("Export XML").on_hover_text("Save the level as libgarib XML").clicked() {
@@ -212,8 +212,8 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if ui.button(".lev").on_hover_text("Assemble the level and save the .lev").clicked() {
             w.export("lev", None);
         }
-        style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Build ROM: the ROM boots straight into this level (libgarib's copyskip and quickboot patches)");
-        let r = ui.button("Export patch").on_hover_text("Export a BPS patch: share it, and players apply it to their own ROM with the patcher");
+        style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Make Build ROM boot straight into this level");
+        let r = ui.button("Export patch").on_hover_text("Export a BPS patch to share your level. Players apply it to their own ROM with the patcher");
         w.tour.mark(Target::Patch, r.rect);
         if r.clicked() {
             crate::dialogs::open_patch_dialog(w);
@@ -223,7 +223,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if r.clicked() {
             w.test_level();
         }
-        let r = ui.add(style::primary("Build ROM")).on_hover_text("Patch the edited level (and any imported models) into the ROM");
+        let r = ui.add(style::primary("Build ROM")).on_hover_text("Build a ROM with the edited level and any imported models");
         w.tour.mark(Target::Build, r.rect);
         if r.clicked() {
             w.export("rom", None);
@@ -231,7 +231,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if ui.button("Build all…").on_hover_text("Build every edited level into one ROM or patch").clicked() {
             crate::dialogs::open_all_dialog(w);
         }
-        if ui.button("Patcher ↗").on_hover_text("Open the patcher page for players (works offline; the ROM never leaves the page)").clicked() {
+        if ui.button("Patcher ↗").on_hover_text("Open the patcher page for players. It works offline, and the ROM is not uploaded").clicked() {
             w.open_patcher();
         }
     });
