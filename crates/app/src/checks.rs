@@ -80,7 +80,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
     }
     if ids.iter().any(|i| ed.catalog.get(i).is_none_or(|c| c.custom.is_none())) {
         let mut on = ed.copy_imports;
-        let tip = "Works without the Expansion Pak, but patches then contain game data";
+        let tip = "This works without the Expansion Pak, but patches will then contain game data";
         if style::checkbox(ui, &mut on, "Copy the models into the ROM instead").on_hover_text(tip).changed() {
             w.acts.push(Box::new(move |w: &mut Window| {
                 w.ed.copy_imports = on;

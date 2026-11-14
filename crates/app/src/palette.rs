@@ -43,13 +43,13 @@ struct As {
 }
 
 const MODELS_AS: [As; 3] = [
-    As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "LandActor: solid scenery with collision" },
-    As { key: "background", label: "Background", tag: "BackgroundActor", tip: "BackgroundActor: decoration without collision" },
-    As { key: "platform", label: "Platform", tag: "Platform", tip: "Platform: solid, can move, spin and be scaled" },
+    As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "Solid scenery with collision (LandActor)" },
+    As { key: "background", label: "Background", tag: "BackgroundActor", tip: "Decoration without collision (BackgroundActor)" },
+    As { key: "platform", label: "Platform", tag: "Platform", tip: "Solid, and can move, spin and be scaled (Platform)" },
 ];
 const KIT_AS: [As; 2] = [
-    As { key: "background", label: "Background", tag: "BackgroundActor", tip: "BackgroundActor: decoration without collision" },
-    As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "LandActor: solid, built from the model’s triangles" },
+    As { key: "background", label: "Background", tag: "BackgroundActor", tip: "Decoration without collision (BackgroundActor)" },
+    As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "Solid, built from the model’s triangles (LandActor)" },
 ];
 
 const ENEMIES_NOTE: &str = "A new enemy copies the shortest script that type has in a shipped level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.";
@@ -460,7 +460,7 @@ fn view_row(px: &mut Px, ui: &mut egui::Ui, tab: usize) {
     let mut changed = false;
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
-        for (grid, text, tip) in [(false, "List", "Rows with names, notes and buttons"), (true, "Grid", "Pictures only. A click on a picture adds it to the level")] {
+        for (grid, text, tip) in [(false, "List", "Rows with names, info and buttons"), (true, "Grid", "Pictures only. Click a picture to add it to the level")] {
             if style::tab(ui, st.grid == grid, text).on_hover_text(tip).clicked() && st.grid != grid {
                 st.grid = grid;
                 changed = true;
@@ -783,7 +783,7 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
             let Some((first, c)) = pieces.first() else { continue };
             let kb = pieces.iter().map(|p| p.1.bytes).sum::<u64>() as f64 / 1024.0;
             let sub = format!("{} piece{} · {:.0} KB", pieces.len(), if pieces.len() == 1 { "" } else { "s" }, kb);
-            let buttons = [("Place", "Every piece as LandActor: solid scenery with collision", true), ("Remove", "Remove this model from the editor", true)];
+            let buttons = [("Place", "Every piece as Solid scenery with collision (LandActor)", true), ("Remove", "Remove this model from the editor", true)];
             let clicked = ui.push_id(("set", &set), |ui| px.prow(ui, |px, ui| px.thumb(ui, Some(first)), &c.bank.replace("Custom: ", ""), None, &sub, &buttons, |_, _| {})).inner;
             match clicked {
                 Some(0) => px.acts.push(Box::new(move |w: &mut Window| w.ed.place_custom(&set, "LandActor", None))),

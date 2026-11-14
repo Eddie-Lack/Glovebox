@@ -87,26 +87,26 @@ pub struct Step {
 }
 
 pub const STEPS: [Step; 12] = [
-    Step { title: "The level list", text: "Pick any of the {levels} levels here. Your edits save themselves, level by level", target: Target::LevelList, show: Show::Plain },
-    Step { title: "The view", text: "Drag to turn the camera, right-drag to slide it, wheel to zoom. C flies: W A S D move, drag looks around", target: Target::View, show: Show::Plain },
-    Step { title: "Selecting", text: "Click a thing in the view, or in this list. Its numbers show in the Inspector on the right", target: Target::LevelPanel, show: Show::Selection },
-    Step { title: "Move, Rotate, Scale", text: "W, E and R pick the tool. Drag its handles in the view, or drag a number in the Inspector sideways", target: Target::Tools, show: Show::Selection },
-    Step { title: "+ Add", text: "Collectables, enemies, models from any level and the kit. Pick one and it's in your level. A opens this too", target: Target::Add, show: Show::AddPanel },
-    Step { title: "The Inspector", text: "What you selected, on cards: a platform's commands, an enemy's script. Deselect everything for the level's settings and its puzzles", target: Target::Inspector, show: Show::Selection },
-    Step { title: "Checks", text: "The game's own rules, checked after every edit. Click a line to see the spot", target: Target::Checks, show: Show::Plain },
-    Step { title: "Test level and Build ROM", text: "Test level opens your level in your emulator. Build ROM saves a ROM. With boot here it starts in this level", target: Target::Build, show: Show::Plain },
-    Step { title: "Export patch", text: "A patch is how you share a level. Patcher ↗ at the end of the row opens the page players patch their ROM with", target: Target::Patch, show: Show::Plain },
-    Step { title: "Undo and Reset level", text: "Undo takes back an edit (Ctrl+Z). Reset level gives you the shipped level back, and Undo still undoes that", target: Target::Undo, show: Show::Plain },
-    Step { title: "Options", text: "Themes and the info texts. Take the tour starts this again", target: Target::Options, show: Show::Plain },
+    Step { title: "The level list", text: "Pick any of the {levels} levels here. Your edits are saved automatically for each level", target: Target::LevelList, show: Show::Plain },
+    Step { title: "The view", text: "Drag to turn the camera, right-drag to pan, and scroll to zoom. Press C to fly: W A S D to move, drag to look around", target: Target::View, show: Show::Plain },
+    Step { title: "Selecting", text: "Click something in the view or in this list to select it. Its details show in the Inspector on the right", target: Target::LevelPanel, show: Show::Selection },
+    Step { title: "Move, Rotate, Scale", text: "Press W, E or R to pick a tool. Then drag its handles in the view, or drag a number sideways in the Inspector", target: Target::Tools, show: Show::Selection },
+    Step { title: "+ Add", text: "This adds collectables, enemies, models from any level and kit models to your level. A opens it too", target: Target::Add, show: Show::AddPanel },
+    Step { title: "The Inspector", text: "This shows details about what you have selected. Deselect everything to see the level's settings and its puzzles", target: Target::Inspector, show: Show::Selection },
+    Step { title: "Checks", text: "After every edit, this checks the level on the game's rules. Click a line to see where the problem is", target: Target::Checks, show: Show::Plain },
+    Step { title: "Test level and Build ROM", text: "Test level opens your level in your emulator. Build ROM saves a ROM. With boot here on, the ROM starts in this level", target: Target::Build, show: Show::Plain },
+    Step { title: "Export patch", text: "Export a patch to share your level. Patcher ↗ at the end of the row opens the page where players patch their ROM", target: Target::Patch, show: Show::Plain },
+    Step { title: "Undo and Reset level", text: "Undo takes back an edit (Ctrl+Z). Reset level brings back the vanilla level, and Undo can take that back too", target: Target::Undo, show: Show::Plain },
+    Step { title: "Options", text: "Change the theme, the info texts and the panels here. Take the tour starts this tour again", target: Target::Options, show: Show::Plain },
     Step { title: "That's it", text: "", target: Target::Inspector, show: Show::Plain },
 ];
 
 /// The text of the last step: where the notes are, by the Info texts setting.
 fn last_text(info: style::Info) -> &'static str {
     match info {
-        style::Info::Hover => "A dotted line under a name means it has a note. Rest the pointer on it to read it. The guide has everything else",
-        style::Info::Shown => "The small texts under titles and fields are notes. Options can move them to tooltips. The guide has everything else",
-        style::Info::Off => "The notes are off. Options brings them back. The guide has everything else",
+        style::Info::Hover => "A dotted line under a name means it has an info text. Hover over it to read it. The guide covers everything else",
+        style::Info::Shown => "The small texts under titles and fields are info texts. Options can turn them into tooltips. The guide covers everything else",
+        style::Info::Off => "The info texts are off. Options turns them back on. The guide covers everything else",
     }
 }
 

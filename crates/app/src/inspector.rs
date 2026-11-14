@@ -1009,7 +1009,7 @@ fn command_buttons(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
             }
         });
     }
-    if PLATFORMS.contains(&tag.as_str()) && ed.doc.len(node) > 1 && mini(ui, "Tidy", "Tidy order: move the commands the game would read in the wrong order").clicked() {
+    if PLATFORMS.contains(&tag.as_str()) && ed.doc.len(node) > 1 && mini(ui, "Tidy", "Move the commands that the game would read in the wrong order").clicked() {
         cx.ed_act(move |ed| ed.tidy_node(node));
     }
     if ed.doc.parent(node).is_some() && tag != "EnemyFinalize" {
