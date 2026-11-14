@@ -1,35 +1,35 @@
 //! The themes: each look of the app as data.
 //!
-//! A `Theme` holds the colours, the shapes of the controls, the fonts and the small details of one look. `style.rs`
-//! draws everything from the active theme. No other file holds a colour of the window.
+//! A `Theme` holds the colors, the shapes of the controls, the fonts and the small details of one look. `style.rs`
+//! draws everything from the active theme. No other file holds a color of the window.
 //!
 //! Each theme follows one model from the world. "1998" is the patcher page (`web/patcher.html`): a game web site
-//! of that year. "Cartridge" is a grey console and its controller. "Blueprint" is a drafting sheet. "Paper" is a
+//! of that year. "Cartridge" is a gray console and its controller. "Blueprint" is a drafting sheet. "Paper" is a
 //! printed manual in two inks. "CRT" is a debug monitor with green phosphor. "Light", "Dark" and "High contrast" are
 //! the plain looks of a desktop tool: they follow the system's own windows and have no decoration.
 //!
 //! The palette themes ("Sage", "Sand", "Ocean", "Lavender", "Coral", "Slate", "Plum") follow a phone app: flat
-//! surfaces told apart by tone, round corners, hairlines, and five colours each (a ground, a card, a main colour,
-//! a second colour and the text). Every other colour of such a theme is a mix of those five.
+//! surfaces told apart by tone, round corners, hairlines, and five colors each (a ground, a card, a main color,
+//! a second color and the text). Every other color of such a theme is a mix of those five.
 //!
 //! To add a theme: write a `Theme` here, add it to `THEMES`, and give `style.rs` a drawing for any new variant of
 //! the enums below. docs/technical.md, "Themes", lists what a theme has to keep.
 
 use egui::Color32;
 
-/// A colour from its hex number.
+/// A color from its hex number.
 const fn c(v: u32) -> Color32 {
     Color32::from_rgb((v >> 16) as u8, (v >> 8) as u8, v as u8)
 }
 
-/// A see-through colour: the hex number and the alpha.
+/// A see-through color: the hex number and the alpha.
 const fn ca(v: u32, a: u8) -> Color32 {
     Color32::from_rgba_unmultiplied_const((v >> 16) as u8, (v >> 8) as u8, v as u8, a)
 }
 
 const NONE: Color32 = Color32::TRANSPARENT;
 
-/// A surface with a text on it and a line round it.
+/// A surface with a text on it and a line around it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Tone {
     pub fill: Color32,
@@ -46,7 +46,7 @@ const fn tone(fill: u32, text: u32, edge: u32) -> Tone {
 pub enum Shape {
     /// A two-tone bevel, sunken while held or on.
     Bevel,
-    /// A moulded key: a line round it and a thick lip under it. The lip goes while it is held or on.
+    /// A molded key: a line around it and a thick lip under it. The lip goes while it is held or on.
     Key,
     /// A hairline round a flat face.
     Outline,
@@ -57,7 +57,7 @@ pub enum Shape {
 pub enum Field {
     /// A sunken box.
     Sunken,
-    /// A line round the box.
+    /// A line around the box.
     Boxed,
     /// A tint with a line under it, as a form on paper.
     Underlined,
@@ -71,7 +71,7 @@ pub enum Bar {
     /// A quiet header: a tinted strip. A panel's has a hairline under it, a card's has the card's round top
     /// corners. A small heading has no fill and a hairline under it.
     Soft,
-    /// A dark label plate. A panel's plate has a coloured end.
+    /// A dark label plate. A panel's plate has a colored end.
     Plate,
     /// No fill. A dimension line with ticks and arrowheads runs from the title to the right edge.
     Dimension,
@@ -86,11 +86,11 @@ pub enum Bar {
 pub enum Logo {
     /// Slanted letters with two hard shadows.
     WordArt,
-    /// Capitals on a dark sticker with a coloured stripe under them.
+    /// Capitals on a dark sticker with a colored stripe under them.
     Label,
     /// Spaced capitals in a title block with corner marks.
     TitleBlock,
-    /// The name with a coloured rule under it, as the head of a manual.
+    /// The name with a colored rule under it, as the head of a manual.
     Masthead,
     /// A prompt, the name in capitals and a block cursor.
     Prompt,
@@ -102,7 +102,7 @@ pub enum Logo {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Divider {
     Rainbow,
-    /// Four blocks in the four mark colours.
+    /// Four blocks in the four mark colors.
     Stripes,
     /// A ruler: a line with short and long ticks.
     Scale,
@@ -126,7 +126,7 @@ pub enum Backdrop {
     Ruled,
     /// The dark lines of a picture tube.
     Scanlines,
-    /// One flat colour.
+    /// One flat color.
     Plain,
 }
 
@@ -145,13 +145,13 @@ pub enum Border {
 /// The mark before a line of the Checks panel.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Mark {
-    /// A small bevelled block.
+    /// A small beveled block.
     Block,
     /// A round lamp.
     Lamp,
     /// A drawn sign for each level: circle, triangle, crossed square, diamond.
     Drawn,
-    /// A printed sign for each level: tick, triangle, square, dot.
+    /// A printed sign for each level: check mark, triangle, square, dot.
     Printed,
     /// Two letters in inverse video: OK, !!, XX.
     Code,
@@ -218,7 +218,7 @@ pub struct Theme {
     pub link: Color32,
     /// The keyboard focus.
     pub focus: Color32,
-    /// The keyboard focus fills the button, with this text colour.
+    /// The keyboard focus fills the button, with this text color.
     pub focus_block: Option<Color32>,
     /// Good, bad, warning, important and token texts.
     pub ok: Color32,
@@ -242,7 +242,7 @@ pub struct Theme {
     /// The main action.
     pub primary: Tone,
     pub primary_hover: Tone,
-    /// The four tones of a bevel, from the lightest: wells, checkboxes and bevelled buttons.
+    /// The four tones of a bevel, from the lightest: wells, checkboxes and beveled buttons.
     pub bevel: [Color32; 4],
     pub button_padding: [f32; 2],
     pub field: Field,
@@ -250,7 +250,7 @@ pub struct Theme {
     pub field_hint: Color32,
     /// Typed text is in the code font.
     pub field_mono: bool,
-    /// A checkbox that is on, when it has no colour of its own.
+    /// A checkbox that is on, when it has no color of its own.
     pub check: Color32,
     /// The chosen row of a list and the row under the pointer.
     pub sel: Tone,
@@ -271,21 +271,21 @@ pub struct Theme {
     pub bar_text: Color32,
     pub bar_text_small: Color32,
     pub logo: Logo,
-    /// The logo's colours: the letters, then two more.
+    /// The logo's colors: the letters, then two more.
     pub logo_colors: [Color32; 3],
     pub divider: Divider,
     pub backdrop: Backdrop,
-    /// The backdrop's ground and its two line colours.
+    /// The backdrop's ground and its two line colors.
     pub backdrop_colors: [Color32; 3],
     /// The band behind the setup screen's logo.
     pub banner: Color32,
     pub border: Border,
-    /// The frame's colours, from the lightest.
+    /// The frame's colors, from the lightest.
     pub border_colors: [Color32; 4],
     pub mark: Mark,
     /// The marks of ok, bad, warning, important and anything else.
     pub marks: [Color32; 5],
-    /// The chips over the 3D view: the fill, the edge, the text, the level's name and the colour of "edited".
+    /// The chips over the 3D view: the fill, the edge, the text, the level's name and the color of "edited".
     pub chip: Tone,
     pub chip_title: Color32,
     pub chip_edited: Color32,
@@ -306,7 +306,7 @@ impl Theme {
 /// The 3D view's background for a level without fog, as the editor's state gives it.
 pub const VIEW_BG: [f64; 3] = [0.051, 0.055, 0.071];
 
-/// The colours of the rainbow divider, from left to right.
+/// The colors of the rainbow divider, from left to right.
 pub const RAINBOW: [Color32; 7] = [c(0xff0000), c(0xff8000), c(0xffff00), c(0x00c000), c(0x0080ff), c(0x8000ff), c(0xff00ff)];
 
 /// The themes. The first is the default. The plain ones come after it, then the palette themes, then the styled
@@ -328,7 +328,7 @@ pub fn by_id(id: &str) -> &'static Theme {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// 1998: the patcher page. Navy panels, grey bevelled buttons, sunken white fields, red title bars with yellow
+// 1998: the patcher page. Navy panels, gray beveled buttons, sunken white fields, red title bars with yellow
 // capitals, a slanted yellow logo, a rainbow divider and stars.
 
 pub static Y1998: Theme = Theme {
@@ -414,8 +414,8 @@ pub static Y1998: Theme = Theme {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Cartridge: a grey console of the late 1990s and its controller. Warm grey moulded plastic, charcoal label
-// plates with white capitals, keys with a lip. The four colours of the face buttons mark states only: green for
+// Cartridge: a gray console of the late 1990s and its controller. Warm gray molded plastic, charcoal label
+// plates with white capitals, keys with a lip. The four colors of the face buttons mark states only: green for
 // on and good, red for the main action and bad, yellow for warnings, blue for the selection.
 
 pub static CARTRIDGE: Theme = Theme {
@@ -588,7 +588,7 @@ pub static BLUEPRINT: Theme = Theme {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Paper: a printed manual in two inks. Off-white paper, black ink, one spot colour (vermilion). A serif face.
+// Paper: a printed manual in two inks. Off-white paper, black ink, one spot color (vermilion). A serif face.
 // Rules instead of boxes, fields as tinted blanks with a line under them and typed entries, printed signs for
 // the checks, a notebook page behind the setup screen.
 
@@ -755,9 +755,9 @@ pub static CRT: Theme = Theme {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Light: a desktop tool in the system's light colours. Neutral greys, white fields and buttons with a thin line
+// Light: a desktop tool in the system's light colors. Neutral grays, white fields and buttons with a thin line
 // and a small corner radius, one blue for the selection, the focus and the main action. A switch that is on is
-// filled dark grey. No decoration.
+// filled dark gray. No decoration.
 
 pub static LIGHT: Theme = Theme {
     id: "light",
@@ -834,8 +834,8 @@ pub static LIGHT: Theme = Theme {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Dark: the same tool in the system's dark colours. Near-black greys, a light blue for the selection, the focus
-// and the main action. A switch that is on is filled light grey.
+// Dark: the same tool in the system's dark colors. Near-black grays, a light blue for the selection, the focus
+// and the main action. A switch that is on is filled light gray.
 
 pub static DARK: Theme = Theme {
     id: "dark",
@@ -1147,7 +1147,7 @@ pub static SAND: Theme = Theme {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Ocean: cool sea tones. A pale blue-grey ground, near-white cards, a deep teal blue for the main action, the
+// Ocean: cool sea tones. A pale blue-gray ground, near-white cards, a deep teal blue for the main action, the
 // selection and the focus, a warm orange for the box of a box select.
 
 pub static OCEAN: Theme = Theme {
@@ -1381,7 +1381,7 @@ pub static CORAL: Theme = Theme {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Slate: a dark app in blue-greys. A slate ground, lighter slate cards, a soft teal for the main action, the
+// Slate: a dark app in blue-grays. A slate ground, lighter slate cards, a soft teal for the main action, the
 // selection and the focus, amber for the box of a box select.
 
 pub static SLATE: Theme = Theme {

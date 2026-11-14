@@ -22,7 +22,7 @@ The bottom row of the toolbar has it all.
 
 `Build ROM` patches your edits into a ROM and asks where to save it.
 
-Tick `boot here` and the ROM starts in your level. Without it the game starts as normal.
+Check `boot here` and the ROM starts in your level. Without it the game starts as normal.
 
 ## Export patch
 
@@ -31,7 +31,7 @@ Tick `boot here` and the ROM starts in your level. Without it the game starts as
 <img src="img/export-patch.png" alt="The Export patch dialog: what the patch holds, and the Export .bps button" width="560">
 
 - The patch holds only what your edit changes.
-- It starts the game normally. Tick `Patched ROM boots straight into this level` for a patch that doesn't.
+- It starts the game normally. Check `Patched ROM boots straight into this level` for a patch that doesn't.
 - The dialog tells you when the patch needs the Expansion Pak.
 
 `Patcher ↗` opens the patcher page. It's one file and it works offline. Share it with your patch.

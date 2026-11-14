@@ -26,10 +26,10 @@ struct Draw {
     color: vec4f,
     // alpha test, dash, gap, sprite size
     params: vec4f,
-    // has a texture, uses vertex colours, is lit
+    // has a texture, uses vertex colors, is lit
     flags: vec4u,
-    // A sprite's centre in the world
-    centre: vec4f,
+    // A sprite's center in the world
+    center: vec4f,
 }
 
 @group(0) @binding(0) var<uniform> g: Globals;
@@ -126,7 +126,7 @@ fn sprite_vs(@builtin(vertex_index) i: u32) -> SpriteOut {
     var corners = array<vec2f, 6>(vec2f(-0.5, -0.5), vec2f(0.5, -0.5), vec2f(0.5, 0.5), vec2f(-0.5, -0.5), vec2f(0.5, 0.5), vec2f(-0.5, 0.5));
     let corner = corners[i];
     var o: SpriteOut;
-    var c = g.view * vec4f(d.centre.xyz, 1.0);
+    var c = g.view * vec4f(d.center.xyz, 1.0);
     c = vec4f(c.xy + corner * d.params.w, c.zw);
     o.uv = corner + 0.5;
     o.pos = clip(g.proj * c);

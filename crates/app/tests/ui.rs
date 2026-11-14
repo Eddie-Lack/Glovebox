@@ -213,7 +213,7 @@ impl T {
         self.find(label, true).first().map(|n| n.rect().min.y)
     }
 
-    /// True when the window's top left corner, which is the toolbar's ground, has the theme's colour.
+    /// True when the window's top left corner, which is the toolbar's ground, has the theme's color.
     fn toolbar_is(&mut self, th: &glovebox::theme::Theme) -> bool {
         self.settle();
         let Ok(img) = self.h.render() else { return false };
@@ -276,7 +276,7 @@ impl T {
         };
         self.settle();
         if !found {
-            println!("      no widget labelled {label:?} (#{n})");
+            println!("      no widget labeled {label:?} (#{n})");
             if std::env::var_os("GLOVEBOX_TEST_DEBUG").is_some() {
                 let part: String = label.chars().take(4).collect();
                 let near: Vec<String> = self.h.query_all_by_label_contains(&part).filter_map(|n| n.accesskit_node().label()).collect();
@@ -340,7 +340,7 @@ impl T {
             None => false,
         };
         if !found {
-            println!("      no text box labelled like {label:?}");
+            println!("      no text box labeled like {label:?}");
             return false;
         }
         self.settle();
@@ -642,8 +642,8 @@ fn editor_on_the_fixture() {
     t.detail("scale writes SetActorScale", scale == Some([2.0, 2.0, 2.0]), format!("{scale:?}"));
     t.detail("rotation survives a scale", (y - 0.6).abs() < 1e-3, y.to_string());
 
-    // Group rotation about the group centre: "rotate by" 90 about y, then Apply
-    let centre = |ed: &Editor| {
+    // Group rotation about the group center: "rotate by" 90 about y, then Apply
+    let center = |ed: &Editor| {
         let g = kinds(ed, "garib");
         let mut c = [0.0; 3];
         for &i in &g {
@@ -654,13 +654,13 @@ fn editor_on_the_fixture() {
     let ed = t.ed();
     let garibs = kinds(ed, "garib");
     ed.set_selection(garibs);
-    let c0 = centre(ed);
+    let c0 = center(ed);
     t.settle();
     t.click("Apply rotation");
     let ed = t.ed();
-    let c1 = centre(ed);
+    let c1 = center(ed);
     let ok = (0..3).all(|k| (c0[k] - c1[k]).abs() < 0.01) && ed.selection.len() == 3 && ed.undo_stack.last().is_some();
-    t.detail("a group rotation keeps the centre and moves the garibs", ok && c0 != [0.0; 3], format!("{c0:?} {c1:?}"));
+    t.detail("a group rotation keeps the center and moves the garibs", ok && c0 != [0.0; 3], format!("{c0:?} {c1:?}"));
 
     // Box select
     let ed = t.ed();
@@ -1330,7 +1330,7 @@ fn more_clicks(t: &mut T) {
     t.check("click: Snap", snap == 10.0 && now == 1.0);
     t.pick("Pivot", "each origin");
     let pivot = t.ed().pivot_mode.clone();
-    t.pick("Pivot", "group centre");
+    t.pick("Pivot", "group center");
     let now = t.ed().pivot_mode.clone();
     t.check("click: Pivot", pivot == "individual" && now == "group");
     let checked = t.w().quickboot;
@@ -1868,13 +1868,13 @@ fn exit_triggers() {
     let ed = t.ed();
     let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
     let side = vec::scale(across, (r - 4.0) / vec::norm(across));
-    let inside = vec::sub(trigger.centre, side);
+    let inside = vec::sub(trigger.center, side);
     ed.add_garib(inside, "garib");
     ed.select(None, false);
     let goal = ent(ed, |e| e.label == "goal").unwrap();
     let sphere = ed.nodes[goal].exit.unwrap();
     t.settle();
-    let spot = px(t.ed(), vec::add(trigger.centre, side));
+    let spot = px(t.ed(), vec::add(trigger.center, side));
     let pixel = |t: &mut T| {
         let at = t.at(spot);
         t.settle();
@@ -1892,12 +1892,12 @@ fn exit_triggers() {
     let picked = ed.selection.first().map(|&i| ed.entities[i].kind);
     t.detail("a click on a sphere selects what is inside it", picked == Some("garib"), format!("{picked:?}"));
     t.ed().select(None, false);
-    let at = px(t.ed(), trigger.centre);
+    let at = px(t.ed(), trigger.center);
     t.view_click(at, none);
     let sel = t.ed().selection.clone();
     let what: Vec<String> = sel.iter().map(|&i| t.ed().entities[i].label.clone()).collect();
     t.detail("a click on the platform selects it", sel == vec![goal], format!("{sel:?} {what:?} {goal}"));
-    let block = t.has("Exit trigger") && t.has("the ball (its centre)") && t.has("Glover must hold the ball.") && t.has(&format!("{r:.1}"));
+    let block = t.has("Exit trigger") && t.has("the ball (its center)") && t.has("Glover must hold the ball.") && t.has(&format!("{r:.1}"));
     t.check("the inspector shows the exit trigger", block);
     t.shot("51-exits-inspector");
     t.ed().select(None, false);
@@ -2581,7 +2581,7 @@ fn kept(t: &mut T) -> Kept {
     }
 }
 
-/// The rectangle round the widgets with these labels.
+/// The rectangle around the widgets with these labels.
 fn around(t: &T, labels: &[&str]) -> Option<egui::Rect> {
     let mut out: Option<egui::Rect> = None;
     for l in labels {
@@ -2705,7 +2705,7 @@ fn walk_tour(t: &mut T, tag: &str) {
 /// The welcome on the first start, and the tour of the window.
 ///
 /// On a user folder without settings the welcome shows once a level is open, and not before. `No thanks` closes it
-/// and writes the setting: a new window on the folder has no welcome. `Show me round` starts the tour, and so does
+/// and writes the setting: a new window on the folder has no welcome. `Show me around` starts the tour, and so does
 /// `Take the tour` of the Options menu. The tour is walked at three window sizes (`walk_tour`). `Skip` and Esc end
 /// it. After it the selection, the panels, the camera, the undo steps and the level are as before, and no draft is
 /// written.
@@ -2745,7 +2745,7 @@ fn welcome_and_tour() {
             std::thread::sleep(Duration::from_millis(3));
         }
         t.idle();
-        let shown = t.w().tour.welcome && t.has("Show me round") && t.has("No thanks") && t.reads("first time");
+        let shown = t.w().tour.welcome && t.has("Show me around") && t.has("No thanks") && t.reads("first time");
         t.shot(&format!("{tag}-00-welcome"));
         t.detail(&format!("{name}: the welcome shows once the level is open, and not before"), shown && !early, format!("{shown} {early}"));
         let unset = !std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains("tour=");
@@ -2758,14 +2758,14 @@ fn welcome_and_tour() {
         let saved = |t: &T| std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains("tour=seen");
         if k == 0 {
             // No thanks, then a new window on the same folder
-            let closed = t.click("No thanks") && !t.w().tour.welcome && t.w().tour.run.is_none() && !t.has("Show me round");
+            let closed = t.click("No thanks") && !t.w().tour.welcome && t.w().tour.run.is_none() && !t.has("Show me around");
             t.detail("No thanks closes the welcome and writes the setting", closed && saved(&t), format!("{closed}"));
             let home = t.home.clone();
             results.append(&mut t.results);
             drop(t.h);
             t = T::open(home, fixture(), size);
             t.idle();
-            let none = !t.w().tour.welcome && !t.has("Show me round") && t.w().tour.run.is_none();
+            let none = !t.w().tour.welcome && !t.has("Show me around") && t.w().tour.run.is_none();
             t.check("a new window on the same folder has no welcome", none);
             // Something selected and the Add panel open, then the tour from the Options menu
             let ed = t.ed();
@@ -2782,8 +2782,8 @@ fn welcome_and_tour() {
             t.detail("after the tour the editor is as it was before", after == before && after.drafts == 0 && !after.edited, format!("{:?} {:?} {:?} {} {:?}", after.selection, after.palette_open, after.front, after.undo, after.mode));
         } else {
             let before = kept(&mut t);
-            let started = t.click("Show me round") && !t.w().tour.welcome && t.w().tour.run.as_ref().is_some_and(|r| r.step == 0);
-            t.detail(&format!("{name}: Show me round starts the tour and writes the setting"), started && saved(&t), format!("{started}"));
+            let started = t.click("Show me around") && !t.w().tour.welcome && t.w().tour.run.as_ref().is_some_and(|r| r.step == 0);
+            t.detail(&format!("{name}: Show me around starts the tour and writes the setting"), started && saved(&t), format!("{started}"));
             walk_tour(&mut t, &tag);
             t.settle();
             let after = kept(&mut t);
@@ -2826,15 +2826,15 @@ fn welcome_and_tour() {
             let mut t = T::with_settings("tour-rom", None, [1280.0, 800.0], &first_start);
             t.files.0.borrow_mut().open.push_back(rom);
             t.settle();
-            let setup = !t.has("Show me round");
+            let setup = !t.has("Show me around");
             t.h.get_by_label("Choose the ROM…").click();
             t.settle();
             t.idle();
-            let shown = t.w().tour.welcome && t.has("Show me round");
+            let shown = t.w().tour.welcome && t.has("Show me around");
             t.detail("the welcome is not over the setup screen, and shows on the first level of the game", setup && shown, format!("{setup} {shown}"));
             t.shot(&format!("{dir}/rom-00-welcome"));
             let before = kept(&mut t);
-            t.click("Show me round");
+            t.click("Show me around");
             walk_tour(&mut t, &format!("{dir}/rom"));
             t.settle();
             let same = kept(&mut t) == before;
@@ -3272,7 +3272,7 @@ fn panel_layout() {
     let saved = t.settings_text().contains("level:left:off");
     let shown = t.panels_menu(&["Show Level"]);
     let (p, v) = (t.w().panels, t.w().view.rect);
-    t.detail("layout: the tick in Options > Panels shows it again", saved && shown && close(p.slot(PanelId::Level), p0.slot(PanelId::Level)) && close(v, v0), format!("{saved} {shown} {p:?}"));
+    t.detail("layout: the checkbox in Options > Panels shows it again", saved && shown && close(p.slot(PanelId::Level), p0.slot(PanelId::Level)) && close(v, v0), format!("{saved} {shown} {p:?}"));
 
     // Checks, then the inspector: the right column goes when both are hidden
     let hid = t.panel_menu("Checks", "Hide");
@@ -3296,7 +3296,7 @@ fn panel_layout() {
     let shown = t.panels_menu(&["Show Inspector", "Show Checks"]);
     let p = t.w().panels;
     let v = t.w().view.rect;
-    t.detail("layout: both ticks bring the right column back", shown && close(p.inspector, p0.inspector) && close(p.checks, p0.checks) && close(v, v0), format!("{shown} {p:?}"));
+    t.detail("layout: both checkboxes bring the right column back", shown && close(p.inspector, p0.inspector) && close(p.checks, p0.checks) && close(v, v0), format!("{shown} {p:?}"));
 
     // Add to level and Path follow their tools
     t.key(Key::A);
@@ -3315,9 +3315,9 @@ fn panel_layout() {
     let again = t.ed().path.on && t.w().panels.slot(PanelId::Path).is_positive();
     t.key(Key::P);
     t.detail("layout: Hide closes Path, and P shows it again", open && hid && closed && again, format!("{open} {hid} {closed} {again}"));
-    let ticked = t.panels_menu(&["Show Add to level"]) && t.w().palette_open;
-    let unticked = t.panels_menu(&["Show Add to level"]) && !t.w().palette_open;
-    t.detail("layout: the tick of Add to level opens and closes it", ticked && unticked, format!("{ticked} {unticked}"));
+    let checked = t.panels_menu(&["Show Add to level"]) && t.w().palette_open;
+    let unchecked = t.panels_menu(&["Show Add to level"]) && !t.w().palette_open;
+    t.detail("layout: the checkbox of Add to level opens and closes it", checked && unchecked, format!("{checked} {unchecked}"));
 
     // Sides: Level to the right, the inspector to the left
     // On one side they are tabs, and the menu is the one of the panel in front
@@ -3531,7 +3531,7 @@ fn setup_refuses_a_wrong_file() {
     t.h.get_by_label("Choose the ROM…").click();
     t.settle();
     let still = t.h.state_mut().window().is_none();
-    t.check("a cancelled dialog keeps the screen", still);
+    t.check("a canceled dialog keeps the screen", still);
     t.finish();
 }
 
@@ -3600,12 +3600,12 @@ fn the_rom() {
             let r = x.radius.unwrap_or(0.0).max(40.0);
             // From the side Glover starts on, a little above
             let start = ent(ed, |e| e.kind == "spawn").map_or(ed.camera.pos, |s| ed.obj_pos(s));
-            let flat = [start[0] - x.centre[0], 0.0, start[2] - x.centre[2]];
+            let flat = [start[0] - x.center[0], 0.0, start[2] - x.center[2]];
             let n = vec::norm(flat).max(1e-6);
             let away = [flat[0] / n, 0.45, flat[2] / n];
-            ed.orbit.target = x.centre;
-            ed.camera.pos = vec::add(x.centre, vec::scale(away, 4.0 * r / vec::norm(away)));
-            ed.camera.look_at(x.centre);
+            ed.orbit.target = x.center;
+            ed.camera.pos = vec::add(x.center, vec::scale(away, 4.0 * r / vec::norm(away)));
+            ed.camera.look_at(x.center);
             ed.select(Some(i), false);
             let fog = ed.show_fog;
             ed.show_fog = false;

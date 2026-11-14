@@ -92,7 +92,7 @@ pub fn action_name(code: i128) -> Option<&'static str> {
         70 => "Zone camera: raise or lower",
         71 => "Zone camera: distance",
         72 => "Zone camera: turn to the focus",
-        73 => "Zone camera: fly towards a point",
+        73 => "Zone camera: fly toward a point",
         74 => "Zone camera: look at Glover",
         75 => "Zone camera (retail 0x4b)",
         76 => "Zone camera (retail 0x4c)",

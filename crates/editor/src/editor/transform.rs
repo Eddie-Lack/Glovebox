@@ -153,7 +153,7 @@ impl Editor {
         let rot_deg = rot_deg.filter(|r| *r != 0.0);
         let scale = scale.filter(|s| *s != 0.0);
         self.edit(|ed| {
-            let c = ed.centre_of(&tset);
+            let c = ed.center_of(&tset);
             let group = tset.len() > 1 && ed.pivot_mode == "group";
             for &i in &tset {
                 if let Some(m) = move_ {

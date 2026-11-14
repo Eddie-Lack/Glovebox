@@ -5,7 +5,7 @@
 //! be equal pixel for pixel. Textures with words differ in the letters only, because the kit draws its own font.
 //!
 //! The pumpkin's texturing was corrected after the recordings were made. The recorded pumpkin wraps the face
-//! texture three times round the body and relies on a clamp that the game does not have. The pumpkin now has the
+//! texture three times around the body and relies on a clamp that the game does not have. The pumpkin now has the
 //! face on its four front columns and a third texture, plain skin, on the other eight. For the pumpkin cases the
 //! test compares what did not change: the settings, the label, every position and normal, the stem's and the face
 //! columns' texture coordinates, and the face and stem textures. It skips the skin triangles' texture and
@@ -111,7 +111,14 @@ fn structure(json: &Value) -> Value {
 fn list_numbers_and_refusals() {
     let Some(dir) = dump() else { return };
     let ix = index(&dir);
-    assert_eq!(kit::items(), ix["items"]);
+    // The wording was changed to American English after the recordings were made: one recorded note has the old word.
+    let mut items = ix["items"].clone();
+    for item in items.as_array_mut().unwrap() {
+        if item["note"] == "A burnt patch for the ground" {
+            item["note"] = "A burned patch for the ground".into();
+        }
+    }
+    assert_eq!(kit::items(), items);
     for r in ix["rng"].as_array().unwrap() {
         let mut g = kit::rng::Random::new(r["seed"].as_u64().unwrap());
         for (i, want) in r["values"].as_array().unwrap().iter().enumerate() {
@@ -207,7 +214,7 @@ fn every_case_matches_the_reference() {
         }
 
         if corrected {
-            // The GLB has a third primitive and the preview has the skin's colours: neither is compared with the
+            // The GLB has a third primitive and the preview has the skin's colors: neither is compared with the
             // recording. The GLB's pictures must still be the soup's textures.
             let (rj, rbin) = split_glb(&soup.glb());
             let images = rj["images"].as_array().unwrap();

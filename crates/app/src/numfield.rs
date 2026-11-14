@@ -88,7 +88,7 @@ struct Drag {
     start: f64,
     moved: f64,
     before: String,
-    cancelled: bool,
+    canceled: bool,
 }
 
 /// A number as a field shows it, rounded to `unit`.
@@ -129,15 +129,15 @@ pub fn field(ui: &mut Ui, id: Id, buf: &mut String, spec: Option<Spec>, edit: im
     let mut out = None;
     let mut st = ui.data(|d| d.get_temp::<Drag>(drag_id));
     if let (true, Some(v)) = (over.drag_started_by(egui::PointerButton::Primary), value) {
-        st = Some(Drag { start: v, moved: 0.0, before: buf.clone(), cancelled: false });
+        st = Some(Drag { start: v, moved: 0.0, before: buf.clone(), canceled: false });
         signal(ui, Signal::Begin);
     }
     // egui itself ends a drag on Esc, so Esc is looked at first
     let esc = ui.input(|i| i.key_pressed(egui::Key::Escape));
-    if let Some(d) = st.as_mut().filter(|d| !d.cancelled && (esc || over.dragged())) {
+    if let Some(d) = st.as_mut().filter(|d| !d.canceled && (esc || over.dragged())) {
         ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
         if esc {
-            d.cancelled = true;
+            d.canceled = true;
             signal(ui, Signal::Cancel);
             out = (d.before != *buf).then(|| d.before.clone());
         } else {
@@ -163,7 +163,7 @@ pub fn field(ui: &mut Ui, id: Id, buf: &mut String, spec: Option<Spec>, edit: im
     }
     if over.drag_stopped() || !ui.input(|i| i.pointer.primary_down()) {
         if let Some(d) = st.take() {
-            if !d.cancelled {
+            if !d.canceled {
                 signal(ui, Signal::End);
             }
         }

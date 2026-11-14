@@ -12,7 +12,7 @@ pub struct ExitTrigger {
     /// The game's `exitType` (SetExit's `behavior`).
     pub exit_type: i64,
     /// The platform's position. For a platform that moves, where it starts.
-    pub centre: V3,
+    pub center: V3,
     /// The radius of the sphere. None when the editor does not have the model's vertices.
     pub radius: Option<f64>,
     /// Why the radius is 0.
@@ -54,7 +54,7 @@ impl Editor {
         };
         Some(ExitTrigger {
             exit_type,
-            centre: e.world_pos(&self.doc, &self.entities),
+            center: e.world_pos(&self.doc, &self.entities),
             radius: (!radius.is_nan()).then_some(radius),
             zero,
             rule: exits::rule(exit_type, self.scene_index()),

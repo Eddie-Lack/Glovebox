@@ -1,4 +1,4 @@
-//! The small picture of a kit model for the kit list: flat shaded triangles in painter's order, coloured by the
+//! The small picture of a kit model for the kit list: flat shaded triangles in painter's order, colored by the
 //! texture at each triangle's middle.
 
 use super::image::Image;

@@ -388,7 +388,7 @@ impl Window {
         cols
     }
 
-    /// Shows the panels round the view. The view takes the room they leave.
+    /// Shows the panels around the view. The view takes the room they leave.
     pub(crate) fn side_panels(&mut self, ui: &mut egui::Ui) {
         self.panels = Panels::default();
         let th = style::theme(ui.ctx());
@@ -568,7 +568,7 @@ fn tab_strip(w: &mut Window, ui: &mut egui::Ui, group: &[PanelId], active: Panel
 }
 
 /// The small menu of a panel: the sides it can move to, and Hide. `on_bar` is for a button on a title bar: it has
-/// the bar's letter colour and no frame.
+/// the bar's letter color and no frame.
 fn panel_menu(w: &mut Window, ui: &mut egui::Ui, p: PanelId, on_bar: bool) {
     let side = w.layout.side(p);
     let mut ask: Option<Option<Side>> = None;
@@ -596,7 +596,7 @@ fn panel_menu(w: &mut Window, ui: &mut egui::Ui, p: PanelId, on_bar: bool) {
     }
 }
 
-/// The Panels part of the Options menu: a tick and a side for each panel, how each side holds its panels, and
+/// The Panels part of the Options menu: a checkbox and a side for each panel, how each side holds its panels, and
 /// `Reset layout`. The menu stays open while its entries are clicked.
 pub fn menu(w: &mut Window, ui: &mut egui::Ui) {
     ui.set_width(250.0);

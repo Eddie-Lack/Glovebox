@@ -1,7 +1,7 @@
 //! A small RGBA picture and the drawing the kit's textures need: points, lines, rectangles, ellipses, arcs, polygons,
 //! one resize and PNG output.
 //!
-//! The shapes follow Pillow 13's rules (libImaging/Draw.c and Resample.c, licence MIT-CMU), and the reference
+//! The shapes follow Pillow 13's rules (libImaging/Draw.c and Resample.c, license MIT-CMU), and the reference
 //! tests hold the textures they give: coordinates are cut to whole numbers toward zero, a line of
 //! width 1 is Bresenham's, a wide line and a polygon are filled by scan lines with Pillow's rounding, and an ellipse
 //! is traced on a grid of half pixels.
@@ -55,9 +55,9 @@ fn round_down64(f: f64) -> i32 {
 }
 
 impl Image {
-    /// A picture of one colour.
-    pub fn new(w: usize, h: usize, colour: Rgba) -> Image {
-        Image { w, h, px: vec![colour; w * h] }
+    /// A picture of one color.
+    pub fn new(w: usize, h: usize, color: Rgba) -> Image {
+        Image { w, h, px: vec![color; w * h] }
     }
 
     /// The pixel at (x, y), or clear black outside the picture.
@@ -206,7 +206,7 @@ impl Image {
         }
     }
 
-    // Pillow's wide line: a four cornered polygon round the line.
+    // Pillow's wide line: a four cornered polygon around the line.
     fn wide_line(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, c: Rgba, width: i32) {
         let (dx, dy) = (x1 - x0, y1 - y0);
         if dx == 0 && dy == 0 {
@@ -359,7 +359,7 @@ impl Image {
     }
 
     /// Pillow's `resize((w, new_h), LANCZOS)` for a picture whose width stays the same.
-    /// The picture must be opaque: Pillow weighs colours by alpha, which changes nothing when alpha is 255.
+    /// The picture must be opaque: Pillow weighs colors by alpha, which changes nothing when alpha is 255.
     pub fn resize_height_lanczos(&self, new_h: usize) -> Image {
         const BITS: u32 = 22;
         let mut out = Image::new(self.w, new_h, [0; 4]);

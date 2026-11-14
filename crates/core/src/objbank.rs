@@ -145,11 +145,11 @@ pub struct Geometry<'a> {
     pub vertices: Option<&'a [u8]>,
     /// Three 16-bit vertex indices for each face
     pub faces: Option<&'a [u8]>,
-    /// Four bytes for each face: a normal of three signed bytes, or a colour
+    /// Four bytes for each face: a normal of three signed bytes, or a color
     pub face_cn: Option<&'a [u8]>,
     /// Six 16-bit numbers for each face: u and v of each corner, in 1/32 of a texel
     pub uvs: Option<&'a [u8]>,
-    /// Four bytes for each vertex: a colour, or a normal
+    /// Four bytes for each vertex: a color, or a normal
     pub vertex_cn: Option<&'a [u8]>,
     /// One byte for each face
     pub flags: Option<&'a [u8]>,
@@ -355,7 +355,7 @@ fn parse_mesh<'a>(data: &'a [u8], ptr: u32) -> Result<(Mesh<'a>, u32, u32), ObjE
                 faces: part(GEOMETRY_FACES_PTR, faces, FACE, "faces")?,
                 face_cn: part(GEOMETRY_FACE_CN_PTR, faces, 4, "face normals")?,
                 uvs: part(GEOMETRY_UVS_PTR, faces, UV, "texture coordinates")?,
-                vertex_cn: part(GEOMETRY_VERTEX_CN_PTR, verts, 4, "vertex colours")?,
+                vertex_cn: part(GEOMETRY_VERTEX_CN_PTR, verts, 4, "vertex colors")?,
                 flags: part(GEOMETRY_FLAGS_PTR, faces, 1, "face flags")?,
                 texture_ids: part(GEOMETRY_TEXTURE_IDS_PTR, faces, 4, "texture ids")?,
             })
@@ -881,7 +881,7 @@ fn unit(n: [f64; 3]) -> [f32; 3] {
 }
 
 /// A vertex in the display list's vertex cache: position, texture coordinates in 1/32 of a texel, and four bytes
-/// that are a normal or a colour.
+/// that are a normal or a color.
 #[derive(Clone, Copy, Default)]
 struct DlVertex {
     pos: [i16; 3],
@@ -1486,7 +1486,7 @@ mod tests {
         assert!(b.colors.is_empty());
         assert_eq!(a.indices, [0, 1, 2, 3, 4, 5]);
         assert_eq!(a.positions[3..], [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]);
-        // The unlit sibling has colours and no normals.
+        // The unlit sibling has colors and no normals.
         let sib = &m.meshes[m.nodes[2].mesh.unwrap() as usize];
         assert!(sib.primitives[0].normals.is_empty());
         assert_eq!(sib.primitives[0].colors[0], [0.0, 127.0 / 255.0, 0.0, 1.0]);
@@ -1572,7 +1572,7 @@ mod tests {
         assert!(relocatable_display_list(&[0; 64], &dl).is_err());
         let dl = [cmd(0x0400_0000 | 62 << 16 | 2 << 10 | 31, 0), cmd(0xB800_0000, 0)].concat();
         assert!(display_list_prims(&[0; 64], &dl, true).is_err());
-        // A changed vertex: new texture coordinates and a new colour
+        // A changed vertex: new texture coordinates and a new color
         let dl = [
             cmd(0x0400_0000 | 3 << 10 | 47, 0),
             cmd(0xB214_0002, 64 << 16 | 32),

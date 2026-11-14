@@ -18,7 +18,7 @@ use std::f64::consts::PI;
 /// An entity's place in the list `build` returns.
 pub type EntId = usize;
 
-/// The layers of the view: (kind, name, colour).
+/// The layers of the view: (kind, name, color).
 pub const KINDS: [(&str, &str, &str); 12] = [
     ("land", "Landscape", "#8fa3b8"),
     ("platform", "Platforms", "#6fb7ff"),
@@ -140,7 +140,7 @@ pub enum Anchor {
     /// Three attributes.
     Xyz([&'static str; 3]),
     /// The middle of a box stored as a corner and a size.
-    BoxCentre { corner: [&'static str; 3], size: [&'static str; 3] },
+    BoxCenter { corner: [&'static str; 3], size: [&'static str; 3] },
     /// The middle of a trigger cylinder: x, the mean of min_y and max_y, z.
     Cylinder,
 }
@@ -150,8 +150,8 @@ pub enum Anchor {
 pub enum Binding {
     /// Three attributes of a node. `parent`: a platform's parent platform, whose place is added.
     Xyz { node: NodeId, ax: [&'static str; 3], parent: Option<EntId> },
-    /// A box stored as a corner and a size, read and moved by its centre.
-    BoxCentre { node: NodeId, corner: [&'static str; 3], size: [&'static str; 3] },
+    /// A box stored as a corner and a size, read and moved by its center.
+    BoxCenter { node: NodeId, corner: [&'static str; 3], size: [&'static str; 3] },
     /// Attributes that shift together by the movement of an anchor point. Each triple names the x, y and z
     /// attributes of one point.
     Shift { node: NodeId, triples: Vec<[Option<&'static str>; 3]>, anchor: Anchor },
@@ -176,7 +176,7 @@ impl Binding {
     pub fn node(&self) -> NodeId {
         match self {
             Binding::Xyz { node, .. }
-            | Binding::BoxCentre { node, .. }
+            | Binding::BoxCenter { node, .. }
             | Binding::Shift { node, .. }
             | Binding::Mid { node }
             | Binding::NewPlatformPos { node, .. } => *node,
@@ -187,13 +187,13 @@ impl Binding {
     pub fn get(&self, doc: &Doc, ents: &[Ent]) -> V3 {
         match self {
             Binding::Xyz { node, ax, parent } => vec::add(trio(doc, Some(*node), *ax, 0.0), parent_offset(doc, ents, *parent)),
-            Binding::BoxCentre { node, corner, size } => box_centre(doc, *node, *corner, *size),
+            Binding::BoxCenter { node, corner, size } => box_center(doc, *node, *corner, *size),
             Binding::Shift { node, anchor, .. } => match anchor {
                 Anchor::Xyz(ax) => vec::add(trio(doc, Some(*node), *ax, 0.0), [0.0; 3]),
-                Anchor::BoxCentre { corner, size } => {
+                Anchor::BoxCenter { corner, size } => {
                     vec::add(trio(doc, Some(*node), *corner, 0.0), vec::scale(trio(doc, Some(*node), *size, 0.0), 0.5))
                 }
-                Anchor::Cylinder => cylinder_centre(doc, *node),
+                Anchor::Cylinder => cylinder_center(doc, *node),
             },
             Binding::Mid { node } => {
                 let (a, b) = (trio(doc, Some(*node), END_1, 0.0), trio(doc, Some(*node), END_2, 0.0));
@@ -212,7 +212,7 @@ impl Binding {
                     doc.set(*node, ax[i], &fmt(v[i] - o[i]));
                 }
             }
-            Binding::BoxCentre { node, corner, size } => {
+            Binding::BoxCenter { node, corner, size } => {
                 for i in 0..3 {
                     let c = v[i] - num0(doc, *node, size[i]) / 2.0;
                     doc.set(*node, corner[i], &fmt(c));
@@ -247,7 +247,7 @@ impl Binding {
     }
 }
 
-fn box_centre(doc: &Doc, node: NodeId, corner: [&str; 3], size: [&str; 3]) -> V3 {
+fn box_center(doc: &Doc, node: NodeId, corner: [&str; 3], size: [&str; 3]) -> V3 {
     let mut out = [0.0; 3];
     for i in 0..3 {
         out[i] = num0(doc, node, corner[i]) + num0(doc, node, size[i]) / 2.0;
@@ -255,7 +255,7 @@ fn box_centre(doc: &Doc, node: NodeId, corner: [&str; 3], size: [&str; 3]) -> V3
     out
 }
 
-fn cylinder_centre(doc: &Doc, vol: NodeId) -> V3 {
+fn cylinder_center(doc: &Doc, vol: NodeId) -> V3 {
     [num0(doc, vol, "x"), (num0(doc, vol, "min_y") + num0(doc, vol, "max_y")) / 2.0, num0(doc, vol, "z")]
 }
 
@@ -269,8 +269,8 @@ fn static_axes(pre: &str) -> Option<[&'static str; 3]> {
 }
 
 /// Absolute points that belong to an object and must follow it: enemy patrol and target points (their scripts use
-/// world coordinates), enemy attention boxes, platform start and path points and orbit centres (relative to a
-/// parent platform, if any). Boxes stored as corner and size follow by their centre.
+/// world coordinates), enemy attention boxes, platform start and path points and orbit centers (relative to a
+/// parent platform, if any). Boxes stored as corner and size follow by their center.
 pub fn attached_points(doc: &Doc, node: NodeId, parent: Option<EntId>) -> Vec<Binding> {
     let mut out = Vec::new();
     for e in doc.iter(node).into_iter().skip(1) {
@@ -280,7 +280,7 @@ pub fn attached_points(doc: &Doc, node: NodeId, parent: Option<EntId>) -> Vec<Bi
                 continue;
             }
             "EnemySetAttentionBbox" => {
-                out.push(Binding::BoxCentre { node: e, corner: ["left", "top", "front"], size: ["width", "height", "depth"] });
+                out.push(Binding::BoxCenter { node: e, corner: ["left", "top", "front"], size: ["width", "height", "depth"] });
                 continue;
             }
             _ => {}
@@ -291,7 +291,7 @@ pub fn attached_points(doc: &Doc, node: NodeId, parent: Option<EntId>) -> Vec<Bi
                 continue;
             }
             if pre == "home" && doc.has(e, "extent_x") {
-                out.push(Binding::BoxCentre { node: e, corner: ax, size: ["extent_x", "extent_y", "extent_z"] });
+                out.push(Binding::BoxCenter { node: e, corner: ax, size: ["extent_x", "extent_y", "extent_z"] });
             } else {
                 out.push(Binding::Xyz { node: e, ax, parent: None });
             }
@@ -327,7 +327,7 @@ pub enum Shape {
 }
 
 /// An axis-aligned volume stored in one node (wind volumes, puzzle trigger volumes). Moving shifts it. Scaling
-/// resizes it about its centre.
+/// resizes it about its center.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Volume {
     pub node: NodeId,
@@ -359,7 +359,7 @@ impl Volume {
     }
 
     fn set_height(&self, doc: &mut Doc, h: f64) {
-        let c = cylinder_centre(doc, self.node)[1];
+        let c = cylinder_center(doc, self.node)[1];
         doc.set(self.node, "min_y", &fmt(c - h / 2.0));
         doc.set(self.node, "max_y", &fmt(c + h / 2.0));
     }
@@ -481,7 +481,7 @@ pub struct Ent {
     pub xform: Option<Xform>,
     pub volume: Option<Volume>,
     pub look: Look,
-    /// More sprites on it: (glyph, colour, size, offset).
+    /// More sprites on it: (glyph, color, size, offset).
     pub icons: Vec<(&'static str, &'static str, u32, V3)>,
     pub object_id: Option<String>,
     /// The model is in the catalog and not in the banks the level loads.
@@ -635,7 +635,7 @@ impl Ent {
     }
 }
 
-/// The swimming volume of a Water element, as the centre and the size of the box the view draws.
+/// The swimming volume of a Water element, as the center and the size of the box the view draws.
 pub fn water_volume(doc: &Doc, node: NodeId) -> (V3, V3) {
     let n = |a: &str| num0(doc, node, a);
     let sum = n("top") + n("bottom");
@@ -651,7 +651,7 @@ pub fn water_volume(doc: &Doc, node: NodeId) -> (V3, V3) {
 
 // Puzzle conditions that test where Glover, the ball or the camera is. parse.c (TOKEN_CONDITION) reads condition
 // ids 35-41 into a PuzzleCamCond, and PuzzleEvaluateCondition (puzzle.c) tests them: a box is a min corner plus a
-// size (IsPointWithinBox), a sphere is a centre and a radius, and the cylinder is a centre x/z and a radius between
+// size (IsPointWithinBox), a sphere is a center and a radius, and the cylinder is a center x/z and a radius between
 // min_y and max_y. Id 34 (PuzzleCond0x22, CONDITION_HAND_CROSSES_LINE) is always true and has nothing to draw.
 
 /// The shape and the subject of a trigger volume element: ("box" | "sphere" | "cylinder", who).
@@ -690,7 +690,7 @@ pub fn lone_trigger(doc: &Doc, ent: &Ent) -> bool {
     ent.kind == "trigger" && trigger_volumes(doc, ent.node).len() == 1
 }
 
-/// A colour "#rrggbb" as three numbers from 0 to 1.
+/// A color "#rrggbb" as three numbers from 0 to 1.
 pub fn hex_rgb(h: &str) -> [f64; 3] {
     let h = h.trim_start_matches('#');
     let part = |i: usize| h.get(i..i + 2).and_then(|s| u8::from_str_radix(s, 16).ok()).unwrap_or(0) as f64 / 255.0;
@@ -813,7 +813,7 @@ fn trigger_entity(node: NodeId, vol: NodeId, spec: (&'static str, &'static str),
         "box" => {
             let (corner, size) = (XYZ, ["l", "w", "h"]);
             (
-                Binding::Shift { node: vol, triples: vec![corner.map(Some)], anchor: Anchor::BoxCentre { corner, size } },
+                Binding::Shift { node: vol, triples: vec![corner.map(Some)], anchor: Anchor::BoxCenter { corner, size } },
                 Shape::Box { corner, size },
             )
         }
@@ -895,7 +895,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
                 let pos_node = doc.first(node, "PlatSetInitialPos");
                 let path_pts = doc.kids(node, "PlatPathPoint");
                 // The platform's position is its start (PlatSetInitialPos, else the first path point). The rest of
-                // its path and its orbit centre are attached points that follow every move, rotation and scale.
+                // its path and its orbit center are attached points that follow every move, rotation and scale.
                 let anchor = pos_node.or(path_pts.first().copied());
                 let mut pts = attached_points(doc, node, parent);
                 let at = anchor.and_then(|a| pts.iter().position(|b| b.node() == a));
@@ -1044,7 +1044,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
                 ent.label = "wind volume".to_string();
                 ent.why_rot = Some(WHY_WIND_ROT);
                 let (corner, size) = (["left", "top", "front"], ["width", "height", "depth"]);
-                ent.bind = Some(Binding::Shift { node, triples: vec![corner.map(Some)], anchor: Anchor::BoxCentre { corner, size } });
+                ent.bind = Some(Binding::Shift { node, triples: vec![corner.map(Some)], anchor: Anchor::BoxCenter { corner, size } });
                 ent.scl = Some("box");
                 ent.xform = Some(Xform::Volume);
                 ent.volume = Some(Volume { node, shape: Shape::Box { corner, size } });
@@ -1218,8 +1218,8 @@ pub fn set_camera_zone(doc: &mut Doc, puzzle: NodeId, z: &Zone) {
 pub const CAM_PRESETS: [(&str, &str, &str); 8] = [
     ("behind", "Behind", "turns to look the way the player goes"),
     ("high", "High", "rises and looks down"),
-    ("side", "Side", "swings round to the right of the way on"),
-    ("left", "Other side", "swings round to the left"),
+    ("side", "Side", "swings around to the right of the way on"),
+    ("left", "Other side", "swings around to the left"),
     ("front", "Front", "faces Glover: you can\u{2019}t see where you go"),
     ("low", "Low", "drops to Glover\u{2019}s height and comes close"),
     ("far", "Far", "stands far back and high"),
@@ -1228,7 +1228,7 @@ pub const CAM_PRESETS: [(&str, &str, &str); 8] = [
 
 /// The settings of a preset, for a player who walks the way `facing` points (radians about y, 0 along +z). Angles
 /// are from the camera to Glover. `None` for a key that is not a preset.
-pub fn preset_zone(key: &str, facing: f64, centre: V3) -> Option<Zone> {
+pub fn preset_zone(key: &str, facing: f64, center: V3) -> Option<Zone> {
     let z = |look: Option<f64>, speed: Option<f64>, distance: Option<f64>, height: Option<f64>| Zone {
         vol: None,
         look,
@@ -1246,20 +1246,20 @@ pub fn preset_zone(key: &str, facing: f64, centre: V3) -> Option<Zone> {
         "front" => z(Some(f + PI), Some(2.0), Some(160.0), Some(30.0)),
         "low" => z(None, None, Some(40.0), Some(-60.0)),
         "far" => z(None, None, Some(700.0), Some(260.0)),
-        "fixed" => Zone { fly: Some(vec::add(centre, [f.sin() * 250.0, 260.0, f.cos() * 250.0])), ..Zone::default() },
+        "fixed" => Zone { fly: Some(vec::add(center, [f.sin() * 250.0, 260.0, f.cos() * 250.0])), ..Zone::default() },
         _ => return None,
     })
 }
 
 /// The middle of a zone's box.
-pub fn zone_centre(doc: &Doc, vol: NodeId) -> V3 {
-    box_centre(doc, vol, XYZ, ["l", "w", "h"])
+pub fn zone_center(doc: &Doc, vol: NodeId) -> V3 {
+    box_center(doc, vol, XYZ, ["l", "w", "h"])
 }
 
 /// Where the camera about stands for a Glover at the middle of the zone, as (glove, eye). `None` when the zone
 /// keeps the level's direction.
 pub fn zone_camera(doc: &Doc, z: &Zone) -> Option<(V3, V3)> {
-    let c = zone_centre(doc, z.vol?);
+    let c = zone_center(doc, z.vol?);
     if let Some(f) = z.fly {
         return Some((c, f));
     }

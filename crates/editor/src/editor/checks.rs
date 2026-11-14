@@ -305,8 +305,8 @@ impl Editor {
         for t in ["AmbientLight", "DiffuseLight", "FogConfiguration"] {
             for n in doc.kids(root, t) {
                 if ["r", "g", "b"].iter().any(|c| num0(doc, n, c) > 255.0) {
-                    let msg = format!("{}: a colour channel is over 255; the game keeps the low byte.", look_name(t).unwrap_or(t));
-                    add(n, format!("level:colour:{}", key_path(doc, n)), msg, None, None, "err");
+                    let msg = format!("{}: a color channel is over 255; the game keeps the low byte.", look_name(t).unwrap_or(t));
+                    add(n, format!("level:color:{}", key_path(doc, n)), msg, None, None, "err");
                 }
             }
         }
@@ -690,7 +690,7 @@ impl Editor {
         }
     }
 
-    /// The actors as the game culls them: centre, radius and matrices (object nodes, plus a shadow for enemies).
+    /// The actors as the game culls them: center, radius and matrices (object nodes, plus a shadow for enemies).
     fn load_items(&self) -> Vec<LoadItem> {
         let mut out = Vec::new();
         for (i, e) in self.entities.iter().enumerate() {
@@ -724,7 +724,7 @@ impl Editor {
         spots
     }
 
-    /// The camera stands behind and over Glover. It can face any way, so each spot counts from four cameras round
+    /// The camera stands behind and over Glover. It can face any way, so each spot counts from four cameras around
     /// it.
     fn load_at(p: V3, far: f64, items: &[LoadItem]) -> (i64, Option<V3>) {
         let (mut n, mut at) = (0, None);

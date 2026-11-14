@@ -84,7 +84,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         }
     }
     ui.label(RichText::new(" Pivot").color(style::theme(ui.ctx()).muted));
-    let pivots = [("group", "group centre"), ("individual", "each origin")];
+    let pivots = [("group", "group center"), ("individual", "each origin")];
     let shown = pivots.iter().find(|p| p.0 == w.ed.pivot_mode).map_or("each origin", |p| p.1);
     let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).show_ui(ui, |ui| {
         for (v, text) in pivots {
@@ -94,7 +94,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         }
     });
     r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
-    r.response.on_hover_text("Where a multi-object rotation or scale is centred");
+    r.response.on_hover_text("Where a multi-object rotation or scale is centered");
     ui.label(RichText::new(" Snap").color(style::theme(ui.ctx()).muted));
     let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
     let shown = snaps.iter().find(|x| x.1 == w.ed.snap).map_or("off", |x| x.0);
@@ -197,7 +197,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         w.ed.set_layer("trigger", !triggers);
     }
     let shown = !w.ed.hidden.contains(exits::LAYER);
-    if style::toggle(ui, shown, "Exits", "Show the exit triggers: the sphere round each platform with an exit, at the size the game tests. Glover or the ball must come inside it. Hiding them only affects the editor view.").clicked() {
+    if style::toggle(ui, shown, "Exits", "Show the exit triggers: the sphere around each platform with an exit, at the size the game tests. Glover or the ball must come inside it. Hiding them only affects the editor view.").clicked() {
         w.ed.set_layer(exits::LAYER, !shown);
     }
     sep(ui);

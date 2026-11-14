@@ -159,7 +159,7 @@ impl State {
         self.targets.clear();
     }
 
-    /// Reports where a target is in this frame. Several widgets of one target give the rectangle round them all.
+    /// Reports where a target is in this frame. Several widgets of one target give the rectangle around them all.
     pub fn mark(&mut self, target: Target, rect: Rect) {
         if rect.is_positive() {
             self.targets.entry(target).and_modify(|r| *r = r.union(rect)).or_insert(rect);
@@ -383,7 +383,7 @@ fn welcome(w: &mut Window, ctx: &egui::Context) {
                 crate::dialogs::title_bar(ui, "Welcome to Glovebox");
                 ui.label("Is this your first time here? Want a quick tour of the editor?");
                 crate::dialogs::buttons(ui, |ui| {
-                    if ui.add(style::primary("Show me round")).clicked() || enter {
+                    if ui.add(style::primary("Show me around")).clicked() || enter {
                         answer = Some(true);
                     }
                     if ui.button("No thanks").clicked() || esc {

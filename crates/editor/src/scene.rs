@@ -26,7 +26,7 @@ pub fn next_id() -> u64 {
 
 pub const IDENTITY: Mat4 = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
 
-/// Vertex data: positions, and optionally triangle indices, normals, uvs and colours (one per vertex).
+/// Vertex data: positions, and optionally triangle indices, normals, uvs and colors (one per vertex).
 /// Without indices, every three vertices are a triangle.
 #[derive(Debug, Clone)]
 pub struct Geometry {
@@ -103,7 +103,7 @@ pub struct Texture {
     pub width: u32,
     pub height: u32,
     pub rgba: Vec<u8>,
-    /// The pixels are sRGB colours. The renderer turns them linear when it samples.
+    /// The pixels are sRGB colors. The renderer turns them linear when it samples.
     pub srgb: bool,
 }
 
@@ -948,7 +948,7 @@ pub struct Prefab {
 impl Prefab {
     /// Builds the scene data of a model. `texture` gives the pixels of a texture id, or none when they are missing (the material is then drawn without a texture).
     ///
-    /// The material: the base colour and its alpha as opacity, `Blend` as transparent, the
+    /// The material: the base color and its alpha as opacity, `Blend` as transparent, the
     /// cutoff of `Mask` as the alpha test, and an alpha test of 0.3 for any other textured material. It is
     /// always lit and double-sided: `unlit`, `billboard` and `inherit_rotation` are not read.
     pub fn from_model(model: &Model, texture: &mut dyn FnMut(u32) -> Option<Arc<Texture>>) -> Prefab {
@@ -1364,7 +1364,7 @@ mod tests {
         let b = box_geometry(1.0, 2.0, 3.0);
         assert_eq!((b.positions.len(), b.triangle_count()), (24, 12));
         assert_eq!((b.bounds().min, b.bounds().max), ([-0.5, -1.0, -1.5], [0.5, 1.0, 1.5]));
-        // every face winds the same way: inwards (it is drawn double-sided)
+        // every face winds the same way: inward (it is drawn double-sided)
         for i in 0..12 {
             let t = b.triangle(i);
             let n = vec::cross(vec::sub(t[1], t[0]), vec::sub(t[2], t[0]));
@@ -1446,13 +1446,13 @@ mod tests {
         cam.look_at([0.0, 0.0, 0.0]);
         let ray = |x: f64, y: f64| cam.ray(x, y).unwrap();
         let with = RayOptions { camera: Some(&cam), line_px: Some(5.0), ..RayOptions::default() };
-        let centre = cam.to_pixels([0.0, 0.0, 0.0]);
-        let (o, d) = ray(centre[0], centre[1]);
+        let center = cam.to_pixels([0.0, 0.0, 0.0]);
+        let (o, d) = ray(center[0], center[1]);
         assert!(s.raycast(&[root], o, d, &RayOptions::default()).is_empty());
         let hits = s.raycast(&[root], o, d, &with);
         assert_eq!(hits.len(), 1);
         assert!(hits[0].node == sp && (hits[0].distance - 50.0).abs() < 1e-6);
-        // just inside and just outside the square's edge (2 units from the centre)
+        // just inside and just outside the square's edge (2 units from the center)
         let edge = cam.to_pixels([1.9, 0.0, 0.0]);
         let (o, d) = ray(edge[0], edge[1]);
         assert_eq!(s.raycast(&[root], o, d, &with).len(), 1);
@@ -1589,7 +1589,7 @@ mod tests {
         s[made[1]].set_euler(0.0, std::f64::consts::FRAC_PI_2, 0.0);
         let (batches, _) = make_batches(&s, &[made[1]], &|_, _| false);
         let n = batches[0].geometry.normals.as_ref().unwrap();
-        // the first face's normal is +x (the box winds inwards). Turned a quarter about y it is -z.
+        // the first face's normal is +x (the box winds inward). Turned a quarter about y it is -z.
         assert!((n[0][2] + 1.0).abs() < 1e-6, "{:?}", n[0]);
     }
 

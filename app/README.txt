@@ -52,7 +52,7 @@ The editor could not start its window!!
 Update the driver from your graphics card's maker (NVIDIA, AMD or Intel).
 
 
-Licences
+Licenses
 --------
 
 see THIRD_PARTY_NOTICES.md and the licenses folder

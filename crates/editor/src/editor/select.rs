@@ -118,7 +118,7 @@ impl Editor {
     }
 
     /// The mean of the entities' positions, summed in the order of `set`.
-    pub(crate) fn centre_of(&self, set: &[EntId]) -> V3 {
+    pub(crate) fn center_of(&self, set: &[EntId]) -> V3 {
         let mut c = [0.0; 3];
         for &i in set {
             c = vec::add(c, self.bind_get(i));
@@ -148,7 +148,7 @@ impl Editor {
         }
         let pos = match single {
             Some(s) => self.bind_get(s),
-            None => self.centre_of(&tset),
+            None => self.center_of(&tset),
         };
         // A single object rotates and scales about its own axes
         let quat = single.and_then(|s| self.entities[s].get_quat(&self.doc)).unwrap_or_else(vec::quat_identity);

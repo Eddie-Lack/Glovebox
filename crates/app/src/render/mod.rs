@@ -1,13 +1,13 @@
 //! Draws a scene (`glovebox_editor::scene`) with wgpu: Lambert-shaded meshes with fog, lines (dashed or not) and
 //! sprites.
 //!
-//! The renderer draws into its own colour and depth textures, never into the window. The window shows the colour
+//! The renderer draws into its own color and depth textures, never into the window. The window shows the color
 //! texture as an egui image (`Renderer::view`). `read_pixels`, `render_image` and `render_thumbnail` give the
 //! picture as RGBA bytes.
 //!
 //! The order of drawing: the batches and the other opaque meshes; then blended meshes, lines and
 //! sprites, far to near; then what ignores depth, by the node's order; then each overlay root (the gizmo) over a
-//! cleared depth buffer. Every material is drawn double-sided. Colours blend by alpha, and alpha itself only
+//! cleared depth buffer. Every material is drawn double-sided. Colors blend by alpha, and alpha itself only
 //! grows.
 //!
 //! GPU copies of geometry, lines and textures are made on first use and kept by the id of the scene object.
@@ -23,14 +23,14 @@ use glovebox_editor::vec::{self, Mat4, V3};
 use std::collections::{HashMap, HashSet};
 
 const SHADERS: &str = include_str!("shaders.wgsl");
-/// The colour target. The shaders write sRGB values into it.
+/// The color target. The shaders write sRGB values into it.
 const COLOR: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
 const DEPTH: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 const GLOBALS_SIZE: u64 = 192;
 const DRAW_SIZE: u64 = 176;
 const MESH_STRIDE: u64 = 48;
 
-/// The level's fog: its colour (sRGB), and where it starts and is full, as distances from the camera.
+/// The level's fog: its color (sRGB), and where it starts and is full, as distances from the camera.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Fog {
     pub color: [f64; 3],
@@ -69,7 +69,7 @@ pub struct Stats {
 struct Target {
     width: u32,
     height: u32,
-    /// The multisampled colour texture's view, when the renderer multisamples.
+    /// The multisampled color texture's view, when the renderer multisamples.
     msaa: Option<wgpu::TextureView>,
     color: wgpu::Texture,
     color_view: wgpu::TextureView,
@@ -136,7 +136,7 @@ pub struct Renderer {
     lines: HashMap<u64, GpuLines>,
     textures: HashMap<TexKey, wgpu::BindGroup>,
     target: Option<Target>,
-    /// The colour the view is cleared to (sRGB).
+    /// The color the view is cleared to (sRGB).
     pub background: [f64; 3],
     pub fog: Option<Fog>,
     /// The level's ambient light (sRGB).
@@ -283,7 +283,7 @@ impl Renderer {
         });
         let mesh_attrs = wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x2, 3 => Float32x4];
         let line_attrs = wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32];
-        // Colour blends by alpha; alpha itself only grows: the view stays opaque, and a thumbnail drawn on a clear
+        // Color blends by alpha; alpha itself only grows: the view stays opaque, and a thumbnail drawn on a clear
         // background keeps its shape
         let blend = wgpu::BlendState {
             color: wgpu::BlendComponent { src_factor: wgpu::BlendFactor::SrcAlpha, dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha, operation: wgpu::BlendOperation::Add },
@@ -660,7 +660,7 @@ impl Renderer {
                 let offset = uniforms.len() as u32;
                 let test = e.order <= 0;
                 let (mut model, mut normal) = (e.m, [[0.0; 3]; 3]);
-                let (mut color, mut params, mut flags, mut centre) = ([1.0f32; 4], [0.0f32; 4], [0u32; 4], [0.0f32; 4]);
+                let (mut color, mut params, mut flags, mut center) = ([1.0f32; 4], [0.0f32; 4], [0u32; 4], [0.0f32; 4]);
                 let mut texture = None;
                 let (pipeline, what) = match &e.item {
                     EntryItem::Mesh(g, mat) => {
@@ -676,7 +676,7 @@ impl Renderer {
                                 normal[i][j] = (0..3).map(|k| view[i][k] * nm[k][j]).sum();
                             }
                         }
-                        // A lit material's colour goes to the shader as it is; an unlit one's is made linear
+                        // A lit material's color goes to the shader as it is; an unlit one's is made linear
                         let c = if mat.lit { mat.color } else { mat.color.map(srgb_to_linear) };
                         color = [c[0] as f32, c[1] as f32, c[2] as f32, mat.opacity as f32];
                         params[0] = mat.alpha_test as f32;
@@ -707,7 +707,7 @@ impl Renderer {
                     EntryItem::Sprite(s) => {
                         let sx = vec::decompose_scale(&e.m)[0];
                         params[3] = (s.size * if sx != 0.0 { sx } else { 1.0 }) as f32;
-                        centre = [e.m[0][3] as f32, e.m[1][3] as f32, e.m[2][3] as f32, 1.0];
+                        center = [e.m[0][3] as f32, e.m[1][3] as f32, e.m[2][3] as f32, 1.0];
                         color[3] = s.opacity as f32;
                         texture = Some(self.ensure_texture(&s.texture, (Wrap::Clamp, Wrap::Clamp)));
                         stats.triangles += 2;
@@ -723,7 +723,7 @@ impl Renderer {
                 for v in flags {
                     uniforms.extend_from_slice(&v.to_le_bytes());
                 }
-                put(&mut uniforms, &centre);
+                put(&mut uniforms, &center);
                 uniforms.resize(offset as usize + self.slot as usize, 0);
                 out.push(Cmd { pipeline, offset, texture, what });
                 stats.draw_calls += 1;
@@ -757,7 +757,7 @@ impl Renderer {
         let last = cmds.len() - 1;
         for (i, list) in cmds.iter().enumerate() {
             let first = i == 0;
-            // The background is an sRGB colour, written as it is
+            // The background is an sRGB color, written as it is
             let bg = wgpu::Color { r: self.background[0], g: self.background[1], b: self.background[2], a: f.clear_alpha };
             let load = if first { wgpu::LoadOp::Clear(bg) } else { wgpu::LoadOp::Load };
             let (view, resolve_target) = match &target.msaa {
@@ -848,7 +848,7 @@ impl Renderer {
         Ok(out)
     }
 
-    /// The view's picture as RGBA bytes, rows from the top. The colours are sRGB.
+    /// The view's picture as RGBA bytes, rows from the top. The colors are sRGB.
     pub fn read_pixels(&self) -> Result<Vec<u8>, String> {
         match &self.target {
             Some(t) => self.read_target(t),
@@ -865,8 +865,8 @@ impl Renderer {
     }
 
     /// A picture of a model for the palette: `size` by `size` RGBA bytes, rows from the top, on a clear
-    /// background. The colours are multiplied by the alpha (where the model covers half a pixel, the pixel holds
-    /// half the colour and an alpha of a half). None for a model without a vertex.
+    /// background. The colors are multiplied by the alpha (where the model covers half a pixel, the pixel holds
+    /// half the color and an alpha of a half). None for a model without a vertex.
     ///
     /// It is drawn at `size` pixels with the renderer's multisampling.
     pub fn render_thumbnail(&mut self, model: &Prefab, size: u32) -> Option<Vec<u8>> {

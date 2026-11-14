@@ -117,7 +117,7 @@ pub fn parse_int(s: &str) -> Option<i128> {
     Some(if neg { -v } else { v })
 }
 
-/// Python's `round(x)` for a float: halves go to the even neighbour.
+/// Python's `round(x)` for a float: halves go to the even neighbor.
 pub fn py_round(v: f64) -> f64 {
     let r = v.round();
     if (v - v.trunc()).abs() == 0.5 {

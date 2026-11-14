@@ -123,7 +123,7 @@ pub fn is_motion_maker(tag: &str) -> bool {
     has(MOTION, tag) || tag == "PlatCopySpinFromParent"
 }
 
-/// What a NullPlatform (a platform with no model: a parent or orbit centre) may hold. The rest use the model or
+/// What a NullPlatform (a platform with no model: a parent or orbit center) may hold. The rest use the model or
 /// the collision, which it does not have (parse.c TOKEN_DUMMY).
 pub fn null_ok(tag: &str) -> bool {
     has(NULL_OK_BASE, tag) || has(ORBIT_MODS, tag)

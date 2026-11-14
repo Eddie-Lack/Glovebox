@@ -27,7 +27,7 @@ process. Nothing is installed, unpacked or run next to it. It builds on three pr
 | `mod/` | The Expansion Pak game mod: `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard), `slots.c` (extra levels), which run from 0x807E0000; `loader.c` (over `ScreenShot`); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
 | `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
 | `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. After editing the page's script, run `tools/build_patcher.py` to pin the new hash. |
-| `tools/licenses.py` | Collects the licences of the Rust crates and fonts in the program, for the release archive. |
+| `tools/licenses.py` | Collects the licenses of the Rust crates and fonts in the program, for the release archive. |
 | `tools/wiki.py` | Copies the guide between `docs/guide` and a checkout of the GitHub wiki, in either direction. |
 | `app/README.txt` | The guide for players that goes into the release archive. |
 | `docs/guide/` | The guide with pictures for players: one Markdown page for each job, and the pictures in `img/` (see "The guide's pictures"). |
@@ -84,7 +84,7 @@ nothing else. The program never runs them.
 | `exits` | Exit triggers: the radius the game gives a platform (`radius`) and who must come within it (`rule`). |
 | `scene`, `camera`, `gizmo` | The 3D view's data: a small scene graph with picking, orbit and fly cameras, the gizmo. |
 | `commands`, `puzzles`, `scripts`, `presets` | The level format's order and rules, puzzles, enemy scripts, platform presets ("Commands, puzzles, enemy scripts, extra levels", below). |
-| `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, three.js maths (Euler `'YZX'`). |
+| `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, three.js math (Euler `'YZX'`). |
 | `fixture` | A back end without a ROM: two made-up levels and a few made-up models. The tests and `--fixture` use it. |
 
 `crates/app` by module:
@@ -94,7 +94,7 @@ nothing else. The program never runs them.
 | `shell`, `main.rs` | The options, the user folder with its marker, lock and log, the ROM copy, the choice of graphics adapter, the self-test. |
 | `app`, `setup` | The application: the first-run screen or the editor's window, opening levels, builds, Test level, the keyboard. |
 | `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
-| `layout` | Which panels show and where: the layout, its settings, the columns round the view, the Panels menu. |
+| `layout` | Which panels show and where: the layout, its settings, the columns around the view, the Panels menu. |
 | `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
 | `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
 | `settings`, `style`, `theme`, `icon` | `settings.ini`, the drawing of the look (the widgets' shapes, title bars, the logo), the themes as data, the app's icon. |
@@ -111,7 +111,7 @@ nothing else. The program never runs them.
   world size, as three.js sprites do.
 - Picking runs on the CPU: a ray against each mesh's triangles, sprites as camera-facing squares, lines
   within 5 pixels.
-- The player arranges the panels (`layout.rs`). A colour is picked in the inspector itself, not in a dialog.
+- The player arranges the panels (`layout.rs`). A color is picked in the inspector itself, not in a dialog.
   - There are five panels (`PanelId`): Level, Inspector, Checks, Add to level and Path. The view is in the middle and
     takes the room they leave. With every panel hidden it fills the window.
   - A `Layout` holds, for each panel, its side (left or right; the checks can also be at the bottom, under the
@@ -140,7 +140,7 @@ nothing else. The program never runs them.
   - `Reset layout` removes both settings' effect: the default layout, and new ids for the egui panels
     (`layout_gen` is part of each id), which drops the sizes egui kept.
   - The controls: `Options` > `Panels` (`layout::menu`, a submenu that stays open while its entries are clicked)
-    has a tick and a side for each panel, `Stacked` or `Tabbed` for each side, and `Reset layout`. Each title bar,
+    has a checkbox and a side for each panel, `Stacked` or `Tabbed` for each side, and `Reset layout`. Each title bar,
     each row of tabs and the checks' heading has a small menu (`panel_menu`): `Move to left`, `Move to right`,
     `Move to bottom` for the checks, and `Hide`. Panels are not dragged to dock them.
   - `Window::panels` has the rectangles of the last frame: the columns of Level and of the inspector, the checks,
@@ -163,26 +163,26 @@ nothing else. The program never runs them.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
   (`render/icons.rs`), not with a system font. They look the same on every computer.
 - The look is a theme. The themes are data in `theme.rs`; `style.rs` draws everything from the active one.
-  - A `Theme` holds the colours of every surface and text, the tones of the buttons (`Tone`: fill, text, line), and
+  - A `Theme` holds the colors of every surface and text, the tones of the buttons (`Tone`: fill, text, line), and
     one variant for each part that has a shape: `Shape` (buttons), `Field` (text boxes), `Bar` (title bars), `Logo`,
     `Divider`, `Backdrop` (behind the setup screen), `Border` (the frame of the setup box, of a dialog and of the
     note in the view) and `Mark` (the signs of the Checks panel). It also names the fonts, the chips over the 3D
-    view, the colours of the selection, and the 3D view's background for a level without fog.
+    view, the colors of the selection, and the 3D view's background for a level without fog.
   - `THEMES` lists them. The first is the default. The three plain themes come next, then the seven palette
     themes (`PALETTES` names them again), then the styled ones.
   - The plain themes (Light, Dark, High contrast) use the system's sans face (Segoe UI on Windows, then Tahoma,
     Arial, Liberation Sans, DejaVu Sans). They have the plain variants `Logo::Plain`, `Divider::Line` and
     `Backdrop::Plain`, and title bars that are a flat strip with a line under it (`Bar::Solid` with a light line
-    in the colour of the fill).
+    in the color of the fill).
   - The palette themes (Sage, Sand, Ocean, Lavender, Coral, Slate, Plum) look like a phone app. Each has five
-    colours: a ground, a card, a main colour, a second colour and the text. Every other colour is a mix of those
-    five: the toolbar is the ground with a little of the main colour, a hairline is the ground with a little of
+    colors: a ground, a card, a main color, a second color and the text. Every other color is a mix of those
+    five: the toolbar is the ground with a little of the main color, a hairline is the ground with a little of
     the text. They share the fonts and the plain variants of the plain themes. Their own shapes: buttons and
     fields with a corner radius of 6 (`radius`), cards, check lines, chips, pop-ups and dialogs with one of 8
     (`round`, 0 in every other theme), and `Bar::Soft` title bars (a tinted strip for a panel or a card, a
-    hairline under a small heading). A switch that is on is a tint of the main colour with a line and bold letters
-    in it. The main action and the chosen row are filled with the main colour. A ticked box is too, with a tick in
-    the colour of the main action's letters. Good, warning and bad are a green, an amber and a red that suit the
+    hairline under a small heading). A switch that is on is a tint of the main color with a line and bold letters
+    in it. The main action and the chosen row are filled with the main color. A checked box is too, with a check mark in
+    the color of the main action's letters. Good, warning and bad are a green, an amber and a red that suit the
     palette. Coral's bad is a crimson, apart from its coral. The 3D view of a level without fog is a dark tone
     of the palette.
   - `Theme::disabled` is how much of a control that cannot be used is left (egui's `disabled_alpha`). The styled
@@ -191,18 +191,18 @@ nothing else. The program never runs them.
 
     | id | name | follows | main choices |
     | --- | --- | --- | --- |
-    | `1998` | 1998 | the patcher page (`web/patcher.html`), a game web site of 1998 | navy panels, grey bevelled buttons, sunken white fields, red title bars with yellow capitals, a slanted yellow logo, a rainbow divider, stars |
-    | `light` | Light | a desktop tool in the system's light colours | neutral greys, white buttons and fields with a thin line and a corner radius of 3, one blue for the selection, the focus and the main action, a switch that is on filled dark grey, no decoration |
-    | `dark` | Dark | the same tool in the system's dark colours | near-black greys, one light blue for the selection, the focus and the main action, a switch that is on filled light grey |
-    | `contrast` | High contrast | the system's high contrast mode | white on black, a white line round every control, yellow for the pointer and the focus (a focused button is filled yellow), cyan for the selection and the main action, a switch that is on white with black letters |
+    | `1998` | 1998 | the patcher page (`web/patcher.html`), a game web site of 1998 | navy panels, gray beveled buttons, sunken white fields, red title bars with yellow capitals, a slanted yellow logo, a rainbow divider, stars |
+    | `light` | Light | a desktop tool in the system's light colors | neutral grays, white buttons and fields with a thin line and a corner radius of 3, one blue for the selection, the focus and the main action, a switch that is on filled dark gray, no decoration |
+    | `dark` | Dark | the same tool in the system's dark colors | near-black grays, one light blue for the selection, the focus and the main action, a switch that is on filled light gray |
+    | `contrast` | High contrast | the system's high contrast mode | white on black, a white line around every control, yellow for the pointer and the focus (a focused button is filled yellow), cyan for the selection and the main action, a switch that is on white with black letters |
     | `sage` | Sage | a calm phone app in muted greens | a very pale green ground (`e9f0e4`), off-white cards, a deep sage (`456f52`) for the main action, the selection and the focus, moss headers, an ochre box select |
     | `sand` | Sand | the same app in warm paper tones | a sand ground (`f4eee3`), cream cards, a caramel brown (`a65f2b`), a teal box select |
-    | `ocean` | Ocean | the same app in sea tones | a pale blue-grey ground (`eaf2f6`), near-white cards, a deep teal blue (`1b6e8c`), an orange box select |
+    | `ocean` | Ocean | the same app in sea tones | a pale blue-gray ground (`eaf2f6`), near-white cards, a deep teal blue (`1b6e8c`), an orange box select |
     | `lavender` | Lavender | the same app in violets | a pale lilac ground (`f2eff8`), near-white cards, a violet (`6650b0`), a rose box select |
     | `coral` | Coral | the same app in warm pinks | a blush ground (`fbf0ec`), near-white cards, a coral red (`c54e3e`), a teal box select, crimson for bad |
-    | `slate` | Slate | a dark phone app in blue-greys | a slate ground (`222932`), lighter slate cards, a soft teal (`6cc4b6`) with dark letters, an amber box select |
+    | `slate` | Slate | a dark phone app in blue-grays | a slate ground (`222932`), lighter slate cards, a soft teal (`6cc4b6`) with dark letters, an amber box select |
     | `plum` | Plum | a dark phone app in warm purples | a plum ground (`2a2030`), lighter plum cards, a rose (`e79bb8`) with dark letters, a gold box select |
-    | `cartridge` | Cartridge | a grey console of the late 1990s and its controller | warm grey panels, charcoal label plates with white capitals, keys with a lip, the four face-button colours for states only |
+    | `cartridge` | Cartridge | a gray console of the late 1990s and its controller | warm gray panels, charcoal label plates with white capitals, keys with a lip, the four face-button colors for states only |
     | `blueprint` | Blueprint | a drafting sheet | blue paper with a grid, hairline controls without fills, titles followed by dimension lines, a ruler for a divider, drawn signs |
     | `paper` | Paper | a printed manual in two inks | off-white paper, black ink and vermilion, a serif face, rules instead of boxes, fields as tinted blanks with a line under them and typed entries |
     | `crt` | CRT | a debug monitor | black with green phosphor in one fixed-width face, amber for the main action, inverse video for what is on, chosen or under the pointer, double-line frames, two-letter codes for the checks |
@@ -225,17 +225,17 @@ nothing else. The program never runs them.
     hard shadow under it. The line under a Paper field is a hard shadow that shows below its tint only.
   - Title bars (`title_bar`, `h4`, the head of a `card`) show their text in capitals. The accessible name keeps the
     text as written. A card whose title is a command's tag (`FogConfiguration`) keeps its letters.
-  - Checkboxes are drawn by `style::checkbox`. A layer's box takes the layer's colour.
+  - Checkboxes are drawn by `style::checkbox`. A layer's box takes the layer's color.
   - Fonts: each theme names font files of the computer for four families (text, `bold`, `label` for title bars,
     `logo`). `style.rs` looks for them in the system's font folders. A family without a file takes the family
     before it, and every family ends with the fonts compiled in. CRT uses the code font compiled in. No font file
     is in the repository.
-  - The editor's state gives a level without fog the background `theme::VIEW_BG`. The view replaces that colour
+  - The editor's state gives a level without fog the background `theme::VIEW_BG`. The view replaces that color
     with the theme's `view_bg`. 1998 keeps `VIEW_BG`; the render comparison tests use it.
   - To add a theme: write a `Theme` in `theme.rs` and add it to `THEMES`. A new variant of a shape needs its
     drawing in `style.rs`. A theme must keep these rules:
-    - No file outside `theme.rs` holds a colour of the window. `style.rs` only picks black or white for a tick on a
-      coloured box, and shades a mark with a see-through white or black.
+    - No file outside `theme.rs` holds a color of the window. `style.rs` only picks black or white for a check mark on a
+      colored box, and shades a mark with a see-through white or black.
     - The panels, the cards, the toolbar and the pop-ups are all dark or all light: `text` and `muted` are read on
       each of them.
     - Layout does not depend on the theme: the same margins, row heights and frame widths (`RIDGE`). Only the
@@ -243,7 +243,7 @@ nothing else. The program never runs them.
     - A switch that is on, the main action, the keyboard focus, the chosen row, and good, warning and bad must
       each be clear at a glance.
     - Text keeps a contrast of 4.5 on its ground (3 for bold text and for the marks): body, muted, disabled and
-      field text, the chosen row, the buttons, and the good, warning and bad colours.
+      field text, the chosen row, the buttons, and the good, warning and bad colors.
     - `GLOVEBOX_THEME=id cargo test -p glovebox --test ui` runs every click test in that theme. The test `themes`
       chooses each theme through the Options menu at three window sizes and checks that the toolbar has two rows,
       and `the_fonts_have_the_symbols` checks the fonts of each.
@@ -272,13 +272,13 @@ nothing else. The program never runs them.
   - A new explanatory text must use one of the note helpers. The test `info_texts` checks the three states.
   - The click tests read the notes in the panels. Their harness writes `info=shown` into the settings
     (`T::with_theme`). `info_texts` starts without the setting.
-- The welcome and the tour are in `tour.rs`. The welcome is a dialog with `Show me round` and `No thanks`. It shows
+- The welcome and the tour are in `tour.rs`. The welcome is a dialog with `Show me around` and `No thanks`. It shows
   the first time a level is open and the settings have no `tour=seen`. An answer, Esc or a click beside it writes
   `tour=seen`. `Take the tour` of the Options menu starts the tour at any time (`Window::start_tour`).
   - The steps are data: `tour::STEPS`, each with a title, a text, a `Target` and a `Show`. The last step's text
     depends on the Info texts setting (`last_text`), and it has the link to the guide.
   - A `Target` names a part of the window. The toolbar, the panels and the view report their rectangles in every
-    frame with `tour::State::mark`. Several widgets of one target give the rectangle round them all (`Move`,
+    frame with `tour::State::mark`. Several widgets of one target give the rectangle around them all (`Move`,
     `Rotate` and `Scale`). No position is written in the code. A target that is not in the window has a fallback:
     the toolbar, or the column of the inspector.
   - A `Show` says what the window shows during the step: nothing selected, one thing near Glover's start selected
@@ -289,8 +289,8 @@ nothing else. The program never runs them.
   - The tour does not edit the level. `Window::end_tour` puts back the layout and the tabs in front, the selection,
     the open puzzle, the Add panel
     and its tab, box select, the fly camera and the camera's place.
-  - The picture: `style::spotlight` dims the window round the target with the colour of the theme's scrim and draws a
-    line in the focus colour. `style::callout` draws the bubble in the colours of the menus, with a pointer.
+  - The picture: `style::spotlight` dims the window around the target with the color of the theme's scrim and draws a
+    line in the focus color. `style::callout` draws the bubble in the colors of the menus, with a pointer.
     `tour::place` puts the bubble under, over or beside the target, inside the window and never over the target.
     Beside a target it can be narrower. The bubble's size comes from its texts, which are laid out first.
   - The tour is an `egui::Modal` over the whole window. Clicks do not reach the window under it.
@@ -331,7 +331,7 @@ nothing else. The program never runs them.
   - Its Content-Security-Policy has `connect-src 'none'`: the browser itself blocks any network request.
     The script is pinned by hash (`tools/build_patcher.py`; run it after editing the script).
   - Its look follows the practice ROM's patch page (glover.love): a 1998 game web site, with a star background,
-    a ridge-framed column, red title bars and grey bevelled buttons. It is all inline CSS and `data:` SVG.
+    a ridge-framed column, red title bars and gray beveled buttons. It is all inline CSS and `data:` SVG.
     Nothing in it comes from the ROM. A change to the style or the markup needs no new hash.
   - Every read and copy in the decoder is bounds-checked.
   - A wrong ROM, damaged patch or malformed patch is refused with a plain explanation; nothing is saved.
@@ -374,7 +374,7 @@ nothing else. The program never runs them.
 
 - **Multi-select**: Ctrl/Cmd+click toggles; **B** (or the Box select button) drags a box; **Ctrl+A** selects
   everything visible except landscape; the outliner supports Ctrl/Shift+click and an "all" button per group.
-  Move, rotate, scale, duplicate and delete apply to the whole selection. **Pivot** chooses the group centre or
+  Move, rotate, scale, duplicate and delete apply to the whole selection. **Pivot** chooses the group center or
   each object's own origin.
 - **W / E / R** switch the gizmo between move, rotate and scale. The inspector also has numeric fields
   (one object) or "move / rotate / scale by" (several objects).
@@ -388,12 +388,12 @@ nothing else. The program never runs them.
   | Powerups | X, Y, Z via `SetActorRotation`, under the powerup's own spin (mod) | X, Y, Z via `SetActorScale` (mod) |
   | Water | X, Y, Z via `SetActorRotation` on its model (mod) | X, Y, Z via `SetActorScale` on its model (mod) |
   | Wind volumes | none | resizes the box |
-  | Puzzle trigger volumes | none (axis-aligned) | resizes the box, sphere or cylinder about its centre |
+  | Puzzle trigger volumes | none (axis-aligned) | resizes the box, sphere or cylinder about its center |
   | Garibs, Mr. Tip, spawns | none: sprites or points in the game; group rotations move them around the pivot | none |
 
   "(mod)" means the game applies it only with the Expansion Pak game mod, described below.
 
-  The transform maths comes from the decomp: rotation is `GetQuaternionFromXYZRot` with `rotOrder` {1,2,0}
+  The transform math comes from the decomp: rotation is `GetQuaternionFromXYZRot` with `rotOrder` {1,2,0}
   (R = Ry·Rz·Rx, Euler order `YZX`), and scale is `guScaleF(x, y, z)` with no axis swap. noclip uses `ZYX`
   and swaps X/Z. Shipped levels only use Y rotation and uniform scale. The two agree on shipped data.
   An edited level rendered from the emulator's exact camera (`guLookAt(actualCamPos, actualCamTargetPos)`, read
@@ -483,7 +483,7 @@ nothing else. The program never runs them.
   - **Models**: all 1,522 models in the game, from every object bank, placed as Scenery (`LandActor`, solid),
     Background (no collision) or Platform. **Import model…** adds a model of your own (see [Import model](Import-model.md)).
 - **Attached points follow their object.** Enemy scripts use world coordinates (`home_*`, `destination_*`,
-  `lookat_*`, attention box), and platforms have path points and orbit centres. Moving, rotating, scaling or
+  `lookat_*`, attention box), and platforms have path points and orbit centers. Moving, rotating, scaling or
   duplicating an object applies the same transform to all of them. In the emulator, a General Wu moved 300
   units this way roams its new area; with only its `x` changed, it walks back to the old one.
 - **Imports**: a model from another level's bank is imported when you press Build ROM. By default the game mod
@@ -513,8 +513,8 @@ nothing else. The program never runs them.
   Glover, the ball or the camera is. The shapes follow `PuzzleEvaluateCondition` in the decomp:
   - Boxes (`…WithinVolume`) are a min corner `x, y, z` plus a size `l, w, h` along X, Y, Z
     (`IsPointWithinBox`).
-  - Ranges (`…WithinRangeOfPoint`) are spheres: a centre and a radius.
-  - `PuzzleCondGloverWithinRangeOfPoint2` is a vertical cylinder: centre `x, z`, radius `range`, from
+  - Ranges (`…WithinRangeOfPoint`) are spheres: a center and a radius.
+  - `PuzzleCondGloverWithinRangeOfPoint2` is a vertical cylinder: center `x, z`, radius `range`, from
     `min_y` to `max_y`.
 
   Pink is Glover, orange the ball, purple the camera. Move them with the gizmo and resize them with scale or
@@ -525,8 +525,8 @@ nothing else. The program never runs them.
 - **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It is the same switch as the
   "Puzzle triggers" layer. The setting is remembered between sessions. Hidden volumes can't be picked, and the
   level keeps them.
-- **Exit triggers** are drawn as a green translucent sphere with three rings round each platform whose
-  `SetExit` the game tests (an exit type other than 0). The centre is the platform's position, for a moving
+- **Exit triggers** are drawn as a green translucent sphere with three rings around each platform whose
+  `SetExit` the game tests (an exit type other than 0). The center is the platform's position, for a moving
   platform its start. The radius is the one the game gives the platform ("Facts from the decomp", exits):
   `exits::radius` walks the platform's commands in the level file's order, on the vertices the faces of the
   model's root mesh use (`Backend::root_vertices`, read from the object bank with
@@ -557,7 +557,7 @@ with one condition (Glover inside a box, `cond_type` 35) and camera actions only
 |---|---|
 | Behind | turns to look the way the player goes |
 | High | rises and looks down on Glover |
-| Side, Other side | swings round to the right or the left of the way on |
+| Side, Other side | swings around to the right or the left of the way on |
 | Front | faces Glover: the player can't see where they go |
 | Low | drops to Glover's height and comes close |
 | Far | stands far back and high |
@@ -617,16 +617,16 @@ model ([Import model](Import-model.md)), and it then shows with the imported mod
 
 - The shapes and textures come from seeded random numbers (`kit/rng.rs`: the Mersenne Twister with CPython's seeding).
   On Linux the geometry is fixed bit for bit, and the reference tests hold it. Sines, cosines and `atan2` come
-  from the system's maths library: on Windows a coordinate can differ in its last bit. This was not measured.
+  from the system's math library: on Windows a coordinate can differ in its last bit. This was not measured.
 - The textures are drawn by `kit/image.rs`, which follows Pillow's drawing rules.
 - The words on gravestones and signs use the kit's own letter shapes (`kit/font.rs`, a stroke font on a 5 by 7 grid).
   The letters sit in cells with the measures of Pillow's built-in font. That font is not copied.
 - The game repeats every texture: the object format has no setting that stops it. A kit texture that must show
   once (a face, a board with words) is laid inside its own picture, with coordinates from 0 to 1. A unit test in
   `kit/mod.rs` checks this for every item.
-- The pumpkin's face is a 64 by 32 texture on the four front columns of its body (the side towards +z, as the
+- The pumpkin's face is a 64 by 32 texture on the four front columns of its body (the side toward +z, as the
   gravestone's words). The other eight columns repeat a 16 by 32 texture of plain skin, one tile per column.
-  The first pumpkin laid the face texture three times round the body, and the face showed on three sides.
+  The first pumpkin laid the face texture three times around the body, and the face showed on three sides.
 - A pumpkin placed before this correction keeps its old model, because a converted model is stored under a hash of
   its file. A pumpkin added now gets the corrected model.
 
@@ -748,7 +748,7 @@ offer **Platform** for them, and the checks flag one that is.
   - An exit is a platform with a `SetExit`. `behavior` is the game's `exitType`. `UpdatePlatform` calls
     `CheckForExit` for every platform whose `exitType` is not 0. `type` 0 (`loading_zone`) sets `alpha = 0` and
     `flags |= 4`, and frees the collision faces.
-  - The test is `DistanceBetweenPoints(pos, &platform->actor.pos) < platform->actor.radius`: a sphere round the
+  - The test is `DistanceBetweenPoints(pos, &platform->actor.pos) < platform->actor.radius`: a sphere around the
     platform's position. `pos` is the hand for exit types 6 to 12 and 21, for type 13 outside the Assault
     Course, and in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1. Otherwise it is the ball.
   - Exit type 3 tests no distance: the ball must be on the platform (`ball.obj->platform`) while Glover holds it.
@@ -800,7 +800,7 @@ offer **Platform** for them, and the checks flag one that is.
   `PuzzleActionType` values plus 45: 70 `ACTION_CAM_HEIGHT`, 71 `ACTION_CAM_DISTANCE`, 73 `ACTION_CAM_FIXEDPOS`,
   74 `ACTION_CAM_FIXEDROT`.
 - In Atlantis 1 the garibs float over water and the seabed: a glove put at one by a test drowns or falls and restarts.
-  The camera zone check puts its zones round the start instead.
+  The camera zone check puts its zones around the start instead.
 
 ## Real hardware
 
@@ -959,10 +959,10 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   real window through `egui_kittest`, without a screen. The Windows job then builds the release program, runs its
   `--self-test` and packs `Glovebox-<version>-windows-x64.zip`: `Glovebox.exe`, `README.txt`,
   `THIRD_PARTY_NOTICES.md` and `licenses/`.
-- `licenses/` is made by `tools/licenses.py`: the licence files of every crate linked into the Windows program
+- `licenses/` is made by `tools/licenses.py`: the license files of every crate linked into the Windows program
   (from `cargo metadata`, without build and test dependencies and without procedural macros, which run in the
   compiler) and of the fonts egui embeds. Each distinct text is there once, and `CRATES.txt` lists the crates with
-  their licences and files.
+  their licenses and files.
 - The app is released for Windows. It also builds and runs on Linux from source (`cargo run -p glovebox --release`).
 
 ## The guide and the wiki
@@ -996,8 +996,8 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
   `docs/guide/The-editor.md` explains them. No other picture is drawn on.
 - The small pictures of the contents list (`thumb-*.png`) are parts of the same pictures, 240 by 150. Most are at
   half size. Those of a side panel are at two thirds: the panel is 380 wide.
-- The files are PNGs with a palette of 256 colours (`Pic::save`). The 64 most used colours keep their exact values,
-  which keeps the window's flat colours right. A median cut shares the rest among the shades of the 3D view.
+- The files are PNGs with a palette of 256 colors (`Pic::save`). The 64 most used colors keep their exact values,
+  which keeps the window's flat colors right. A median cut shares the rest among the shades of the 3D view.
 - The pointer shows in the pictures of an open menu and of the box select. Elsewhere it leaves the window first.
 - The autosave chip shows the time of the run. Everything else is the same from run to run.
 - These pictures show the game's levels. The owner allows them in the repository. Nothing else made from the ROM
@@ -1019,16 +1019,16 @@ the split ROM and libgarib's exported files.
 | `build_reference.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game and the build scenarios |
 | `custom_reference.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
 | `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel. The pumpkin was corrected after the recordings: its skin triangles' texture, its GLB and its preview are not compared | Every kit item with several settings |
-| `crates/editor/tests/logic_reference.rs` | The vector maths, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
+| `crates/editor/tests/logic_reference.rs` | The vector math, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
 | `editor_reference.rs` | The editor's state after loading, and the XML after each recorded edit step | All 48 levels |
-| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean colour difference: two renderers do not give equal pixels |
+| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean color difference: two renderers do not give equal pixels |
 
 What keeps the results exact:
 
 - Floats in the XML are written as Python's `repr` writes a double, and read as Python's `float()` reads them
   (`pyfmt.rs`). libgarib, a Python library, defined the format. The XML writer gives the bytes of lxml, which
   libgarib writes with.
-- The editor's maths is in `f64`, in a fixed order. The dot products in `vec.rs` use fused multiply-adds (`mul_add`),
+- The editor's math is in `f64`, in a fixed order. The dot products in `vec.rs` use fused multiply-adds (`mul_add`),
   as the reference results were computed.
 - Random choices (the kit, `reskin`, scatter) use the Mersenne Twister with CPython's seeding (`pyrandom.rs`,
   `kit/rng.rs`).
@@ -1041,7 +1041,7 @@ What keeps the results exact:
 - A ROM without the game mod is not padded to a whole number of MiB and does not go through the hardware check: it is
   the retail ROM with its data repacked. A ROM with the mod is padded and checked (`modpatch::apply_mod`).
 - Every built ROM comes from your ROM. Keep it local.
-- libgarib's behaviour that the Rust code reproduces on purpose:
+- libgarib's behavior that the Rust code reproduces on purpose:
   - The level format follows two sets of nesting rules, because libgarib's tools use two.
     `SetActorRotation` and `SetActorScale` may sit inside enemies, platforms, powerups and water in the XML's rules
     (our change to `formats/glover.lev.ksy`). Turning a `.lev` into XML follows libgarib's own, unchanged rules:
@@ -1051,9 +1051,9 @@ What keeps the results exact:
     wrote.
   - The fixes Glovebox made to libgarib are part of the port. Models: animated models, missing textures, zero-length
     normals and meshes with and without textures in one object are handled as the fixed exporter handled them. Packing: vertex indices do not
-    overflow, a normal of exactly 1 fits its byte, a mesh without vertex colours gets a display list, and more than
+    overflow, a normal of exactly 1 fits its byte, a mesh without vertex colors gets a display list, and more than
     four texture coordinates at one position are allowed.
-  - The packer's vertex cache optimiser is kept as libgarib has it. Its cache stays empty in practice: the result is
+  - The packer's vertex cache optimizer is kept as libgarib has it. Its cache stays empty in practice: the result is
     the best first triangle, then the others in their order.
   - The object packer takes no wrap mode. A glTF sampler's wrap mode only tells the converter along which axes the
     texture coordinates repeat.

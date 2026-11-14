@@ -240,8 +240,8 @@ impl Editor {
                     self.graph.add(vol, f);
                     self.graph.add(vol, l);
                     self.graph.add(world, vol);
-                    let (centre, size) = water_volume(&self.doc, e.node);
-                    self.graph[vol].pos = centre;
+                    let (center, size) = water_volume(&self.doc, e.node);
+                    self.graph[vol].pos = center;
                     self.graph[vol].scale = size;
                     n.extra = Some(vol);
                 }
@@ -294,7 +294,7 @@ impl Editor {
         let g = &mut self.graph[node];
         g.visible = r.is_some() && shown;
         if let (Some(t), Some(r)) = (t, r) {
-            g.pos = t.centre;
+            g.pos = t.center;
             g.scale = [r; 3];
         }
         r.is_some()

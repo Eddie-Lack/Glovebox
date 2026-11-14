@@ -12,7 +12,7 @@ A condition that tests where something is has a shape in the view.
 
 ![The trigger box of a lift selected in the view](img/puzzle-trigger.png)
 
-| Colour | Who it tests |
+| Color | Who it tests |
 | --- | --- |
 | Pink | Glover |
 | Orange | The ball |

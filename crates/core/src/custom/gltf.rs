@@ -222,7 +222,7 @@ impl Gltf {
             Some(end) if end <= data.len() => {}
             _ => return past(),
         }
-        let normalised = a.get("normalized").and_then(Value::as_bool) == Some(true);
+        let normalized = a.get("normalized").and_then(Value::as_bool) == Some(true);
         let divisor = match ctype {
             5120 => 127.0,
             5121 => 255.0,
@@ -242,7 +242,7 @@ impl Gltf {
                     5125 => u32::from_le_bytes([c[0], c[1], c[2], c[3]]) as f64,
                     _ => f32::from_le_bytes([c[0], c[1], c[2], c[3]]) as f64,
                 };
-                out.push(if normalised && divisor != 0.0 { (v / divisor).max(-1.0) } else { v });
+                out.push(if normalized && divisor != 0.0 { (v / divisor).max(-1.0) } else { v });
             }
         }
         Ok((out, width))
@@ -274,7 +274,7 @@ impl Gltf {
         }
     }
 
-    /// A material's colour factor, its texture index and its alpha mode. A material the file lacks has none of them.
+    /// A material's color factor, its texture index and its alpha mode. A material the file lacks has none of them.
     pub fn material(&self, index: i64) -> (Option<Vec<f64>>, Option<i64>, Option<&str>) {
         let Some(mat) = usize::try_from(index).ok().and_then(|i| list(&self.json, "materials").get(i)) else {
             return (None, None, None);

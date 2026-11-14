@@ -83,7 +83,7 @@ impl Editor {
     }
 
     /// Runs an edit. When it changed the XML, that is one undo step and the entities are built again. `f` returns
-    /// the elements to select afterwards, or None to keep the selection. True when the level changed.
+    /// the elements to select afterward, or None to keep the selection. True when the level changed.
     pub fn mutate(&mut self, f: impl FnOnce(&mut Editor) -> Option<Vec<NodeId>>) -> bool {
         let before = self.serialize();
         let select = f(self);
@@ -170,7 +170,7 @@ impl Editor {
         }
     }
 
-    /// The drag was cancelled: the level is as it was before, with no undo step.
+    /// The drag was canceled: the level is as it was before, with no undo step.
     pub fn cancel_scrub(&mut self) {
         let Some(before) = self.scrub.take() else { return };
         if before == self.serialize() {
@@ -282,7 +282,7 @@ impl Editor {
         out
     }
 
-    /// Where the view's centre meets the ground (or the orbit's target).
+    /// Where the view's center meets the ground (or the orbit's target).
     pub fn placement_point(&self) -> V3 {
         let Some((origin, d)) = self.camera.ray_ndc(0.0, 0.0) else { return self.orbit.target };
         let o = RayOptions { camera: Some(&self.camera), ..RayOptions::default() };

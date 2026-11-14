@@ -137,7 +137,7 @@ impl Soup {
         self.tris.push(Tri { p, n, uv, mat });
     }
 
-    /// Four corners, counter-clockwise seen from outside.
+    /// Four corners, counterclockwise seen from outside.
     pub fn quad(&mut self, p: [V3; 4], uv: [Uv; 4], mat: usize, n: [Option<V3>; 4]) {
         self.tri([p[0], p[1], p[2]], [uv[0], uv[1], uv[2]], mat, [n[0], n[1], n[2]]);
         self.tri([p[0], p[2], p[3]], [uv[0], uv[2], uv[3]], mat, [n[0], n[2], n[3]]);
@@ -343,9 +343,9 @@ pub fn lathe(s: &mut Soup, profile: &[(f64, f64)], segs: usize, mat: usize, o: L
     }
 }
 
-/// A flat disc that faces up, with the picture's middle at its middle.
-pub fn disc(s: &mut Soup, centre: V3, radius: f64, segs: usize, mat: usize) {
-    let [cx, cy, cz] = centre;
+/// A flat disk that faces up, with the picture's middle at its middle.
+pub fn disk(s: &mut Soup, center: V3, radius: f64, segs: usize, mat: usize) {
+    let [cx, cy, cz] = center;
     let (uvc, uvr) = ([0.5, 0.5], 0.5);
     for k in 0..segs {
         let (a0, a1) = (2.0 * PI * k as f64 / segs as f64, 2.0 * PI * (k + 1) as f64 / segs as f64);
@@ -487,7 +487,7 @@ pub fn dome(s: &mut Soup, radius: f64, rings: usize, segs: usize, mat: usize, sq
     }
 }
 
-/// A surface from a function of u and v in 0 to 1, where u wraps round. Normals come from the surface's slopes.
+/// A surface from a function of u and v in 0 to 1, where u wraps around. Normals come from the surface's slopes.
 /// `flip` reverses the winding.
 pub fn param(s: &mut Soup, f: &dyn Fn(f64, f64) -> V3, nu: usize, nv: usize, mat: usize, uv: &dyn Fn(f64, f64) -> Uv, flip: bool) {
     param_cols(s, f, nu, nv, &|_, u, v| (mat, uv(u, v)), flip);
@@ -545,7 +545,7 @@ pub fn param_cols(s: &mut Soup, f: &dyn Fn(f64, f64) -> V3, nu: usize, nv: usize
     }
 }
 
-/// A convex polygon of (x, z) points, counter-clockwise seen from above, pulled up from y0 to y1. The top is a fan
+/// A convex polygon of (x, z) points, counterclockwise seen from above, pulled up from y0 to y1. The top is a fan
 /// with texture coordinates from `top_uv`, or from the default when None. `bottom` closes the underside.
 pub fn prism(s: &mut Soup, poly: &[(f64, f64)], y0: f64, y1: f64, side: usize, top: usize, bottom: Option<usize>, top_uv: Option<&dyn Fn(f64, f64) -> Uv>) {
     let n = poly.len();
@@ -588,7 +588,7 @@ fn shade(base: [i64; 3], d: i64) -> Rgba {
     [(base[0] + d).clamp(0, 255) as u8, (base[1] + d).clamp(0, 255) as u8, (base[2] + d).clamp(0, 255) as u8, 255]
 }
 
-/// A noisy picture of one colour: each texel moves by a random amount from `lo` to `hi`.
+/// A noisy picture of one color: each texel moves by a random amount from `lo` to `hi`.
 pub fn noise(w: usize, h: usize, rnd: &mut Random, lo: i64, hi: i64, base: [i64; 3]) -> Image {
     let mut im = Image::new(w, h, [0; 4]);
     for p in im.px.iter_mut() {
@@ -597,7 +597,7 @@ pub fn noise(w: usize, h: usize, rnd: &mut Random, lo: i64, hi: i64, base: [i64;
     im
 }
 
-/// Grey stone, with specks of moss when asked.
+/// Gray stone, with specks of moss when asked.
 pub fn stone(rnd: &mut Random, w: usize, h: usize, base: [i64; 3], moss: bool) -> Image {
     let mut im = noise(w, h, rnd, -18, 14, base);
     if moss {
@@ -623,11 +623,11 @@ pub fn wood(rnd: &mut Random, w: usize, h: usize, base: [i64; 3]) -> Image {
     im
 }
 
-/// Lines of text, each centred across the picture.
-pub fn text_centered(im: &mut Image, lines: &[String], y0: f64, line_h: f64, colour: Rgba, size: u32) {
+/// Lines of text, each centered across the picture.
+pub fn text_centered(im: &mut Image, lines: &[String], y0: f64, line_h: f64, color: Rgba, size: u32) {
     for (i, t) in lines.iter().enumerate() {
         let w = font::text_length(t, size);
-        font::draw_text(im, (im.w as f64 - w) / 2.0, y0 + i as f64 * line_h, t, colour, size);
+        font::draw_text(im, (im.w as f64 - w) / 2.0, y0 + i as f64 * line_h, t, color, size);
     }
 }
 
@@ -675,7 +675,7 @@ mod tests {
         tube(&mut s, &[[0.0; 3], [0.0, 5.0, 0.0], [1.0, 9.0, 0.0]], &[1.0, 1.0, 0.5], 4, m, Tube::default());
         assert_eq!(s.count(), 2 * 8 + 4);
         let (mut s, m) = plain();
-        disc(&mut s, [0.0; 3], 3.0, 7, m);
+        disk(&mut s, [0.0; 3], 3.0, 7, m);
         assert_eq!(s.count(), 7);
     }
 

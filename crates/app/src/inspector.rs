@@ -9,7 +9,7 @@ use glovebox_core::pyfmt;
 use glovebox_core::xml::NodeId;
 use glovebox_editor::commands::{refusal, PLATFORMS};
 use glovebox_editor::editor::{look_name, Editor, GITHUB, LOOK, LOOKS};
-use glovebox_editor::entities::{self, camera_zone, preset_zone, set_camera_zone, zone_camera, zone_centre, EntId, CAM_PRESETS, KINDS};
+use glovebox_editor::entities::{self, camera_zone, preset_zone, set_camera_zone, zone_camera, zone_center, EntId, CAM_PRESETS, KINDS};
 use glovebox_editor::exits::Who;
 use glovebox_editor::puzzles;
 use glovebox_editor::scripts;
@@ -49,13 +49,13 @@ pub struct State {
     axis: usize,
     deg: String,
     sc: String,
-    /// New look: the worlds ticked and the seed.
+    /// New look: the worlds checked and the seed.
     worlds: Option<[bool; 7]>,
     pub reskin_seed: i64,
     /// The spin boxes of the bonus clock and of a puzzle, while they differ from the level.
     secs: i64,
-    /// A colour being picked: the element's place and the colour.
-    colour: Option<(Vec<usize>, [u8; 3])>,
+    /// A color being picked: the element's place and the color.
+    color: Option<(Vec<usize>, [u8; 3])>,
 }
 
 impl Default for State {
@@ -71,7 +71,7 @@ impl Default for State {
             worlds: None,
             reskin_seed: 0,
             secs: 60,
-            colour: None,
+            color: None,
         }
     }
 }
@@ -294,7 +294,7 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
                     }
                 }
             });
-            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, coloured moods, or the shipped levels' daylight)", |ui| {
+            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, colored moods, or the shipped levels' daylight)", |ui| {
                 for l in &LOOKS {
                     if ui.button(l.name).clicked() {
                         let name = l.name;
@@ -400,11 +400,11 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
     let own = ed.catalog.get(&src).and_then(|c| c.world.clone());
     card(ui, "New look", None, |_| {}, |ui| {
         card_note(ui, "A copy of the model with textures from other worlds. The copy is kept with your imported models and copied into the level's banks at ROM build.");
-        let ticks = cx.st.worlds.get_or_insert_with(|| std::array::from_fn(|i| WORLDS[i] == "PIRATES" && own.as_deref() != Some("PIRATES")));
+        let checked = cx.st.worlds.get_or_insert_with(|| std::array::from_fn(|i| WORLDS[i] == "PIRATES" && own.as_deref() != Some("PIRATES")));
         egui::Grid::new("worlds").num_columns(2).show(ui, |ui| {
             for (i, world) in WORLDS.iter().enumerate() {
                 let name = if *world == "OOTW" { "Space".to_string() } else { crate::app::title_case(world) };
-                ui.add_enabled_ui(own.as_deref() != Some(*world), |ui| style::checkbox(ui, &mut ticks[i], name));
+                ui.add_enabled_ui(own.as_deref() != Some(*world), |ui| style::checkbox(ui, &mut checked[i], name));
                 if i % 2 == 1 {
                     ui.end_row();
                 }
@@ -415,9 +415,9 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
                 cx.st.reskin_seed = v;
             }
         });
-        let ticks = *ticks;
+        let checked = *checked;
         let go = |cx: &mut Cx, next: bool| {
-            let worlds: Vec<String> = WORLDS.iter().zip(ticks).filter(|(w_, on)| *on && own.as_deref() != Some(**w_)).map(|(w_, _)| w_.to_string()).collect();
+            let worlds: Vec<String> = WORLDS.iter().zip(checked).filter(|(w_, on)| *on && own.as_deref() != Some(**w_)).map(|(w_, _)| w_.to_string()).collect();
             if worlds.is_empty() {
                 return cx.ed_act(|ed| ed.set_status("Pick at least one world.", "err"));
             }
@@ -817,7 +817,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                         ed.edit(|ed| vol.size_set(&mut ed.doc, k, v));
                     });
                 }
-                note(ui, &format!("{}{}", names.join(", "), if ent.kind == "trigger" { ". Scaling keeps the centre." } else { "" }));
+                note(ui, &format!("{}{}", names.join(", "), if ent.kind == "trigger" { ". Scaling keeps the center." } else { "" }));
             }
             _ => absent(ui, "scale", ent.why_scl.unwrap_or(entities::WHY_NO_SCALE)),
         }
@@ -829,8 +829,8 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
     let Some(t) = cx.ed.exit_trigger(i) else { return };
     card(ui, "Exit trigger", None, |_| {}, |ui| {
         let who = match t.rule.who {
-            Who::Glover => "Glover (the hand\u{2019}s centre)",
-            Who::Ball => "the ball (its centre)",
+            Who::Glover => "Glover (the hand\u{2019}s center)",
+            Who::Ball => "the ball (its center)",
             Who::OnPlatform => "the ball, resting on the platform",
         };
         row(ui, "exit type", |ui| ui.label(t.exit_type.to_string()));
@@ -847,7 +847,7 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 card_note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
             }
             (_, Some(r)) if r > 0.0 => {
-                card_note(ui, "The exit fires when the centre comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
+                card_note(ui, "The exit fires when the center comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
             }
             _ => {
                 let why = t.zero.as_ref().map(|z| z.text()).unwrap_or_default();
@@ -879,7 +879,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 let fv = pyfmt::parse_float(facing.trim()).unwrap_or(0.0);
                 if let (false, Some(vol)) = (k.is_empty(), z.vol) {
                     cx.ed_act(move |ed| {
-                        let c = zone_centre(&ed.doc, vol);
+                        let c = zone_center(&ed.doc, vol);
                         if let Some(zone) = preset_zone(k, fv / DEG, c) {
                             ed.edit(|ed| set_camera_zone(&mut ed.doc, puzzle, &zone));
                         }
@@ -987,7 +987,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
 // Commands
 
 /// + (add a command inside), Tidy on a platform, ↑ ↓ (move) and × (remove) for an element of the level. Menu
-/// entries the element can't take are greyed out, with the reason as the tooltip.
+/// entries the element can't take are grayed out, with the reason as the tooltip.
 fn command_buttons(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
     let ed = cx.ed;
     let tag = ed.doc.tag(node).to_string();
@@ -1025,29 +1025,29 @@ fn command_buttons(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
     }
 }
 
-/// A swatch of r, g, b that opens a colour picker. Fog and lights use 0 to 255: the game keeps the low byte of a
+/// A swatch of r, g, b that opens a color picker. Fog and lights use 0 to 255: the game keeps the low byte of a
 /// bigger value.
-fn colour_button(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
+fn color_button(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
     let ed = cx.ed;
     let clamp = |a: &str| inum(&ed.doc, Some(node), a, 0).clamp(0, 255) as u8;
     let stored = [clamp("r"), clamp("g"), clamp("b")];
     let path = ed.doc.path_of(node);
-    let mut rgb = match &cx.st.colour {
+    let mut rgb = match &cx.st.color {
         Some((p, c)) if *p == path => *c,
         _ => stored,
     };
     ui.horizontal(|ui| {
         let r = ui.color_edit_button_srgb(&mut rgb);
-        r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ColorWell, true, "Colour…"));
-        muted(ui, "Colour…");
+        r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ColorWell, true, "Color…"));
+        muted(ui, "Color…");
         if r.changed() {
-            cx.st.colour = Some((path.clone(), rgb));
+            cx.st.color = Some((path.clone(), rgb));
         }
     });
     // Written once the picker is let go, as one undo step
     let picking = ui.input(|i| i.pointer.any_down());
-    if !picking && matches!(&cx.st.colour, Some((p, _)) if *p == path) {
-        cx.st.colour = None;
+    if !picking && matches!(&cx.st.color, Some((p, _)) if *p == path) {
+        cx.st.color = None;
         if rgb != stored {
             cx.ed_act(move |ed| {
                 ed.edit(|ed| {
@@ -1246,7 +1246,7 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                     }
                 }
                 if ["r", "g", "b"].iter().all(|k| ed.doc.has(node, k)) {
-                    colour_button(&mut cx, ui, node);
+                    color_button(&mut cx, ui, node);
                 }
                 decomp_block(&mut cx, ui, &tag, node);
                 if with_children && ed.doc.len(node) > 0 {
@@ -1325,7 +1325,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             }
         });
         cx.acts.extend(go);
-        let pivot = if ed.pivot_mode == "group" { "group centre (positions rotate and scale around it)" } else { "each object’s own origin" };
+        let pivot = if ed.pivot_mode == "group" { "group center (positions rotate and scale around it)" } else { "each object’s own origin" };
         remark(ui, &format!("Pivot: {pivot}. {rot} of {} can store a rotation and {scl} a size; the rest only move.", tset.len()));
     });
     for (n, &i) in sel.iter().take(200).enumerate() {

@@ -86,7 +86,7 @@ fn camera(w: u32, h: u32, pos: [f64; 3], target: [f64; 3]) -> Camera {
 }
 
 /// A 2 by 2 picture: red and green on top, blue and white below.
-fn four_colours() -> Arc<Texture> {
+fn four_colors() -> Arc<Texture> {
     let px = [[255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255], [255, 255, 255, 255]];
     let mut rgba = Vec::new();
     for y in 0..32 {
@@ -110,14 +110,14 @@ fn a_made_up_scene() {
     let mut s = Scene::new();
     let world = s.node("world");
     // A lit, textured square in the middle, facing the camera
-    let tex = four_colours();
+    let tex = four_colors();
     let textured = Arc::new(Material { texture: Some(tex), ..Material::default() });
     let sq = s.mesh_node(Arc::new(square()), textured);
     s[sq].scale = [40.0; 3];
     s.add(world, sq);
-    // A lit grey box to its right, turned so that three faces show
-    let grey = Arc::new(Material::color([0.5, 0.5, 0.5]));
-    let bx = s.mesh_node(Arc::new(scene::box_geometry(50.0, 50.0, 50.0)), grey);
+    // A lit gray box to its right, turned so that three faces show
+    let gray = Arc::new(Material::color([0.5, 0.5, 0.5]));
+    let bx = s.mesh_node(Arc::new(scene::box_geometry(50.0, 50.0, 50.0)), gray);
     s[bx].pos = [110.0, 0.0, 0.0];
     s.add(world, bx);
     // A translucent, unlit volume in front of the square's lower half, with its outline
@@ -168,13 +168,13 @@ fn a_made_up_scene() {
     assert!(near(at([-20.0, 20.0, 0.0], -8, -8), lit([1.0, 0.0, 0.0], [1.0; 3], n_dot), 2), "{:?}", at([-20.0, 20.0, 0.0], -8, -8));
     assert!(near(at([20.0, 20.0, 0.0], 8, -8), lit([0.0, 1.0, 0.0], [1.0; 3], n_dot), 2));
     // Its lower half is behind the white volume at half opacity: blue on the left, white on the right
-    // The volume's front and back faces both blend over it: a quarter of the colour is left
+    // The volume's front and back faces both blend over it: a quarter of the color is left
     let blend = |c: [u8; 4]| [(c[0] / 4 + 191), (c[1] / 4 + 191), (c[2] / 4 + 191), 255];
     assert!(near(at([-20.0, -20.0, 0.0], 0, 0), blend(lit([0.0, 0.0, 1.0], [1.0; 3], n_dot)), 3), "{:?}", at([-20.0, -20.0, 0.0], 0, 0));
     assert!(near(at([20.0, -20.0, 0.0], 0, 0), blend(lit([1.0, 1.0, 1.0], [1.0; 3], n_dot)), 3));
-    // The grey box shows its front face
+    // The gray box shows its front face
     assert!(near(at([110.0, 0.0, 25.0], 0, 0), lit([0.5; 3], [1.0; 3], n_dot), 2), "{:?}", at([110.0, 0.0, 25.0], 0, 0));
-    // The sprite: the icon's red disc with the dark dot in the middle and a black rim. The sprite's shader writes
+    // The sprite: the icon's red disk with the dark dot in the middle and a black rim. The sprite's shader writes
     // the texel as sampled (linear): 255 stays 255, the glyph's 17 becomes 1.
     assert!(near(at([-110.0, 18.0, 0.0], 0, 0), [255, 0, 0, 255], 2), "{:?}", at([-110.0, 18.0, 0.0], 0, 0));
     assert!(near(at([-110.0, 0.0, 0.0], 0, 0), [1, 1, 1, 255], 2));
@@ -183,7 +183,7 @@ fn a_made_up_scene() {
     assert!(near(at([-110.0, 0.0, 0.0], -24, -24), [51, 77, 102, 255], 1));
     // The sprite behind the square is hidden
     assert!(near(at([20.0, 20.0, 0.0], 0, 0), lit([0.0, 1.0, 0.0], [1.0; 3], n_dot), 2));
-    // The lines: some pixel of the row is the line's colour (multisampling may split it over two rows)
+    // The lines: some pixel of the row is the line's color (multisampling may split it over two rows)
     let row_has = |p: [f64; 3], c: [u8; 3]| (-1..=1).any(|dy| (0..3).all(|k| (i32::from(at(p, 0, dy)[k]) - i32::from(c[k])).abs() <= 140) && at(p, 0, dy)[..3] != [51, 77, 102]);
     assert!(row_has([100.0, 80.0, 0.0], [255, 255, 0]));
     // The dashed line is drawn for 20 units and left out for 20
@@ -219,7 +219,7 @@ fn textures_wrap_and_cut_out() {
     let (w, h) = (300u32, 100u32);
     let mut s = Scene::new();
     let world = s.node("world");
-    let tex = four_colours();
+    let tex = four_colors();
     // Three squares whose texture coordinates run from -1 to 2: repeated, mirrored and clamped
     for (i, wrap) in [Wrap::Repeat, Wrap::Mirror, Wrap::Clamp].into_iter().enumerate() {
         let mut g = square();
@@ -252,7 +252,7 @@ fn textures_wrap_and_cut_out() {
     assert_eq!([at(0, 0.17, -0.17), at(1, 0.17, -0.17), at(2, 0.17, -0.17)], [white, white, white]);
     assert_eq!(at(2, -0.83, -0.83), blue);
 
-    // A cut-out: texels under the alpha test are not drawn, and vertex colours tint the rest
+    // A cut-out: texels under the alpha test are not drawn, and vertex colors tint the rest
     let mut s = Scene::new();
     let world = s.node("world");
     let mut rgba = Vec::new();
@@ -308,7 +308,7 @@ fn a_thumbnail_keeps_its_shape() {
     r.fog = Some(Fog { color: [1.0; 3], near: 0.0, far: 1.0 });
     let img = r.render_thumbnail(&prefab, 64).unwrap();
     assert_eq!(img.len(), 64 * 64 * 4);
-    // Clear around the model, the lit colour in the middle: the flat square faces up, towards the sun
+    // Clear around the model, the lit color in the middle: the flat square faces up, toward the sun
     assert_eq!(px(&img, 64, 1, 1), [0, 0, 0, 0]);
     let d = [0.4f64, 1.0, 0.3];
     let n_dot = 1.0 / (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
@@ -351,7 +351,7 @@ fn settings(r: &mut Renderer, json: &serde_json::Value) {
     r.fog = s["fog"].as_array().map(|fog| Fog { color: v3(&fog[0]), near: f(&fog[1]), far: f(&fog[2]) });
 }
 
-/// The mean difference of the colours of two pictures, of 255, and the share of pixels that differ by more than
+/// The mean difference of the colors of two pictures, of 255, and the share of pixels that differ by more than
 /// 40 in some channel. Saves the differences as a picture (white where they are the same).
 fn compare(dir: &Path, name: &str, w: u32, h: u32, ours: &[u8], theirs: &[u8]) -> (f64, f64) {
     assert_eq!(ours.len(), theirs.len());
@@ -391,11 +391,11 @@ fn the_made_up_scene_matches_the_reference() {
     let (pw, ph, theirs) = load_png(&dir.join("made_py.png"));
     assert_eq!((pw, ph), (w, h));
     let (mean, far) = compare(&dir, "made", w, h, &ours, &theirs);
-    println!("made: mean colour difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40; {batched_calls} draw calls", far * 100.0);
+    println!("made: mean color difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40; {batched_calls} draw calls", far * 100.0);
     assert!(mean < 1.0 && far < 0.01, "{mean} {far}");
     // Without batches the picture is the same
     let plain = r.render_image(&Frame { overlay, ..Frame::new(&d.scene, roots, &cam) }, w, h).unwrap();
-    // The batches hold positions and normals in the world as f32: a colour may differ by a step
+    // The batches hold positions and normals in the world as f32: a color may differ by a step
     let apart: u64 = plain.iter().zip(&ours).map(|(a, b)| u64::from(a.abs_diff(*b))).sum();
     assert!((apart as f64) / (plain.len() as f64) < 0.5, "{apart}");
     assert!(r.stats.draw_calls >= batched_calls);
@@ -403,7 +403,7 @@ fn the_made_up_scene_matches_the_reference() {
     (r.background, r.fog, r.ambient) = ([0.051, 0.055, 0.071], None, [1.0; 3]);
     let ours = r.render_image(&Frame { overlay, ..Frame::new(&d.scene, roots, &cam) }, w, h).unwrap();
     let (mean, far) = compare(&dir, "made_nofog", w, h, &ours, &load_png(&dir.join("made_py_nofog.png")).2);
-    println!("made, no fog: mean colour difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40", far * 100.0);
+    println!("made, no fog: mean color difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40", far * 100.0);
     assert!(mean < 1.0 && far < 0.01, "{mean} {far}");
 }
 
@@ -534,7 +534,7 @@ fn a_level_matches_the_reference() {
     let ours = r.render_image(&frame, w, h).unwrap();
     let (mean, far) = compare(&dir, "level_0a", w, h, &ours, &load_png(&dir.join("level_0a_py.png")).2);
     println!(
-        "{}: {copies} model copies of {} models ({model_nodes} nodes, worst matrix difference {worst:e}), built in {build:?}; mean colour \
+        "{}: {copies} model copies of {} models ({model_nodes} nodes, worst matrix difference {worst:e}), built in {build:?}; mean color \
          difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40",
         d.json["info"]["level"],
         models.prefabs.len(),
@@ -546,7 +546,7 @@ fn a_level_matches_the_reference() {
         let near_cam = dump_camera(c);
         let ours = r.render_image(&Frame { camera: &near_cam, ..Frame::new(&d.scene, roots, &near_cam) }, w, h).unwrap();
         let (mean, far) = compare(&dir, "level_0a_near", w, h, &ours, &load_png(&dir.join("level_0a_near_py.png")).2);
-        println!("near view: mean colour difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40", far * 100.0);
+        println!("near view: mean color difference {mean:.3} of 255, {:.2}% of pixels differ by more than 40", far * 100.0);
         assert!(mean < 2.5 && far < 0.03, "{mean} {far}");
     }
 
@@ -609,7 +609,7 @@ impl eframe::App for Shows {
     }
 }
 
-/// The picture reaches the window with the colours the renderer wrote (through egui-wgpu, on eframe's own device).
+/// The picture reaches the window with the colors the renderer wrote (through egui-wgpu, on eframe's own device).
 #[test]
 fn egui_shows_the_picture() {
     use egui_kittest::Harness;

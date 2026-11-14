@@ -20,9 +20,9 @@ pub mod color {
 
 /// Values of `Texture::compression_format`: the size of one pixel.
 pub mod compression {
-    /// 4 bits for each pixel, an index into a palette of 16-bit colours
+    /// 4 bits for each pixel, an index into a palette of 16-bit colors
     pub const CI4: u16 = 0;
-    /// 8 bits for each pixel, an index into a palette of 16-bit colours
+    /// 8 bits for each pixel, an index into a palette of 16-bit colors
     pub const CI8: u16 = 1;
     pub const UNCOMPRESSED_16B: u16 = 2;
     pub const UNCOMPRESSED_32B: u16 = 3;
@@ -134,7 +134,7 @@ impl<'a> Texture<'a> {
             && matches!(self.compression_format, compression::CI4 | compression::CI8)
     }
 
-    /// The palette's colours as RGBA, as libgarib decodes them.
+    /// The palette's colors as RGBA, as libgarib decodes them.
     pub fn palette(&self) -> Result<Vec<[u8; 4]>, TexError> {
         let Some(start) = (self.palette_offset as usize).checked_sub(HEADER) else {
             return err(format!("texture 0x{:08X} has a bad palette offset", self.id));
@@ -176,7 +176,7 @@ impl<'a> Texture<'a> {
                 let indices = &self.data[..bytes.min(self.data.len())];
                 let mut put = |i: usize| {
                     if palette.is_empty() {
-                        // An image without a palette keeps the image library's grey ramp.
+                        // An image without a palette keeps the image library's gray ramp.
                         out.extend_from_slice(&[i as u8, i as u8, i as u8, 255]);
                     } else {
                         // An index past the palette is opaque black in the PNG.
@@ -218,7 +218,7 @@ impl<'a> Texture<'a> {
     }
 }
 
-/// A 16-bit colour (5 bits each of red, green and blue, 1 bit of alpha) as RGBA. libgarib divides by 32, not 31,
+/// A 16-bit color (5 bits each of red, green and blue, 1 bit of alpha) as RGBA. libgarib divides by 32, not 31,
 /// so full red is 240.
 pub fn decode_rgba16(raw: u16) -> [u8; 4] {
     let c = |v: u16| ((v & 31) as u32 * 255 / 32) as u8;
@@ -405,7 +405,7 @@ mod tests {
 
     #[test]
     fn decode_formats() {
-        // 2 by 2, 4 bits for each pixel: indices 1, 0, 2, 1 and a palette of three colours
+        // 2 by 2, 4 bits for each pixel: indices 1, 0, 2, 1 and a palette of three colors
         let data = [0x10, 0x21, 0x00, 0x01, 0xF8, 0x01, 0x07, 0xC0];
         let r = record(1, 2, 2, color::RGBA, compression::CI4, 36 + 2, &data);
         let t = Texture::parse(&r).unwrap();

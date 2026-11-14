@@ -20,7 +20,7 @@ Select the platform. The `Exit trigger` card tells you the radius, who has to ge
 
 <img src="img/exit-trigger-inspector.png" alt="The Exit trigger card: exit type 1, radius 20, the ball, and Glover must hold the ball" width="380">
 
-It's the centre of Glover or the ball that counts, not the edge.
+It's the center of Glover or the ball that counts, not the edge.
 
 _[The reference](../Using-the-editor.md#exit-triggers)_ has the table for every exit type.
 

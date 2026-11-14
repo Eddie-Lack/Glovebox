@@ -3,7 +3,7 @@
 //! Import model names a texture by a hash of its pixels, so a picture must decode to the same bytes on
 //! every computer. This follows libjpeg's defaults step by step: Huffman decoding (baseline and progressive), the
 //! accurate integer inverse DCT (`jidctint.c`), "fancy" chroma upsampling (`jdsample.c`) and the fixed point
-//! colour conversion (`jdcolor.c`). Arithmetic coding, lossless, 12-bit and CMYK files are refused.
+//! color conversion (`jdcolor.c`). Arithmetic coding, lossless, 12-bit and CMYK files are refused.
 
 const ZIGZAG: [usize; 64] = [
     0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21,
@@ -256,7 +256,7 @@ impl Decoder {
             let (wide, t) = (seg[0] >> 4 != 0, (seg[0] & 15) as usize);
             let size = if wide { 128 } else { 64 };
             if t > 3 || seg.len() < 1 + size {
-                return bad("a quantisation table is cut short");
+                return bad("a quantization table is cut short");
             }
             let mut table = [0u16; 64];
             for (k, slot) in ZIGZAG.iter().enumerate() {
@@ -398,7 +398,7 @@ impl Decoder {
         // Each component at the picture's size
         let mut planes: Vec<Vec<u8>> = Vec::new();
         for c in &self.comps {
-            let Some(q) = &self.quant[c.tq] else { return bad("a quantisation table is missing") };
+            let Some(q) = &self.quant[c.tq] else { return bad("a quantization table is missing") };
             let (pw, ph) = (c.blocks_w * 8, c.blocks_h * 8);
             let mut plane = vec![0u8; pw * ph];
             for by in 0..c.blocks_h {

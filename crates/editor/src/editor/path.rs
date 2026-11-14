@@ -31,7 +31,7 @@ pub struct Scatter {
     /// Up or down from the ground.
     pub dy: (f64, f64),
     pub scale: (f64, f64),
-    /// "free" (any way), "path" (the way on) or "player" (towards the path).
+    /// "free" (any way), "path" (the way on) or "player" (toward the path).
     pub turn: String,
     /// The most tilt about x and z, in radians.
     pub tilt: f64,
@@ -60,7 +60,7 @@ impl Default for Scatter {
     }
 }
 
-/// Rounds to `digits` decimals, by the exact value of the double. A half goes to the even neighbour.
+/// Rounds to `digits` decimals, by the exact value of the double. A half goes to the even neighbor.
 fn round_to(x: f64, digits: usize) -> f64 {
     if !x.is_finite() {
         return x;
@@ -262,8 +262,8 @@ impl Editor {
             return self.set_status("Select what to copy first: scenery, a kit model, an enemy, a powerup or Mr. Tip.", "err");
         }
         let ents: Vec<EntId> = src.iter().filter_map(|n| (0..self.entities.len()).find(|&i| self.entities[i].node == *n && self.whole(i))).collect();
-        let centre = self.centre_of(&ents);
-        let under = self.ground_below(vec::add(centre, [0.0, 120.0, 0.0]), 600.0, None, Some(&ground));
+        let center = self.center_of(&ents);
+        let under = self.ground_below(vec::add(center, [0.0, 120.0, 0.0]), 600.0, None, Some(&ground));
         let anchor = under.unwrap_or_else(|| {
             let mut low = f64::INFINITY;
             for &i in &ents {
@@ -272,7 +272,7 @@ impl Editor {
                     low = y;
                 }
             }
-            [centre[0], low, centre[2]]
+            [center[0], low, center[2]]
         });
         let do_turn = turn && src.len() == 1 && ents.first().is_some_and(|&i| self.entities[i].rot == Some("xyz"));
         let mut rnd = Random::new(clock_seed());
@@ -362,8 +362,8 @@ impl Editor {
                 let (z0, z1) = (lo[2] - margin, hi[2] + margin);
                 let mid = ch[ch.len() / 2];
                 let facing = mid.1[0].atan2(mid.1[2]);
-                let centre = if key == "fixed" { ch[ch.len() - 1].0 } else { vec::add(mid.0, [0.0, 100.0, 0.0]) };
-                let Some(zone) = preset_zone(key, facing, centre) else { continue };
+                let center = if key == "fixed" { ch[ch.len() - 1].0 } else { vec::add(mid.0, [0.0, 100.0, 0.0]) };
+                let Some(zone) = preset_zone(key, facing, center) else { continue };
                 made.push(ed.make_zone([x0, y0, z0], [x1 - x0, y1 - y0, z1 - z0], &zone));
             }
             count = made.len();

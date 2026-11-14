@@ -48,7 +48,7 @@ pub fn parse_id(text: &str) -> Option<u32> {
     }
 }
 
-/// The part of a bank's file name before the first full stop: `HUB_PART1` for `HUB_PART1.obj.fla`.
+/// The part of a bank's file name before the first period: `HUB_PART1` for `HUB_PART1.obj.fla`.
 pub fn stem(file: &str) -> &str {
     file.split('.').next().unwrap_or(file)
 }
