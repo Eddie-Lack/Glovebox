@@ -16,7 +16,7 @@ The editor itself doesn't have game data. Everything it shows comes from the ROM
 2. Unzip it and start `Glovebox.exe`
 3. The first time you open it, it'll ask for your ROM
    
-Note: the app isn't signed, so a Windows warning will pop up _(see [the app's guide](app/README.txt))_
+Note: the app isn't signed, so a Windows warning will pop up.
 
 ## Running it from source
 
