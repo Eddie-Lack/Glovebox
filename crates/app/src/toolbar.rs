@@ -209,7 +209,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if ui.button("Export XML").on_hover_text("Save the level as libgarib XML").clicked() {
             w.export("xml", None);
         }
-        if ui.button(".lev").on_hover_text("Assemble with libgarib level-tool and save the .lev").clicked() {
+        if ui.button(".lev").on_hover_text("Assemble the level and save the .lev").clicked() {
             w.export("lev", None);
         }
         style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Build ROM: the ROM boots straight into this level (libgarib's copyskip and quickboot patches)");
@@ -223,7 +223,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if r.clicked() {
             w.test_level();
         }
-        let r = ui.add(style::primary("Build ROM")).on_hover_text("Patch the edited level (and any imported models) into the ROM with libgarib");
+        let r = ui.add(style::primary("Build ROM")).on_hover_text("Patch the edited level (and any imported models) into the ROM");
         w.tour.mark(Target::Build, r.rect);
         if r.clicked() {
             w.export("rom", None);
