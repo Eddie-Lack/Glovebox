@@ -4,17 +4,15 @@ _Back to the [guide](README.md)_
 
 Every exit is a platform with an `Exit` command.
 
-The game doesn't care what the model looks like. It tests a sphere round the platform's position.
-
 ## See the sphere
 
 `Exits` in the toolbar shows or hides the green spheres. They are drawn at their real size.
 
-![The exit at the end of Atlantis Level 1: a small green sphere in front of the temple door](img/exit-trigger.png)
+![The exit at the end of Atlantis 1: a small green sphere in front of the temple door](img/exit-trigger.png)
 
-- Clicks go through the sphere. You can still select what's inside it
-- The outline shows faintly through walls
-- A moving platform's sphere is drawn where the platform starts
+- Clicks go through the sphere. You can still select what's inside it.
+- The outline shows faintly through walls.
+- A moving platform's sphere is drawn where the platform starts.
 
 ## Who has to touch it
 
@@ -32,10 +30,10 @@ _[The reference](../Using-the-editor.md#exit-triggers)_ has the table for every 
 
 | Preset | What it is |
 | --- | --- |
-| `Level exit (heart)` | Bring the ball to it to end the level |
-| `Exit zone` | An invisible level exit |
-| `Bonus finish line` | Five big hearts across the way, for a bonus level |
-| `World exit lift` | Stand on it with the ball and it carries you out of the world |
+| `Level exit (heart)` | Bring the ball to it to end the level. |
+| `Exit zone` | An invisible level exit. |
+| `Bonus finish line` | Five big hearts across the way, for a bonus level. |
+| `World exit lift` | Stand on it with the ball and it carries you out of the world. |
 
 ## Make it bigger
 

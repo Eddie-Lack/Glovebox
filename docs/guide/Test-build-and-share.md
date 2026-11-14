@@ -8,15 +8,17 @@ The bottom row of the toolbar has it all.
 
 ## Test level
 
-`Test level` (or `T`) builds a ROM that starts in your level and opens it in your emulator.
+`Test level` (or `T`) builds a ROM that starts in your level and opens it in your emulator of choice.
 
 <img src="img/test-level.png" alt="The Test level message that asks for your emulator" width="560">
 
-- The first time, press `OK` and pick your emulator's program (ares, simple64, Project64…)
-- After that it's one click
-- The ROM goes in the user folder (`test/`)
+- The first time, click `OK` then navigate to where your emulator is saved on your computer and select it.
+- After that, it's just one click.
+- The ROM goes in the user folder (`test/`).
 
 ## Build ROM
+
+*Don't share game ROMs. This is just for testing or playing yourself.*
 
 `Build ROM` patches your edits into a ROM and asks where to save it.
 
@@ -24,13 +26,13 @@ Tick `boot here` and the ROM starts in your level. Without it the game starts as
 
 ## Export patch
 
-`Export patch` makes a `.bps` patch. That's the file to share: players apply it to their own ROM.
+`Export patch` makes a `.bps` patch. That's the file to share: people can apply it to their own ROM.
 
 <img src="img/export-patch.png" alt="The Export patch dialog: what the patch holds, and the Export .bps button" width="560">
 
-- The patch holds only what your edit changes
-- It starts the game normally. Tick `Patched ROM boots straight into this level` for a patch that doesn't
-- The dialog tells you when the patch needs the Expansion Pak
+- The patch holds only what your edit changes.
+- It starts the game normally. Tick `Patched ROM boots straight into this level` for a patch that doesn't.
+- The dialog tells you when the patch needs the Expansion Pak.
 
 `Patcher ↗` opens the patcher page. It's one file and it works offline. Share it with your patch.
 
@@ -46,9 +48,9 @@ Pick the level it boots into, or a normal start.
 
 ## Level files
 
-- `Export XML` saves the level as a file
-- `.lev` saves it the way the game stores it
-- `Import XML` reads an XML back. It checks the file first
+- `Export XML` saves the level as a file.
+- `.lev` saves it the way the game stores it.
+- `Import XML` reads an XML back. It checks the file first.
 
 Dropping an `.xml` on the window imports it too.
 
@@ -63,12 +65,12 @@ The editor adds its game mod to the ROM or patch when your level:
 
 The Checks and the export dialog say when that happens.
 
-On an emulator, the Expansion Pak has to be on. Most have it on.
+On an emulator, the Expansion Pak has to be on. Most have it on by default.
 
 _[The Expansion Pak game mod](../Game-mod.md)_ has the details.
 
-Note: every ROM and patch the editor builds uses Easy ball controls.
+Note: every ROM and patch the editor builds uses Easy ball controls, obviously
 
 ---
 
-_[← Import your own model](Import-your-own-model.md)_ · _[Contents](README.md)_ · _[Options →](Options.md)_
+_[← Import your own model](Import-your-own-model-(untested).md)_ · _[Contents](README.md)_ · _[Options →](Options.md)_

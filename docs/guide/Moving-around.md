@@ -4,21 +4,21 @@ _Back to the [guide](README.md)_
 
 | Orbit | Focus | Fly |
 | --- | --- | --- |
-| ![The view looking down the start of Atlantis Level 1](img/view-orbit.png) | ![The view after Focus, with one enemy filling it](img/view-focus.png) | ![The view from the fly camera, low over the sand](img/view-fly.png) |
+| ![The view looking down the start of Atlantis 1](img/view-orbit.png) | ![The view after Focus, with one enemy filling it](img/view-focus.png) | ![The view from the fly camera, low over the sand](img/view-fly.png) |
 
 ## Orbit
 
-| You do | The camera |
+| Mouse action | Camera action |
 | --- | --- |
-| Drag | turns round the point it looks at |
-| Right-drag | slides sideways and up and down |
-| Wheel, or middle-drag | goes in and out |
+| Drag | turns around the point it looks at |
+| Right-click+drag | slides sideways and up and down |
+| Scroll wheel, or middle-click+drag | goes in and out |
 
 ## Focus
 
 Select something, then press `F` (or `Focus`).
 
-The camera goes to it and looks at it. Dragging now turns round that object.
+The camera goes to the object and looks at it. Dragging now turns around that object.
 
 ## Fly
 
@@ -27,7 +27,7 @@ The camera goes to it and looks at it. Dragging now turns round that object.
 - `W` `A` `S` `D` move along the view
 - `Space` goes straight up, `Shift` straight down
 - Drag to look around
-- The wheel sets the speed
+- The scroll wheel sets the speed
 - `C` or `Esc` goes back to orbiting
 
 Note: while you fly, those keys move the camera. Use the toolbar for `Move` and `+ Add`.
@@ -40,4 +40,4 @@ It only changes what you see in the editor. The pictures in this guide have it o
 
 ---
 
-_[← The window](The-window.md)_ · _[Contents](README.md)_ · _[Selecting and moving →](Selecting-and-moving.md)_
+_[← The editor](The-editor.md)_ · _[Contents](README.md)_ · _[Selecting and moving →](Selecting-and-moving.md)_
