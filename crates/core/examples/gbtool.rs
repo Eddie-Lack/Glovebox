@@ -3,6 +3,7 @@
 //!     gbtool xml ROM SID                          print a level's XML
 //!     gbtool build ROM SID XML OUT [--quickboot] [--expansion] [--copy] [--bps] [--import 0xID]...
 //!     gbtool hwcheck ROM                          check a built ROM against the console's rules
+//!     gbtool pack SID XML OUTDIR NAME             write a level pack for g64coopdx (docs/technical.md, "Level packs")
 //!
 //! OUT gets the built ROM (or the BPS patch with --bps).
 //! `build` reads imported models from the user folder that the environment variable `GLOVEBOX_HOME` names.
@@ -56,6 +57,15 @@ fn run(args: &[String]) -> Result<(), String> {
             eprintln!("{}: {} bytes, game mod {}", args[4], built.data.len(), if built.needs_mod { "yes" } else { "no" });
             Ok(())
         }
+        "pack" if args.len() == 5 => {
+            // A pack needs no ROM: the level's XML and the number of the level whose place it takes are enough.
+            let scene = glovebox_core::gamedata::scenes().iter().find(|s| s.id == args[1]).ok_or_else(|| format!("no level {}", args[1]))?;
+            let xml = std::fs::read(&args[2]).map_err(|e| e.to_string())?;
+            let pack = glovebox_core::pack::make_pack(&args[4], scene.index, &xml)?;
+            pack.write_to(Path::new(&args[3])).map_err(|e| e.to_string())?;
+            eprintln!("{}: level {} ({}), {} bytes, id {}", args[3], scene.index, scene.name, pack.level.len(), pack.id_hex());
+            Ok(())
+        }
         "hwcheck" if args.len() == 2 => {
             let rom = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
             let found = glovebox_core::hwcheck::check_rom(&rom);
@@ -66,7 +76,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 Err(found.join("\n"))
             }
         }
-        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM".into()),
+        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack SID XML OUTDIR NAME".into()),
     }
 }
 

@@ -341,6 +341,31 @@ nothing else. The program never runs them.
   copyright screen, studio intro, title fly-through, main menu, file select and name entry, never reaching
   `gameInfo.mode` 13.
 
+## Level packs for g64coopdx
+
+g64coopdx is the online co-op game on PC ([github.com/Eddie-Lack/g64coopdx](https://github.com/Eddie-Lack/g64coopdx)).
+It reads a level from a **level pack**, not from a patched ROM. A pack is a folder with two files:
+
+- `pack.txt`, the manifest: `format=1`, `name=` (1 to 32 plain ASCII characters) and `level=` (the number of the
+  level whose place the pack's level takes). Each line ends with a line feed alone.
+- `level.lev`, the level in the game's own format: what `level::assemble_xml` gives.
+
+A pack holds no game data. Its level file names models and textures by their ids, and each player's own ROM supplies
+them. The pack's level takes the place of the level it was made for, and the game loads that level's banks with it.
+
+- `crates/core/src/pack.rs` makes a pack from a level's XML (`make_pack`) and writes it (`LevelPack::write_to`).
+- The pack's id is the first 16 bytes of a BLAKE2b hash of both files. g64coopdx computes the same and refuses a
+  player whose pack has another id. The test `id_matches_g64coopdx` holds the id that g64coopdx's own test prints
+  for the same two files. g64coopdx's `docs/discovery/level-pack.md` has the format in full.
+- `gbtool pack SID XML OUTDIR NAME` writes a pack from the command line. It needs no ROM.
+- A level that needs the console's game mod is refused: g64coopdx does not have the mod's features yet (rotation and
+  scale on every object type, more bank slots, the extra level slots). Imported models are not in a pack yet either.
+- g64coopdx does not check yet that the level's objects are in the banks of the level whose place it takes. A level
+  that names another level's object makes that game stop.
+- The app has no button for it yet.
+- Verified with g64coopdx: Atlantis 1's XML gives a `level.lev` with the same bytes as the ROM's level file, and a pack
+  of that level with its first checkpoint moved plays online in two programs with equal state hashes.
+
 ## Autosave, reset, import
 
 - **Autosave**: after every edit the level's XML is saved in the user folder (`drafts/<level id>.json`,
