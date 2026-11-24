@@ -639,6 +639,11 @@ pub fn commands(lev: &[u8]) -> Result<Vec<(u32, usize)>, LevelError> {
         read_obj(f, &mut r, f.cmd, 0)?;
         let code = u16::from_be_bytes([lev[start], lev[start + 1]]) as u32;
         out.push((code, start + 2));
+        // The game stops at EndLevelData. The bytes after it pad the file to a multiple of 8, and their count can be
+        // odd, so they are not read as commands.
+        if Some(code) == f.opcode("EndLevelData") {
+            break;
+        }
     }
     Ok(out)
 }
@@ -1483,5 +1488,18 @@ mod tests {
         assert!(!needs_mod(&level("<LandActor><SetActorScale/></LandActor><SetActorRotation/>")));
         assert!(needs_mod(&level("<Water><SetActorScale/></Water>")));
         assert!(needs_mod(&level("<NullPlatform><SetActorRotation/></NullPlatform>")));
+    }
+
+    #[test]
+    fn commands_stop_at_the_end_of_the_level() {
+        // A name of 6 letters leaves 3 bytes of padding after EndLevelData.
+        let mut b = vec![0u8; 4];
+        b.extend_from_slice(b"ISLAND\0");
+        b.extend_from_slice(&[0x7D, 0x00]);
+        while b.len() % 8 != 0 {
+            b.push(0);
+        }
+        assert_eq!(b.len() - 13, 3);
+        assert_eq!(commands(&b).unwrap(), vec![(0x7D00, 13)]);
     }
 }
