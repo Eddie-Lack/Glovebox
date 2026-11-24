@@ -8,10 +8,11 @@
 use glovebox_core::backend::{Backend, BackendError, CatalogEntry, CustomEntry, ModInfo, ModelRef, Result, SceneModels};
 use glovebox_core::build::{self, BuildAllRequest, BuildRequest, Built};
 use glovebox_core::custom;
-use glovebox_core::gamedata::Image;
+use glovebox_core::gamedata::{self, Image};
 use glovebox_core::imports::{CopyPlan, Plan, Runtime};
 use glovebox_core::kit;
 use glovebox_core::level;
+use glovebox_core::pack;
 use glovebox_core::model::{Material, Mesh, Model, Node, Primitive, Wrap};
 use glovebox_core::tables;
 use serde_json::{json, Value};
@@ -472,6 +473,21 @@ impl Backend for FixtureBackend {
 
     fn build_all(&self, _request: &BuildAllRequest) -> Result<Built> {
         no_rom()
+    }
+
+    /// A pack of the level alone. The fixture's models are made up, so a level that names any other model is
+    /// refused.
+    fn level_pack(&self, sid: &str, xml: &str, name: &str) -> Result<pack::LevelPack> {
+        let index = usize::from_str_radix(sid, 16).map_err(|_| BackendError(format!("no level {sid}")))?;
+        let p = pack::make_pack(name, index, xml.as_bytes())?;
+        let own = self.level_ids();
+        for (_, id) in pack::object_refs(&p.level)? {
+            let id = gamedata::hex(id);
+            if !own.contains(&id) {
+                return Err(BackendError(format!("The fixture has no ROM: it can't put model {id} in a level pack.")));
+            }
+        }
+        Ok(p)
     }
 
     fn import_custom(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {

@@ -22,7 +22,7 @@ fn every_shipped_level_makes_a_pack() {
             .unwrap_or_else(|e| panic!("level {} ({}) does not make a pack: {}", scene.id, scene.name, e));
         // A pack of an unchanged level holds the level file as the game has it: it starts with its own size.
         pack::check_level(&p.level).unwrap();
-        assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level));
+        assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level, None, None));
         made += 1;
     }
     assert_eq!(made, pack::LEVELS, "the game has 48 levels");
