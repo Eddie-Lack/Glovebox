@@ -183,7 +183,8 @@ impl Editor {
     }
 
     /// Moves an element one place earlier (-1) or later (+1) among its siblings. The top level keeps EndLevelData
-    /// last, an enemy keeps EnemyFinalize last, and a platform refuses an order the game reads wrong.
+    /// last, an enemy keeps EnemyFinalize last, and a move inside a platform is not made when the game would read
+    /// the new order wrong.
     pub fn move_node(&mut self, node: NodeId, delta: i32) {
         let Some(parent) = self.doc.parent(node) else { return };
         let sib = self.doc.children(parent).to_vec();

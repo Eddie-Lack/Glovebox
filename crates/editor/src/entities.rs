@@ -1256,7 +1256,7 @@ pub fn zone_center(doc: &Doc, vol: NodeId) -> V3 {
     box_center(doc, vol, XYZ, ["l", "w", "h"])
 }
 
-/// Where the camera about stands for a Glover at the middle of the zone, as (glove, eye). `None` when the zone
+/// About where the camera stands for a Glover at the middle of the zone, as (glove, eye). `None` when the zone
 /// keeps the level's direction.
 pub fn zone_camera(doc: &Doc, z: &Zone) -> Option<(V3, V3)> {
     let c = zone_center(doc, z.vol?);

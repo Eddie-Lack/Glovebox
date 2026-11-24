@@ -32,7 +32,7 @@ Press `B` (or `Box select`), then drag a box in the viewer to select everything 
 Drag a handle. Red is X, green is Y (up), blue is Z.
 
 - Hold `Ctrl` to click something behind the gizmo!
-- An enemy's script points and a platform's path move with it.
+- An enemy's script points (where it goes and looks) and a platform's path move with it.
 
 Not everything can turn or grow - see _[What can rotate and scale](../Using-the-editor.md#what-can-rotate-and-scale)_.
 

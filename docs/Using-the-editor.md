@@ -17,7 +17,7 @@ The first time a level opens, the editor asks if you want a quick tour
 
 ## Moving around
 
-- Pick a level in the list at the top, all 48 load
+- Pick a level in the list at the top. All 48 open
 - Drag to turn the camera, right-drag to pan, wheel (or middle-drag) to zoom
 - `F` frames the selection
 
@@ -28,7 +28,7 @@ The first time a level opens, the editor asks if you want a quick tour
 - Drag to turn, wheel sets the speed
 - `C` or `Esc` goes back to orbiting
 
-Note: while you fly, those keys move the camera. Use the toolbar for Move and + Add, and Shift+click doesn't drop garibs
+Note: while you fly, those keys move the camera. Use the toolbar for Move (`W`) and + Add (`A`), and Shift+click doesn't drop garibs
 
 ## Selecting and moving
 
@@ -44,20 +44,20 @@ Note: while you fly, those keys move the camera. Use the toolbar for Move and + 
 - Shift+click the ground to drop a garib
 - Undo, redo, duplicate and delete work on the whole selection
 
-An enemy's script points and a platform's path move with it
+An enemy's script points (where it goes and looks) and a platform's path move with it
 
 ## What can rotate and scale
 
 | Object | Rotation | Scale |
 | --- | --- | --- |
-| Land and background actors | X, Y, Z | X, Y, Z |
+| Land and background actors (`Scenery` and `Background`) | X, Y, Z | X, Y, Z |
 | Platforms | X, Y, Z (needs the mod) | One scale, before the first path point |
-| Enemies | Y turns it, X and Z tilt it (needs the mod) | X, Y, Z (needs the mod) |
-| Powerups | X, Y, Z, under their own spin (needs the mod) | X, Y, Z (needs the mod) |
+| Enemies | Y turns it. X and Z tilt it (needs the mod) | X, Y, Z (needs the mod) |
+| Powerups | X, Y, Z, and they keep their own spin (needs the mod) | X, Y, Z (needs the mod) |
 | Water | X, Y, Z (needs the mod) | X, Y, Z (needs the mod) |
 | Wind volumes | None | Resizes the box |
 | Puzzle trigger volumes | None | Resizes the box, sphere or cylinder |
-| Garibs, Mr. Tip, spawn points | None | None |
+| Garibs, Mr. Tip, spawn points (where Glover, the ball and the camera start) | None | None |
 
 _See [The Expansion Pak game mod](Game-mod.md) for what "needs the mod" means_
 
@@ -71,9 +71,11 @@ Opens a palette with a picture of each entry:
 - `Kit`: props the editor makes itself, free to share _(see [Kit](#kit))_
 - `Presets`: ready-made platforms _(see [Presets](#presets))_
 - `Camera`: camera zones _(see [Camera zones](#camera-zones))_
-- `Import model…` adds a model of your own _(see [Import model](Import-model.md))_
+- `Import model…`, in the `Models` tab, adds a model of your own _(see [Import model](Import-model.md))_
 
 Note: boss enemies are tied to their arenas. The palette marks them
+
+A bank is a group of models that the game loads together. Each level loads a few banks
 
 ### List or Grid
 
@@ -95,11 +97,11 @@ Note: boss enemies are tied to their arenas. The palette marks them
 - The search box and the bank list of `Models` work in both views. `Grid` shows every match, `List` the first 150
 - `Tab` and `Enter` work on the pictures too
 
-A model from another level or world is copied in when you build. `Checks` shows its size against the level's free memory, and lists every import
+A model from another level or world is copied in when you build. `Checks` shows its size against the level's free memory, and lists each of those models
 
 ## Presets
 
-Ready-made platforms, with their commands in the order the game reads them
+Ready-made platforms, with their commands in the order the game reads them _(see [Commands](#commands))_
 
 - `Start ring`: Glover starts here. If the level has a start ring already, it moves that one
 - `Checkpoint ring`: Glover restarts here once he's touched it
@@ -109,18 +111,22 @@ Ready-made platforms, with their commands in the order the game reads them
 - `Lift`: rises once when Glover walks onto it. It comes with its puzzle
 - `Slam button`: goes down when you slam it. Use its tag in a puzzle
 - `Moving platform`, `Spinner`, `Conveyor`, `Ice floor`
-- `Spike`: an invisible point that hurts Glover and pops the ball. Put any model on it
+- `Spike`: an invisible point that hurts Glover and pops the ball. Put any model on it as the visible part
 - `Exit zone`: an invisible level exit
 - `Teleport pad`: sends Glover and the ball ahead. Change where in the inspector
 - `Extra levels entry`: for hubs only _(see [The Expansion Pak game mod](Game-mod.md#extra-levels))_
 
 Moving platform, spinner, conveyor and ice use the selected object's model if you've selected one
 
+`Motion` in the toolbar spins the spinning platforms in the view
+
 Note: give a platform one of the game's own models. A platform with an imported model crashes a console
 
 ## Commands
 
-Every object's card in the inspector has buttons:
+The inspector shows an object's commands as cards, one card each
+
+Every object's card has buttons:
 
 - `+` adds a command inside it. The ones it can't take are grayed out, hover to see why
 - `↑` `↓` move a command. A move the game would read wrong is refused
@@ -138,7 +144,7 @@ With nothing selected, the inspector lists every puzzle in the level. Click one 
 - `+ Add` adds a condition or an action. Pick its type in its card
 - A puzzle with no conditions fires when the level starts
 
-A trigger volume's card has `Edit its puzzle` too
+A trigger volume's card has `Edit its puzzle` too _(see [Puzzle trigger volumes](#puzzle-trigger-volumes))_
 
 Note: a puzzle with no limit runs its actions on every frame its conditions hold. Most puzzles want `Once`
 
@@ -151,15 +157,16 @@ An enemy's card shows its script: the normal, conditional and attack lists
 - Follow, flee and face pick their target: the glove, the ball or the closer one
 - `Ready-made` swaps in a whole normal script: chase the glove, wander, patrol, or stand still
 
-The checks show an error when a list could run off its end. End it with `Go to instruction`
+The checks show an error when a list could run off its end: its last instruction ends, and the game reads past the list. End it with `Go to instruction`
 
 ## Level settings
 
 With nothing selected you get the level's settings:
 
 - `Look` sets the lights and fog to a preset: dark, colored moods or daylight
-- `File name` is the name inside the level file. Keep it 7 letters: an even length crashes a console
+- `File name` is the name inside the level file. Keep it 7 letters, like the shipped levels' names. An even length crashes a console
 - `Title, music and clock`: the title in the level select, the music, and a countdown like a bonus level's
+- On a Space level, `Title, music and clock` also has `Extra level (Expansion Pak)` _(see [The Expansion Pak game mod](Game-mod.md#extra-levels))_
 - `+ Add` adds fog, lights, a backdrop, gravity or an ambient sound
 
 Note: at 0 the clock says TIME UP and sends you to the way room
@@ -177,16 +184,20 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - Trigger volumes that are flat or empty
 - Exits that can never fire
 - A checkpoint or start with no solid ground under it
-- `fog_distance` of 1000 or more
+- `fog_distance` of 1000 or more, in `FogConfiguration`
 - Platforms made from your own models _(a console stops on them)_
 
 Each check links to the game's code. Problems a shipped level already has are labeled
 
+The links go to _[gloveworld](https://github.com/Eddie-Lack/gloveworld)_, the game's code turned back into C
+
 ### Draw load
 
-The game draws everything within its far plane, even what's behind the camera. Too much at once and it lags, and past 256 object matrices it stops
+The game draws everything within its far plane, even what's behind the camera. Too much at once and it lags. Past 256 object matrices a frame never finishes, and the game stops
 
-`Checks` estimates the busiest spot in your level:
+Each part of a model the game draws takes one object matrix, and so does each shadow and footprint
+
+`Checks` estimates the draw load at the busiest spot in your level, in object matrices:
 
 | Estimate | What it means |
 | --- | --- |
@@ -194,11 +205,13 @@ The game draws everything within its far plane, even what's behind the camera. T
 | 190 to 239 | It slows down |
 | 240 or more | At or near the limit |
 
-Click the row to see the spot and the far plane
+Click the `Draw load` row to see the spot and the far plane
 
-To fix it, put fewer pieces close together, or shorten the far plane (`near_clip` in `FogConfiguration`)
+To fix it, put fewer pieces close together, or shorten the far plane
 
-Note: it's an estimate. It came within 35 of the game in four levels, and ran up to 63 over in hub 1
+The far plane is the `near_clip` field of `FogConfiguration`, despite the name. Without one it's 1000
+
+Note: it's an estimate. It came within 35 matrices of the game's own count in four levels, and ran up to 63 over in hub 1
 
 ## Puzzle trigger volumes
 
@@ -214,13 +227,11 @@ Duplicate and delete take the whole puzzle when it has only that one volume. Whe
 
 The `Triggers` button shows or hides them. The `Fog` button shows or hides the level's fog in the editor only (to change the game's fog, edit `FogConfiguration` in the inspector)
 
-`Motion` spins the spinning platforms
-
 ## Exit triggers
 
 Every exit is a platform with an `Exit` command. The game tests a sphere around the platform's position, whatever the model looks like
 
-The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model.
+The green sphere shows that sphere at its real size. World entrances in the hubs and some level ends (Atlantis 3, Carnival 1) are a small hidden model
 
 The `Exits` button in the toolbar shows or hides the spheres. The `Exit triggers` layer in the list on the left is the same switch
 
@@ -247,9 +258,9 @@ Select the platform and the inspector's `Exit trigger` block tells you the radiu
 
 ### An exit with a radius of 0 can never fire!
 
-The game measures the platform when it reads its position. An `Exit` of type `loading_zone` that comes before the position stops that, and the radius stays 0
+The game measures the platform when it reads its position (`PlatSetInitialPos` or the first path point). An `Exit` with its `type` set to `loading_zone` stops that if it comes before the position, and the radius stays 0
 
-The editor always adds the `Exit` after the position. `Checks` warns you when an imported level has it the other way around
+The editor always adds the `Exit` after the position. `Checks` warns you when a level from `Import XML` has it the other way around
 
 ## Camera zones
 
@@ -267,7 +278,7 @@ A box where the camera moves while Glover is inside it. When he leaves, the came
 | `Far` | stands far back and high |
 | `Fixed` | flies to a point ahead and watches from there |
 
-- A new zone expects you to walk the way the view looks
+- A new zone's `player walks` heading is the way the view looks when you add it. It's the way the player goes through the zone
 - Move and size the box like any trigger volume
 - The inspector's `Camera zone` panel changes the preset, the heading, the look angle, the distance, the height and the point to fly to
 - The dashed line shows about where the camera stands
@@ -283,9 +294,11 @@ Props the editor makes itself, so they hold no game data and you can share them
 - Ruins: rubble, a scorch mark, thorns
 - Creatures: a shade, a giant hand, an eye, a pale face, a rag-doll glove, a hanging glove, gallows, a cage, a lantern
 
-The picture follows what you type. `Background` places it with no collision, `Scenery` makes it solid
+Some props have settings, like the words on a signpost. The picture follows them
 
-After that it's listed with your imported models, and it's copied into the level when you build
+`Background` places it with no collision, `Scenery` makes it solid
+
+Once you place a prop, it's listed with your imported models, and it's copied into the level when you build
 
 ## New look
 
@@ -311,7 +324,7 @@ Each one lands on the ground under it. `random turn` spins each copy of a single
 
 - Random spacing, distance, height, scale and facing, in the ranges you set
 - Select a few models and each copy picks one of them
-- `Try another` takes it back and tries the next seed
+- `Try another` takes it back and scatters again with new random values
 
 `Add zones` (under `Camera zone over the path`) covers a stretch of the path with camera zones. Long stretches get split into shorter boxes
 
@@ -320,10 +333,10 @@ Note: the path is only a guide, the level doesn't keep it
 ## Autosave
 
 - Every edit is saved in the app's user folder (`drafts/`)
+- The user folder is `%LOCALAPPDATA%\Glovebox` on Windows and `~/.local/share/glovebox` on Linux
 - Reopen the level or the editor and your edits are back
 - The level list marks edited levels with ●
-- `Reset level` throws away a level's edits (you can still undo it)
-- `Import XML` (or drop an `.xml` on the window) checks the file before it touches your level
+- `Reset level` in the toolbar throws away a level's edits (you can still undo it)
 
 ## Options
 
@@ -331,7 +344,7 @@ Note: the path is only a guide, the level doesn't keep it
 
 ### Theme
 
-Don't like the 1998 look? Pick another one under `Theme`
+The editor starts with the `1998` look. Don't like it? Pick another one under `Theme`
 
 | Theme | Looks like |
 | --- | --- |
@@ -351,10 +364,10 @@ Don't like the 1998 look? Pick another one under `Theme`
 | `Paper` | a printed manual: black and red ink on off-white paper |
 | `CRT` | a debug monitor: green on black |
 
-- The list has two columns: the color themes (`Sage` to `Plum`) are in the right one
+- The list has two columns. `Sage` to `Plum` are in the right one
 - The window changes right away, no restart
 - The editor remembers your theme, the setup screen uses it too
-- Every button stays where it is
+- Only the look changes. Every button stays where it is
 
 ### Info texts
 
@@ -392,7 +405,7 @@ Small gray texts explain how the game or the editor works. They belong to titles
 - The `Checks` are never a tab. They sit under the other panels of their side, or under the view
 - Stacked panels have a line between them that drags, like the line over the `Checks`
 - Drag a panel's edge to resize it. The width stays with the panel when you move it
-- On a very wide window (1560 and up) `Add to level` and `Path` get a column of their own next to the tabs, as long as the view keeps 480 of width
+- On a very wide window (1560 points and up) `Add to level` and `Path` get a column of their own next to the tabs, as long as the view keeps 480 points of width
 - With the `Inspector` hidden, the status bar says what you selected
 - The editor remembers the layout and the sizes
 
@@ -409,9 +422,12 @@ Note: a level that uses the game mod needs the emulator's Expansion Pak on _(mos
 ## Build ROM and export
 
 - `Export XML` and `.lev` save the level where you choose
+- `Import XML` (or drop an `.xml` on the window) checks the file before it touches your level
 - `Build ROM` patches your edits into a ROM. `boot here` starts it in the edited level
 - `Export patch` makes a patch to share _(see [Sharing levels](Sharing-levels.md))_
 - `Build all…` puts every level you've edited into one ROM or patch. Pick the level it boots into, or a normal start
-- `Export level pack`, in the `Export patch` dialog, saves the level as a level pack for g64coopdx, the online co-op game _(see [Sharing levels](Sharing-levels.md))_
+- `Export level pack`, in the `Export patch` dialog, saves the level as a level pack for _[g64coopdx](https://github.com/Eddie-Lack/g64coopdx)_, the online co-op game _(see [Sharing levels](Sharing-levels.md))_
 
 Every ROM and patch the editor builds uses Easy ball controls on every difficulty
+
+On Medium and Hard, the shipped game pushes the ball the opposite way to the stick. Lives, garibs per life and the bosses still follow the difficulty

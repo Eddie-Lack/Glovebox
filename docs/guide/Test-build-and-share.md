@@ -36,7 +36,11 @@ Check `boot here` and the ROM starts in your level. Without it the game starts a
 
 `Patcher ↗` opens the patcher page. It's one file and it works offline. Share it with your patch.
 
+The page is `patcher.html` in the user folder. The status bar says where that is.
+
 _[Sharing levels](../Sharing-levels.md)_ shows how players use it.
+
+`Export level pack` in the same dialog saves the level for g64coopdx, the online co-op game on PC. See _[Sharing levels](../Sharing-levels.md#export-level-pack)_.
 
 ## Build all
 

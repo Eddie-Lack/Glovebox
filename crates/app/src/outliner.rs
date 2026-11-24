@@ -64,7 +64,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 ui.end_row();
             }
         }
-        // The exit triggers are no entities of their own: the layer shows the spheres of the platforms with an exit
+        // The exit triggers are not entities of their own: the layer shows the spheres of the platforms with an exit
         let n = ed.exits().len();
         if n > 0 {
             let mut on = !ed.hidden.contains(exits::LAYER);

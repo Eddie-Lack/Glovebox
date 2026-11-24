@@ -5,7 +5,7 @@
  *
  * With an Expansion Pak it copies the mod from ROM into MOD_RAM, near the top of the Expansion Pak's memory, with the game's own
  * DMAMemory, then invalidates the instruction cache over it. Mod_Init gives the game's heap the memory below it (heap.c). Without one it puts the original
- * instructions back at every hook except the parser's, which it points at NoPakParseToken: that skips
+ * instructions back at every hook except the parser's, which it points at NoPakParseToken. NoPakParseToken skips
  * SetActorRotation and SetActorScale after an enemy, platform, powerup or water. The game then ignores them;
  * it does not apply them to the previous landscape actor.
  * MOD_RAM, MOD_ROM, MOD_SIZE, PARSE_HOOK and the hook table come from tools/build_mod.py (hooks.h).

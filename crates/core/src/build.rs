@@ -78,8 +78,9 @@ pub fn build_rom(
 /// A ROM with every level of `levels` replaced.
 ///
 /// With the game mod, imported models are loaded from the player's ROM at run time (`plan_runtime`), unless `copy`
-/// is set. Otherwise they are copied into the level's object and texture banks (`build_import_banks`); with the mod
-/// too, they then still get its larger heap. Two levels can't both copy models into the same bank.
+/// is set. Otherwise they are copied into the level's object and texture banks (`build_import_banks`). When the ROM
+/// also has the mod, the copied models still get the mod's larger heap. Two levels can't both copy models into the
+/// same bank.
 pub fn build_levels(
     gd: &GameData,
     customs: &Customs,
@@ -370,7 +371,7 @@ fn patch(gd: &GameData, rom: &[u8], facts: &str, with_mod: bool, created: &str) 
 ///
 /// A patch is made against the clean ROM. Plain edits come out as a true diff. With the mod, imports load from the
 /// player's ROM at run time and the patch has no game data. Without it, imports rebuild the level's object and
-/// texture banks without compression, and those banks travel in full.
+/// texture banks without compression, and the patch holds those banks in full.
 pub fn build(gd: &GameData, customs: &Customs, req: &BuildRequest) -> Result<Built, String> {
     let s = scene(&req.sid).map_err(|e| e.0)?;
     let (lev, needs) = assemble(req.xml.as_bytes())?;

@@ -2,12 +2,13 @@
  * Glover game mod: the matrix guard.
  *
  * The game's per-frame matrices (Dynamic.objectMtx in display.h) hold 256. Every drawn object node, shadow and footprint takes one, and
- * nothing checks the count: the 257th and 258th overwrite the camera's matrices and the next ones the start of the display list, the RSP
- * runs matrix data as commands and the frame never finishes. The game stops (mupen64plus showed it with rice and with angrylion in a
- * level with 259 matrices in one view). The guard skips what would pass the end: an actor whose object nodes would leave fewer than
- * MTX_RESERVE free (the opaque pass draws the nearest first, so the far ones go; the glove and the ball may use the reserve), and a
- * shadow or footprint when none is free.
- * modPeakMatrices is the most matrices a frame asked for (the skipped ones included), modSkippedDraws the draws skipped;
+ * the game does not check the count. The 257th and 258th overwrite the camera's matrices, and the next ones overwrite the start of the
+ * display list. The RSP then runs matrix data as commands and the frame never finishes. The game stops (mupen64plus showed it with rice
+ * and with angrylion in a level with 259 matrices in one view).
+ * The guard skips what would pass the end. It skips an actor whose object nodes would leave fewer than MTX_RESERVE free. The opaque
+ * pass draws the nearest first, so the far ones go. The glove and the ball may use the reserve. The guard skips a shadow or footprint
+ * when no matrix is free.
+ * modPeakMatrices is the most matrices a frame asked for, the skipped ones included. modSkippedDraws counts the skipped draws.
  * mod.json has the addresses of both, for tests in the emulator.
  *
  * Its hooks are installed at run time by Mod_InitGuard, only with an Expansion Pak. The ROM's code does not change for them. The call

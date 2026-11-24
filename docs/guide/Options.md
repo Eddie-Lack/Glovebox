@@ -4,11 +4,14 @@ _Back to the [guide](README.md)_
 
 `Options` is at the end of the toolbar.
 
-![The Options menu: fifteen themes in two columns, Shown, On hover, Off for the info texts, and Take the tour](img/options-menu.png)
+![The Options menu: fifteen themes in two columns, Shown, On hover, Off for the info texts, Panels and Take the tour](img/options-menu.png)
 
 ## Theme
 
 There's 15 themes to pick from. This guide uses `Sage`.
+
+The editor starts with `1998`.
+
 | | | |
 | --- | --- | --- |
 | ![The editor in the 1998 theme: navy with red title bars](img/theme-1998.png) | ![The editor in the Dark theme](img/theme-dark.png) | ![The editor in the Blueprint theme: white lines on blue](img/theme-blueprint.png) |
@@ -33,6 +36,10 @@ Small texts explain how the game or the editor works. They start `On hover`.
 - On hover, a dotted line under a name means it has info text.
 - Checks, warnings, values and names always stay.
 - The editor remembers your choice.
+
+## Panels
+
+`Panels` moves and hides the panels. See _[The editor](The-editor.md#arranging-the-panels)_.
 
 ## Take the tour
 

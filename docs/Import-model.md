@@ -27,9 +27,13 @@ The game draws it and Glover can stand on it
 
 `Your imported models` at the top of the Models tab lists them. `Place` adds all the pieces again, `Remove` deletes the model
 
+After `Remove`, levels that use the model show a placeholder. They can't be built until you remove those pieces
+
 Each piece is also in the model list, for use as Background or Platform
 
 Imported models are kept in the editor's user folder (`custom/`) and you can use them in every level
+
+The user folder is `%LOCALAPPDATA%\Glovebox` on Windows and `~/.local/share/glovebox` on Linux
 
 ## Limits
 
@@ -37,7 +41,7 @@ Imported models are kept in the editor's user folder (`custom/`) and you can use
 - No vertex colors, animation, skinning, or more than one texture per material
 - The editor can't read a few rare kinds of JPEG: arithmetic-coded, CMYK and 12-bit ones. Save the texture as PNG instead
 - Enemies, doors, water and scripts from another game don't carry over. Rebuild them with Glover's objects and puzzles
-- A big map can need more memory than the game has, even with the Expansion Pak. The budget under `Checks` shows it
+- A big map can need more memory than the game has, even with the Expansion Pak. `Checks` shows how much memory the level has left
 - On a real console, don't use an imported model as a Platform. Use Scenery or Background
 
 Note: the patch you export holds the models, so only share levels with models you have the right to share

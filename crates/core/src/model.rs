@@ -207,7 +207,7 @@ impl Model {
         self.nodes.iter().filter(|n| n.mesh.is_some()).count()
     }
 
-    /// The editor's draw-load count of the model: the nodes with a mesh, and at least 1.
+    /// The number that the model adds to the editor's draw load: the nodes with a mesh, and at least 1.
     pub fn draw_nodes(&self) -> usize {
         self.mesh_nodes().max(1)
     }

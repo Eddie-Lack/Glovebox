@@ -3,7 +3,7 @@
 //! A `Theme` holds the colors, the shapes of the controls, the fonts and the small details of one look. `style.rs`
 //! draws everything from the active theme. No other file holds a color of the window.
 //!
-//! Each theme follows one model from the world. "1998" is the patcher page (`web/patcher.html`): a game web site
+//! Each theme follows the look of one real thing. "1998" is the patcher page (`web/patcher.html`): a game web site
 //! of that year. "Cartridge" is a gray console and its controller. "Blueprint" is a drafting sheet. "Paper" is a
 //! printed manual in two inks. "CRT" is a debug monitor with green phosphor. "Light", "Dark" and "High contrast" are
 //! the plain looks of a desktop tool: they follow the system's own windows and have no decoration.
@@ -1304,7 +1304,7 @@ pub static LAVENDER: Theme = Theme {
 
 // ---------------------------------------------------------------------------------------------------------------
 // Coral: warm pinks. A blush ground, near-white cards, a coral red for the main action, the selection and the
-// focus, teal for the box of a box select. Bad is a deep crimson, apart from the coral.
+// focus, teal for the box of a box select. Bad is a deep crimson, distinct from the coral.
 
 pub static CORAL: Theme = Theme {
     id: "coral",

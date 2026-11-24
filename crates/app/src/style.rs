@@ -43,7 +43,7 @@ pub fn hex(s: &str) -> Color32 {
     Color32::from_rgb((v >> 16) as u8, (v >> 8) as u8, v as u8)
 }
 
-/// A font file of the computer, when it is there and of a sane size.
+/// A font file of the computer, when it is there and smaller than 8 MiB.
 fn system_font(names: &[&str]) -> Option<Vec<u8>> {
     let mut dirs: Vec<std::path::PathBuf> = Vec::new();
     if let Some(win) = std::env::var_os("WINDIR") {

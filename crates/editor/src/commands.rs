@@ -52,7 +52,7 @@ pub const ORBIT_MODS: &[&str] = &["PlatOrbitPause", "PlatOrbitFlip0x77", "PlatOr
 pub const FREES_FACES: &[&str] = &["PlatNoClip", "PlatSpike"];
 /// The phase of the children that no phase names: features.
 pub const FEATURES: usize = 4;
-/// The set-up commands that change the collision the platform builds when it is placed.
+/// The set-up commands that change the collision that the platform builds when it is placed.
 pub const SETUP: &[&str] = &["SetActorRotation", "SetActorScale", "PlatScale"];
 /// Pairs that write the same field: the game refuses the second one and reads its data as tokens.
 pub const EXCLUSIVE: &[&[&str]] = &[
@@ -472,7 +472,7 @@ fn glued_end(tags: &[&str], i: usize) -> usize {
     j
 }
 
-/// The index a new child with this tag goes at.
+/// The index where a new child with this tag goes.
 pub fn place_for(doc: &Doc, parent: NodeId, tag: &str) -> usize {
     let tags = tags_of(doc, parent);
     if has(PLATFORMS, doc.tag(parent)) {

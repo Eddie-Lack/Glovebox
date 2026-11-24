@@ -18,6 +18,8 @@ Dropping a `.glb` on the window opens the same dialog.
 
 The dialog says how many triangles it has, how many pieces it becomes and how big it is next to the level.
 
+A model over 1,500 triangles is cut into pieces.
+
 The pieces appear as Scenery in the middle of the view. One `Undo` takes them all back.
 
 ## Use it again
@@ -27,7 +29,7 @@ The pieces appear as Scenery in the middle of the view. One `Undo` takes them al
 - `Place` adds all the pieces again
 - `Remove` deletes the model
 
-Your models are in every level.
+You can use your models in every level.
 
 ### Don't make a platform from your own model!
 

@@ -265,7 +265,7 @@ impl Editor {
     // -----------------------------------------------------------------------------------------------------------
     // Adding things
 
-    /// The nodes a ray meets the ground on. `solid_only`: only what the game gives collision (LandActor and
+    /// The nodes on which a ray meets the ground. `solid_only`: only what the game gives collision (LandActor and
     /// platforms), without `skip`.
     pub fn ground_objects(&self, skip: Option<EntId>, solid_only: bool) -> Vec<scene::NodeId> {
         let mut out = Vec::new();
@@ -290,7 +290,7 @@ impl Editor {
         hits.first().map(|h| h.point).unwrap_or(self.orbit.target)
     }
 
-    /// The heading the editor's camera looks along: new zones expect the player to walk away from the viewer.
+    /// The heading the editor's camera looks along: new zones are made for a player who walks away from the viewer.
     pub fn view_facing(&self) -> f64 {
         let d = self.camera.forward();
         d[0].atan2(d[2])

@@ -2,31 +2,33 @@
 
 _Back to the [README](../README.md)_
 
-How the editor is put together, what the game does with a level, and the rules a built ROM has to keep.
+How the editor is put together, what the game does with a level ("Facts from the decomp"), and the rules a built ROM
+has to keep ("Real hardware").
 
-The editor is a desktop level editor for Glover (N64, NGVE). It is one native program written in Rust: an egui window
+The editor is a desktop level editor for Glover (N64, USA, game ID NGVE). It is one native program written in Rust: an egui window
 with a wgpu view (`crates/app`) over the editor's state (`crates/editor`) and the back end (`crates/core`), all in one
-process. It installs and unpacks nothing, and the only other program it starts is the player's emulator. It builds on three projects:
+process. It installs and unpacks nothing, and the only other program it starts is the player's emulator, for Test level
+(see "Test level"). It builds on three projects:
 
 | Source | Used for |
 |---|---|
-| **libgarib** (naclomi) | The formats and the ROM tools. Its descriptions of the level file and of the retail ROM's layout are in `formats/`. Its algorithms are ported to Rust in `crates/core`: `.lev` ↔ XML (the round trip gives the same bytes on all 48 levels), the XML's rules, object banks and their models, texture banks, FLA2, repacking and relocating the ROM's data, and the `copyskip` and `quickboot` patches. |
-| **noclip.website** | The level list. Its scene table supplies level names and the object and texture banks of each level (`crates/core/data/scenes.json`), and its enemy and powerup model tables are `noclip_tables.json`. The editor does not use its placement logic (actor rotation order, X/Z-swapped scale): see "Selecting, rotating, scaling, adding". The editor names a bank by the file name noclip's ROM splitter gives it (`HUB_PART1.obj.fla`). |
-| **gloveworld** decompilation (`../gloveworld`) | What each opcode means. The decomp names each opcode (`enum Token`) and points to the C that parses it. It gives real names for 31 opcodes that libgarib only has placeholders for (e.g. `PlatMvspn0x58` = `TOKEN_SPINTOMOVE`). It also supplies enum names for enemy types, puzzle conditions/actions and enemy instructions. The editor's checks also come from it: they run the game's own level-parser warnings and `Crash()` limits on your edits. |
+| **libgarib** (naclomi) | The formats and the ROM tools. Its descriptions of the level file and of the retail ROM's layout are in `formats/`. Its algorithms are ported to Rust in `crates/core`: `.lev` ↔ XML (the round trip gives the same bytes on all 48 levels), the XML's rules, object banks and their models, texture banks, FLA2, repacking and relocating the ROM's data, and the `copyskip` and `quickboot` patches. `copyskip` skips the copyright screen. `quickboot` boots straight into one level. |
+| **noclip.website** | The level list. Its scene table supplies level names and the object and texture banks of each level (`crates/core/data/scenes.json`), and its enemy and powerup model tables are `noclip_tables.json`. The editor does not use its placement logic: noclip rotates actors in the order `ZYX` and swaps the X and Z scales (see "Selecting, rotating, scaling, adding"). The editor names a bank by the file name that noclip's ROM splitter gives it (`HUB_PART1.obj.fla`). The splitter is noclip's tool that writes the ROM's banks to files. The editor does not run it. |
+| **gloveworld** decompilation (`../gloveworld`) | What each opcode means. The decomp names each opcode (`enum Token`) and points to the C that parses it. It gives real names for 31 opcodes that libgarib only has placeholders for (e.g. `PlatMvspn0x58` = `TOKEN_SPINTOMOVE`). It also supplies enum names for enemy types, puzzle conditions/actions and enemy instructions. The editor's checks also come from it: they run the game's own level-parser warnings on your edits, and the limits past which the game calls `Crash()`, its error report. `tools/build_xref.py`, `tools/game_banks.py`, `tools/measure_heap.py` and `tools/build_mod.py` read a gloveworld checkout. `build_mod.py` looks in `../gloveworld` by default. The program does not need one. |
 
 ## Where things are
 
 | Path | What |
 |---|---|
-| `crates/core` | `glovebox-core`, the back end: the formats, the game data read from the player's ROM, ROM and patch builds, Import model, the kit. No window. |
+| `crates/core` | `glovebox-core`, the back end: the formats, the game data read from the player's ROM, ROM and patch builds, Import model (the conversion of the player's own models), the kit (props made by code). No window. |
 | `crates/editor` | `glovebox-editor`: the editor's state and every edit, the entities, the scene graph, the checks. No window, no drawing. |
-| `crates/app` | `glovebox`, the program: the window, the panels, the renderer, the user folder, and the click tests (`tests/ui.rs`). |
+| `crates/app` | `glovebox`, the program: the window, the panels, the renderer, the user folder, and the click tests (`tests/ui.rs`). The user folder is where the app keeps its copy of the ROM, the drafts, the settings and the other files it writes ("The Windows app"). |
 | `crates/core/examples/gbtool.rs` | The back end on the command line: a level's XML, a ROM or patch build, the hardware check. |
 | `crates/core/data/` | The tables compiled into the program (below). None holds bytes copied from the ROM. |
-| `formats/` | libgarib's description of the level file (`glover.lev.ksy`, with one change of ours) and its map of the retail ROM. The program does not read them: `tools/gen_formats.py` and `tools/gen_rom_map.py` turn them into JSON tables. |
-| `mod/` | The Expansion Pak game mod: `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard), `slots.c` (extra levels), which run from 0x807E0000; `loader.c` (over `ScreenShot`); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
-| `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
-| `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. After editing the page's script, run `tools/build_patcher.py` to pin the new hash. |
+| `formats/` | libgarib's description of the level file (`glover.lev.ksy`, with one change of ours: `SetActorRotation` and `SetActorScale` may also sit in a platform, enemy, powerup or water) and its map of the retail ROM. The program does not read them: `tools/gen_formats.py` and `tools/gen_rom_map.py` turn them into JSON tables. |
+| `mod/` | The Expansion Pak game mod ("Expansion Pak game mod", under "Selecting, rotating, scaling, adding"): `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard, which skips draws that would pass the frame's 256 object matrices), `slots.c` (extra levels), which run from 0x807E0000; `loader.c` (the loader, written over `ScreenShot`, a debug function the game never calls); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
+| `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against gloveworld's `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
+| `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. It applies a BPS patch to the player's own ROM ("Sharing levels: patches and the patcher"). After editing the page's script, run `tools/build_patcher.py`. It writes the script's new hash into the page's Content-Security-Policy. |
 | `tools/licenses.py` | Collects the licenses of the Rust crates and fonts in the program, for the release archive. |
 | `tools/wiki.py` | Copies the guide between `docs/guide` and a checkout of the GitHub wiki, in either direction. |
 | `app/README.txt` | The guide for players that goes into the release archive. |
@@ -39,66 +41,72 @@ nothing else. The program never runs them.
 | Table | What | Written by |
 |---|---|---|
 | `level_format.json` | The level file's commands, types, fields and enums, and what may sit inside what | `tools/gen_formats.py`, from `formats/glover.lev.ksy` (`--check` fails when the table is out of date) |
-| `rom_map.json` | Where the retail ROM keeps each bank, level file and pointer | `tools/gen_rom_map.py`, from `formats/map.0x8e6e01ff.0xccb4f948.yaml` |
+| `rom_map.json` | Where the retail ROM keeps each bank, level file and pointer | `tools/gen_rom_map.py`, from `formats/map.0x8e6e01ff.0xccb4f948.yaml` (the two numbers are the retail ROM's header CRCs) |
 | `decomp.json` | The level format joined with the decomp: token names, parser locations, enums, diagnostics | `tools/build_xref.py --gloveworld DIR`, from gloveworld's sources and `formats/glover.lev.ksy` |
 | `bank_numbers.json` | The game's number for each bank | `tools/game_banks.py --gloveworld DIR --numbers`, from `LoadObjectBank` and `LoadTextureBank` in gloveworld's `src/banks.c` |
-| `heap.json` | Free heap per level | `tools/measure_heap.py --rom ROM --gloveworld DIR`, measured in the emulator |
+| `heap.json` | Free heap per level | `tools/measure_heap.py --rom ROM --gloveworld DIR`, measured in gloveworld's emulator harness (`tools/emu`) |
 | `scenes.json` | The 48 levels: name, level file and banks, in noclip's scene table and in the game's `LoadLevel` | No tool. See below |
 | `noclip_tables.json` | Which model each enemy and powerup type uses | No tool. See below |
 
-- `build_xref.py` and `game_banks.py --numbers` read gloveworld's sources only. They give the committed files byte
-  for byte from gloveworld at the commit `decomp.json` records (`source.gloveworld`).
+- `build_xref.py` and `game_banks.py --numbers` read gloveworld's sources only. Run on gloveworld at the commit that
+  `decomp.json` records (`source.gloveworld`), they write the same bytes as the committed files.
 - `scenes.json` and `noclip_tables.json` were made once from noclip.website's scene table and enemy tables
-  (`src/Glover/scenes.ts`, `enemy.ts`) joined with the banks the game's `LoadLevel` loads
-  (`tools/game_banks.py` still prints those, and `--compare crates/core/data/scenes.json` compares them). They
-  describe the retail game, which does not change. They are committed data without a generator.
+  (`src/Glover/scenes.ts` and `enemy.ts` in noclip.website's source) joined with the banks the game's `LoadLevel`
+  loads. `tools/game_banks.py` prints those banks, and with `--compare crates/core/data/scenes.json` it compares them
+  with the table. It does not write the table. The two tables describe the retail game, which does not change. They
+  are committed data without a generator.
 
 `crates/core` by module:
 
 | Module | What |
 |---|---|
 | `xml` | The level XML as a tree (`Doc`, `NodeId`), a hardened parser (no DTD, no entities) and the writer. |
-| `pyfmt` | Numbers as the level XML writes them: floats as Python's `repr`, integers above 10000 as hex. |
+| `pyfmt` | Numbers as the level XML writes them: floats as Python's `repr` writes them, integers above 10000 as hex. libgarib, a Python library, defined the XML ("Reference tests"). |
 | `level` | `.lev` ↔ XML (`disassemble`, `assemble`) and the XML's rules (`validate`). |
 | `fla2` | FLA2, the compression of the game's banks. |
-| `objbank`, `model` | Object banks: a hardened parser, the linker that writes a bank, `split` into single-object banks, `pack`, and the model the editor draws for an object. |
+| `objbank`, `model` | Object banks: a hardened parser, the linker that writes a bank, `split` into single-object banks, `pack` (adds the objects of single-object banks to a bank), and the model the editor draws for an object. |
 | `texbank` | Texture banks: records, decoding to RGBA, writing a bank. |
 | `n64`, `rom` | The byte order of a dump, the boot code and the header CRCs; the retail ROM as regions, and a rebuilt ROM with some replaced, the `copyskip` and `quickboot` patches. |
 | `gamedata` | The game's data read from the ROM and kept in memory: levels, banks, the catalog of every model, what each level has loaded. It writes no file. |
-| `imports` | Which banks an edited level needs for the models it imports (`plan_imports`, `plan_runtime`), and the enlarged banks a build writes. |
+| `imports` | Which banks an edited level needs for the models it imports, and the enlarged banks a build writes. `plan_imports` plans a build that copies the models into the level's banks. `plan_runtime` plans a build whose game mod loads their banks from the player's ROM when the level starts. |
 | `build` | ROM, patch and level file builds (`assemble`, `build_rom`, `build_levels`). |
-| `modpatch` | Adds the mod to a built ROM, with the extra banks each level loads and the extra levels. Also writes the level table and the ball controls. Checks each word before it replaces it. |
-| `hwcheck` | Checks a built ROM against the rules of real hardware. `modpatch::apply_mod` runs it on every ROM that gets the mod. `self_test` breaks a copy in each way and checks the breaks are found. |
+| `modpatch` | Adds the mod to a built ROM, with the extra banks each level loads and the extra levels. Also writes the level table and the ball controls (Easy's controls on every difficulty, "Notes and limits"). Checks each word before it replaces it. |
+| `hwcheck` | Checks a built ROM against the rules of real hardware ("Real hardware"). `modpatch::apply_mod` runs it on every ROM that gets the mod. `self_test` breaks a copy of a ROM in each way that the rules name, and checks that each break is found. |
 | `bps` | The BPS encoder and decoder. |
-| `custom` | Import model: `gltf` (the reader), `image` and `jpeg` (PNG and JPEG to pixels, the resize), `pack` (triangles to an object bank), and the stored sets. |
+| `custom` | Import model: `gltf` (the reader), `image` and `jpeg` (PNG and JPEG to pixels, the resize), `pack` (triangles to an object bank), and the stored sets. A set is one imported file's pieces and textures in the user folder ("Imported models"). |
 | `kit` | The kit: models made by code, their textures and previews. |
 | `backend` | `Backend`, what the window asks the back end for. `GameBackend` answers from the ROM and the user folder. |
+| `pack` | Level packs for g64coopdx ("Level packs for g64coopdx"). |
+| `pyrandom` | Python's `random.Random` seeded with a string: the Mersenne Twister with CPython's seeding. Reskin picks textures with it. |
 | `tables` | The compiled-in tables and the mod. |
 
 `crates/editor` by module:
 
 | Module | What |
 |---|---|
-| `editor` | The state and every edit: loading (`load`), selection (`select`), the transform engine (`transform`), undo and adding and removing (`edit`), commands, scripts, puzzles and camera zones (`cmds`), the checks, draw load, imports and the budget (`checks`), the path tool (`path`), the entities' scene nodes (`nodes`). A queue of events tells the window what changed. |
-| `entities` | Entities from the level XML (`build`), bindings, attached points, trigger volumes, camera zones. |
+| `editor` | The state and every edit: loading (`load`), selection (`select`), the transform engine (`transform`), undo and adding and removing (`edit`), commands, scripts, puzzles and camera zones (`cmds`), the checks, the draw load (how hard the busiest spot is to draw), the imports and their memory budget (`checks`), the path tool (`path`), the entities' scene nodes (`nodes`). A queue of events tells the window what changed. |
+| `entities` | Entities from the level XML (`build`), bindings, attached points, trigger volumes, camera zones. A binding says how a point of an entity is read from the XML and written back. Attached points are the points that move with their object, such as an enemy script's points. |
 | `exits` | Exit triggers: the radius the game gives a platform (`radius`) and who must come within it (`rule`). |
 | `scene`, `camera`, `gizmo` | The 3D view's data: a small scene graph with picking, orbit and fly cameras, the gizmo. |
 | `commands`, `puzzles`, `scripts`, `presets` | The level format's order and rules, puzzles, enemy scripts, platform presets ("Commands, puzzles, enemy scripts, extra levels", below). |
-| `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, three.js math (Euler `'YZX'`). |
+| `sanitize`, `drafts`, `xmlutil`, `vec` | Import checks, drafts as files, XML helpers, vector math with three.js's conventions (Euler order `'YZX'`). |
 | `fixture` | A back end without a ROM: two made-up levels and a few made-up models. The tests and `--fixture` use it. |
 
 `crates/app` by module:
 
 | Module | What |
 |---|---|
-| `shell`, `main.rs` | The options, the user folder with its marker, lock and log, the ROM copy, the choice of graphics adapter, the self-test. |
-| `app`, `setup` | The application: the first-run screen or the editor's window, opening levels, builds, Test level, the keyboard. |
+| `shell`, `main.rs` | The options, the user folder with its marker file, lock and log ("The Windows app"), the ROM copy, the choice of graphics adapter, the self-test. |
+| `app`, `setup` | The application: the first-run screen or the editor's window, opening levels, builds, Test level (a build with quickboot, opened in the emulator), the keyboard. |
 | `toolbar`, `outliner`, `inspector`, `checks`, `palette`, `path_panel`, `dialogs` | The panels and the dialogs. File dialogs are the system's (`rfd`), behind a trait that the tests replace. |
 | `layout` | Which panels show and where: the layout, its settings, the columns around the view, the Panels menu. |
 | `viewport`, `render` | The 3D view: the mouse and keys, the HUD, and the wgpu renderer (`render/shaders.wgsl`). |
 | `jobs` | Slow work (opening a level, builds, imports, model pictures) on worker threads. |
-| `settings`, `style`, `theme`, `icon` | `settings.ini`, the drawing of the look (the widgets' shapes, title bars, the logo), the themes as data, the app's icon. |
+| `settings`, `style`, `theme`, `icon` | `settings.ini`, the drawing of the active theme (the widgets' shapes, title bars, the logo), the themes as data, the app's icon. |
+| `tour` | The welcome on the first start, and the tour of the window. |
 | `numfield` | Number fields that change by dragging. |
+
+## Models and drawing
 
 - A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
   `Backend::texture` give the model and the pixels.
@@ -111,12 +119,18 @@ nothing else. The program never runs them.
   world size, as three.js sprites do.
 - Picking runs on the CPU: a ray against each mesh's triangles, sprites as camera-facing squares, lines
   within 5 pixels.
-- The player arranges the panels (`layout.rs`). A color is picked in the inspector itself. There is no color dialog.
+- The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
+  (`render/icons.rs`). They do not depend on a system font.
+
+## Panels
+
+- The player arranges the panels (`layout.rs`).
   - There are five panels (`PanelId`): Level, Inspector, Checks, Add to level and Path. The view is in the middle and
     takes the room they leave. With every panel hidden it fills the window.
   - A `Layout` holds, for each panel, its side (left or right; the checks can also be at the bottom, under the
     view) and whether it shows, and for each side how its panels share it: `Tabbed` or `Stacked`. The default is
-    Level on the left, and on the right the inspector over the checks, tabbed.
+    Level on the left, and on the right the inspector over the checks. Add to level and Path are tabs beside the
+    inspector. Both sides are `Tabbed`.
   - Add to level and Path show while their tool is on. The layout keeps their side only. Hiding one turns its
     tool off, and `+ Add`, `A`, `Path` and `P` show it again.
   - Each side is one column (`Window::columns`), an egui side panel. `Tabbed` draws a row of tabs and the panel
@@ -124,19 +138,21 @@ nothing else. The program never runs them.
     each with its title bar, as egui top panels with a divider to drag. The checks are never a tab: they are the
     lowest part of their column, with a divider over them, or a bottom panel under the view.
   - `Window::front` lists the tabbed panels, the one chosen last first. A column shows the first of its panels in
-    that list. Opening Add to level or Path, a click on a tab and a move bring a panel to the front.
+    that list. Opening Add to level or Path, a click on a tab, and moving a panel to another side bring it to the
+    front.
   - On a tabbed side of a window at least 1560 points wide (`layout::WIDE`), Add to level and Path get a column of
     their own beside the side's other panels. They stay tabs when that would leave the view less than 480 points
     (`layout::MIN_VIEW`) at the widths the columns have. No other rule limits the view: on a small window the
-    columns keep their least widths.
+    columns keep their minimum widths (300 points for the inspector, Add to level and Path, 200 for Level).
   - The setting `panels` holds the layout as one value, for example
     `level:left:on,inspector:right:on,checks:right:on,add:right,path:right,left:tabbed,right:tabbed`.
     `Layout::from_text` wants all seven parts, each once, with known words. Anything else gives the default layout.
   - The setting `panel_sizes` holds the sizes the player dragged, as `name:points` parts: a column's width under
-    the name of the panel in it that needs the most room (`inspector`, `add`, `path`, `level`, or `checks-column`),
-    the height of the checks (`checks`, `checks-bottom`) and of a stacked panel (`stack-level` and so on). A width
-    stays with its panel when the panel changes sides. A size is written when it changed while a mouse button was
-    down. At the start a kept size is the panel's default size. A part that can't be read is left out.
+    the name of the panel in it that needs the most room (`inspector`, `add`, `path` or `level`, and `checks-column`
+    for a column with only the checks), the height of the checks (`checks`, `checks-bottom`) and of a stacked panel
+    (`stack-` and the panel's name, as `stack-level`). A width stays with its panel when the panel changes sides. A
+    size is written when it changed while a mouse button was down. At the start, a part with a kept size starts at
+    that size instead of its default. A part that can't be read is left out.
   - `Reset layout` removes both settings' effect: the default layout, and new ids for the egui panels
     (`layout_gen` is part of each id), which drops the sizes egui kept.
   - The controls: `Options` > `Panels` (`layout::menu`, a submenu that stays open while its entries are clicked)
@@ -145,48 +161,57 @@ nothing else. The program never runs them.
     `Move to bottom` for the checks, and `Hide`. Panels are not dragged to dock them.
   - `Window::panels` has the rectangles of the last frame: the columns of Level and of the inspector, the checks,
     the column the tool panels have for themselves, and each panel's own part of the window (`slots`).
-  - With the inspector hidden, a selection writes what was selected to the status line (`Window::pump`).
+  - With the inspector hidden, a selection writes what was selected to the status line at the bottom of the window
+    (`Window::pump`).
   - `egui_dock` is not used. Its newest release (0.21.1) needs egui 0.36, and the app uses 0.37.
-- A panel's size comes from its default (`LEVEL_WIDTH` 270, `INSPECTOR_WIDTH` 380, `ADD_WIDTH` 360 in `layout.rs`)
-  and from drags on its edge. A column has the default and the limits of the panel in it that needs the most room.
-  Its contents never change it:
-  - egui grows a panel to fit its contents and remembers the larger size. A card measures the buttons of its title
-    bar in its first frame and is too wide in that frame. Without a fixed size, each new selection widens the
-    inspector, up to its largest width, and it goes back there after every drag.
+- A panel's size comes from its default and from drags on its edge. The default widths are in `layout.rs`:
+  `LEVEL_WIDTH` 270, `INSPECTOR_WIDTH` 380, and `ADD_WIDTH` 360 for Add to level and Path. The checks start at 36%
+  of their column's height (180 to 320 points), and at 200 points under the view. A column has the default and the
+  limits of the panel in it that needs the most room. Its contents never change it:
   - `style::fixed` shows a panel's contents in a child `Ui` of the panel's size and clips it. Every panel uses it.
+  - egui grows a panel to fit its contents and remembers the larger size. A card is a box with a title bar
+    (`style::card`). A card measures the buttons of its title bar in its first frame and is too wide in that frame.
+    Without a fixed size, each new selection widens the inspector, up to its largest width, and it goes back there
+    after every drag.
   - Contents must fit the default width. Each scroll area reports how much wider its content was (`style::fits`),
-    and the click test `panels_resize` checks that this is zero for every kind of object and every tab.
+    and the click test `panels_resize` checks that this is zero for every kind of object, all objects selected at
+    once, a puzzle, the level's settings, every tab of Add to level and the Path panel.
   - A widget that is too wide also widens every row after it in the same `Ui`: egui moves the layout's right edge.
   - The 3D view does not take the pointer in the strips along its left and right sides (egui's
     `resize_grab_radius_side`), nor in the strip along its bottom when the checks are under it. The view is added after the panels, and it would otherwise take the half of each resize handle that
     lies over it.
-- The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
-  (`render/icons.rs`). They do not depend on a system font.
+- A color is picked in the inspector. There is no color dialog.
+
+## Themes
+
 - The look is a theme. The themes are data in `theme.rs`; `style.rs` draws everything from the active one.
   - A `Theme` holds the colors of every surface and text, the tones of the buttons (`Tone`: fill, text, line), and
     one variant for each part that has a shape: `Shape` (buttons), `Field` (text boxes), `Bar` (title bars), `Logo`,
     `Divider`, `Backdrop` (behind the setup screen), `Border` (the frame of the setup box, of a dialog and of the
-    note in the view) and `Mark` (the signs of the Checks panel). It also names the fonts, the chips over the 3D
-    view, the colors of the selection, and the 3D view's background for a level without fog.
-  - `THEMES` lists them. The first is the default. The three plain themes come next, then the seven palette
-    themes (`PALETTES` names them again), then the styled ones.
+    box in the middle of the 3D view that shows loading or an error) and `Mark` (the signs of the Checks panel). It
+    also names the fonts, the chips over the 3D view, the colors of the selection and of the box select, and the 3D
+    view's background for a level without fog. The chips are small labels over the view, such as the level's name
+    and the autosave chip. The box select is the box that `B` drags to select.
+  - `THEMES` lists them. The first is the default, 1998. The three plain themes come next, then the seven palette
+    themes, then the four styled ones (Cartridge, Blueprint, Paper and CRT). `PALETTES` lists the palette themes
+    again: the Theme list shows them in a column of their own.
   - The plain themes (Light, Dark, High contrast) use the system's sans face (Segoe UI on Windows, then Tahoma,
     Arial, Liberation Sans, DejaVu Sans). They have the plain variants `Logo::Plain`, `Divider::Line` and
-    `Backdrop::Plain`, and title bars that are a flat strip with a line under it (`Bar::Solid` with a light line
-    in the color of the fill).
+    `Backdrop::Plain`, and title bars that are a flat strip with a line under it. They use `Bar::Solid`, which
+    draws a light line over the bar and a dark line under it, and give the light line the color of the fill.
   - The palette themes (Sage, Sand, Ocean, Lavender, Coral, Slate, Plum) look like a phone app. Each has five
     colors: a ground, a card, a main color, a second color and the text. Every other color is a mix of those
     five: the toolbar is the ground with a little of the main color, a hairline is the ground with a little of
     the text. They share the fonts and the plain variants of the plain themes. Their own shapes: buttons and
-    fields with a corner radius of 6 (`radius`), cards, check lines, chips, pop-ups and dialogs with one of 8
-    (`round`, 0 in every other theme), and `Bar::Soft` title bars (a tinted strip for a panel or a card, a
-    hairline under a small heading). A switch that is on is a tint of the main color with a line and bold letters
-    in it. The main action and the chosen row are filled with the main color. A checked box is too, with a check mark in
+    fields with a corner radius of 6 (`radius`), cards, check lines (the lines of the Checks panel), chips, pop-ups
+    and dialogs with one of 8 (`round`, 0 in every other theme), and `Bar::Soft` title bars (a tinted strip for a
+    panel or a card, a hairline under a small heading). A switch is a toolbar button that stays down while its tool
+    is on, such as `Fly`. A switch that is on is a tint of the main color with a line and bold letters in it. The main action and the chosen row are filled with the main color. A checked box is too, with a check mark in
     the color of the main action's letters. Good, warning and bad are a green, an amber and a red that suit the
     palette. Coral's bad is a crimson, which differs from its coral main color. The 3D view of a level without fog is a dark tone
     of the palette.
-  - `Theme::disabled` is how much of a control that cannot be used is left (egui's `disabled_alpha`). The styled
-    themes have 0.55. The plain ones have 0.6 or 0.62 and the palette ones 0.6 to 0.71: their disabled text keeps a
+  - `Theme::disabled` is the opacity of a control that cannot be used (egui's `disabled_alpha`): 1 is fully opaque.
+    1998 and the styled themes have 0.55. The plain ones have 0.6 or 0.62 and the palette ones 0.6 to 0.71: their disabled text keeps a
     contrast of 4.5.
 
     | id | name | follows | main choices |
@@ -202,7 +227,7 @@ nothing else. The program never runs them.
     | `coral` | Coral | the same app in warm pinks | a blush ground (`fbf0ec`), near-white cards, a coral red (`c54e3e`), a teal box select, crimson for bad |
     | `slate` | Slate | a dark phone app in blue-grays | a slate ground (`222932`), lighter slate cards, a soft teal (`6cc4b6`) with dark letters, an amber box select |
     | `plum` | Plum | a dark phone app in warm purples | a plum ground (`2a2030`), lighter plum cards, a rose (`e79bb8`) with dark letters, a gold box select |
-    | `cartridge` | Cartridge | a gray console of the late 1990s and its controller | warm gray panels, charcoal label plates with white capitals, keys with a lip, the four face-button colors for states only |
+    | `cartridge` | Cartridge | a gray console of the late 1990s and its controller | warm gray panels, charcoal label plates with white capitals, keys with a lip, the four face-button colors for states only (green for on and good, red for the main action and bad, yellow for warnings, blue for the selection) |
     | `blueprint` | Blueprint | a drafting sheet | blue paper with a grid, hairline controls without fills, titles followed by dimension lines, a ruler for a divider, drawn signs |
     | `paper` | Paper | a printed manual in two inks | off-white paper, black ink and vermilion, a serif face, rules instead of boxes, fields as tinted blanks with a line under them and typed entries |
     | `crt` | CRT | a debug monitor | black with green phosphor in one fixed-width face, amber for the main action, inverse video for what is on, chosen or under the pointer, double-line frames, two-letter codes for the checks |
@@ -215,25 +240,31 @@ nothing else. The program never runs them.
     and the styled themes, then the palette themes. A click calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
     applies the theme after the frame. `App::new` reads the setting before the first frame, for the setup screen
     too. An unknown or missing id is `1998`.
-  - egui's buttons, text boxes and separators get their shapes from widget themes (`Look`, registered with
-    `replace_widget_theme`; this needs egui's `experimental` feature). A toolbar switch that is on has the class
-    `CLASS_ON`, the main action (Build ROM) `CLASS_PRIMARY`. An entry of a list or a menu is flat: the chosen one
-    and the one under the pointer take the bands `sel` and `hover`.
-  - egui marks the entries of a menu with a clear `weak_bg_fill`, and `Look` reads that mark. `apply` therefore
-    never sets a clear `weak_bg_fill`, even in a theme whose buttons have no fill.
+  - egui's buttons, text boxes and separators get their shapes from egui's widget themes, which are not the app's
+    themes. The app's widget theme is `Look`: it draws those widgets in the shapes of the active theme. It is
+    registered with `replace_widget_theme`, which needs egui's `experimental` feature. A toolbar switch that is on
+    has the class `CLASS_ON`, the main action (Build ROM) `CLASS_PRIMARY`. An entry of a list or a menu is flat:
+    the chosen one and the one under the pointer take the theme's tones `sel` and `hover`.
+  - egui marks the entries of a menu with a transparent `weak_bg_fill`, and `Look` reads that mark. `apply`
+    therefore never sets a transparent `weak_bg_fill`, even in a theme whose buttons have no fill.
   - An egui frame has one stroke. A bevel is a light stroke and a dark hard shadow of one pixel. A key's lip is a
     hard shadow under it. The line under a Paper field is a hard shadow that shows below its tint only.
   - Title bars (`title_bar`, `h4`, the head of a `card`) show their text in capitals. The accessible name keeps the
-    text as written. A card whose title is a command's tag (`FogConfiguration`) keeps its letters.
-  - Checkboxes are drawn by `style::checkbox`. A layer's box takes the layer's color.
+    text as written. A card whose title is a command's tag (`FogConfiguration`) is not put in capitals: in capitals
+    its words would run together.
+  - Checkboxes are drawn by `style::checkbox`. The Level panel has a layer for each kind of object the level has,
+    and one for the exit triggers. Each layer has a checkbox that shows or hides it. A layer's box takes the
+    layer's color.
   - Fonts: each theme names font files of the computer for four families (text, `bold`, `label` for title bars,
     `logo`). `style.rs` looks for them in the system's font folders. A family without a file takes the family
-    before it, and every family ends with the fonts compiled in. CRT uses the code font compiled in. No font file
-    is in the repository.
-  - The editor's state gives a level without fog the background `theme::VIEW_BG`. The view replaces that color
-    with the theme's `view_bg`. 1998 keeps `VIEW_BG`; the render comparison tests use it.
-  - To add a theme: write a `Theme` in `theme.rs` and add it to `THEMES`. A new variant of a shape needs its
-    drawing in `style.rs`. A theme must keep these rules:
+    before it, and every family ends with the fonts compiled in: egui's own, with its code font Hack. CRT uses the
+    code font compiled in. No font file is in the repository.
+  - The editor's state (`crates/editor`) gives a level without fog a fixed background color. `theme::VIEW_BG`
+    holds the same color. The view replaces that color with the theme's `view_bg`. 1998 keeps `VIEW_BG`; the render
+    comparison tests (`crates/app/tests/render.rs`, "Reference tests") use it.
+  - To add a theme: write a `Theme` in `theme.rs` and add it to `THEMES`. Add a palette theme to `PALETTES` too:
+    the Theme list puts those in its second column. A new variant of a shape needs its drawing in `style.rs`. A
+    theme must keep these rules:
     - No file outside `theme.rs` holds a color of the window. `style.rs` only picks black or white for a check mark on a
       colored box, and shades a mark with a see-through white or black.
     - The panels, the cards, the toolbar and the pop-ups are all dark or all light: `text` and `muted` are read on
@@ -245,11 +276,15 @@ nothing else. The program never runs them.
     - Text keeps a contrast of 4.5 on its ground (3 for bold text and for the marks): body, muted, disabled and
       field text, the chosen row, the buttons, and the good, warning and bad colors.
     - `GLOVEBOX_THEME=id cargo test -p glovebox --test ui` runs every click test in that theme. The test `themes`
-      chooses each theme through the Options menu at three window sizes and checks that the toolbar has two rows,
-      and `the_fonts_have_the_symbols` checks the fonts of each.
+      chooses each theme through the Options menu at three window sizes and checks that the toolbar keeps to its
+      two rows. `the_fonts_have_the_symbols` checks that the fonts of each theme have a list of arrows, shapes and
+      punctuation marks.
+
+## Info texts
+
 - A note is a text that explains how the game or the editor works: the small muted text under a title, a field, a
   group of fields or a row, the second line of a check, the paragraph under a dialog's title, the key hints over
-  the view. The Info texts of the Options menu say how notes show: `Shown`, `On hover` or `Off`. The setting is
+  the view. The Info texts list of the Options menu sets how notes show: `Shown`, `On hover` or `Off`. The setting is
   `info` in `settings.ini`; `Window::set_info` writes it and `App::new` reads it. Without a setting the notes are
   on hover (`Info::DEFAULT`).
   - Every note is drawn by the helpers under "Notes" in `style.rs`: `note`, `note_at`, `note_on`, `card_note`,
@@ -264,7 +299,7 @@ nothing else. The program never runs them.
   - The thing a note explains is its anchor. Title bars, headings, rows of fields (`anchor_row`), checkboxes and
     card titles name themselves as the anchor when they are drawn (`style::anchor`), and `note` takes the last
     one. `card_note` takes the whole card and its title. `note_on` and `para_on` take a place the caller gives.
-    A note without an anchor within 48 points over it shows as a small "?" with the tooltip.
+    A note with no anchor within 48 points of it shows as a small "?" with the tooltip.
   - On hover, a dotted line under the anchor's letters is the cue that it has a note. Check lines, buttons and
     tabs get no cue.
   - A check's second line joins the check's own tooltip on hover (`tip_with_note`). The key hints over the view
@@ -272,6 +307,9 @@ nothing else. The program never runs them.
   - A new explanatory text must use one of the note helpers. The test `info_texts` checks the three states.
   - The click tests read the notes in the panels. Their harness writes `info=shown` into the settings
     (`T::with_theme`). `info_texts` starts without the setting.
+
+## The welcome and the tour
+
 - The welcome and the tour are in `tour.rs`. The welcome is a dialog with `Show me around` and `No thanks`. It shows
   the first time a level is open and the settings have no `tour=seen`. An answer, Esc or a click beside it writes
   `tour=seen`. `Take the tour` of the Options menu starts the tour at any time (`Window::start_tour`).
@@ -282,16 +320,16 @@ nothing else. The program never runs them.
     `Rotate` and `Scale`). No position is written in the code. A target that is not in the window has a fallback:
     the toolbar, or the column of the inspector.
   - A `Show` says what the window shows during the step: nothing selected, one thing near Glover's start selected
-    and framed, or the Add panel open. `Window::enter_step` sets it when the step opens.
+    and framed, or Add to level open. `Window::enter_step` sets it when the step opens.
   - A step on the Level panel, the inspector or the checks shows that panel when the player hid it, and brings it
     in front of its tabs. Each step starts from the player's layout: a panel shown for one step is hidden again
     in the next. These changes are not written to the settings.
   - The tour does not edit the level. `Window::end_tour` puts back the layout and the tabs in front, the selection,
-    the open puzzle, the Add panel
+    the open puzzle, Add to level
     and its tab, box select, the fly camera and the camera's place.
-  - The picture: `style::spotlight` dims the window around the target with the color of the theme's scrim and draws a
-    line in the focus color. `style::callout` draws the bubble in the colors of the menus, with a pointer.
-    `tour::place` puts the bubble under, over or beside the target, inside the window and never over the target.
+  - The picture: `style::spotlight` dims the window around the target with the theme's scrim and draws a line in the
+    focus color. The scrim is the color that dims the window behind a dialog. `style::callout` draws the bubble in
+    the colors of the menus, with a pointer. `tour::place` puts the bubble under, over or beside the target, inside the window and never over the target.
     Beside a target it can be narrower. The bubble's size comes from its texts, which are laid out first.
   - The tour is an `egui::Modal` over the whole window. Clicks do not reach the window under it.
     `Window::modal` is true during a dialog, the welcome and the tour: the editor's keys, the view's mouse and
@@ -299,6 +337,9 @@ nothing else. The program never runs them.
   - The click tests start with `tour=seen` in the settings (`T::with_theme`). The test `welcome_and_tour` starts
     without it (`T::with_settings`), and walks every step at three window sizes, and once with the inspector on
     the left and the checks hidden.
+
+## Number fields
+
 - Number fields change by dragging (`numfield.rs`). A field without the keyboard focus is drawn as a text box that
   takes no input, under an area that takes the press. A press that moves to the side changes the number: one step
   for each point, ten times finer with Shift, ten times coarser with Ctrl. A press without movement gives the text
@@ -338,7 +379,7 @@ nothing else. The program never runs them.
   - Patch metadata is shown as text only.
 - Patches also work in other BPS tools: RomPatcher.js applies them to the same bytes.
 - Verified in the emulator: a shared patch (normal start) applied to the clean ROM boots through the
-  copyright screen, studio intro, title fly-through, main menu, file select and name entry, never reaching
+  copyright screen, studio intro, title fly-through, main menu, file select and name entry. It never reaches
   `gameInfo.mode` 13.
 
 ## Level packs for g64coopdx
@@ -390,7 +431,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
 - The game reads a sprite's texture with no test, and crashes on a sprite whose texture no loaded bank has. So
   g64coopdx refuses a pack that names an object bank of the game's whose sprites need a texture from no bank the level
   has (`g64_pack_check_retail_sprites`). It checks every object of the bank, also the ones the level does not place.
-  The banks it counts are the font's (10), GENERIC (2), the level's own and the texture banks `models.bin` names.
+  The banks it counts are the font's (10), GENERIC (2), the level's own and the texture banks that `models.bin` names.
   `pack::add_sprite_banks` runs after `plan_runtime` and adds texture banks until every sprite texture of each named
   object bank is in one. It tries the texture banks of the levels that load the object bank first, then every other
   one. The added banks come after the plan's own. More than 4 in all is refused, and so is a sprite texture in no
@@ -502,7 +543,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
     `SetActorScale` only to landscape and background actors. The mod applies them to enemies, platforms,
     powerups and water too (`mod/transforms.c`, details below).
   - **A larger heap.** The game's heap (Jalloc) normally ends at 4 MB and holds about 1.3 MB. The mod moves its
-    end up to 0x807E0000, just below the mod itself, adding 3,968 KB (`mod/heap.c`).
+    end up to 0x807E0000, just below the mod itself. That adds 3,968 KB (`mod/heap.c`).
   - **Models from other banks** (`mod/banks.c`). The game has 5 slots for model banks and 5 for texture banks,
     and a level uses about 3 of each. The patch lists the extra banks each level needs. Before the level is
     parsed, the mod loads them from the ROM with the game's own `LoadObjectBank` and `LoadTextureBank`: it
@@ -627,7 +668,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
 - **Exit triggers** are drawn as a green translucent sphere with three rings around each platform whose
   `SetExit` the game tests (an exit type other than 0). The center is the platform's position, for a moving
   platform its start. The radius is the one the game gives the platform ("Facts from the decomp", exits):
-  `exits::radius` walks the platform's commands in the level file's order, on the vertices the faces of the
+  `exits::radius` walks the platform's commands in the level file's order, on the vertices that the faces of the
   model's root mesh use (`Backend::root_vertices`, read from the object bank with
   `objbank::root_face_vertices`). The sphere is a node of its own in the world (`EntNodes::exit`). A click
   goes through it, and it is in no selection box. The rings are drawn a second time, faint and without the
@@ -931,9 +972,9 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
 - Code written to RAM at run time: `osWritebackDCache` over the words, then `osInvalICache` over the same words (`Patch`, `Redirect`
   and the loader do). DMAed code gets `osInvalICache` over its whole length.
 - Data the RSP or RDP reads that the CPU wrote needs `osWritebackDCache` before the task starts. The game writes back its whole
-  `dynamic` area before it sends a frame (`SendLastFrame`) and the whole data cache before every audio task. The display lists the mod
-  appends to `glistp` and everything else it writes reach RAM that way. The mod's textures are never written by the CPU.
-- `osInvalDCache` over a DMA target before the DMA. Never invalidate a range the CPU has dirty data in that must stay (the game does it
+  `dynamic` area before it sends a frame (`SendLastFrame`) and the whole data cache before every audio task. The display lists that the mod
+  appends to `glistp` reach RAM that way, and so does everything else it writes. The mod's textures are never written by the CPU.
+- `osInvalDCache` over a DMA target before the DMA. Never invalidate a range where the CPU has dirty data that must stay (the game does it
   for `size` on the stack and it works because a partial line at either end is written back first).
 
 **RDP and RSP**
@@ -1023,7 +1064,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   | `drafts/` | Autosaved levels (`<level id>.json`) and `info.json` (titles, music, clocks) |
   | `custom/` | Imported models and kit models |
   | `test/` | The ROMs Test level builds |
-  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `hover`), `tour` (`seen` once the welcome was answered), `panels` and `panel_sizes` (the layout of the panels and their dragged sizes), `add_view`, `add_models_as` and `add_kit_as` (the Add panel's view and what a click on a tile places), `saveDir` and `emulator`, as `key=value` lines |
+  | `settings.ini` | `scene`, `fog`, `triggers`, `exits`, `theme`, `info` (`shown`, `hover` or `off`: how the notes show; anything else is `hover`), `tour` (`seen` once the welcome was answered), `panels` and `panel_sizes` (the layout of the panels and their dragged sizes), `add_view`, `add_models_as` and `add_kit_as` (the view of Add to level and what a click on a tile places), `saveDir` and `emulator`, as `key=value` lines |
   | `editor.log` | The app's messages, a new file at every start |
   | `editor.lock`, `glovebox-folder.txt` | The lock and the marker (below) |
 
@@ -1083,7 +1124,7 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
   some steps only (the names are in `run`).
 - The test opens the real window at 1280 by 800 in the Sage theme with the fog off, takes the ROM on the setup
   screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the shipped level.
-- Its settings name the default layout of the panels and the list view of the Add panel, and the test checks the
+- Its settings name the default layout of the panels and the list view of Add to level, and the test checks the
   layout before the first picture. The step `panels` moves the panels for `window-panels.png` and puts the default
   layout back. The step `add` switches to the grid for two pictures and back to the list.
 - The routine sets the Info texts itself. The welcome, the tour's step and `first-level.png` have the notes on
@@ -1094,8 +1135,8 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
   `docs/guide/The-editor.md` explains them. No other picture is drawn on.
 - The small pictures of the contents list (`thumb-*.png`) are parts of the same pictures, 240 by 150. Most are at
   half size. Those of a side panel are at two thirds: the panel is 380 wide.
-- The files are PNGs with a palette of 256 colors (`Pic::save`). The 64 most used colors keep their exact values,
-  which keeps the window's flat colors right. A median cut shares the rest among the shades of the 3D view.
+- The files are PNGs with a palette of 256 colors (`Pic::save`). The 64 most used colors keep their exact values.
+  That keeps the window's flat colors right. A median cut shares the rest among the shades of the 3D view.
 - The pointer shows in the pictures of an open menu and of the box select. Elsewhere it leaves the window first.
 - The autosave chip shows the time of the run. Everything else is the same from run to run.
 - These pictures show the game's levels. The owner allows them in the repository. Nothing else made from the ROM

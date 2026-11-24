@@ -75,8 +75,8 @@ fn flag_name(doc: &Doc, child: NodeId) -> Option<&'static str> {
     }
 }
 
-/// The radius the game gives a platform, and why when it is 0. `verts` are the vertices the faces of the model's
-/// root mesh use (`Backend::root_vertices`).
+/// The radius the game gives a platform, and why when it is 0. `verts` are the vertices that the faces of the
+/// model's root mesh use (`Backend::root_vertices`).
 ///
 /// It walks the platform's commands in the order of the level file, as the game's parser does:
 /// - `exitpost.ndo` starts with a radius of 20 and a scale of 1.5, 2, 1.5. Every other platform starts with 0 and 1.

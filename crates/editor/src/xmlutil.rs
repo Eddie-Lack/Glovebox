@@ -96,8 +96,8 @@ pub fn id_hex(n: i64) -> String {
     format!("0x{:08X}", n as u32)
 }
 
-/// Gets or creates a child element. `before` picks the node the new child goes in front of (`None` from it
-/// appends). Without `before` the new child goes first.
+/// Gets or creates a child element. `before` picks the node that the new child goes in front of. When it gives
+/// `None`, the new child is appended. Without `before` the new child goes first.
 pub fn ensure_child(
     doc: &mut Doc,
     parent: NodeId,

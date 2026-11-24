@@ -19,7 +19,7 @@ The quick way to a working one is a preset.
 
 The lift rises once when Glover walks onto it.
 
-The pink box is its trigger. It belongs to a puzzle that came with the lift. _[Puzzles and camera zones](Puzzles-and-camera-zones.md)_ opens it.
+The pink box is its trigger. It belongs to a puzzle that came with the lift. _[Puzzles and camera zones](Puzzles-and-camera-zones.md)_ shows how to open it.
 
 The line going up from the lift is its path. Each point on it can be selected and moved.
 
@@ -56,13 +56,13 @@ The gray ones can't go on this platform. Hover over one to see why.
 - `Conveyor` pushes what stands on it
 - `Ice floor` lets the ball keep its speed
 
-Select a model first and these four use it.
+Select an object in the level first and these four use its model.
 
 `Motion` in the toolbar spins the spinning platforms in the view.
 
 ### A platform with your own model crashes a console!
 
-Platforms always use the game's own models.
+Always give a platform one of the game's own models.
 
 Use your imported models as `Scenery` or `Background`.
 

@@ -18,7 +18,8 @@ pub fn repr(v: f64) -> String {
     // Rust's exponent form gives the shortest round-trip digits: d.ddddde-N
     let e = format!("{:e}", v.abs());
     // When two digit strings of that length read back to the same double, Python takes the one nearer to the exact
-    // value, and the even one on a tie. Rust's shortest form does not always. Rounding to that length does.
+    // value, and the even one on a tie. Rust's shortest form does not always give that one. Rounding to that length
+    // gives it.
     let e = {
         let n = e.split_once('e').map_or(1, |(m, _)| m.bytes().filter(|b| b.is_ascii_digit()).count());
         let rounded = format!("{:.*e}", n - 1, v.abs());

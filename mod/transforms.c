@@ -14,7 +14,7 @@
  *                                                because the game rewrites rotQuat and scale every frame
  *
  * In all 48 shipped levels every SetActorRotation and SetActorScale follows a landscape-type actor. The
- * shipped levels parse exactly as before.
+ * shipped levels parse exactly as they do in the unmodded game.
  *
  * Hooks (call sites patched by tools/build_mod.py, each a same-size `jal` change):
  *   ParseLandscapeFile -> ParseTokenGeneric     Mod_ParseTokenGeneric

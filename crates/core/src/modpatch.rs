@@ -91,7 +91,7 @@ fn splice(blob: &mut [u8], offset: usize, table: &[u8]) -> Result<(), ModError> 
 // ---------------------------------------------------------------------------------------------
 // Extra banks
 
-/// The game's bank numbers the mod loads from the ROM before a level is parsed (mod/banks.c).
+/// The game's bank numbers that the mod loads from the ROM before a level is parsed (mod/banks.c).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ExtraBanks {
     pub textures: Vec<i64>,
@@ -149,7 +149,7 @@ pub struct LevelInfo {
     pub bonus_time: Option<i16>,
 }
 
-/// The header CRCs, as libgarib computes them: it first looks which boot code the ROM has.
+/// The header CRCs, as libgarib computes them: it first looks at which boot code the ROM has.
 fn fix_crc(out: &mut [u8]) -> Result<(), ModError> {
     match n64::identify_cic(out) {
         Some(6101) | Some(6102) => {}

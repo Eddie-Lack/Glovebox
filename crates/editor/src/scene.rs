@@ -759,7 +759,7 @@ pub fn ray_triangle(origin: V3, direction: V3, tri: &[V3; 3]) -> f64 {
     }
 }
 
-/// True when the ray meets the box (the slab test). An axis the ray runs along a face of is skipped.
+/// True when the ray meets the box (the slab test). When the ray runs along a face, that face's axis is skipped.
 pub fn ray_box(origin: V3, direction: V3, b: &Box3) -> bool {
     let (mut tmin, mut tmax) = (f64::NAN, f64::NAN);
     for i in 0..3 {

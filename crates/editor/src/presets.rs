@@ -98,7 +98,7 @@ fn ring(doc: &mut Doc, p: [f64; 3], facing: f64, height: f64) -> NodeId {
 
 fn heart(doc: &mut Doc, p: [f64; 3], facing: f64, behavior: i64, scale: Option<[f64; 3]>) -> NodeId {
     let n = platform(doc, HEART, p, scale, true);
-    // A spin of speed 0 only turns the heart. The heart is updated every frame, which makes it safe.
+    // A spin of speed 0 only turns the heart. It is safe here because the heart is updated every frame.
     add(
         doc,
         n,

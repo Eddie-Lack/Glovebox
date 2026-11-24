@@ -437,7 +437,8 @@ fn display_list(f: &Flat) -> Result<DisplayList, ModelError> {
             .step_by(3)
             .map(|i| [m.indices[i], m.indices[i + 1], m.indices[i + 2], (i / 3) as u32])
             .collect();
-        // sort_faces_by_variant. The sort is stable, which stands for the original index in libgarib's key.
+        // sort_faces_by_variant. libgarib's key also holds the original index. This sort is stable, which gives the
+        // same order without the index.
         faces.sort_by_key(|face| {
             let t = f.face_texture[face[3] as usize];
             (Some(t) != loaded, t, face[0] & 3, face[1] & 3, face[2] & 3)
