@@ -360,6 +360,21 @@ them. The pack's level takes the place of the level it was made for, and the gam
 - `gbtool pack SID XML OUTDIR NAME` writes a pack from the command line. It needs no ROM.
 - A level that needs the console's game mod is refused: g64coopdx does not have the mod's features yet (rotation and
   scale on every object type, more bank slots, the extra level slots). Imported models are not in a pack yet either.
+- g64coopdx plans a third, optional file for a pack's own models: `models.bin` (its `docs/discovery/model-banks.md`).
+  It holds one texture bank and one object bank, uncompressed, after a 16-byte header with their sizes.
+  - `custom::pack::model_banks` builds the two banks from converted pieces. It needs no ROM. The object bank holds
+    the pieces alone, linked with no game bank under them. Two pieces with the same id are an error. The texture bank
+    holds the records the pieces use, padded to a multiple of 8 bytes with their size fixed, and no names after them.
+    It ends with 4 zero bytes, so its size is a multiple of 8 too.
+  - The converter writes a rotation key of all zeros. The game turns it into a matrix of values that are not numbers.
+    `model_banks` writes the key of no turn (0, 0, 0, 1) in its place. The converter itself does not change.
+  - `pack::models_bin` writes the file with no game banks named.
+  - `gbtool modelbanks GLTF OUT` converts a glTF file at scale 1 and writes `models.bin`. It needs no ROM, so it does
+    not avoid the game's ids. g64coopdx does not check them yet. Its plan (docs/discovery/model-banks.md, "The
+    check") is to refuse a pack whose ids are the game's.
+  - `crates/core/tests/data/cube.gltf` is a cube drawn from scratch by `make_cube.py` next to it. g64coopdx keeps its
+    `models.bin` as the fixture of its bank check. The test `the_cube_clashes_with_no_game_id` checks its ids
+    against every object bank and texture bank in the ROM map.
 - g64coopdx does not check yet that the level's objects are in the banks of the level whose place it takes. A level
   that names another level's object makes that game stop.
 - The app has no button for it yet.

@@ -582,3 +582,191 @@ pub fn pack_object(node_name: &str, id: u32, render_mode: u16, prims: &[Prim]) -
     linker.set_actor(id, actor);
     linker.link().map_err(|e| ModelError(e.to_string()))
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// The banks of a level pack for g64coopdx
+
+/// The rotation key the game reads as no turn: x, y and z 0, w 1.
+const IDENTITY_ROTATION: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+
+/// One texture bank and one object bank that hold `pieces`, for a level pack of g64coopdx (its
+/// docs/discovery/model-banks.md). Returns the texture bank, then the object bank. Neither needs the ROM.
+///
+/// - The object bank holds the pieces alone, linked with no bank of the game's under them.
+/// - The texture bank holds the records the pieces use, each padded to a multiple of 8 bytes with its size field
+///   fixed, in rising order of id. No list of names follows them. The bank ends with zeros up to a multiple of 8.
+/// - Each rotation key of all zeros becomes the key of no turn (0, 0, 0, 1). The game turns a zero key into a
+///   matrix of values that are not numbers. The converter still writes zero keys; only this copy changes.
+///
+/// `texture_banks` are the banks that hold the pieces' textures, such as `CustomSet::texture_bank`. A texture in two
+/// of them is taken from the first.
+pub fn model_banks(pieces: &[&super::Piece], texture_banks: &[&[u8]]) -> Result<(Vec<u8>, Vec<u8>), ModelError> {
+    if pieces.is_empty() {
+        return err("A level pack's models need at least one piece");
+    }
+    // The linker replaces an object with a later one of the same id. The first one's textures would stay in the
+    // texture bank with no object to use them.
+    let mut ids: Vec<u32> = pieces.iter().map(|p| p.id).collect();
+    ids.sort_unstable();
+    if let Some(w) = ids.windows(2).find(|w| w[0] == w[1]) {
+        return err(format!("Two pieces have the id 0x{:08X}", w[0]));
+    }
+    let mut wanted: Vec<u32> = pieces.iter().flat_map(|p| p.textures.iter().copied()).collect();
+    wanted.sort_unstable();
+    wanted.dedup();
+    let parsed = texture_banks
+        .iter()
+        .map(|b| crate::texbank::records(b))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| ModelError(e.to_string()))?;
+    let mut records: Vec<&[u8]> = Vec::with_capacity(wanted.len());
+    for id in &wanted {
+        let found = parsed.iter().flat_map(|r| r.records.iter()).find(|(rid, _)| rid == id);
+        match found {
+            Some((_, rec)) => records.push(rec.as_ref()),
+            None => return err(format!("Texture 0x{id:08X} of the model is in none of the texture banks")),
+        }
+    }
+    let mut textures = crate::texbank::write_bank(&records, &[] as &[&[u8]]);
+    // The count takes 4 bytes and every record a multiple of 8, so the bank ends 4 bytes past a multiple of 8.
+    // The object bank follows it in models.bin, and its display lists must start on a multiple of 8.
+    textures.resize(textures.len().next_multiple_of(8), 0);
+
+    let banks = pieces
+        .iter()
+        .map(|p| crate::objbank::Bank::parse(&p.bank))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| ModelError(e.to_string()))?;
+    let mut linker = Linker::new();
+    for b in &banks {
+        linker.add_bank(b).map_err(|e| ModelError(e.to_string()))?;
+    }
+    let mut objects = linker.link().map_err(|e| ModelError(e.to_string()))?;
+    identity_rotations(&mut objects)?;
+    Ok((textures, objects))
+}
+
+/// Puts the key of no turn in place of each rotation key of all zeros. The keys are found through each mesh's
+/// pointer and count. A search for the bytes would also find the translation keys, which are zeros too.
+fn identity_rotations(bank: &mut [u8]) -> Result<(), ModelError> {
+    let mut keys: Vec<usize> = Vec::new();
+    {
+        let parsed = crate::objbank::Bank::parse(bank).map_err(|e| ModelError(e.to_string()))?;
+        for mesh in parsed.objects.iter().flat_map(|o| o.meshes.iter()) {
+            let f = layout::MESH_ROTATION_PTR as usize;
+            let start = u32::from_be_bytes([mesh.raw[f], mesh.raw[f + 1], mesh.raw[f + 2], mesh.raw[f + 3]]) as usize;
+            let count = mesh.rotation.map_or(0, |r| r.len() / layout::KEY);
+            keys.extend((0..count).map(|i| start + i * layout::KEY));
+        }
+    }
+    keys.sort_unstable();
+    keys.dedup();
+    for at in keys {
+        let key = &mut bank[at..at + 16];
+        let zero = key.chunks_exact(4).all(|c| f32::from_be_bytes([c[0], c[1], c[2], c[3]]) == 0.0);
+        if zero {
+            for (dst, v) in key.chunks_exact_mut(4).zip(IDENTITY_ROTATION) {
+                dst.copy_from_slice(&v.to_be_bytes());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::objbank::Bank;
+    use std::collections::HashSet;
+
+    /// A cube drawn from scratch: `tests/data/cube.gltf`, written by `tests/data/make_cube.py`.
+    const CUBE: &[u8] = include_bytes!("../../tests/data/cube.gltf");
+
+    fn u32_at(d: &[u8], at: usize) -> u32 {
+        u32::from_be_bytes([d[at], d[at + 1], d[at + 2], d[at + 3]])
+    }
+
+    fn cube() -> (super::super::CustomSet, Vec<u8>, Vec<u8>) {
+        let set = super::super::convert(CUBE, "cube", 1.0, &HashSet::new(), &HashSet::new()).unwrap();
+        let pieces: Vec<&super::super::Piece> = set.pieces.iter().collect();
+        let (t, o) = model_banks(&pieces, &[&set.texture_bank]).unwrap();
+        (set, t, o)
+    }
+
+    #[test]
+    fn cube_banks() {
+        let (set, tex, obj) = cube();
+        assert_eq!(set.pieces.len(), 1);
+        assert_eq!(set.triangles, 12);
+        assert!(!tex.is_empty() && !obj.is_empty());
+        assert_eq!(tex.len() % 8, 0);
+        assert_eq!(obj.len() % 8, 0);
+        for bank in [&tex, &obj] {
+            assert_ne!(&bank[..4], b"FLA2");
+        }
+
+        // The texture bank: one 8 by 8 record of 16-bit RGBA, padded to 168 bytes, then only zeros
+        assert_eq!(u32_at(&tex, 0), 1);
+        let rec = crate::texbank::Texture::parse(&tex[4..]).unwrap();
+        assert_eq!(rec.id, set.textures[0].0);
+        assert_eq!((rec.width, rec.height, rec.masks, rec.maskt), (8, 8, 3, 3));
+        assert_eq!((rec.color_format, rec.compression_format), (0, 2));
+        assert_eq!((rec.flags, rec.data_ptr, rec.palette_offset), (0, 36, 0));
+        assert_eq!(rec.length, 168);
+        assert_eq!(rec.length as usize, (crate::texbank::HEADER + 2 * 8 * 8).next_multiple_of(8));
+        let end = 4 + rec.length as usize;
+        assert_eq!(tex.len(), end.next_multiple_of(8));
+        assert!(tex[end..].iter().all(|b| *b == 0), "no names after the records");
+
+        // The object bank: the cube alone, with the key of no turn
+        let bank = Bank::parse(&obj).unwrap();
+        assert_eq!(bank.objects.len(), 1);
+        assert_eq!(bank.objects[0].id, set.pieces[0].id);
+        // The game's loop stops at an entry whose instance offset (the word at 12) is 0.
+        assert!(obj[8..16].iter().all(|&b| b == 0), "the directory ends after one entry");
+        for mesh in bank.objects.iter().flat_map(|o| o.meshes.iter()) {
+            let keys: Vec<_> = crate::objbank::Mesh::keys(mesh.rotation).collect();
+            assert_eq!(keys.len(), 1);
+            for k in keys {
+                assert!(k.v.iter().any(|c| *c != 0.0), "a rotation key of all zeros");
+                assert_eq!(k.v, IDENTITY_ROTATION);
+            }
+        }
+        // The object reads back as a model that uses the bank's texture
+        let size = |id: u32| (id == rec.id).then_some((8u16, 8u16));
+        let used: Vec<u32> = crate::objbank::texture_ids(&bank, set.pieces[0].id, &size).into_iter().collect();
+        assert_eq!(used, vec![rec.id]);
+    }
+
+    #[test]
+    fn the_converter_keeps_zero_keys() {
+        let (set, _, _) = cube();
+        let bank = Bank::parse(&set.pieces[0].bank).unwrap();
+        let key = crate::objbank::Mesh::keys(bank.objects[0].meshes[0].rotation).next().unwrap();
+        assert_eq!(key.v, [0.0; 4]);
+    }
+
+    #[test]
+    fn same_bytes_every_time() {
+        let (_, t1, o1) = cube();
+        let (_, t2, o2) = cube();
+        assert_eq!((t1, o1), (t2, o2));
+    }
+
+    #[test]
+    fn missing_texture_is_an_error() {
+        let (set, _, _) = cube();
+        let pieces: Vec<&super::super::Piece> = set.pieces.iter().collect();
+        let empty = crate::texbank::write_bank(&[] as &[&[u8]], &[] as &[&[u8]]);
+        assert!(model_banks(&pieces, &[&empty]).is_err());
+        assert!(model_banks(&[], &[&set.texture_bank]).is_err());
+    }
+
+    #[test]
+    fn two_pieces_with_one_id_are_an_error() {
+        let (set, _, _) = cube();
+        let piece = &set.pieces[0];
+        let e = model_banks(&[piece, piece], &[&set.texture_bank]).unwrap_err();
+        assert!(e.to_string().contains(&format!("0x{:08X}", piece.id)), "{e}");
+    }
+}

@@ -4,6 +4,7 @@
 //!     gbtool build ROM SID XML OUT [--quickboot] [--expansion] [--copy] [--bps] [--import 0xID]...
 //!     gbtool hwcheck ROM                          check a built ROM against the console's rules
 //!     gbtool pack SID XML OUTDIR NAME             write a level pack for g64coopdx (docs/technical.md, "Level packs")
+//!     gbtool modelbanks GLTF OUT                  write a glTF model as a pack's models.bin for g64coopdx
 //!
 //! OUT gets the built ROM (or the BPS patch with --bps).
 //! `build` reads imported models from the user folder that the environment variable `GLOVEBOX_HOME` names.
@@ -66,6 +67,31 @@ fn run(args: &[String]) -> Result<(), String> {
             eprintln!("{}: level {} ({}), {} bytes, id {}", args[3], scene.index, scene.name, pack.level.len(), pack.id_hex());
             Ok(())
         }
+        "modelbanks" if args.len() == 3 => {
+            // The converter needs no ROM. With no ROM it cannot avoid the game's ids. g64coopdx plans to refuse
+            // a pack with the game's ids, but does not check them yet.
+            let data = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
+            let name = Path::new(&args[1]).file_stem().and_then(|s| s.to_str()).unwrap_or("model");
+            let none = std::collections::HashSet::new();
+            let set = glovebox_core::custom::convert(&data, name, 1.0, &none, &none).map_err(|e| e.to_string())?;
+            let pieces: Vec<_> = set.pieces.iter().collect();
+            let (textures, objects) =
+                glovebox_core::custom::pack::model_banks(&pieces, &[&set.texture_bank]).map_err(|e| e.to_string())?;
+            let file = glovebox_core::pack::models_bin(&textures, &objects)?;
+            std::fs::write(&args[2], &file).map_err(|e| e.to_string())?;
+            let ids: Vec<String> = set.pieces.iter().map(|p| format!("0x{:08X}", p.id)).collect();
+            let tex: Vec<String> = set.textures.iter().map(|t| format!("0x{:08X}", t.0)).collect();
+            eprintln!(
+                "{}: {} bytes, texture bank {} bytes ({}), object bank {} bytes ({})",
+                args[2],
+                file.len(),
+                textures.len(),
+                tex.join(" "),
+                objects.len(),
+                ids.join(" ")
+            );
+            Ok(())
+        }
         "hwcheck" if args.len() == 2 => {
             let rom = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
             let found = glovebox_core::hwcheck::check_rom(&rom);
@@ -76,7 +102,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 Err(found.join("\n"))
             }
         }
-        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack SID XML OUTDIR NAME".into()),
+        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack SID XML OUTDIR NAME | modelbanks GLTF OUT".into()),
     }
 }
 

@@ -85,6 +85,37 @@ pub fn check_level(lev: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
+/// The most bytes of a pack's own models: its texture bank and its object bank together.
+pub const MODELS_MAX: usize = 4 << 20;
+
+/// `models.bin`, the optional file of a pack's own models, in g64coopdx's layout (its
+/// docs/discovery/model-banks.md, "The file"). All words are big-endian. It names no bank of the game's.
+///
+/// - 0: the texture bank's size T. 4: the object bank's size O.
+/// - 8: the flags, then the number of the game's texture banks and of its object banks, then a zero byte. All are 0.
+/// - Zeros up to 16, then the texture bank, then the object bank.
+///
+/// Both banks are empty or neither is. Each is a multiple of 8 bytes, and together they are at most `MODELS_MAX`.
+pub fn models_bin(textures: &[u8], objects: &[u8]) -> Result<Vec<u8>, String> {
+    if textures.is_empty() != objects.is_empty() {
+        return Err("A pack's models need both a texture bank and an object bank".into());
+    }
+    if !textures.len().is_multiple_of(8) || !objects.len().is_multiple_of(8) {
+        return Err("A bank in a pack's models must be a multiple of 8 bytes".into());
+    }
+    if textures.len() + objects.len() > MODELS_MAX {
+        return Err(format!("A pack's models are {} bytes. The most is {}", textures.len() + objects.len(), MODELS_MAX));
+    }
+    // The header is 12 bytes; the banks start at the next multiple of 8
+    const H: usize = 16;
+    let mut out = vec![0u8; H];
+    out[0..4].copy_from_slice(&(textures.len() as u32).to_be_bytes());
+    out[4..8].copy_from_slice(&(objects.len() as u32).to_be_bytes());
+    out.extend_from_slice(textures);
+    out.extend_from_slice(objects);
+    Ok(out)
+}
+
 impl LevelPack {
     /// The id as text: 32 hex digits.
     pub fn id_hex(&self) -> String {
@@ -102,6 +133,20 @@ impl LevelPack {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn models_file() {
+        let (t, o) = (vec![1u8; 16], vec![2u8; 24]);
+        let m = models_bin(&t, &o).unwrap();
+        assert_eq!(m.len(), 16 + 16 + 24);
+        assert_eq!(&m[..16], &[0, 0, 0, 16, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(&m[16..32], &t[..]);
+        assert_eq!(&m[32..], &o[..]);
+        assert_eq!(models_bin(&[], &[]).unwrap(), vec![0u8; 16]);
+        assert!(models_bin(&t, &[]).is_err());
+        assert!(models_bin(&[0; 12], &o).is_err());
+        assert!(models_bin(&vec![0; MODELS_MAX], &o).is_err());
+    }
 
     /// The same two files as g64coopdx's own test (tests/net/pack_test.c), which prints the first 8 bytes of the
     /// id it computes in C: both programs must agree.
