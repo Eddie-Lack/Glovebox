@@ -398,6 +398,106 @@ mod tests {
         assert_eq!(hex(pack_id(manifest, &level, Some(script), Some(&models))), "13a1ae26d488c9f540b5d44cbdecaf94");
     }
 
+    /// The imported models of a user folder with the cube, converted under `name`, as set `0123456789`.
+    fn cube_customs(name: &str, reskin: bool) -> (Customs, String) {
+        let cube = include_bytes!("../tests/data/cube.gltf");
+        let set = crate::custom::convert(cube, name, 1.0, &Default::default(), &Default::default()).unwrap();
+        let p = &set.pieces[0];
+        let id = hex(p.id);
+        let model = imports::CustomModel {
+            name: name.to_string(),
+            set_name: name.to_string(),
+            set: "0123456789".to_string(),
+            piece: p.name.clone(),
+            offset: p.offset,
+            textures: p.textures.iter().map(|t| hex(*t)).collect(),
+            bank: p.bank.clone(),
+            bytes: p.bank.len() as u64,
+            reskin_from: reskin.then(|| "0x12345678".to_string()),
+        };
+        let mut customs = Customs::default();
+        customs.models.push((id.clone(), model));
+        customs.tex_banks.insert("0123456789".to_string(), set.texture_bank.clone());
+        (customs, id)
+    }
+
+    /// A plan of `imports::plan_runtime` that copies `copied` and names the game's banks by number.
+    fn plan(copied: &[String], textures: &[i64], objects: &[i64]) -> Plan {
+        Plan {
+            copy: Some(imports::CopyPlan { objects: copied.to_vec(), ..Default::default() }),
+            runtime: Some(imports::Runtime {
+                texture_numbers: textures.to_vec(),
+                object_numbers: objects.to_vec(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn models_of_a_plan() {
+        let (customs, id) = cube_customs("cube", false);
+        let num = crate::gamedata::parse_id(&id).unwrap();
+        // Nothing to add: no models.bin
+        assert_eq!(pack_models(&plan(&[], &[], &[]), &customs, &[]).unwrap(), None);
+        // The cube as a platform: its banks are the cube's banks of g64coopdx's fixture
+        let m = pack_models(&plan(&[id.clone()], &[], &[]), &customs, &[(98, num)]).unwrap().unwrap();
+        let cube = include_bytes!("../tests/data/cube.gltf");
+        let set = crate::custom::convert(cube, "cube", 1.0, &Default::default(), &Default::default()).unwrap();
+        let pieces: Vec<_> = set.pieces.iter().collect();
+        let (t, o) = crate::custom::pack::model_banks(&pieces, &[&set.texture_bank]).unwrap();
+        assert_eq!(m, models_bin(false, &[], &[], &t, &o).unwrap());
+        // With banks of the game's
+        let m = pack_models(&plan(&[id.clone()], &[4], &[20]), &customs, &[(146, num)]).unwrap().unwrap();
+        assert_eq!(&m[8..14], &[0, 1, 1, 0, 4, 20]);
+        let m = pack_models(&plan(&[], &[], &[20]), &customs, &[]).unwrap().unwrap();
+        assert_eq!(m, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 20, 0, 0, 0]);
+    }
+
+    #[test]
+    fn models_a_pack_refuses() {
+        let (customs, id) = cube_customs("cube", false);
+        let num = crate::gamedata::parse_id(&id).unwrap();
+        let copy = plan(&[id.clone()], &[], &[]);
+        let fails = |p: &Plan, c: &Customs, refs: &[(u32, u32)], what: &str| {
+            let e = pack_models(p, c, refs).unwrap_err();
+            assert!(e.contains(what), "{e}");
+        };
+        // A cameo of an imported model
+        fails(&copy, &customs, &[(CAMEO, num)], "cameo");
+        // A model made from the game's own model
+        let (reskin, rid) = cube_customs("cube", true);
+        fails(&plan(&[rid], &[], &[]), &reskin, &[], "game's own data");
+        // A model with the name of the ball or the hand
+        for name in RESERVED_NAMES {
+            let (c, nid) = cube_customs(name, false);
+            fails(&plan(&[nid], &[], &[]), &c, &[], "ball or the hand");
+        }
+        // Too many of the game's banks, or ones that every level loads
+        fails(&plan(&[], &[], &[20, 21, 22, 23, 24]), &customs, &[], "at most 4");
+        fails(&plan(&[], &[3, 4, 5, 6, 7], &[]), &customs, &[], "at most 4");
+        fails(&plan(&[], &[2], &[]), &customs, &[], "texture bank 2");
+        fails(&plan(&[], &[10], &[]), &customs, &[], "texture bank 10");
+        fails(&plan(&[], &[], &[1]), &customs, &[], "object bank 1");
+        fails(&plan(&[], &[], &[300]), &customs, &[], "no bank 300");
+        // An id of the game's enemies or pick-ups
+        let mut taken = customs.clone();
+        let bad = hex(GAME_NAME_IDS[0]);
+        taken.models[0].0 = bad.clone();
+        fails(&plan(&[bad], &[], &[]), &taken, &[], "enemy or a pick-up");
+    }
+
+    #[test]
+    fn ids_of_a_level_file() {
+        let xml = br#"<Level name="ids.lnd" libgarib-version="a" data-format-version="b">
+            <LandActor object_id="0x11111111" name="a" x="0.0" y="0.0" z="0.0"/>
+            <Platform object_id="0x22222222" name="p"><PlatDestructible flags="0" num_fragments="0" fragment_object_id="0x0" name="d"/></Platform>
+            <AnimatedBackgroundActor object_id="0x33333333" name="c" x="0.0" y="0.0" z="0.0"/>
+        </Level>"#;
+        let (lev, _) = level::assemble_xml(xml).unwrap();
+        assert_eq!(object_refs(&lev).unwrap(), vec![(146, 0x11111111), (98, 0x22222222), (CAMEO, 0x33333333)]);
+    }
+
     #[test]
     fn manifest_rules() {
         assert_eq!(manifest("A test level", 10).unwrap(), b"format=1\nname=A test level\nlevel=10\n");
