@@ -909,6 +909,48 @@ fn editor_on_the_fixture() {
     let asked = t.files.0.borrow().asked.last().cloned().unwrap_or_default();
     let status = t.status();
     t.detail(".lev builds and the schema accepts the edits", size > 100 && asked.ends_with(".lev"), format!("{size} {asked} {status}"));
+    // Export level pack: the dialog, Cancel, a refused name, then a pack in a folder of its own
+    t.click("Export patch");
+    t.click("Export level pack");
+    t.shot("16b-export-pack");
+    let open = t.has_containing("A level pack for g64coopdx");
+    let named = matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::Pack { name }) if name == "Fixture 1");
+    t.click("Cancel");
+    let closed = t.w().dialog.is_none();
+    t.click("Export patch");
+    t.click("Export level pack");
+    if let Some(glovebox::dialogs::Dialog::Pack { name }) = &mut t.w().dialog {
+        name.clear();
+    }
+    t.click("Export pack");
+    t.until(60, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let refused = t.status();
+    let dir = t.home.join("packs");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    t.files.0.borrow_mut().save.push_back(dir.clone());
+    t.click("Export patch");
+    t.click("Export level pack");
+    t.click("Export pack");
+    t.until(60, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let status = t.status();
+    let folder = dir.join("Fixture_1.pack");
+    let manifest = std::fs::read(folder.join("pack.txt")).unwrap_or_default();
+    let lev = std::fs::read(folder.join("level.lev")).unwrap_or_default();
+    // The fixture's sign is in its made-up object bank 9, which models.bin names
+    let models = std::fs::read(folder.join("models.bin")).ok();
+    let sign = t.ed().current_imports().contains(&glovebox_editor::fixture::SIGN.to_string());
+    // The sign was placed earlier, and the reset with its undo brought it back
+    let models_ok = sign && models.as_deref() == Some(&[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 9, 0, 0, 0][..]);
+    let id = glovebox_core::pack::pack_id(&manifest, &lev, None, models.as_deref());
+    let hex: String = id.iter().map(|b| format!("{b:02x}")).collect();
+    let written = manifest == b"format=1\nname=Fixture 1\nlevel=16\n" && glovebox_core::pack::check_level(&lev).is_ok() && models_ok;
+    t.detail(
+        "click: Export patch, Export level pack, Cancel and Export pack",
+        open && named && closed && refused.contains("No level pack") && written && status.contains("Exported the level pack") && status.contains(&hex)
+            && status.contains(glovebox_core::pack::GAME_BANKS_TEXT),
+        format!("{refused} / {status} / sign {sign}, models {models:?}"),
+    );
     let path = t.save_to("out.xml");
     t.click("Export XML");
     let text = std::fs::read_to_string(&path).unwrap_or_default();

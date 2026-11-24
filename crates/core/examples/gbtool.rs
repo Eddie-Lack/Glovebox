@@ -87,20 +87,27 @@ fn run(args: &[String]) -> Result<(), String> {
             let scene = glovebox_core::gamedata::scene(&args[2]).map_err(|e| e.0)?;
             let xml = std::fs::read_to_string(&args[3]).map_err(|e| e.to_string())?;
             let pack = be.level_pack(&scene.id, &xml, &args[5]).map_err(|e| e.to_string())?;
-            pack.write_to(Path::new(&args[4])).map_err(|e| e.to_string())?;
+            // The folder's id counts a script.lua that is already there
+            let id = pack.write_to(Path::new(&args[4])).map_err(|e| e.to_string())?;
+            let script = if id != pack.id { ", with the folder's script.lua" } else { "" };
             let models = match &pack.models {
                 Some(m) => format!("models.bin {} bytes", m.len()),
                 None => "no models.bin".to_string(),
             };
             eprintln!(
-                "{}: level {} ({}), level.lev {} bytes, {}, id {}",
+                "{}: level {} ({}), level.lev {} bytes, {}{}, id {}",
                 args[4],
                 scene.index,
                 scene.name,
                 pack.level.len(),
                 models,
-                pack.id_hex()
+                script,
+                glovebox_core::pack::id_text(&id)
             );
+            let (tex, obj) = pack.game_banks();
+            if tex + obj > 0 {
+                eprintln!("{}", glovebox_core::pack::GAME_BANKS_TEXT);
+            }
             Ok(())
         }
         "import" if args.len() >= 3 => {

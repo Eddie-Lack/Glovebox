@@ -593,6 +593,50 @@ impl Window {
         );
     }
 
+    /// Makes a level pack for g64coopdx of the open level, named `name`, then asks for the pack's folder and
+    /// writes it there. The back end's refusals go to the status line.
+    pub fn export_pack(&mut self, name: String) {
+        let (backend, sid, xml) = (self.ed.backend.clone(), self.ed.scene_id().to_string(), self.ed.serialize());
+        self.set_status("Making the level pack…", "");
+        self.loading = "Making the level pack…".to_string();
+        self.jobs.run(
+            move || backend.level_pack(&sid, &xml, &name).map(|p| (p, name)).map_err(|e| e.0),
+            move |w: &mut Window, res| {
+                w.loading.clear();
+                let (pack, name) = match res {
+                    Ok(r) => r,
+                    Err(e) => return w.set_status(&format!("No level pack: {e}"), "err"),
+                };
+                let folder = w.settings.get("saveDir").map(PathBuf::from).filter(|p| p.is_dir()).or_else(home_dir).unwrap_or_else(|| PathBuf::from("."));
+                // The pack is a folder of its own: the name chosen here is the folder's.
+                let default: String = name.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
+                let Some(dir) = w.dialogs.save_file("Save the level pack's folder", &folder, &format!("{default}.pack")) else {
+                    return w.set_status("Not saved.", "");
+                };
+                if dir.is_file() {
+                    return w.set_status(&format!("{} is a file. A level pack is a folder.", dir.display()), "err");
+                }
+                let id = match pack.write_to(&dir) {
+                    Ok(id) => id,
+                    Err(e) => return w.set_status(&format!("Couldn’t save {}: {e}", dir.display()), "err"),
+                };
+                if let Some(parent) = dir.parent() {
+                    w.settings.set("saveDir", &parent.to_string_lossy());
+                }
+                let models = match &pack.models {
+                    Some(m) => format!(", with models.bin ({} bytes)", m.len()),
+                    None => String::new(),
+                };
+                // The folder's id counts a script.lua that is already there
+                let script = if id != pack.id { " It keeps the folder's script.lua." } else { "" };
+                let (tex, obj) = pack.game_banks();
+                let note = if tex + obj > 0 { format!(" {}", glovebox_core::pack::GAME_BANKS_TEXT) } else { String::new() };
+                w.last_saved = Some(dir.clone());
+                w.set_status(&format!("Exported the level pack {}{models}.{script} Its id is {}.{note}", dir.display(), glovebox_core::pack::id_text(&id)), "ok");
+            },
+        );
+    }
+
     /// Asks where to save a built file and writes it. True when it was saved.
     pub fn save(&mut self, out: BuildOutput) -> bool {
         let BuildOutput { data, name, message } = out;

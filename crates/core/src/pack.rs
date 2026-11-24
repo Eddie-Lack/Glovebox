@@ -64,6 +64,14 @@ pub fn pack_id(manifest: &[u8], level: &[u8], script: Option<&[u8]>, models: Opt
     id
 }
 
+/// A pack id as text: 32 hex digits.
+pub fn id_text(id: &[u8; 16]) -> String {
+    id.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
+/// What an author is told when the pack's `models.bin` names banks of the game's.
+pub const GAME_BANKS_TEXT: &str = "The pack uses models from other levels. Each player's game loads those levels' banks from the player's own ROM.";
+
 /// The manifest of a pack with this name, whose level takes the place of level number `level_index`.
 pub fn manifest(name: &str, level_index: usize) -> Result<Vec<u8>, String> {
     if name.is_empty() || name.len() > NAME_MAX || !name.bytes().all(|c| (32..=126).contains(&c)) {
@@ -123,7 +131,7 @@ pub const NOT_RETAIL_OBJECTS: [u8; 2] = [0, 1];
 /// - Zeros up to the next multiple of 8, then the texture bank, then the object bank.
 ///
 /// Both of the pack's banks are empty or neither is. Each is a multiple of 8 bytes, and together they are at most
-/// `MODELS_MAX`.
+/// `MODELS_MAX`. A file with no banks of its own names at least one of the game's.
 pub fn models_bin(first: bool, retail_textures: &[u8], retail_objects: &[u8], textures: &[u8], objects: &[u8]) -> Result<Vec<u8>, String> {
     if textures.is_empty() != objects.is_empty() {
         return Err("A pack's models need both a texture bank and an object bank".into());
@@ -160,6 +168,10 @@ pub fn models_bin(first: bool, retail_textures: &[u8], retail_objects: &[u8], te
     }
     if first && retail_textures.is_empty() {
         return Err("The flag for the game's texture banks needs a texture bank of the game's".into());
+    }
+    // g64coopdx refuses a file that holds no models and names no bank
+    if textures.is_empty() && retail_textures.is_empty() && retail_objects.is_empty() {
+        return Err("A pack's models.bin needs models of its own or a bank of the game's".into());
     }
     let head = 12 + retail_textures.len() + retail_objects.len();
     let mut out = vec![0u8; head.next_multiple_of(8)];
@@ -230,10 +242,86 @@ pub fn export(gd: &GameData, customs: &Customs, sid: &str, name: &str, xml: &[u8
     if ids.is_empty() {
         return Ok(pack);
     }
-    let plan = imports::plan_runtime(gd, customs, sid, &ids)?;
+    let mut plan = imports::plan_runtime(gd, customs, sid, &ids)?;
+    if let Some(runtime) = plan.runtime.as_mut() {
+        add_sprite_banks(gd, scene, runtime)?;
+    }
     pack.models = pack_models(&plan, customs, &refs)?;
     pack.id = pack_id(&pack.manifest, &pack.level, None, pack.models.as_deref());
     Ok(pack)
+}
+
+/// Adds the game's texture banks that the sprites of the plan's object banks need.
+///
+/// g64coopdx's game reads a sprite's texture with no test. A sprite whose texture is in no loaded bank crashes it.
+/// So g64coopdx refuses a pack that names an object bank of the game's whose sprites need a texture from no bank the
+/// level has (`g64_pack_check_retail_sprites` in its src/client/packrom.c). It checks every object of the bank, also
+/// the ones the level does not place. The banks it counts are the font's, GENERIC, the level's own and the texture
+/// banks that `models.bin` names.
+///
+/// The banks this adds come after the ones the plan has. The texture banks of the levels that load the object bank
+/// are tried first, then every other one.
+fn add_sprite_banks(gd: &GameData, scene: &crate::gamedata::Scene, runtime: &mut imports::Runtime) -> Result<(), String> {
+    let has = |bank: &str, id: u32| gd.texture_ids(&format!("{bank}.tex.fla")).contains(&id);
+    let planned = runtime.texture_banks.len();
+    for obj in runtime.object_banks.clone() {
+        let raw = gd.raw_bank(&format!("{obj}.obj.fla")).map_err(|e| e.0)?;
+        let bank = objbank::Bank::parse(raw).map_err(|e| format!("Object bank {obj}: {}", e.0))?;
+        let sprites: BTreeSet<u32> =
+            bank.objects.iter().flat_map(|o| o.meshes.iter()).flat_map(|m| m.sprite_list()).map(|s| s.texture_id).collect();
+        let loaded = || ["FONT_TEX_BANK", "GENERIC_TEX_BANK"].into_iter().chain(scene.game_texture_banks.iter().map(|b| b.as_str()));
+        let mut need: BTreeSet<u32> = sprites
+            .into_iter()
+            .filter(|id| !loaded().chain(runtime.texture_banks.iter().map(|b| b.as_str())).any(|b| has(b, *id)))
+            .collect();
+        if need.is_empty() {
+            continue;
+        }
+        let world = crate::gamedata::scenes()
+            .iter()
+            .filter(|s| s.game_object_banks.contains(&obj))
+            .flat_map(|s| s.game_texture_banks.iter().cloned());
+        let all = gd.all_texture_banks().map(|f| crate::gamedata::stem(f).to_string());
+        let mut candidates: Vec<String> = Vec::new();
+        for b in world.chain(all) {
+            if !candidates.contains(&b) {
+                candidates.push(b);
+            }
+        }
+        for b in candidates {
+            let Some(number) = crate::gamedata::bank_number("tex", &b) else { continue };
+            if NOT_RETAIL_TEXTURES.iter().any(|n| i64::from(*n) == number) || runtime.texture_banks.contains(&b) {
+                continue;
+            }
+            let before = need.len();
+            need.retain(|id| !has(&b, *id));
+            if need.len() < before {
+                runtime.bytes += gd.raw_bank(&format!("{b}.tex.fla")).map_err(|e| e.0)?.len() as u64;
+                runtime.texture_banks.push(b);
+                runtime.texture_numbers.push(number);
+            }
+            if need.is_empty() {
+                break;
+            }
+        }
+        if !need.is_empty() {
+            let list: Vec<String> = need.iter().map(|id| hex(*id)).collect();
+            return Err(format!(
+                "The game's object bank {obj} has sprites with textures {} that no texture bank has. A level pack cannot use models from it",
+                list.join(", ")
+            ));
+        }
+    }
+    if runtime.texture_banks.len() > RETAIL_MAX {
+        let sprites = if runtime.texture_banks.len() > planned { ", with the textures of their sprites" } else { "" };
+        return Err(format!(
+            "The models from other levels need {} of the game's texture banks ({}){sprites}. A level pack can name {} at most. Use models from fewer levels",
+            runtime.texture_banks.len(),
+            runtime.texture_banks.join(", "),
+            RETAIL_MAX
+        ));
+    }
+    Ok(())
 }
 
 /// `models.bin` for a plan of `imports::plan_runtime`, or None when the plan needs no models. `refs` are the
@@ -277,7 +365,7 @@ pub fn pack_models(plan: &Plan, customs: &Customs, refs: &[(u32, u32)]) -> Resul
         for mesh in bank.objects.iter().flat_map(|o| o.meshes.iter()) {
             if RESERVED_NAMES.contains(&mesh.name) {
                 return Err(format!(
-                    "{} has a part named {}, the name of the ball or the hand in the game. Rename the model's file or its mesh and import it again",
+                    "{} has a part named {}, the name of the ball or the hand in the game. Remove the model (Remove in the Models tab), give its file another name, import it again and place the new model",
                     c.name, mesh.name
                 ));
             }
@@ -311,21 +399,35 @@ pub fn pack_models(plan: &Plan, customs: &Customs, refs: &[(u32, u32)]) -> Resul
 impl LevelPack {
     /// The id as text: 32 hex digits.
     pub fn id_hex(&self) -> String {
-        self.id.iter().map(|b| format!("{:02x}", b)).collect()
+        id_text(&self.id)
     }
 
-    /// Writes the pack's files into `dir`, which is made if it is not there. g64coopdx finds `models.bin` by its
-    /// presence, so an old one is removed when the pack has none.
-    pub fn write_to(&self, dir: &Path) -> std::io::Result<()> {
+    /// How many of the game's texture banks and object banks `models.bin` names. Each player's game loads them
+    /// from the player's own ROM.
+    pub fn game_banks(&self) -> (usize, usize) {
+        match &self.models {
+            Some(m) if m.len() >= 12 => (m[9] as usize, m[10] as usize),
+            _ => (0, 0),
+        }
+    }
+
+    /// Writes the pack's files into `dir`, which is made if it is not there, and returns the folder's pack id.
+    /// g64coopdx finds `models.bin` by its presence, so an old one is removed when the pack has none. Glovebox
+    /// writes no `script.lua`, but it keeps one that the folder has. The returned id counts that script, as
+    /// g64coopdx does, so it can differ from `self.id`.
+    pub fn write_to(&self, dir: &Path) -> std::io::Result<[u8; 16]> {
         std::fs::create_dir_all(dir)?;
         std::fs::write(dir.join("pack.txt"), &self.manifest)?;
         std::fs::write(dir.join("level.lev"), &self.level)?;
         let models = dir.join("models.bin");
         match &self.models {
-            Some(m) => std::fs::write(models, m),
-            None if models.exists() => std::fs::remove_file(models),
-            None => Ok(()),
+            Some(m) => std::fs::write(models, m)?,
+            None if models.exists() => std::fs::remove_file(models)?,
+            None => {}
         }
+        let script_path = dir.join("script.lua");
+        let script = if script_path.exists() { Some(std::fs::read(script_path)?) } else { None };
+        Ok(pack_id(&self.manifest, &self.level, script.as_deref(), self.models.as_deref()))
     }
 }
 
@@ -341,7 +443,7 @@ mod tests {
         assert_eq!(&m[..16], &[0, 0, 0, 16, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(&m[16..32], &t[..]);
         assert_eq!(&m[32..], &o[..]);
-        assert_eq!(models_bin(false, &[], &[], &[], &[]).unwrap(), vec![0u8; 16]);
+        assert!(models_bin(false, &[], &[], &[], &[]).is_err());
         assert!(models_bin(false, &[], &[], &t, &[]).is_err());
         assert!(models_bin(false, &[], &[], &[0; 12], &o).is_err());
         assert!(models_bin(false, &[], &[], &vec![0; MODELS_MAX], &o).is_err());
@@ -441,14 +543,14 @@ mod tests {
         // Nothing to add: no models.bin
         assert_eq!(pack_models(&plan(&[], &[], &[]), &customs, &[]).unwrap(), None);
         // The cube as a platform: its banks are the cube's banks of g64coopdx's fixture
-        let m = pack_models(&plan(&[id.clone()], &[], &[]), &customs, &[(98, num)]).unwrap().unwrap();
+        let m = pack_models(&plan(std::slice::from_ref(&id), &[], &[]), &customs, &[(98, num)]).unwrap().unwrap();
         let cube = include_bytes!("../tests/data/cube.gltf");
         let set = crate::custom::convert(cube, "cube", 1.0, &Default::default(), &Default::default()).unwrap();
         let pieces: Vec<_> = set.pieces.iter().collect();
         let (t, o) = crate::custom::pack::model_banks(&pieces, &[&set.texture_bank]).unwrap();
         assert_eq!(m, models_bin(false, &[], &[], &t, &o).unwrap());
         // With banks of the game's
-        let m = pack_models(&plan(&[id.clone()], &[4], &[20]), &customs, &[(146, num)]).unwrap().unwrap();
+        let m = pack_models(&plan(std::slice::from_ref(&id), &[4], &[20]), &customs, &[(146, num)]).unwrap().unwrap();
         assert_eq!(&m[8..14], &[0, 1, 1, 0, 4, 20]);
         let m = pack_models(&plan(&[], &[], &[20]), &customs, &[]).unwrap().unwrap();
         assert_eq!(m, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 20, 0, 0, 0]);
@@ -458,7 +560,7 @@ mod tests {
     fn models_a_pack_refuses() {
         let (customs, id) = cube_customs("cube", false);
         let num = crate::gamedata::parse_id(&id).unwrap();
-        let copy = plan(&[id.clone()], &[], &[]);
+        let copy = plan(std::slice::from_ref(&id), &[], &[]);
         let fails = |p: &Plan, c: &Customs, refs: &[(u32, u32)], what: &str| {
             let e = pack_models(p, c, refs).unwrap_err();
             assert!(e.contains(what), "{e}");
@@ -471,7 +573,9 @@ mod tests {
         // A model with the name of the ball or the hand
         for name in RESERVED_NAMES {
             let (c, nid) = cube_customs(name, false);
-            fails(&plan(&[nid], &[], &[]), &c, &[], "ball or the hand");
+            fails(&plan(std::slice::from_ref(&nid), &[], &[]), &c, &[], "ball or the hand");
+            // Importing the same file again gives the same set, so the model must be removed first
+            fails(&plan(&[nid], &[], &[]), &c, &[], "Remove the model");
         }
         // Too many of the game's banks, or ones that every level loads
         fails(&plan(&[], &[], &[20, 21, 22, 23, 24]), &customs, &[], "at most 4");
@@ -491,7 +595,7 @@ mod tests {
     fn ids_of_a_level_file() {
         let xml = br#"<Level name="ids.lnd" libgarib-version="a" data-format-version="b">
             <LandActor object_id="0x11111111" name="a" x="0.0" y="0.0" z="0.0"/>
-            <Platform object_id="0x22222222" name="p"><PlatDestructible flags="0" num_fragments="0" fragment_object_id="0x0" name="d"/></Platform>
+            <Platform object_id="0x22222222" name="p"><PlatDestructible flags="0" num_fragments="0" fragment_object_id="0x00000000" name="d"/></Platform>
             <AnimatedBackgroundActor object_id="0x33333333" name="c" x="0.0" y="0.0" z="0.0"/>
         </Level>"#;
         let (lev, _) = level::assemble_xml(xml).unwrap();
@@ -528,9 +632,24 @@ mod tests {
                 assert_eq!(pack.models, None);
                 assert_eq!(pack.id_hex().len(), 32);
                 let dir = std::env::temp_dir().join(format!("glovebox-pack-test-{}", std::process::id()));
-                pack.write_to(&dir).unwrap();
+                let _ = std::fs::remove_dir_all(&dir);
+                assert_eq!(pack.write_to(&dir).unwrap(), pack.id);
                 assert_eq!(std::fs::read(dir.join("pack.txt")).unwrap(), pack.manifest);
                 assert_eq!(std::fs::read(dir.join("level.lev")).unwrap(), pack.level);
+                assert_eq!(pack.game_banks(), (0, 0));
+                // A script that the folder has stays, and the folder's id counts it
+                let script = b"print(\"hi\")\n";
+                std::fs::write(dir.join("script.lua"), script).unwrap();
+                let id = pack.write_to(&dir).unwrap();
+                assert_eq!(id, pack_id(&pack.manifest, &pack.level, Some(script), None));
+                assert_ne!(id, pack.id);
+                assert_eq!(std::fs::read(dir.join("script.lua")).unwrap(), script);
+                // An old models.bin goes when the pack has none
+                std::fs::write(dir.join("models.bin"), [0u8; 16]).unwrap();
+                pack.write_to(&dir).unwrap();
+                assert!(!dir.join("models.bin").exists());
+                let with = LevelPack { models: Some(models_bin(false, &[4], &[20, 21], &[], &[]).unwrap()), ..pack.clone() };
+                assert_eq!(with.game_banks(), (1, 2));
                 let _ = std::fs::remove_dir_all(&dir);
             }
             Err(e) => panic!("the smallest level did not make a pack: {}", e),

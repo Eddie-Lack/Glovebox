@@ -412,5 +412,6 @@ Note: a level that uses the game mod needs the emulator's Expansion Pak on _(mos
 - `Build ROM` patches your edits into a ROM. `boot here` starts it in the edited level
 - `Export patch` makes a patch to share _(see [Sharing levels](Sharing-levels.md))_
 - `Build all…` puts every level you've edited into one ROM or patch. Pick the level it boots into, or a normal start
+- `Export level pack`, in the `Export patch` dialog, saves the level as a level pack for g64coopdx, the online co-op game _(see [Sharing levels](Sharing-levels.md))_
 
 Every ROM and patch the editor builds uses Easy ball controls on every difficulty

@@ -344,42 +344,101 @@ nothing else. The program never runs them.
 ## Level packs for g64coopdx
 
 g64coopdx is the online co-op game on PC ([github.com/Eddie-Lack/g64coopdx](https://github.com/Eddie-Lack/g64coopdx)).
-It reads a level from a **level pack**, not from a patched ROM. A pack is a folder with two files:
+It reads a level from a **level pack**, not from a patched ROM. A pack is a folder with two to four files:
 
 - `pack.txt`, the manifest: `format=1`, `name=` (1 to 32 plain ASCII characters) and `level=` (the number of the
   level whose place the pack's level takes). Each line ends with a line feed alone.
 - `level.lev`, the level in the game's own format: what `level::assemble_xml` gives.
+- `models.bin`, only when the level needs models that its own banks lack. g64coopdx's `docs/discovery/model-banks.md`
+  has its format: a header with the numbers of the game's banks it needs, then a texture bank and an object bank of
+  the pack's own, uncompressed. A pack that needs only the game's banks has no banks of its own.
+- `script.lua`, optional: a Lua script for g64coopdx. Glovebox does not write one.
 
-A pack holds no game data. Its level file names models and textures by their ids, and each player's own ROM supplies
-them. The pack's level takes the place of the level it was made for, and the game loads that level's banks with it.
+A pack holds no game data. Its level file names models and textures by their ids. The pack's level takes the place of
+the level it was made for, and the game loads that level's banks with it. Each player's own ROM supplies them.
 
-- `crates/core/src/pack.rs` makes a pack from a level's XML (`make_pack`) and writes it (`LevelPack::write_to`).
-- The pack's id is the first 16 bytes of a BLAKE2b hash of both files. g64coopdx computes the same and refuses a
-  player whose pack has another id. The test `id_matches_g64coopdx` holds the id that g64coopdx's own test prints
-  for the same two files. g64coopdx's `docs/discovery/level-pack.md` has the format in full.
-- `gbtool pack SID XML OUTDIR NAME` writes a pack from the command line. It needs no ROM.
+- `crates/core/src/pack.rs` makes a pack. `make_pack` makes one from a level's XML alone. `export` adds the level's
+  imports. `LevelPack::write_to` writes the files, and removes an old `models.bin` when the pack has none.
+- The pack's id is the first 16 bytes of a BLAKE2b hash of its files, in the order `pack.txt`, `level.lev`,
+  `script.lua`, `models.bin` (each file's name, a zero byte, its length and its bytes). g64coopdx computes the same and
+  refuses a player whose pack has another id. The test `id_matches_g64coopdx` holds the ids that g64coopdx's tools
+  print: its own test's id for a pack of two files, and `g64pack make`'s ids for the same pack with the cube's
+  `models.bin`, with and without a script. Glovebox writes no `script.lua`. `write_to` keeps one that the folder
+  has, and returns the folder's id, which counts it. The app and `gbtool pack` print that id.
+- `gbtool pack ROM SID XML OUTDIR NAME [--home DIR]` writes a pack from the command line. The `Export level pack`
+  button in the app's Export patch dialog does the same for the open level (`Backend::level_pack`), and shows the
+  refusals in the status line. The toolbar has no room for one more button at 1280 pixels. The button opens a dialog
+  that asks for the pack's name, then a Save dialog names the pack's folder.
 - A level that needs the console's game mod is refused: g64coopdx does not have the mod's features yet (rotation and
-  scale on every object type, more bank slots, the extra level slots). Imported models are not in a pack yet either.
-- g64coopdx plans a third, optional file for a pack's own models: `models.bin` (its `docs/discovery/model-banks.md`).
-  It holds one texture bank and one object bank, uncompressed, after a 16-byte header with their sizes.
-  - `custom::pack::model_banks` builds the two banks from converted pieces. It needs no ROM. The object bank holds
-    the pieces alone, linked with no game bank under them. Two pieces with the same id are an error. The texture bank
-    holds the records the pieces use, padded to a multiple of 8 bytes with their size fixed, and no names after them.
-    It ends with 4 zero bytes, so its size is a multiple of 8 too.
-  - The converter writes a rotation key of all zeros. The game turns it into a matrix of values that are not numbers.
-    `model_banks` writes the key of no turn (0, 0, 0, 1) in its place. The converter itself does not change.
-  - `pack::models_bin` writes the file with no game banks named.
-  - `gbtool modelbanks GLTF OUT` converts a glTF file at scale 1 and writes `models.bin`. It needs no ROM, so it does
-    not avoid the game's ids. g64coopdx does not check them yet. Its plan (docs/discovery/model-banks.md, "The
-    check") is to refuse a pack whose ids are the game's.
-  - `crates/core/tests/data/cube.gltf` is a cube drawn from scratch by `make_cube.py` next to it. g64coopdx keeps its
-    `models.bin` as the fixture of its bank check. The test `the_cube_clashes_with_no_game_id` checks its ids
-    against every object bank and texture bank in the ROM map.
-- g64coopdx does not check yet that the level's objects are in the banks of the level whose place it takes. A level
-  that names another level's object makes that game stop.
-- The app has no button for it yet.
+  scale on every object type, more bank slots, the extra level slots).
 - Verified with g64coopdx: Atlantis 1's XML gives a `level.lev` with the same bytes as the ROM's level file, and a pack
   of that level with its first checkpoint moved plays online in two programs with equal state hashes.
+
+### The level's imports
+
+- `pack::object_refs` reads the object ids from the assembled level file, at the commands g64coopdx reads
+  (`g64_lev_object_ids` in its src/client/pack.c): Platform, BackgroundActor, LandActor and AnimatedBackgroundActor
+  (g64coopdx's CAMEO_OBJ) at field offset 0, PlatSine at 4, PlatDestructible (its debris) and Rope at 6, PlatOrbit at
+  8, Water at 38. A debris id of 0 is no debris. The XML's `object_id` attributes miss the rope's and the bridges' ids.
+- An import is an id that the level's own banks lack (`GameData::loaded_ids`, as the editor's rule). `export` gives
+  them to `imports::plan_runtime`, as for a ROM with the game mod. Imported models go into the pack's own banks
+  (`custom::pack::model_banks`). The game's other banks go into `models.bin`'s lists, by number. `copy_imports` does
+  not apply: a pack never copies the game's models. An id in no bank and in no imported model is an error.
+- Each player's g64coopdx game loads the game's banks that `models.bin` names from the player's own ROM (its
+  model-banks.md, "Retail banks"). The app's status line and `gbtool pack` say so (`pack::GAME_BANKS_TEXT`) when a
+  pack names them.
+- The game reads a sprite's texture with no test, and crashes on a sprite whose texture no loaded bank has. So
+  g64coopdx refuses a pack that names an object bank of the game's whose sprites need a texture from no bank the level
+  has (`g64_pack_check_retail_sprites`). It checks every object of the bank, also the ones the level does not place.
+  The banks it counts are the font's (10), GENERIC (2), the level's own and the texture banks `models.bin` names.
+  `pack::add_sprite_banks` runs after `plan_runtime` and adds texture banks until every sprite texture of each named
+  object bank is in one. It tries the texture banks of the levels that load the object bank first, then every other
+  one. The added banks come after the plan's own. More than 4 in all is refused, and so is a sprite texture in no
+  bank. `plan_runtime` itself does not change: the game mod's builds do not use the rule.
+- Example: Carnival's shared bank (object bank 19) has a body, 0x23313E06, whose faces need no texture bank of
+  Carnival's. Other objects of the bank have sprites with a texture of Carnival's texture bank (4). Without the rule
+  the pack for Atlantis 1 named object bank 19 alone, and `g64pack check` refused it. With it, the pack names texture
+  bank 4 too and passes. One object of each object bank in the scenes' catalog, placed in Hub 1, Atlantis 1 and
+  the Wayroom, gives a pack that passes `g64pack check`.
+- The flag of `models.bin` (the game's texture banks win over the level's own) is always 0. The game mod's builds never
+  set it either.
+- All 48 shipped levels export with no `models.bin` (`every_shipped_level_makes_a_pack`).
+- `pack::pack_models` refuses, with a message:
+  - a reskin: a set whose `meta.json` names the model it was made from
+  - a model whose id is one that the game finds an enemy, a bullet or a pick-up by (`pack::GAME_NAME_IDS`, copied from
+    g64coopdx's `g64_models_game_ids`)
+  - a cameo (AnimatedBackgroundActor) of an imported model. The game animates a cameo, and the model has no animation.
+  - a model with a mesh named `gball`, `cball`, `GShinL`, `GShinR` or `gbl_bt`. The game points the ball's and the
+    hand's textures at those. The export does not rename it. The mesh's name comes from the file's name when it was
+    imported. A set's folder name comes from the file's bytes and the scale alone, so an import of the same file under
+    another name gives back the old set. The author removes the model, renames the file, imports it again and places
+    the new model.
+  - models over 4 MiB, more than 4 of the game's banks of a kind, the font or generic texture banks (10 and 2), and
+    object banks 0 and 1
+- The refusals need no ROM. Their tests are in `pack.rs`. `a_pack_with_imports` (in `crates/core/tests/pack_rom.rs`)
+  runs the export with the ROM.
+
+### models.bin
+
+- `custom::pack::model_banks` builds the two banks from converted pieces. It needs no ROM. The object bank holds the
+  pieces alone, linked with no game bank under them. Two pieces with the same id are an error. The texture bank holds
+  the records the pieces use, padded to a multiple of 8 bytes with their size fixed, and no names after them. It ends
+  with 4 zero bytes, so its size is a multiple of 8 too.
+- The converter writes a rotation key of all zeros. The game turns it into a matrix of values that are not numbers.
+  `model_banks` writes the key of no turn (0, 0, 0, 1) in its place. The converter itself does not change.
+- `pack::models_bin` writes the file: the header, the numbers of the game's banks, zeros up to a multiple of 8, then
+  the two banks.
+- `gbtool modelbanks GLTF OUT` converts a glTF file at scale 1 and writes `models.bin`. It needs no ROM, so it does
+  not avoid the game's ids. `gbtool import ROM GLTF [--scale S] [--home DIR]` imports a model into a user folder, as
+  the app's Import model does.
+- `crates/core/tests/data/cube.gltf` is a cube drawn from scratch by `make_cube.py` next to it. g64coopdx keeps its
+  `models.bin` as the fixture of its bank check. The test `the_cube_clashes_with_no_game_id` checks its ids against
+  every object bank and texture bank in the ROM map.
+- Verified with g64coopdx's `g64pack check DIR --rom ROM`: Atlantis 1 with a model drawn from scratch and imported
+  with `gbtool import`, as a LandActor and a Platform, and Atlantis 1 with a Carnival 1 bell (models.bin names texture
+  bank 4 and object bank 20), and Atlantis 1 with that model and the cube, two imported sets in one pack. All three
+  pass the ROM's rules and the rule for the level's objects, and g64pack prints the id that gbtool prints. The pack
+  with the bell names banks that each player's game loads from the player's own ROM.
 
 ## Autosave, reset, import
 

@@ -81,6 +81,8 @@ pub enum Dialog {
     Patch { lines: Vec<(&'static str, String)>, quickboot: bool },
     BuildAll { levels: Vec<(String, String, String, bool)>, boot: Option<usize> },
     ImportModel(Box<ImportModel>),
+    /// Export level pack: the pack's name
+    Pack { name: String },
 }
 
 pub struct ImportXml {
@@ -123,6 +125,13 @@ pub fn open_import_dialog(w: &mut Window, path: Option<PathBuf>) {
         read_xml(w, &mut d, &p);
     }
     w.dialog = Some(Dialog::ImportXml(Box::new(d)));
+}
+
+/// Export level pack: asks for the pack's name, the level's own name to start with.
+pub fn open_pack_dialog(w: &mut Window) {
+    let Some(scene) = &w.ed.scene else { return };
+    let name: String = s(scene, "name").chars().filter(|c| (' '..='~').contains(c)).take(glovebox_core::pack::NAME_MAX).collect();
+    w.dialog = Some(Dialog::Pack { name });
 }
 
 fn read_xml(w: &Window, d: &mut ImportXml, path: &Path) {
@@ -397,7 +406,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
             }
             Dialog::Patch { lines, quickboot } => {
                 title_bar(ui, "Export patch");
-                style::para(ui, "A BPS patch for other players. They apply it to their own Glover (USA) ROM with patcher.html. Share the .bps and patcher.html (one file, works offline).");
+                style::para(ui, "A BPS patch for other players. They apply it to their own Glover (USA) ROM with patcher.html. Share the .bps and patcher.html (one file, works offline). Export level pack saves the level for g64coopdx, the online co-op game on PC, instead.");
                 for (level, text) in lines.iter() {
                     check_line(ui, level, text, false, None, None, None);
                 }
@@ -407,6 +416,30 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                         keep = false;
                         let qb = *quickboot;
                         then = Some(Box::new(move |w: &mut Window| w.export("bps", Some(qb))));
+                    }
+                    let r = ui.button("Export level pack").on_hover_text("Save the level as a level pack for g64coopdx, the online co-op game on PC, with the models it imports");
+                    if r.clicked() {
+                        keep = false;
+                        then = Some(Box::new(open_pack_dialog));
+                    }
+                    if ui.button("Cancel").clicked() {
+                        keep = false;
+                    }
+                });
+            }
+            Dialog::Pack { name } => {
+                title_bar(ui, "Export level pack");
+                style::para(ui, "A level pack for g64coopdx, the online co-op game on PC. It is a folder with the level and the models it imports. Models from other levels are named by their bank, not copied. Each player's game loads those banks from the player's own ROM. The pack holds no game data.");
+                ui.horizontal(|ui| {
+                    ui.label("Pack name");
+                    ui.add(egui::TextEdit::singleline(name).char_limit(glovebox_core::pack::NAME_MAX).hint_text("Name").desired_width(260.0));
+                });
+                muted(ui, "1 to 32 characters of plain ASCII. Every player sees it.");
+                buttons(ui, |ui| {
+                    if ui.add(style::primary("Export pack")).clicked() {
+                        keep = false;
+                        let n = name.clone();
+                        then = Some(Box::new(move |w: &mut Window| w.export_pack(n)));
                     }
                     if ui.button("Cancel").clicked() {
                         keep = false;
