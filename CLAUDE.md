@@ -87,7 +87,7 @@ cargo run -p glovebox-core --example gbtool -- hwcheck ROM     # a built ROM aga
 - `gbtool` (`crates/core/examples/gbtool.rs`) is the back end on the command line: `gbtool xml ROM LEVEL` prints a
   level's XML, `gbtool build ROM LEVEL XML OUT [--quickboot] [--expansion] [--bps]` builds a ROM or a patch.
   `gbtool pack LEVEL XML OUTDIR NAME` writes a level pack for g64coopdx (docs/technical.md, "Level packs for
-  g64coopdx").
+  g64coopdx"). `gbtool modelbanks GLTF OUT` writes a glTF model as a pack's `models.bin`.
 - The game itself is tested in gloveworld's emulator harness (`tools/emu/emu.py SCRIPT.py --rom ROM`, set up with its
   `tools/emu/setup.sh`). It needs a built gloveworld: `make toolchain`, the ROM as `baserom.us.z64`, `make setup`,
   `make`. Make the ROM to test with `gbtool build`. Give every new ROM a new file name: the harness keeps data for a
