@@ -14,6 +14,7 @@ pub mod model;
 pub mod modpatch;
 pub mod n64;
 pub mod objbank;
+pub mod pack;
 pub mod pyfmt;
 pub mod pyrandom;
 pub mod rom;

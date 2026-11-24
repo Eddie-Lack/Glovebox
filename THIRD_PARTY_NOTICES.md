@@ -230,7 +230,7 @@ under MIT or Apache 2.0, at the user's choice. The main ones:
 | [chrono](https://github.com/chronotope/chrono) | Local time | MIT or Apache 2.0 |
 | [png](https://github.com/image-rs/image-png) | Reading and writing PNG | MIT or Apache 2.0 |
 | [serde, serde_json](https://github.com/serde-rs/serde) | JSON | MIT or Apache 2.0 |
-| [sha1, sha2](https://github.com/RustCrypto/hashes) | Hashes | MIT or Apache 2.0 |
+| [sha1, sha2, blake2](https://github.com/RustCrypto/hashes) | Hashes | MIT or Apache 2.0 |
 | [crc32fast](https://github.com/srijs/rust-crc32fast) | CRC32 for patches | MIT or Apache 2.0 |
 
 egui's font crate (`epaint_default_fonts`) compiles these fonts into the app. Their license texts are in the
