@@ -8,10 +8,11 @@
 use glovebox_core::backend::{Backend, BackendError, CatalogEntry, CustomEntry, ModInfo, ModelRef, Result, SceneModels};
 use glovebox_core::build::{self, BuildAllRequest, BuildRequest, Built};
 use glovebox_core::custom;
-use glovebox_core::gamedata::Image;
-use glovebox_core::imports::{CopyPlan, Plan, Runtime};
+use glovebox_core::gamedata::{self, Image};
+use glovebox_core::imports::{self, CopyPlan, Plan, Runtime};
 use glovebox_core::kit;
 use glovebox_core::level;
+use glovebox_core::pack;
 use glovebox_core::model::{Material, Mesh, Model, Node, Primitive, Wrap};
 use glovebox_core::tables;
 use serde_json::{json, Value};
@@ -472,6 +473,37 @@ impl Backend for FixtureBackend {
 
     fn build_all(&self, _request: &BuildAllRequest) -> Result<Built> {
         no_rom()
+    }
+
+    /// A pack as the game's back end makes it. The fixture's plan names its made-up bank 9 for every model the
+    /// level does not load, and the fixture has no imported models to put in the pack's own banks.
+    fn level_pack(&self, sid: &str, xml: &str, name: &str) -> Result<pack::LevelPack> {
+        let index = usize::from_str_radix(sid, 16).map_err(|_| BackendError(format!("no level {sid}")))?;
+        let mut p = pack::make_pack(name, index, xml.as_bytes())?;
+        let refs = pack::object_refs(&p.level)?;
+        let own = self.level_ids();
+        let mut ids: Vec<String> = Vec::new();
+        for (_, id) in &refs {
+            let id = gamedata::hex(*id);
+            if !own.contains(&id) && !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+        if ids.is_empty() {
+            return Ok(p);
+        }
+        for id in &ids {
+            if self.customs().contains_key(id) {
+                return Err(BackendError("The fixture has no ROM: it can't put imported models in a level pack.".to_string()));
+            }
+            if !self.cat.contains_key(id) {
+                return Err(BackendError(format!("Object {id} isn't in any of the fixture's banks")));
+            }
+        }
+        let plan = self.plan(sid, &ids)?;
+        p.models = pack::pack_models(&plan, &imports::Customs::default(), &refs)?;
+        p.id = pack::pack_id(&p.manifest, &p.level, None, p.models.as_deref());
+        Ok(p)
     }
 
     fn import_custom(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {

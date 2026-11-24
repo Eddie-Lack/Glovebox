@@ -3,16 +3,38 @@
 //!     gbtool xml ROM SID                          print a level's XML
 //!     gbtool build ROM SID XML OUT [--quickboot] [--expansion] [--copy] [--bps] [--import 0xID]...
 //!     gbtool hwcheck ROM                          check a built ROM against the console's rules
-//!     gbtool pack SID XML OUTDIR NAME             write a level pack for g64coopdx (docs/technical.md, "Level packs")
+//!     gbtool pack ROM SID XML OUTDIR NAME [--home DIR]
+//!                                                 write a level pack for g64coopdx (docs/technical.md, "Level packs")
+//!     gbtool import ROM GLTF [--scale S] [--home DIR] import a glTF model into the user folder
 //!     gbtool modelbanks GLTF OUT                  write a glTF model as a pack's models.bin for g64coopdx
 //!
 //! OUT gets the built ROM (or the BPS patch with --bps).
-//! `build` reads imported models from the user folder that the environment variable `GLOVEBOX_HOME` names.
+//! `build` reads imported models from the user folder that the environment variable `GLOVEBOX_HOME` names. `pack`
+//! and `import` use the folder that `--home` names, or else that variable.
 
 use glovebox_core::backend::{Backend, GameBackend};
 use glovebox_core::build::BuildRequest;
 use std::path::Path;
 use std::process::ExitCode;
+
+/// The user folder: `--home DIR` among `opts`, else `GLOVEBOX_HOME`, else a folder in the temporary folder. The
+/// other options are returned as pairs of a name and a value.
+fn options(opts: &[String], allowed: &[&str]) -> Result<(std::path::PathBuf, Vec<(String, String)>), String> {
+    let mut home = std::env::var("GLOVEBOX_HOME").map(Into::into).unwrap_or_else(|_| std::env::temp_dir().join("gbtool-home"));
+    let mut rest = Vec::new();
+    let mut i = 0;
+    while i < opts.len() {
+        let name = opts[i].as_str();
+        let value = opts.get(i + 1).ok_or_else(|| format!("{name} needs a value"))?.clone();
+        match name {
+            "--home" => home = value.into(),
+            _ if allowed.contains(&name) => rest.push((name.to_string(), value)),
+            _ => return Err(format!("unknown option {name}")),
+        }
+        i += 2;
+    }
+    Ok((home, rest))
+}
 
 fn run(args: &[String]) -> Result<(), String> {
     let cmd = args.first().map(String::as_str).unwrap_or("");
@@ -58,18 +80,54 @@ fn run(args: &[String]) -> Result<(), String> {
             eprintln!("{}: {} bytes, game mod {}", args[4], built.data.len(), if built.needs_mod { "yes" } else { "no" });
             Ok(())
         }
-        "pack" if args.len() == 5 => {
-            // A pack needs no ROM: the level's XML and the number of the level whose place it takes are enough.
-            let scene = glovebox_core::gamedata::scenes().iter().find(|s| s.id == args[1]).ok_or_else(|| format!("no level {}", args[1]))?;
-            let xml = std::fs::read(&args[2]).map_err(|e| e.to_string())?;
-            let pack = glovebox_core::pack::make_pack(&args[4], scene.index, &xml)?;
-            pack.write_to(Path::new(&args[3])).map_err(|e| e.to_string())?;
-            eprintln!("{}: level {} ({}), {} bytes, id {}", args[3], scene.index, scene.name, pack.level.len(), pack.id_hex());
+        "pack" if args.len() >= 6 => {
+            // The level's imports come from the ROM and from the imported models in the user folder.
+            let (home, _) = options(&args[6..], &[])?;
+            let be = GameBackend::open(Path::new(&args[1]), home).map_err(|e| e.to_string())?;
+            let scene = glovebox_core::gamedata::scene(&args[2]).map_err(|e| e.0)?;
+            let xml = std::fs::read_to_string(&args[3]).map_err(|e| e.to_string())?;
+            let pack = be.level_pack(&scene.id, &xml, &args[5]).map_err(|e| e.to_string())?;
+            // The folder's id counts a script.lua that is already there
+            let id = pack.write_to(Path::new(&args[4])).map_err(|e| e.to_string())?;
+            let script = if id != pack.id { ", with the folder's script.lua" } else { "" };
+            let models = match &pack.models {
+                Some(m) => format!("models.bin {} bytes", m.len()),
+                None => "no models.bin".to_string(),
+            };
+            eprintln!(
+                "{}: level {} ({}), level.lev {} bytes, {}{}, id {}",
+                args[4],
+                scene.index,
+                scene.name,
+                pack.level.len(),
+                models,
+                script,
+                glovebox_core::pack::id_text(&id)
+            );
+            let (tex, obj) = pack.game_banks();
+            if tex + obj > 0 {
+                eprintln!("{}", glovebox_core::pack::GAME_BANKS_TEXT);
+            }
+            Ok(())
+        }
+        "import" if args.len() >= 3 => {
+            let (home, rest) = options(&args[3..], &["--scale"])?;
+            let scale = match rest.iter().find(|(k, _)| k == "--scale") {
+                Some((_, v)) => v.parse::<f64>().map_err(|_| format!("--scale {v} is not a number"))?,
+                None => 1.0,
+            };
+            let be = GameBackend::open(Path::new(&args[1]), home).map_err(|e| e.to_string())?;
+            let data = std::fs::read(&args[2]).map_err(|e| e.to_string())?;
+            let name = Path::new(&args[2]).file_stem().and_then(|s| s.to_str()).unwrap_or("model");
+            let meta = be.import_custom(&data, name, scale).map_err(|e| e.to_string())?;
+            let ids: Vec<&str> = meta["pieces"].as_array().into_iter().flatten().filter_map(|p| p["id"].as_str()).collect();
+            println!("{}", ids.join(" "));
+            eprintln!("set {}: {} piece(s)", meta["set"].as_str().unwrap_or("?"), ids.len());
             Ok(())
         }
         "modelbanks" if args.len() == 3 => {
-            // The converter needs no ROM. With no ROM it cannot avoid the game's ids. g64coopdx plans to refuse
-            // a pack with the game's ids, but does not check them yet.
+            // The converter needs no ROM. With no ROM it cannot avoid the game's ids. g64coopdx refuses a pack
+            // with the game's ids when it has the ROM.
             let data = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
             let name = Path::new(&args[1]).file_stem().and_then(|s| s.to_str()).unwrap_or("model");
             let none = std::collections::HashSet::new();
@@ -77,7 +135,7 @@ fn run(args: &[String]) -> Result<(), String> {
             let pieces: Vec<_> = set.pieces.iter().collect();
             let (textures, objects) =
                 glovebox_core::custom::pack::model_banks(&pieces, &[&set.texture_bank]).map_err(|e| e.to_string())?;
-            let file = glovebox_core::pack::models_bin(&textures, &objects)?;
+            let file = glovebox_core::pack::models_bin(false, &[], &[], &textures, &objects)?;
             std::fs::write(&args[2], &file).map_err(|e| e.to_string())?;
             let ids: Vec<String> = set.pieces.iter().map(|p| format!("0x{:08X}", p.id)).collect();
             let tex: Vec<String> = set.textures.iter().map(|t| format!("0x{:08X}", t.0)).collect();
@@ -102,7 +160,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 Err(found.join("\n"))
             }
         }
-        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack SID XML OUTDIR NAME | modelbanks GLTF OUT".into()),
+        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack ROM SID XML OUTDIR NAME [--home DIR] | import ROM GLTF [--scale S] [--home DIR] | modelbanks GLTF OUT".into()),
     }
 }
 

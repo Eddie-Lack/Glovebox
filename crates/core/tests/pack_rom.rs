@@ -22,7 +22,10 @@ fn every_shipped_level_makes_a_pack() {
             .unwrap_or_else(|e| panic!("level {} ({}) does not make a pack: {}", scene.id, scene.name, e));
         // A pack of an unchanged level holds the level file as the game has it: it starts with its own size.
         pack::check_level(&p.level).unwrap();
-        assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level));
+        assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level, None, None));
+        // The export with the level's imports finds none in a shipped level: it uses only its own banks.
+        let e = be.level_pack(&scene.id, &xml, "Shipped").unwrap_or_else(|e| panic!("level {} does not export: {}", scene.id, e));
+        assert_eq!((e.models.as_deref(), e.level.as_slice()), (None, p.level.as_slice()), "level {}", scene.id);
         made += 1;
     }
     assert_eq!(made, pack::LEVELS, "the game has 48 levels");
@@ -73,4 +76,80 @@ fn the_cube_clashes_with_no_game_id() {
         assert!(!taken_textures.contains(t), "texture 0x{t:08X} is the game's");
     }
     assert_eq!(banks(&taken_ids, &taken_textures), banks(&HashSet::new(), &HashSet::new()));
+}
+
+/// A level that imports the cube (from a user folder) and a model of another world: the cube goes into the pack's own
+/// banks, the other model's banks into models.bin by number.
+#[test]
+fn a_pack_with_imports() {
+    let Ok(rom) = std::env::var("GLOVEBOX_ROM") else {
+        println!("a_pack_with_imports: skipped (GLOVEBOX_ROM is not set)");
+        return;
+    };
+    let home = std::env::temp_dir().join(format!("glovebox-pack-imports-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&home);
+    let be = GameBackend::open(Path::new(&rom), home.clone()).expect("the ROM opens");
+    let meta = be.import_custom(include_bytes!("data/cube.gltf"), "cube", 1.0).expect("the cube imports");
+    let cube = meta["pieces"][0]["id"].as_str().unwrap().to_string();
+    let xml = be.level_xml("0a").unwrap();
+    let at = xml.find('\n').and_then(|i| xml[i + 1..].find('\n').map(|j| i + j + 2)).unwrap();
+    let with = |lines: &str| format!("{}{}{}", &xml[..at], lines, &xml[at..]);
+    // 0x45F8316C is a bell of Carnival 1
+    let bell = r#"  <LandActor object_id="0x45F8316C" name="bell" x="0.0" y="40.0" z="0.0"/>
+"#;
+    let land = format!("  <LandActor object_id=\"{cube}\" name=\"cube\" x=\"0.0\" y=\"40.0\" z=\"0.0\"/>\n");
+    let p = be.level_pack("0a", &with(&land), "Cube").expect("the cube's pack");
+    let m = p.models.as_ref().expect("the pack has models");
+    assert_eq!(&m[8..12], &[0, 0, 0, 0], "no bank of the game's");
+    assert!(u32::from_be_bytes([m[0], m[1], m[2], m[3]]) > 0 && u32::from_be_bytes([m[4], m[5], m[6], m[7]]) > 0);
+    assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level, None, Some(m)));
+    let p = be.level_pack("0a", &with(bell), "Bell").expect("the bell's pack");
+    let m = p.models.as_ref().expect("the pack names the bell's banks");
+    assert_eq!(&m[..8], &[0; 8], "no banks of the pack's own");
+    assert!(m[10] == 1, "one object bank of the game's: {m:?}");
+    let p = be.level_pack("0a", &with(&format!("{land}{bell}")), "Both").expect("the pack of both");
+    assert!(p.models.as_ref().is_some_and(|m| m[10] == 1 && m[0..4] != [0; 4]));
+    // 0x23313E06 is a body of Carnival's shared bank, object bank 19. Its own faces need no texture bank of
+    // Carnival's, but other objects of the bank have sprites with a texture of Carnival's texture bank (4).
+    // g64coopdx refuses the bank without the textures of its sprites, so the export names bank 4 as well.
+    let body = r#"  <LandActor object_id="0x23313E06" name="body" x="0.0" y="40.0" z="0.0"/>
+"#;
+    let p = be.level_pack("0a", &with(body), "Body").expect("the body's pack");
+    let m = p.models.as_ref().expect("the pack names the body's banks");
+    assert_eq!(&m[9..14], &[1, 1, 0, 4, 19], "texture bank 4 and object bank 19: {m:?}");
+    let game = gamedata::GameData::open(std::fs::read(&rom).unwrap()).unwrap();
+    let raw = game.raw_bank("CARNIVAL_SHARED.obj.fla").unwrap();
+    let bank = objbank::Bank::parse(raw).unwrap();
+    let banks = ["FONT_TEX_BANK", "GENERIC_TEX_BANK", "ATLANTIS_TEX_BANK", "CARNIVAL_TEX_BANK"];
+    let mut sprites = 0;
+    for s in bank.objects.iter().flat_map(|o| o.meshes.iter()).flat_map(|m| m.sprite_list()) {
+        sprites += 1;
+        let found = banks.iter().any(|b| game.texture_ids(&format!("{b}.tex.fla")).contains(&s.texture_id));
+        assert!(found, "sprite texture 0x{:08X} is in no bank the pack has", s.texture_id);
+    }
+    assert!(sprites > 0, "object bank 19 has sprites");
+    // Models of five worlds need five of the game's texture banks, one more than a pack can name.
+    let loaded = game.loaded_ids("0a").unwrap();
+    let mut worlds: Vec<String> = Vec::new();
+    let mut lines = String::new();
+    for (id, e) in game.catalog() {
+        if worlds.len() == 5 || loaded.contains(id) || worlds.contains(&e.world) || e.world == "ATLANTIS" {
+            continue;
+        }
+        let plan = glovebox_core::imports::plan_runtime(&game, &Default::default(), "0a", &[gamedata::hex(*id)]).unwrap();
+        if plan.runtime.is_some_and(|r| !r.texture_numbers.is_empty()) {
+            worlds.push(e.world.clone());
+            lines += &format!("  <LandActor object_id=\"{}\" name=\"m\" x=\"0.0\" y=\"40.0\" z=\"0.0\"/>\n", gamedata::hex(*id));
+        }
+    }
+    assert_eq!(worlds.len(), 5, "{worlds:?}");
+    let e = be.level_pack("0a", &with(&lines), "Five").unwrap_err().0;
+    assert!(e.contains("can name 4 at most"), "{e}");
+    // A cameo of the cube, and a model that is in no bank
+    let cameo = format!("  <AnimatedBackgroundActor object_id=\"{cube}\" name=\"cube\" x=\"0.0\" y=\"40.0\" z=\"0.0\"/>\n");
+    assert!(be.level_pack("0a", &with(&cameo), "Cameo").unwrap_err().0.contains("cameo"));
+    let none = r#"  <LandActor object_id="0x0BADF00D" name="none" x="0.0" y="40.0" z="0.0"/>
+"#;
+    assert!(be.level_pack("0a", &with(none), "None").unwrap_err().0.contains("0x0BADF00D"));
+    let _ = std::fs::remove_dir_all(&home);
 }

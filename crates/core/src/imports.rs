@@ -162,12 +162,17 @@ impl Plan {
 /// A texture bank's data, not compressed. A `custom:` bank is an imported set's.
 fn raw_bank<'a>(gd: &'a GameData, customs: &'a Customs, bank: &str) -> Result<Cow<'a, [u8]>, String> {
     match bank.strip_prefix("custom:") {
-        Some(set) => match customs.tex_banks.get(set) {
-            Some(data) if fla2::is_fla2(data) => fla2::decompress(data).map(Cow::Owned).map_err(|e| e.to_string()),
-            Some(data) => Ok(Cow::Borrowed(data.as_slice())),
-            None => Err(format!("The imported model {set} has no texture bank")),
-        },
+        Some(set) => custom_tex_bank(customs, set),
         None => gd.raw_bank(bank).map(Cow::Borrowed).map_err(|e| e.0),
+    }
+}
+
+/// The texture bank of the imported set `set`, not compressed.
+pub fn custom_tex_bank<'a>(customs: &'a Customs, set: &str) -> Result<Cow<'a, [u8]>, String> {
+    match customs.tex_banks.get(set) {
+        Some(data) if fla2::is_fla2(data) => fla2::decompress(data).map(Cow::Owned).map_err(|e| e.to_string()),
+        Some(data) => Ok(Cow::Borrowed(data.as_slice())),
+        None => Err(format!("The imported model {set} has no texture bank")),
     }
 }
 

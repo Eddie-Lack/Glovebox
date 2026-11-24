@@ -14,6 +14,25 @@ _Back to the [README](../README.md)_
 
 Note: only share levels that use models you have the right to share
 
+## Export level pack
+
+`Export level pack` in the `Export patch` dialog saves the level as a level pack for g64coopdx, the online co-op game on PC
+
+- A pack is a folder. Give it a name (1 to 32 plain ASCII characters), then pick where the folder goes
+- Your imported models go in the pack's `models.bin`
+- Models from other levels don't: the pack names their banks, and each player's game loads them from their own ROM
+- The pack also names the texture banks of those models' sprites. g64coopdx needs them
+- The status line tells you when your pack uses models from other levels
+- The pack holds no game data
+
+It refuses:
+
+- a level that needs the Expansion Pak game mod (rotations and scales on enemies, platforms, powerups or water)
+- a model made with other textures from one of the game's models
+- an imported model as a cameo. Use it as a landscape, a background or a platform
+- an imported model with the name of the ball or the hand (`gball`, `cball`, `GShinL`, `GShinR`, `gbl_bt`). `Remove` the model in the Models tab, give its file another name, import it again and place the new model
+- more than 4 MB of imported models, or models from more than 4 banks of each kind. The texture banks of the sprites count too
+
 ## The patcher
 
 `web/patcher.html` is for players. It's one file and it works offline

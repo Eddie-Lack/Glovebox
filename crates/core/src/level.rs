@@ -622,6 +622,27 @@ pub fn disassemble(lev: &[u8]) -> Result<Doc, LevelError> {
     Ok(doc.compact())
 }
 
+/// Each command of a level file: its type code and the offset of its fields, which follow the 2 bytes of the code.
+/// The commands are read as `disassemble` reads them.
+pub fn commands(lev: &[u8]) -> Result<Vec<(u32, usize)>, LevelError> {
+    let f = format();
+    let mut r = Reader { data: lev, pos: 0 };
+    r.take(4)?;
+    let name_len = match lev[r.pos..].iter().position(|b| *b == 0) {
+        Some(n) => n,
+        None => return err("the level's name has no end"),
+    };
+    r.take(name_len + 1)?;
+    let mut out = Vec::new();
+    while r.pos < lev.len() {
+        let start = r.pos;
+        read_obj(f, &mut r, f.cmd, 0)?;
+        let code = u16::from_be_bytes([lev[start], lev[start + 1]]) as u32;
+        out.push((code, start + 2));
+    }
+    Ok(out)
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // XML to .lev
 

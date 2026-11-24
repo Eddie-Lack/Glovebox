@@ -12,6 +12,7 @@ use crate::kit;
 use crate::level;
 use crate::model::Model;
 use crate::objbank::{self, Bank};
+use crate::pack;
 use crate::tables;
 use crate::texbank::TexBank;
 use serde_json::Value;
@@ -148,6 +149,9 @@ pub trait Backend: Send + Sync {
 
     fn build(&self, request: &BuildRequest) -> Result<Built>;
     fn build_all(&self, request: &BuildAllRequest) -> Result<Built>;
+    /// A level pack for g64coopdx of the level `sid` with this XML, named `name`, with the models it imports
+    /// (`pack::export`).
+    fn level_pack(&self, sid: &str, xml: &str, name: &str) -> Result<pack::LevelPack>;
 
     // -- Imported models and the kit
 
@@ -412,6 +416,10 @@ impl Backend for GameBackend {
 
     fn build_all(&self, request: &BuildAllRequest) -> Result<Built> {
         Ok(build::build_all(&self.game, &self.customs(), request)?)
+    }
+
+    fn level_pack(&self, sid: &str, xml: &str, name: &str) -> Result<pack::LevelPack> {
+        Ok(pack::export(&self.game, &self.customs(), sid, name, xml.as_bytes())?)
     }
 
     fn import_custom(&self, data: &[u8], name: &str, scale: f64) -> Result<Value> {
