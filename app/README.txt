@@ -1,4 +1,4 @@
-Glovebox Version 1.07
+Glovebox Version 1.0.7
 =====================
 
 A level editor for Glover (Nintendo 64, USA version).
