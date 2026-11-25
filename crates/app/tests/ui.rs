@@ -3164,7 +3164,7 @@ fn add_grid() {
     for _ in 0..10 {
         t.h.step();
     }
-    let why = t.reads("A platform must use a model from the game");
+    let why = t.reads("In a ROM, a platform must use a model from the game");
     t.shot("grid/fixture-models-platform");
     t.detail("grid: a converted model is refused as a platform, with the list's reason", is_platform && off && n2 == n && status == WHY_CUSTOM_PLATFORM && why, format!("{custom:?} {is_platform} {off} {n} {n2} {why} {status}"));
     t.click("Place as Scenery");

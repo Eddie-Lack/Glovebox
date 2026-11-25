@@ -1008,7 +1008,7 @@ fn geometry_prims(
                 let size = match key.texture {
                     Some(id) => match textures(id) {
                         Some(size) => Some(size),
-                        None => return err(format!("Need dimensions of texture 0x{id:08X}")),
+                        None => return err(format!("the size of texture 0x{id:08X} is not known")),
                     },
                     None => None,
                 };

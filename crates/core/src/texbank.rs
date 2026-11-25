@@ -164,7 +164,7 @@ impl<'a> Texture<'a> {
             }
             (color::IA, _) => {
                 return err(format!(
-                    "Unsupported image format ({}/{}) for texture {}",
+                    "unsupported image format ({}/{}) for texture {}",
                     self.compression_format, self.color_format, self.id
                 ))
             }
@@ -209,7 +209,7 @@ impl<'a> Texture<'a> {
             }
             _ => {
                 return err(format!(
-                    "Unsupported image format ({}/{}) for texture {}",
+                    "unsupported image format ({}/{}) for texture {}",
                     self.compression_format, self.color_format, self.id
                 ))
             }

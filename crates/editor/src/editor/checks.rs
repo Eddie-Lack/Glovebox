@@ -501,6 +501,27 @@ impl Editor {
         }
     }
 
+    /// The draw load of the shipped level, worked out once for each level. A restored draft is set aside while it
+    /// is measured: the entities are built for the shipped level, then for the draft again.
+    pub(crate) fn prime_orig_load(&mut self) {
+        let Some(orig) = self.orig_xml.clone().filter(|_| self.has_level) else { return };
+        if self.orig_load.as_ref().is_some_and(|(x, _)| *x == orig) {
+            return;
+        }
+        let n = if self.serialize() == orig {
+            self.draw_load().worst.0
+        } else {
+            let Ok(d) = Doc::parse(&orig) else { return };
+            let draft = std::mem::replace(&mut self.doc, d);
+            self.build_entities();
+            let n = self.draw_load().worst.0;
+            self.doc = draft;
+            self.build_entities();
+            n
+        };
+        self.orig_load = Some((orig, n));
+    }
+
     /// How the scenery added or removed since the shipped level changes the heap. None for an unchanged level or
     /// one with no measured heap.
     pub fn scenery_budget(&self) -> Option<SceneryBudget> {
@@ -799,16 +820,23 @@ impl Editor {
         }
         let dl = self.draw_load();
         let (n, Some(at)) = dl.worst else { return out };
-        let level = if n >= LOAD_STOP {
+        // Shipped levels reach these numbers too: the estimate says 261 for hub 1. A level warns or fails only when
+        // it is busier than the shipped level.
+        let orig = self.orig_xml.as_ref().and_then(|x| self.orig_load.as_ref().filter(|(o, _)| o == x)).map(|(_, n)| *n);
+        let busier = orig.is_none_or(|o| n > o);
+        let level = if n >= LOAD_STOP && busier {
             "err"
-        } else if n >= LOAD_SLOW {
+        } else if n >= LOAD_SLOW && busier {
             "warn"
+        } else if n >= LOAD_SLOW {
+            "note"
         } else {
             "ok"
         };
         let what = match level {
             "err" => format!("That's at or near the limit: past {} the game stops, and before that it crawls.", MATRICES),
             "warn" => "The game slows down here. Fewer pieces in reach or a shorter far plane fix it.".to_string(),
+            "note" => format!("The shipped level reaches about {}, and the game runs it.", orig.unwrap_or(n)),
             _ => "Fine.".to_string(),
         };
         let far = fmt_g(dl.far);
@@ -842,17 +870,18 @@ impl Editor {
         hits.first().map(|h| h.point)
     }
 
-    /// Glover starts at the first checkpoint (or the GloverSpawnPoint) and restarts at the last one he touched:
-    /// one with no solid ground under it drops him into a pit every time.
+    /// Glover starts at the first checkpoint (or the GloverSpawnPoint in a level with none) and restarts at the last
+    /// one he touched: one with no solid ground under it drops him into a pit every time.
     pub fn ground_checks(&self) -> Vec<Check> {
         let mut out = Vec::new();
         if self.scene.is_some() && self.scene_str("group") == "System" {
             return out; // the cutscenes and the flythrus aren't played
         }
+        let gates = self.entities.iter().any(|e| e.gate.is_some());
         for (i, e) in self.entities.iter().enumerate() {
             let what = if e.gate.is_some() {
                 "checkpoint"
-            } else if e.tag == "GloverSpawnPoint" {
+            } else if e.tag == "GloverSpawnPoint" && !gates {
                 "Glover's start"
             } else {
                 continue;

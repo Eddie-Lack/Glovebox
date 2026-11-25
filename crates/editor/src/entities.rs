@@ -50,10 +50,12 @@ pub const WHY_ROT_WATER: &str = "SetActorRotation, applied by the game mod to th
 pub const WHY_SCALE_ENEMY: &str = "SetActorScale, a factor on the type's size. The game mod also scales the collision sphere by the mean of the three axes.";
 pub const WHY_SCALE_PICKUP: &str = "SetActorScale, a factor on the powerup's size (0.4 in the game's code).";
 pub const WHY_SCALE_WATER: &str = "SetActorScale on the water's model. Its swimming volume keeps its own size.";
-pub const WHY_CUSTOM_PLATFORM: &str = "A platform must use a model from the game. A converted model's first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn't). Place it as Scenery or Background.";
+pub const WHY_CUSTOM_PLATFORM: &str = "In a ROM, a platform must use a model from the game. A converted model's first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn't). Place it as Scenery or Background.";
 pub const WHY_TRIGGER_ROT: &str = "Puzzle trigger volumes are axis-aligned: the game tests boxes with IsPointWithinBox, spheres and cylinders by distance.";
 pub const WHY_TRIGGER_EDIT: &str = "This trigger volume is one of several conditions of its puzzle. It can't be duplicated or deleted on its own.";
 pub const WHY_WIND_ROT: &str = "Wind volumes are axis-aligned boxes (left/top/front + width/height/depth).";
+/// The label of a GloverSpawnPoint in a level with a checkpoint. The game starts Glover at the first checkpoint.
+pub const UNUSED_SPAWN: &str = "Glover spawn point (not used: the first checkpoint is the start)";
 pub const WHY_START_ROT: &str = "Set by the first checkpoint platform's theta.";
 
 pub const EULER_ORDER: &str = "YZX";
@@ -1093,20 +1095,22 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             _ => {}
         }
     }
-    // The start marker sits on the first restart gate (PlatCheckpoint). It is left out when the level has a
-    // GloverSpawnPoint. parse.c TOKEN_RESTART: the first gate is the start, its theta Glover's facing (hub levels
-    // override it by world).
+    // The start marker sits on the first restart gate (PlatCheckpoint), its theta Glover's facing (hub levels
+    // override it by world). The game starts Glover there also when the level has a GloverSpawnPoint: the parser
+    // puts him at the spawn point (parse.c TOKEN_HAND_START), and the first gate's restart moves him to the gate
+    // (TOKEN_RESTART sets its restartTimer to 65, and RestartPlayer in platform.c acts on it).
     if let Some(g) = first_gate {
-        if !ents.iter().any(|e| e.tag == "GloverSpawnPoint") {
-            let mut ent = Ent::new("spawn", ents[g].node, "Platform", Look::Start);
-            ent.label = "Glover start (first checkpoint)".to_string();
-            ent.derived = true;
-            ent.selects = Some(g);
-            ent.why_rot = Some(WHY_START_ROT);
-            ent.why_scl = Some(WHY_NO_SCALE);
-            ent.icons.push(("\u{270b}", "#ffffff", 18, [0.0, 22.0, 0.0]));
-            ents.push(ent);
+        for e in ents.iter_mut().filter(|e| e.tag == "GloverSpawnPoint") {
+            e.label = UNUSED_SPAWN.to_string();
         }
+        let mut ent = Ent::new("spawn", ents[g].node, "Platform", Look::Start);
+        ent.label = "Glover start (first checkpoint)".to_string();
+        ent.derived = true;
+        ent.selects = Some(g);
+        ent.why_rot = Some(WHY_START_ROT);
+        ent.why_scl = Some(WHY_NO_SCALE);
+        ent.icons.push(("\u{270b}", "#ffffff", 18, [0.0, 22.0, 0.0]));
+        ents.push(ent);
     }
     Level { ents, fog, ambient }
 }
@@ -1294,6 +1298,26 @@ mod tests {
         };
         let l = build(&doc, doc.root(), &cx);
         (doc, l)
+    }
+
+    /// The game starts Glover at the first checkpoint, also when the level has a GloverSpawnPoint. Without a
+    /// checkpoint he starts at the spawn point.
+    #[test]
+    fn where_glover_starts() {
+        let labels = |l: &Level| l.ents.iter().map(|e| (e.kind, e.label.clone())).collect::<Vec<_>>();
+        let gate = r#"<Platform object_id="0x1" name="gate"><PlatSetInitialPos x="5.0" y="0.0" z="0.0"/><PlatCheckpoint theta="1.0"/></Platform>"#;
+        let spawn = r#"<GloverSpawnPoint x="0.0" y="70.0" z="250.0"/>"#;
+        let (_, both) = level(&format!("<Level>{spawn}{gate}</Level>"));
+        assert_eq!(
+            labels(&both),
+            [("spawn", UNUSED_SPAWN.to_string()), ("platform", "gate".to_string()), ("spawn", "Glover start (first checkpoint)".to_string())]
+        );
+        let start = &both.ents[2];
+        assert!(start.derived && start.selects == Some(1) && matches!(start.look, Look::Start));
+        let (_, alone) = level(&format!("<Level>{spawn}</Level>"));
+        assert_eq!(labels(&alone), [("spawn", "Glover start".to_string())]);
+        let (_, gate_only) = level(&format!("<Level>{gate}</Level>"));
+        assert_eq!(gate_only.ents.last().map(|e| e.label.as_str()), Some("Glover start (first checkpoint)"));
     }
 
     #[test]

@@ -33,6 +33,8 @@ Each part of a model the game draws takes one object matrix, and so does each sh
 | 190 to 239 | It slows down |
 | 240 or more | At or near the limit |
 
+Some shipped levels are over 190 too, and hub 1 is over 240. Your level only gets a warning or an error when it's busier than the shipped one
+
 Click the `Draw load` row. The view goes to the busiest spot and draws the far plane around it.
 
 ![The whole of Atlantis 1 inside the rings of its far plane](img/checks-draw-load.png)

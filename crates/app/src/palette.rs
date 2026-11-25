@@ -352,7 +352,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 }
             }
             _ => {
-                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels' camera zones, so it needs no game mod. The zone expects the player to walk the way the view looks; change it in the inspector.");
+                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels' camera zones, so it needs no game mod. It is made for a player who walks the way the view looks. Change that in the Inspector.");
                 for (key, lab, about) in CAM_PRESETS {
                     ui.push_id(key, |ui| {
                         if px.prow(ui, |_, _| {}, lab, None, about, &[("Add", "", true)], |_, _| {}).is_some() {

@@ -382,7 +382,7 @@ pub fn apply_mod_with(
                 return err(format!("the level file of slot {} is not in the game's size-prefixed format", slot));
             }
             if lev.len() > MAX_LEVEL_FILE {
-                return err(format!("the level file of slot {} is {} KB; the mod reads 256 KB at most", slot, lev.len() / 1024));
+                return err(format!("the level file of slot {} is {} KiB; the mod reads 256 KiB at most", slot, lev.len() / 1024));
             }
             let at = u32::try_from(base + store.len()).or_else(|_| bad_json())?;
             offsets.insert(slot, at);

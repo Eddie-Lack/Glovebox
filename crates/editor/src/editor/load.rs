@@ -300,6 +300,7 @@ impl Editor {
         self.model_cache = data.prefabs;
         self.exit_verts.borrow_mut().clear();
         self.build_entities();
+        self.prime_orig_load();
         self.frame_level();
         if let Some(st) = self.settings.as_mut() {
             st.set_value("scene", sid);

@@ -450,6 +450,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
   - a model whose id is one that the game finds an enemy, a bullet or a pick-up by (`pack::GAME_NAME_IDS`, copied from
     g64coopdx's `g64_models_game_ids`)
   - a cameo (AnimatedBackgroundActor) of an imported model. The game animates a cameo, and the model has no animation.
+    The message uses the palette's names: Scenery, Background and Platform.
   - a model with a mesh named `gball`, `cball`, `GShinL`, `GShinR` or `gbl_bt`. The game points the ball's and the
     hand's textures at those. The export does not rename it. The mesh's name comes from the file's name when it was
     imported. A set's folder name comes from the file's bytes and the scale alone, so an import of the same file under
@@ -457,8 +458,12 @@ the level it was made for, and the game loads that level's banks with it. Each p
     the new model.
   - models over 4 MiB, more than 4 of the game's banks of a kind, the font or generic texture banks (10 and 2), and
     object banks 0 and 1
+- An imported model as a platform is allowed. `model_banks` writes the rotation key of no turn ("models.bin"
+  below), and g64coopdx's `make models` test plays such platforms. A ROM for the console still must not have one
+  ("Platforms from converted models").
 - The refusals need no ROM. Their tests are in `pack.rs`. `a_pack_with_imports` (in `crates/core/tests/pack_rom.rs`)
-  runs the export with the ROM.
+  runs the export with the ROM. It also exports the cube as a platform of Atlantis 1. With `GLOVEBOX_PACK_OUT=DIR` it
+  writes that pack to DIR, and g64coopdx's `g64pack check DIR --rom ROM` passes it.
 
 ### models.bin
 
@@ -731,7 +736,12 @@ The checks estimate how hard the busiest spot of the level is to draw.
 - The far plane is `FogConfiguration`'s `near_clip` (1000 without one).
 - The editor counts the object nodes of every model within reach of a camera 130 behind and 50 over Glover,
   facing four ways, at every garib, powerup, checkpoint, enemy and camera zone.
-- From 190 it's a warning, from 240 an error. Click the row to see the spot and the far plane.
+- From 190 it's a warning, from 240 an error. Both need an estimate over the shipped level's own. Shipped levels
+  reach these numbers too: hub 1 261, hubs 2 to 6 and hub 8 209 to 239, Pirates 2 198, and the two flythrus 225 and
+  213. A level over 190 that is not busier than the shipped one gets a note. The shipped level's estimate is worked out when the
+  level opens (`prime_orig_load`), also under a restored draft. Click the row to see the spot and the far plane.
+- `the_draw_load_of_shipped_levels` (`crates/editor/tests/shipped_rom.rs`, with `GLOVEBOX_ROM`) checks that no
+  shipped level gets the warning or the error, and that hub 1 with more landscape gets the error, also from its draft.
 - Checked against the game's own count (the mod's `modPeakMatrices`) at 8 spots from quiet to busy in each of five
   levels. In Atlantis 1, Carnival 1, Carnival Bonus and Pirates 2 the estimate was within
   35 of the game at every spot. In hub 1 it said up to 63 more than the game. The shipped hub 1 asks for 228 at
@@ -742,7 +752,9 @@ The checks estimate how hard the busiest spot of the level is to draw.
 ### Ground under checkpoints
 
 Glover starts at the first checkpoint and restarts at the last one he touched. A checkpoint, or a
-`GloverSpawnPoint`, with no solid ground within 400 under it is a warning. Solid means a landscape piece
+`GloverSpawnPoint` in a level with no checkpoint, with no solid ground within 400 under it is a warning. The view
+marks the first checkpoint as Glover's start, also in a level with a `GloverSpawnPoint`. The spawn point is then
+labeled as not used. No shipped level has both. Solid means a landscape piece
 (`LandActor`) or a platform. Background actors have no collision.
 
 ### The kit
@@ -791,7 +803,8 @@ guide in the editor and isn't saved.
 
 A platform must use a model from the game. A converted model (imported or from the kit) has a first rotation
 key of all zeros. A console stops when it draws one as a platform. An emulator runs on. The Models tab doesn't
-offer **Platform** for them, and the checks flag a converted model that is used as a platform.
+offer **Platform** for them, and the checks flag a converted model that is used as a platform. This rule is for
+ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64coopdx").
 
 ## Commands, puzzles, enemy scripts, extra levels
 

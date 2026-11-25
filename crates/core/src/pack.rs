@@ -358,7 +358,7 @@ pub fn pack_models(plan: &Plan, customs: &Customs, refs: &[(u32, u32)]) -> Resul
         }
         if refs.iter().any(|(code, r)| *code == CAMEO && *r == id) {
             return Err(format!(
-                "A cameo uses the imported model {}. The game animates a cameo, and an imported model has no animation. Use it as a landscape, a background or a platform",
+                "A cameo uses the imported model {}. The game animates a cameo, and an imported model has no animation. Use it as Scenery, Background or Platform",
                 c.name
             ));
         }

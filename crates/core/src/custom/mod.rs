@@ -782,8 +782,9 @@ pub fn reskin(
     let new_id = hex_id(new);
     let Some(old) = parse_id(model.oid) else { return err(format!("{} is not an object ID", model.oid)) };
     let data = model.bank;
-    if count(data, &old.to_be_bytes()) != 2 {
-        return err(format!("the object ID of {} isn't where it should be", model.oid));
+    let found = count(data, &old.to_be_bytes());
+    if found != 2 {
+        return err(format!("the bank of {} holds its object ID {} times, not 2", model.oid, found));
     }
     let mut words: Vec<([u8; 4], [u8; 4])> = vec![(old.to_be_bytes(), new.to_be_bytes())];
     for (a, b) in &swap {

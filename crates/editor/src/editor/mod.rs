@@ -54,7 +54,8 @@ pub const GITHUB: &str = "https://github.com/Eddie-Lack/gloveworld/blob/";
 pub const MATRICES: i64 = 256;
 // Measured in the emulator: the shipped hub 1 asks for 228 at its fountain, and a hub
 // built with the editor lagged on a console at 206 to 228. The estimate was within 35 of the game's count in four
-// levels, and up to 63 over in hub 1.
+// levels, and up to 63 over in hub 1. Shipped levels pass both limits (hub 1's estimate is 261). A level gets the
+// warning or the error only when it is busier than the shipped one.
 pub const LOAD_SLOW: i64 = 190;
 pub const LOAD_STOP: i64 = 240;
 /// Glover, the ball, their shadows and footprints.
@@ -342,6 +343,8 @@ pub struct Editor {
     pub(crate) plan_serial: u64,
     pub(crate) now: f64,
     pub(crate) orig_cost: Option<(String, (i64, i64))>,
+    /// The draw load of the shipped level at its busiest spot, for the XML it was worked out from.
+    pub(crate) orig_load: Option<(String, i64)>,
     pub(crate) mouse: select::Mouse,
     pub(crate) preview_t0: f64,
 }
@@ -416,6 +419,7 @@ impl Editor {
             plan_serial: 0,
             now: 0.0,
             orig_cost: None,
+            orig_load: None,
             mouse: select::Mouse::default(),
             preview_t0: 0.0,
         }

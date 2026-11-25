@@ -204,7 +204,7 @@ fn scatter_box(w: &mut Window, ui: &mut egui::Ui) {
                 st.sc_seed = v;
             }
         });
-        style::card_note(ui, "Select one or more landscape pieces or kit models; each copy picks one of them at random. Every copy takes heap memory: the status line says how much.");
+        style::card_note(ui, "Select one or more scenery pieces or kit models; each copy picks one of them at random. Every copy takes heap memory: the status bar says how much.");
         ui.horizontal(|ui| {
             if ui.button("Try another").on_hover_text("Undo the last scatter and scatter again with the next seed").clicked() {
                 w.acts.push(Box::new(rescatter));

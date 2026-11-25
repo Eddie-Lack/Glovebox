@@ -576,7 +576,7 @@ pub fn sanitize_level_xml(text: &str, model: &FormatModel, source: &str) -> Sani
     } else if ends.is_empty() && errors.is_empty() {
         let e = out.new_element("EndLevelData");
         out.append(out_root, e);
-        warnings.push("Added the missing <EndLevelData/> terminator the game parses until.".into());
+        warnings.push("Added the missing <EndLevelData/> at the end. The game reads the level up to it.".into());
     }
     if out.len(out_root) <= 1 {
         errors.push("The level has no commands.".into());
@@ -640,7 +640,7 @@ mod tests {
             [
                 "Dropped unknown attribute odd on <Level>.",
                 "Dropped 2 comments or processing instructions.",
-                "Added the missing <EndLevelData/> terminator the game parses until."
+                "Added the missing <EndLevelData/> at the end. The game reads the level up to it."
             ]
         );
         assert_eq!(r.root.unwrap().serialize(), r#"<Level><Platform object_id="0x1" name="a"/><EndLevelData/></Level>"#);

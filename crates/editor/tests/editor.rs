@@ -345,6 +345,23 @@ fn editor_on_the_fixture() {
     t.check("the draw load check is there", dl.len() == 1);
     ed.click_check(dl[0].click.as_ref().unwrap());
     t.check("clicking it shows the far plane", ed.far_sphere.is_some());
+    // The shipped level's own load gives no warning. Copies of its landscape past 190 do.
+    let shipped = ed.draw_load().worst.0;
+    let level_of = |ed: &Editor| ed.load_checks().into_iter().find(|c| c.text.starts_with("Draw load")).map(|c| c.level).unwrap_or_default();
+    t.check("the fixture's own draw load is fine", shipped < glovebox_editor::editor::LOAD_SLOW && level_of(&ed) == "ok");
+    let mut copies = 0;
+    while ed.draw_load().worst.0 < glovebox_editor::editor::LOAD_SLOW && copies < 6 {
+        let land: Vec<EntId> = (0..ed.entities.len()).filter(|&i| ed.entities[i].kind == "land" && !ed.entities[i].derived).collect();
+        ed.set_selection(land);
+        ed.duplicate();
+        copies += 1;
+    }
+    let busy = ed.draw_load().worst.0;
+    t.detail("a busier level than the shipped one warns", busy >= glovebox_editor::editor::LOAD_SLOW && ["warn", "err"].contains(&level_of(&ed)), format!("{shipped} {busy} {copies}"));
+    for _ in 0..copies {
+        ed.undo();
+    }
+    t.check("undo brings the shipped load back", ed.draw_load().worst.0 == shipped);
 
     // Rules from the decomp: a bad trigger volume
     let vol = ed.doc.iter_tags(ed.root(), &["PuzzleCondBallWithinRangeOfPoint"])[0];

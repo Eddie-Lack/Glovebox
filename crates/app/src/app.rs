@@ -311,8 +311,8 @@ impl Window {
             |w: &mut Window, res| {
                 let res = res.and_then(|data| w.ed.apply_level(data));
                 if let Err(e) = res {
-                    shell::log(&format!("Failed to load level: {e}"));
-                    w.set_status(&format!("Failed to load level: {e}"), "err");
+                    shell::log(&format!("Couldn't load the level: {e}"));
+                    w.set_status(&format!("Couldn't load the level: {e}"), "err");
                 }
                 w.busy = false;
                 w.loading.clear();
