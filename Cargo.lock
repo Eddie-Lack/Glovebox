@@ -1459,7 +1459,7 @@ dependencies = [
 
 [[package]]
 name = "glovebox"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "chrono",
  "eframe",
@@ -1477,7 +1477,7 @@ dependencies = [
 
 [[package]]
 name = "glovebox-core"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "blake2",
  "crc32fast",
@@ -1490,7 +1490,7 @@ dependencies = [
 
 [[package]]
 name = "glovebox-editor"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "glovebox-core",
  "serde",
