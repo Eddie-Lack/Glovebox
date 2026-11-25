@@ -187,7 +187,7 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - `fog_distance` of 1000 or more, in `FogConfiguration`
 - Platforms made from your own models _(a console stops on them)_
 
-Each check links to the game's code. Problems a shipped level already has are labeled
+Some checks link to the game's code. Problems a shipped level already has are labeled
 
 The links go to _[gloveworld](https://github.com/Eddie-Lack/gloveworld)_, the game's code turned back into C
 

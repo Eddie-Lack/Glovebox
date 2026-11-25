@@ -431,8 +431,9 @@ impl Editor {
     }
 
     /// Imports are loaded from the player's ROM at run time by the game mod (mod/banks.c), unless the author
-    /// chooses to copy them into the level's banks. Copied imports work without the Expansion Pak but put game data
-    /// in patches. Imported custom models are always copied: they are not in the player's ROM.
+    /// chooses to copy them into the level's banks. Copied imports put game data in patches. They work without the
+    /// Expansion Pak when they fit in the game's own heap (`needs_pak_heap`). Imported custom models are always
+    /// copied: they are not in the player's ROM.
     pub fn runtime_imports(&self) -> bool {
         self.current_imports().iter().any(|i| !self.is_custom(i)) && !self.copy_imports
     }

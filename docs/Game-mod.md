@@ -8,7 +8,7 @@ The editor adds the mod by itself when your level needs it _(see [When the edito
 
 ## What the mod adds
 
-- Rotation and scale for enemies, platforms, powerups and water (the retail game only does it for landscape and background actors, which you place as `Scenery` and `Background`)
+- Rotation and scale for enemies, platforms, powerups and water (the retail game only applies `SetActorRotation` and `SetActorScale` to landscape and background actors, which you place as `Scenery` and `Background`)
 - More memory: 3,968 KB more for the level
 - Models and textures from other worlds, loaded from the player's own ROM when the level starts
 - Extra levels: new levels in the Space slots, with the shipped Space levels kept _(see [Extra levels](#extra-levels))_
@@ -19,10 +19,14 @@ Note: animated textures on models from other worlds don't animate
 
 `Build ROM` and `Export patch` add the mod when your level:
 
-- rotates or scales one of those objects
+- tilts an enemy, or rotates a platform, a powerup or water
+- scales an enemy, a powerup or water
+- has a `SetActorScale` command in a platform
 - imports models
 - has more scenery than the game's own memory holds
 - is an extra level
+
+Note: turning an enemy and scaling a platform don't add the mod. The retail game does both
 
 `Checks` and the export dialog will say when it gets added
 

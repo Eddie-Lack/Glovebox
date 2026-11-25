@@ -157,7 +157,7 @@ static void ApplyRotation(Vec3 *v) {
             break;
         case KIND_PLATFORM:
             /* Set now: the collision that SetPlatformPos builds uses it. A spinning platform gets it added to its
-               spin angles after parsing (FinishPlatforms). */
+               spin angles after parsing (FinishLevel). */
             if (curBase != NULL) {
                 curBase->hasRot = TRUE;
                 curBase->euler = *v;

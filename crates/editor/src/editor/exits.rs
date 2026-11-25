@@ -22,7 +22,8 @@ pub struct ExitTrigger {
 }
 
 impl ExitTrigger {
-    /// True when the game can never fire this exit: it tests a distance, and no distance is below 0.
+    /// True when the game can never fire this exit: the radius is 0, and the exit tests a distance. No distance is
+    /// below 0.
     pub fn dead(&self) -> bool {
         self.radius == Some(0.0) && self.rule.who != exits::Who::OnPlatform
     }

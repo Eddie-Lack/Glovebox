@@ -623,7 +623,8 @@ pub fn disassemble(lev: &[u8]) -> Result<Doc, LevelError> {
 }
 
 /// Each command of a level file: its type code and the offset of its fields, which follow the 2 bytes of the code.
-/// The commands are read as `disassemble` reads them.
+/// The commands are read as `disassemble` reads them, up to and including EndLevelData. `disassemble` reads on to
+/// the end of the file and drops the Noop elements at the end.
 pub fn commands(lev: &[u8]) -> Result<Vec<(u32, usize)>, LevelError> {
     let f = format();
     let mut r = Reader { data: lev, pos: 0 };

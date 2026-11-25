@@ -219,7 +219,7 @@ impl<'a> Texture<'a> {
 }
 
 /// A 16-bit color (5 bits each of red, green and blue, 1 bit of alpha) as RGBA. libgarib divides by 32, not 31,
-/// so full red is 240.
+/// so full red is 247.
 pub fn decode_rgba16(raw: u16) -> [u8; 4] {
     let c = |v: u16| ((v & 31) as u32 * 255 / 32) as u8;
     [c(raw >> 11), c(raw >> 6), c(raw >> 1), (raw & 1) as u8 * 255]

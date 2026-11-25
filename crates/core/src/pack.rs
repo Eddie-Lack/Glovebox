@@ -86,7 +86,8 @@ pub fn manifest(name: &str, level_index: usize) -> Result<Vec<u8>, String> {
 /// Makes a pack from a level's XML. `level_index` is the number of the level whose place it takes: the level the
 /// XML was made for, whose model and texture banks the game loads with it.
 ///
-/// A level that needs the console's game mod is refused: g64coopdx does not have the mod's features yet.
+/// A level that rotates or scales an enemy, a platform, a powerup or water is refused (`level::needs_mod`). On the
+/// console only the game mod applies `SetActorRotation` and `SetActorScale` to them, and g64coopdx does not.
 pub fn make_pack(name: &str, level_index: usize, xml: &[u8]) -> Result<LevelPack, String> {
     let manifest = manifest(name, level_index)?;
     let (lev, needs_mod) = level::assemble_xml(xml).map_err(|e| e.to_string())?;

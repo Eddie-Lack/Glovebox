@@ -62,7 +62,9 @@ Dropping an `.xml` on the window imports it too.
 
 The editor adds its game mod to the ROM or patch when your level:
 
-- rotates or scales enemies, platforms, powerups or water
+- tilts enemies, or rotates platforms, powerups or water
+- scales enemies, powerups or water
+- has a `SetActorScale` command in a platform
 - imports models
 - has more scenery than the game's own memory holds
 - is an extra level

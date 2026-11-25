@@ -1889,7 +1889,6 @@ fn review_fixes(t: &mut T) {
     t.check("the camera list of the path panel has tooltips", tip);
 }
 
-/// The window at 1280 by 720 and at a display scale of 1.5: nothing panics and the panels stay inside.
 /// The exit triggers: the toolbar's Exits switch, the layer's checkbox, the spheres and the inspector's block.
 #[test]
 fn exit_triggers() {
@@ -2126,6 +2125,8 @@ fn number_fields_drag() {
     t.finish();
 }
 
+/// The window at 1280 by 720, at 1920 by 1080, and at 1920 by 1080 with a display scale of 1.5: the view has room,
+/// it is drawn at the display's scale, and buttons work.
 #[test]
 fn small_and_scaled_windows() {
     for (name, size, scale) in [("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5), ("1920x1080", [1920.0, 1080.0], 1.0)] {

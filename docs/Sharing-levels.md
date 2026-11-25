@@ -31,7 +31,7 @@ It refuses:
 
 - a level with rotations or scales that only the Expansion Pak game mod applies (on enemies, platforms, powerups or water)
 - a model made with `New look` (other textures on one of the game's models)
-- an imported model as a cameo (a background the game animates). Use it as `Scenery`, `Background` or `Platform`
+- an imported model as a cameo (a background the game animates). Use it as `Scenery` or `Background`
 - an imported model with the name of the ball or the hand (`gball`, `cball`, `GShinL`, `GShinR`, `gbl_bt`). That name comes from the file's name when you imported it. `Remove` the model in the Models tab, give its file another name, import it again and place the new model
 - more than 4 MB of imported models, or models from more than 4 banks of each kind (object banks and texture banks). The texture banks of the sprites count too
 
@@ -57,4 +57,4 @@ The patcher is a page for players, `patcher.html` (`web/patcher.html` in the sou
 - `.lev` saves the level the way the game stores it
 - The file size limit is 4 MB
 
-Note: an XML or `.lev` that uses imported models, or rotates or scales enemies, platforms, powerups or water, only works in a ROM the editor built. The editor warns you
+Note: an XML or `.lev` that uses your own models or models from other levels, or rotates or scales enemies, platforms, powerups or water, only works in a ROM the editor built. The editor warns you

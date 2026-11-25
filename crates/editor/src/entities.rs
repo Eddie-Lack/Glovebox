@@ -1093,9 +1093,9 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             _ => {}
         }
     }
-    // Where Glover starts: the first restart gate (PlatCheckpoint) unless the level has a GloverSpawnPoint.
-    // parse.c TOKEN_RESTART: the first gate is the start, its theta Glover's facing (hub levels override it by
-    // world).
+    // The start marker sits on the first restart gate (PlatCheckpoint). It is left out when the level has a
+    // GloverSpawnPoint. parse.c TOKEN_RESTART: the first gate is the start, its theta Glover's facing (hub levels
+    // override it by world).
     if let Some(g) = first_gate {
         if !ents.iter().any(|e| e.tag == "GloverSpawnPoint") {
             let mut ent = Ent::new("spawn", ents[g].node, "Platform", Look::Start);

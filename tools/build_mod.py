@@ -6,8 +6,9 @@
 Needs a built gloveworld checkout: its GCC 2.7.2 (`make toolchain`), its headers and build/NGVE.elf, plus
 mips-linux-gnu binutils. The outputs are committed. Building ROMs does not need any of this.
 
-mod/heap.c, mod/transforms.c, mod/banks.c and mod/guard.c are linked at MOD_RAM, near the top of the Expansion Pak's memory, against the
-game's symbols, and are stored in the ROM at MOD_ROM. The game's heap gets the memory below MOD_RAM (heap.c).
+mod/aligned.c, mod/heap.c, mod/transforms.c, mod/banks.c, mod/guard.c and mod/slots.c (SOURCES) are linked at
+MOD_RAM, near the top of the Expansion Pak's memory, against the game's symbols, and are stored in the ROM at MOD_ROM.
+The game's heap gets the memory below MOD_RAM (heap.c).
 mod/loader.c is linked over ScreenShot, a debug function the game never calls. The JSON lists every word to patch
 in the game's code: the loader, and the `jal`s that now call the mod.
 """

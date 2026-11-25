@@ -23,10 +23,10 @@ process. It installs and unpacks nothing, and the only other program it starts i
 | `crates/core` | `glovebox-core`, the back end: the formats, the game data read from the player's ROM, ROM and patch builds, Import model (the conversion of the player's own models), the kit (props made by code). No window. |
 | `crates/editor` | `glovebox-editor`: the editor's state and every edit, the entities, the scene graph, the checks. No window, no drawing. |
 | `crates/app` | `glovebox`, the program: the window, the panels, the renderer, the user folder, and the click tests (`tests/ui.rs`). The user folder is where the app keeps its copy of the ROM, the drafts, the settings and the other files it writes ("The Windows app"). |
-| `crates/core/examples/gbtool.rs` | The back end on the command line: a level's XML, a ROM or patch build, the hardware check. |
+| `crates/core/examples/gbtool.rs` | The back end on the command line: a level's XML, a ROM or patch build, the hardware check, a level pack for g64coopdx, the import of a glTF model, and a glTF model as a pack's `models.bin`. |
 | `crates/core/data/` | The tables compiled into the program (below). None holds bytes copied from the ROM. |
 | `formats/` | libgarib's description of the level file (`glover.lev.ksy`, with one change of ours: `SetActorRotation` and `SetActorScale` may also sit in a platform, enemy, powerup or water) and its map of the retail ROM. The program does not read them: `tools/gen_formats.py` and `tools/gen_rom_map.py` turn them into JSON tables. |
-| `mod/` | The Expansion Pak game mod ("Expansion Pak game mod", under "Selecting, rotating, scaling, adding"): `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard, which skips draws that would pass the frame's 256 object matrices), `slots.c` (extra levels), which run from 0x807E0000; `loader.c` (the loader, written over `ScreenShot`, a debug function the game never calls); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
+| `mod/` | The Expansion Pak game mod ("Expansion Pak game mod", under "Selecting, rotating, scaling, adding"): `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard, which skips draws that would pass the frame's 256 object matrices), `slots.c` (extra levels), which run from 0x807E0000; `aligned.c` (the mod's one buffer that must sit on a 16 byte boundary, the header of an extra level's file); `loader.c` (the loader, written over `ScreenShot`, a debug function the game never calls); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
 | `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against gloveworld's `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
 | `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. It applies a BPS patch to the player's own ROM ("Sharing levels: patches and the patcher"). After editing the page's script, run `tools/build_patcher.py`. It writes the script's new hash into the page's Content-Security-Policy. |
 | `tools/licenses.py` | Collects the licenses of the Rust crates and fonts in the program, for the release archive. |
@@ -410,8 +410,9 @@ the level it was made for, and the game loads that level's banks with it. Each p
   button in the app's Export patch dialog does the same for the open level (`Backend::level_pack`), and shows the
   refusals in the status line. The toolbar has no room for one more button at 1280 pixels. The button opens a dialog
   that asks for the pack's name, then a Save dialog names the pack's folder.
-- A level that needs the console's game mod is refused: g64coopdx does not have the mod's features yet (rotation and
-  scale on every object type, more bank slots, the extra level slots).
+- A level that rotates or scales an enemy, a platform, a powerup or water is refused (`level::needs_mod`). On the
+  console only the game mod applies `SetActorRotation` and `SetActorScale` to them. g64coopdx applies the two
+  commands to landscape and background actors only, as the unmodded game does.
 - Verified with g64coopdx: Atlantis 1's XML gives a `level.lev` with the same bytes as the ROM's level file, and a pack
   of that level with its first checkpoint moved plays online in two programs with equal state hashes.
 
@@ -538,7 +539,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
   and swaps X/Z. Shipped levels only use Y rotation and uniform scale. The two agree on shipped data.
   An edited level rendered from the emulator's exact camera (`guLookAt(actualCamPos, actualCamTargetPos)`, read
   from memory) under both conventions showed it: the decomp's matches the game and noclip's does not.
-- **Expansion Pak game mod.** A small game mod (`mod/`) uses the N64 Expansion Pak for three things:
+- **Expansion Pak game mod.** A small game mod (`mod/`) uses the N64 Expansion Pak for five things:
   - **Rotation and scale for every 3D object.** The unmodded game applies `SetActorRotation` and
     `SetActorScale` only to landscape and background actors. The mod applies them to enemies, platforms,
     powerups and water too (`mod/transforms.c`, details below).
@@ -551,10 +552,14 @@ the level it was made for, and the game loads that level's banks with it. Each p
     back. `FindObject` and `FindTexture` are redirected to versions that search the game's slots first, then
     the mod's lists. The extra banks are freed before the next level loads. Animated textures in them do not
     animate.
-  - **Which builds add the mod.** Build ROM and Export patch add it whenever the level rotates or scales one of those
-    objects or imports models (unless "Copy the models into the ROM instead" is on and the copies fit the
-    game's own heap). The checks panel and the export dialog say so. Other levels are built
-    without the mod.
+  - **The matrix guard** (`mod/guard.c`). It skips draws that would pass the frame's 256 object matrices ("Real
+    hardware", RDP and RSP).
+  - **Extra level slots** (`mod/slots.c`). New levels can use the slots of the Space levels. A loading zone in a hub
+    switches to them ("Commands, puzzles, enemy scripts, extra levels").
+  - **Which builds add the mod.** Build ROM and Export patch add it whenever the level rotates or scales an enemy, a
+    platform, a powerup or water, or imports models (unless "Copy the models into the ROM instead" is on and the
+    copies fit the game's own heap). The checks panel and the export dialog say so. A build with an extra level also
+    gets the mod. Other levels are built without the mod.
   - **Where the mod is stored and runs.**
     - The mod is about 5 KB of code, built from C against the gloveworld decomp. It is stored in the ROM at 12 MiB,
       past anything the ROM builder writes, and runs from Expansion Pak RAM at 0x807E0000.
@@ -646,9 +651,9 @@ the level it was made for, and the game loads that level's banks with it. Each p
   - With it the heap is 5.4 MB, the level plays, and 3.8 MB stays free.
   - With the Expansion Pak check forced to fail, the heap keeps its 1.3 MB and the game stops as without the mod.
 - Which banks a level loads comes from the game's own `LoadLevel` (`tools/game_banks.py` reads `levelInfo`
-  and `worldInfo` from the decomp build; the result is in `scenes.json`). It agrees with noclip's scene table for every playable level.
-  Six differences remain, in the Wayroom (its shared bank depends on the world you came from), the studio
-  logos and the flythrus. A model counts as "already loaded" only if it's in a bank both lists load.
+  and `worldInfo` from the decomp build; the result is in `scenes.json`). It agrees with noclip's scene table for every level except
+  the Wayroom, the studio logos and the two flythrus. These four have six differences. In the Wayroom, the shared
+  bank depends on the world you came from. A model counts as "already loaded" only if it's in a bank both lists load.
 - **Puzzle trigger volumes** are drawn as translucent shapes, one per puzzle condition that tests where
   Glover, the ball or the camera is. The shapes follow `PuzzleEvaluateCondition` in the decomp:
   - Boxes (`…WithinVolume`) are a min corner `x, y, z` plus a size `l, w, h` along X, Y, Z
@@ -831,7 +836,9 @@ offer **Platform** for them, and the checks flag a converted model that is used 
 - Platforms: one `TOKEN_SPIN` each; `PlatScale` and `PlatSetParent` are ignored after the first path point;
   max 20 path points. Enemy scripts: more than 30 normal, 10 conditional or 30 attack instructions calls
   `Crash()`.
-- Glover starts at the first `PlatCheckpoint` (restart gate) unless a `GloverSpawnPoint` exists.
+- Glover starts at the first `PlatCheckpoint` (restart gate), also when a `GloverSpawnPoint` exists. The parser puts
+  him at the spawn point (`TOKEN_HAND_START`). The first gate's restart then moves him to the gate (`TOKEN_RESTART`
+  in `parse.c`, `RestartPlayer` in `platform.c`).
 - Ball walking: `ProcessInput` (`src/controller.c`) subtracts the stick's push from the ball's velocity on Easy and
   adds it otherwise, so Medium and Hard feel inverted. The check is one `bnez` at 0x801396D0 (ROM 0x3A6D0);
   `apply_easy_controls` in `crates/core/src/modpatch.rs` replaces it with a nop in every built ROM. GameShark equivalent:
@@ -989,7 +996,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
 - A texture load of a 16 bit texture holds at most 2048 texels (the converter keeps to it) and the whole of TMEM is 4096 bytes.
 - A frame has 256 object matrices (`Dynamic.objectMtx`). Every drawn object node, shadow and footprint takes one, unchecked: past 256 they overwrite the camera's
   matrices and the start of the display list, and the frame never finishes (the game stops, the music goes on). A hub built with the editor did this (259 in one view).
-  The mod's guard (`mod/guard.c`, with the Expansion Pak) skips the farthest actors and then shadows and footprints instead. Keep every view under 232 (the guard keeps 24 for shadows and footprints): each prop or retail piece is at least one.
+  The mod's guard (`mod/guard.c`, with the Expansion Pak) skips the farthest actors and then shadows and footprints instead. Keep every view under 232 (the guard keeps 24 for the glove, the ball, shadows and footprints): each prop or retail piece is at least one.
 
 **EEPROM**
 - Glover's chip is a 4 Kbit EEPROM: 64 blocks of 8 bytes. The game uses blocks 0 to 55 (ID, best times, save slots, CRCs). Set the
@@ -1015,7 +1022,8 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   alpha 0) also needs no `PlatConstantSpin`: its rotation stays zero.
 
 **Testing**
-- mupen64plus shows none of the faults in this section. Keep `crates/core/src/hwcheck.rs` in the build, and test on the console.
+- mupen64plus does not show the hardware faults in this section. The matrix overflow is an exception: it stopped the game in
+  mupen64plus (`mod/guard.c`). Keep `crates/core/src/hwcheck.rs` in the build, and test on the console.
 
 ## Imported models
 
@@ -1188,16 +1196,16 @@ The Rust code gives the reference outputs for these reasons:
     into `level_format.json`.
   - `<Level>` carries libgarib's `libgarib-version` and `data-format-version` attributes, with the values libgarib
     wrote.
-  - The Rust code differs from libgarib in these places. Models: it handles animated models, missing textures,
-    zero-length normals, and meshes with and without textures in one object. Packing: vertex indices do not
-    overflow, a normal of exactly 1 fits its byte, a mesh without vertex colors gets a display list, and more than
-    four texture coordinates at one position are allowed.
   - The packer's vertex cache optimizer is kept as libgarib has it. Its cache stays empty in practice: the result is
     the best first triangle, then the others in their order.
   - The object packer takes no wrap mode. A glTF sampler's wrap mode only tells the converter along which axes the
     texture coordinates repeat.
   - The `quickboot` and `copyskip` patches are the instruction words libgarib's assembler produced, written as
     numbers (`rom.rs`). The program holds no assembler and no CPU emulator.
+- The Rust code differs from libgarib in these places. Models: it handles animated models, missing textures,
+  zero-length normals, and meshes with and without textures in one object. Packing: vertex indices do not
+  overflow, a normal of exactly 1 fits its byte, a mesh without vertex colors gets a display list, and more than
+  four texture coordinates at one position are allowed.
 - `quickboot` takes the level's number as a number. libgarib's assembler reads a bare `10` in text as hex, and that
   boots Carnival 2 (`StartNewLevel` in the decomp).
 - Two texture banks are named `LEVELEND_TEX_BANK`: the game's banks 1 and 14. `bank_numbers.json` has 1 for the name.

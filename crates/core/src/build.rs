@@ -27,8 +27,9 @@ pub struct LevelEntry {
     /// Object ids the level uses from other banks
     pub imports: Vec<String>,
     pub info: Option<Info>,
-    /// An extra level: it is stored behind the game mod in its Space slot (35 to 41) and loads when the player
-    /// comes in through the entry zone (mod/slots.c).
+    /// An extra level: it is stored behind the game mod in its Space slot and loads when the player comes in
+    /// through the entry zone (mod/slots.c). Only the slots 35, 36, 37, 38 and 41 take one. 39 and 40 have fixed
+    /// game code.
     pub extra: bool,
 }
 

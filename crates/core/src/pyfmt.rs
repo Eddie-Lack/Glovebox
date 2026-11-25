@@ -1,7 +1,8 @@
 //! Numbers as text, the way libgarib's level XML writes and reads them.
 //!
 //! libgarib, a Python library, defined the level XML. Its floats are Python's `repr` of a double ("1.0",
-//! "0.05000000074505806", "1e-05"), and its integers above 10000 are hex. These functions write and read the same text.
+//! "0.05000000074505806", "1e-05"), and its integers above 10000 are hex. These functions write and read its floats,
+//! and read its integers. `disassemble` in level.rs writes the hex (`hex_cutoff`).
 
 /// Python's `repr(float)`: the shortest digits that read back to the same double, with ".0" on whole numbers and an
 /// exponent below 1e-4 and from 1e16.

@@ -5,6 +5,8 @@
 //! - `scenes()`: the 48 levels with their names and the banks each one loads.
 //! - `noclip_tables()`: which model each enemy and powerup type uses.
 //! - `heap()`: free heap per level, measured in the emulator.
+//! - `bank_numbers()`: the game's bank numbers, from the switch statements of LoadObjectBank and LoadTextureBank in
+//!   the decompilation.
 //! - `mod_info()` and `MOD_BIN`: the Expansion Pak game mod (`mod/`).
 
 use serde_json::Value;
