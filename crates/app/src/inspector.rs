@@ -1,4 +1,4 @@
-//! The inspector: what is selected, with its number fields, its commands and their fields, an enemy's script, a
+//! The inspector: what's selected, with its number fields, its commands and their fields, an enemy's script, a
 //! puzzle's conditions and actions, a camera zone's settings, and the level's settings when nothing is selected.
 
 use crate::app::{with_format, Act, Window};
@@ -133,7 +133,7 @@ fn row<R>(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui) -> R) -
     r.inner.1
 }
 
-/// A field the game does not keep for this object: its name, and why as a note.
+/// A field the game doesn't keep for this object: its name, and why as a note.
 fn absent(ui: &mut egui::Ui, name: &str, why: &str) {
     if style::info(ui.ctx()) == style::Info::Shown {
         fieldname(ui, name);
@@ -294,7 +294,7 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
                     }
                 }
             });
-            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, colored moods, or the shipped levels' daylight)", |ui| {
+            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, colored moods, or the vanilla levels' daylight)", |ui| {
                 for l in &LOOKS {
                     if ui.button(l.name).clicked() {
                         let name = l.name;
@@ -315,7 +315,7 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
             cx.ed_act(move |ed| ed.set_attr(root, "name", &v));
         }
     });
-    note(ui, "The name inside the level file, 7 letters like the shipped ones (an even length crashes a console). It isn't the title the game shows.");
+    note(ui, "The name inside the level file, 7 letters like the vanilla ones (an even length crashes a console). It isn't the title the game shows.");
     slot_card(cx, ui);
     for node in ed.doc.children(root).to_vec() {
         if look_name(ed.doc.tag(node)).is_some() {
@@ -332,7 +332,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
     card(ui, "Title, music and clock", None, |_| {}, |ui| {
         let shown = info.name.clone().unwrap_or_default();
         row(ui, "title", |ui| {
-            let (text, r) = commit_text(ui, egui::Id::unique("level title"), &shown, |t| t.char_limit(39).hint_text("the shipped title").desired_width(f32::INFINITY));
+            let (text, r) = commit_text(ui, egui::Id::unique("level title"), &shown, |t| t.char_limit(39).hint_text("the vanilla title").desired_width(f32::INFINITY));
             style::name(&r, "title");
             if let Some(v) = text {
                 let v = v.to_uppercase().trim().to_string();
@@ -349,7 +349,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
             }
         });
         row(ui, "music", |ui| {
-            let mut items: Vec<(Option<i64>, String)> = vec![(None, "Keep the shipped music".to_string())];
+            let mut items: Vec<(Option<i64>, String)> = vec![(None, "Keep the vanilla music".to_string())];
             items.extend(songs().into_iter().map(|(k, text)| (Some(k), format!("{k}  {text}"))));
             if let Some(v) = combo(ui, "song", "music", &info.song, &items) {
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.song = v));
@@ -365,7 +365,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
             cx.st.secs = t;
         }
         row(ui, "clock", |ui| {
-            let items = [(0, "Keep the shipped clock".to_string()), (1, "No clock".to_string()), (2, "Seconds:".to_string())];
+            let items = [(0, "Keep the vanilla clock".to_string()), (1, "No clock".to_string()), (2, "Seconds:".to_string())];
             if let Some(k) = combo(ui, "clock", "clock", &mode, &items) {
                 let secs = cx.st.secs;
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.bonus_time = [None, Some(-1), Some(secs)][k]));
@@ -385,7 +385,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
             if style::checkbox(ui, &mut on, "Extra level (Expansion Pak)").changed() {
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.extra = on));
             }
-            note(ui, "An extra level is stored behind the game mod. The shipped level stays in its slot. Players reach the extra levels through an Extra levels entry zone in a hub (Add, Presets), then the Space way room. Progress in them is kept apart from the shipped Space levels.");
+            note(ui, "An extra level is stored behind the game mod. The vanilla level stays in its slot. Players reach the extra levels through an Extra levels entry zone in a hub (Add, Presets), then the Space way room. Progress in them is kept apart from the vanilla Space levels.");
         }
     });
 }
@@ -434,7 +434,7 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
             if ui.button("Try another").clicked() {
                 go(cx, true);
             }
-            if from.is_some() && ui.button("Original").on_hover_text("Back to the shipped model").clicked() {
+            if from.is_some() && ui.button("Original").on_hover_text("Back to the vanilla model").clicked() {
                 let name: String = ed.catalog.get(&src).map(|c| c.name.clone()).unwrap_or_default().chars().take(7).collect();
                 let src = src.clone();
                 cx.ed_act(move |ed| {
@@ -603,7 +603,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
     muted(ui, &puzzles::summary(&ed.doc, p));
     for v in &ed.violations {
         if v.top == p {
-            check_line(ui, if v.shipped { "note" } else { v.level }, &v.msg, false, None, None, None);
+            check_line(ui, if v.vanilla { "note" } else { v.level }, &v.msg, false, None, None, None);
         }
     }
     let n = puzzles::fires(&ed.doc, p);
@@ -804,7 +804,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 let why = if ent.tag == "Platform" {
                     "PlatScale. The game ignores it after the first path point. The editor keeps it before them."
                 } else {
-                    ent.why_scl.unwrap_or("SetActorScale: x, y, z in the model’s own axes (guScaleF in object.c).")
+                    ent.why_scl.unwrap_or("SetActorScale: x, y, z in the model's own axes (guScaleF in object.c).")
                 };
                 note(ui, why);
             }
@@ -829,7 +829,7 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
     let Some(t) = cx.ed.exit_trigger(i) else { return };
     card(ui, "Exit trigger", None, |_| {}, |ui| {
         let who = match t.rule.who {
-            Who::Glover => "Glover (the hand\u{2019}s center)",
+            Who::Glover => "Glover (the hand's center)",
             Who::Ball => "the ball (its center)",
             Who::OnPlatform => "the ball, resting on the platform",
         };
@@ -844,17 +844,17 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 card_note(ui, "The game tests no distance for this exit type. The view draws no sphere.");
             }
             (_, None) => {
-                card_note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
+                card_note(ui, "The editor doesn't have this model's vertices. It can't tell the size, and draws no sphere.");
             }
             (_, Some(r)) if r > 0.0 => {
-                card_note(ui, "The exit fires when the center comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
+                card_note(ui, "The exit fires when the center comes closer to the platform's position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
             }
             _ => {
                 let why = t.zero.as_ref().map(|z| z.text()).unwrap_or_default();
                 check_line(ui, "err", &format!("The radius is 0. This exit can never fire. {why}"), false, None, None, None);
             }
         }
-        // What else the game asks of this exit. On hover it is one tooltip.
+        // What else the game asks of this exit. On hover it's one tooltip.
         if style::info(ui.ctx()) == style::Info::Shown {
             for n in &t.rule.notes {
                 card_note(ui, n);
@@ -917,7 +917,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
             }
         });
         style::widen(ui, line.response.rect);
-        note(ui, "LookAtGlover: the heading from the camera to Glover, and how fast it turns there (the shipped levels use 1 to 4).");
+        note(ui, "LookAtGlover: the heading from the camera to Glover, and how fast it turns there (the vanilla levels use 1 to 4).");
         // distance and height
         for (name, value, start, why, which) in [
             ("distance", z.distance, 250.0, "TweenDistance: how far behind Glover the camera stands.", 0),
@@ -968,7 +968,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         style::widen(ui, line.response.rect);
         note(ui, "FlyTowardsPoint: the camera flies to this point and watches Glover from there.");
         if let Some(view) = zone_camera(&ed.doc, &z) {
-            let look = ui.button("Look from the zone’s camera");
+            let look = ui.button("Look from the zone's camera");
             if look.clicked() {
                 cx.act(move |w| {
                     w.ed.camera.pos = view.1;
@@ -1088,7 +1088,7 @@ fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
                 let lower = ksy.to_lowercase();
                 let placeholder = lower.contains("todo") || lower.match_indices("0x").any(|(i, _)| lower[i + 2..].starts_with(|ch: char| ch.is_ascii_hexdigit()));
                 if placeholder && !token.is_empty() {
-                    ui.label(" · names libgarib’s placeholder");
+                    ui.label(" · names libgarib's placeholder");
                     ui.label(RichText::new(&ksy).monospace());
                 }
             });
@@ -1238,7 +1238,7 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                     });
                     if name == "object_id" {
                         let text = match hex_id(Some(value)) {
-                            Some(oid) if ed.loaded.contains(&oid) => "model loaded from this level’s object banks".to_string(),
+                            Some(oid) if ed.loaded.contains(&oid) => "model loaded from this level's object banks".to_string(),
                             Some(oid) if ed.catalog.contains_key(&oid) => format!("imported from {} at ROM build", ed.catalog[&oid].bank),
                             _ => "⚠ not in any object bank".to_string(),
                         };
@@ -1325,7 +1325,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             }
         });
         cx.acts.extend(go);
-        let pivot = if ed.pivot_mode == "group" { "group center (positions rotate and scale around it)" } else { "each object’s own origin" };
+        let pivot = if ed.pivot_mode == "group" { "group center (positions rotate and scale around it)" } else { "each object's own origin" };
         remark(ui, &format!("Pivot: {pivot}. {rot} of {} can store a rotation and {scl} a size; the rest only move.", tset.len()));
     });
     for (n, &i) in sel.iter().take(200).enumerate() {

@@ -25,7 +25,7 @@ The app verifies that it's the correct ROM, and keeps a copy in the user folder.
 The user folder
 ---------------
 
-Holds the ROM copy, your autosaved edits (drafts), the editor's settings, the ROMs Test level builds (test) and the models you import with Import model (custom)
+Holds the ROM copy, your autosaved edits (drafts), the editor's settings, the ROMs that Test level builds (test) and the models you import with Import model (custom)
 It's located at %LOCALAPPDATA%\Glovebox.
 editor.log there holds the editor's messages, please send it with any bug reports
 

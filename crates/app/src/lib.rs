@@ -1,6 +1,6 @@
 //! Glovebox's window: the egui panels and the wgpu view. See docs/technical.md.
 //!
-//! `shell` is what is around the window (the user folder, the options, the self-test). `app` is the application:
+//! `shell` is what's around the window (the user folder, the options, the self-test). `app` is the application:
 //! the setup screen (`setup`) or the editor's window, whose parts are `toolbar`, `viewport`, `outliner`,
 //! `inspector`, `checks`, `palette`, `path_panel` and `dialogs`. `tour` is the welcome and the tour of the window.
 //! `jobs` runs slow work on threads.

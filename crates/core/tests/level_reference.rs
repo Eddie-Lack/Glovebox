@@ -1,6 +1,6 @@
 //! `level` against the reference dumps.
 //!
-//! Needs `GLOVEBOX_REFERENCE`: the folder with `levels/<id>.xml` and `.lev` for the 48 shipped levels, and
+//! Needs `GLOVEBOX_REFERENCE`: the folder with `levels/<id>.xml` and `.lev` for the 48 vanilla levels, and
 //! `level/variants.json`, the edited levels and what libgarib does with each. Without the variable the tests pass without doing anything.
 
 use glovebox_core::level;
@@ -48,7 +48,7 @@ fn every_level_assembles_to_the_same_bytes() {
     let text = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("{}: {}", path.display(), e));
     let recorded: serde_json::Value = serde_json::from_str(&text).unwrap();
-    let (mut same_as_shipped, mut shorter, mut reordered) = (0, 0, Vec::new());
+    let (mut same_as_vanilla, mut shorter, mut reordered) = (0, 0, Vec::new());
     for (id, lev, xml) in levels(&dir) {
         let hex = |b: &[u8]| b.iter().map(|x| format!("{:02x}", x)).collect::<String>();
         let expected = recorded[&id].as_str().unwrap();
@@ -60,13 +60,13 @@ fn every_level_assembles_to_the_same_bytes() {
         assert!(level::assemble(&doc).unwrap() == mine, "level {}: the bytes differ from the XML text", id);
         let (bytes, needs_mod) = level::assemble_xml(xml.as_bytes()).unwrap();
         assert!(bytes == mine && !needs_mod, "level {}", id);
-        // The shipped file holds the same commands. Many shipped files end in 8 more zero bytes: empty commands
+        // The vanilla file holds the same commands. Many vanilla files end in 8 more zero bytes: empty commands
         // that the XML leaves out. One level has an empty command between an object's commands; the XML puts it
         // after the object, as libgarib does.
         assert!(mine.len() <= lev.len() && lev.len() - mine.len() <= 8, "level {}", id);
         assert_eq!(lev[..4], (lev.len() as u32).to_be_bytes(), "level {}", id);
         if mine == lev {
-            same_as_shipped += 1;
+            same_as_vanilla += 1;
         } else if mine[4..] == lev[4..mine.len()] && lev[mine.len()..].iter().all(|b| *b == 0) {
             shorter += 1;
         } else {
@@ -74,8 +74,8 @@ fn every_level_assembles_to_the_same_bytes() {
         }
     }
     assert!(reordered.len() <= 1, "{:?}", reordered);
-    println!("{} levels are 8 zero bytes shorter than the shipped file; other order: {:?}", shorter, reordered);
-    println!("{} of 48 levels assemble to the shipped file byte for byte", same_as_shipped);
+    println!("{} levels are 8 zero bytes shorter than the vanilla file; other order: {:?}", shorter, reordered);
+    println!("{} of 48 levels assemble to the vanilla file byte for byte", same_as_vanilla);
 }
 
 #[test]

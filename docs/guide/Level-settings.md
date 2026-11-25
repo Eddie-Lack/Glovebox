@@ -44,7 +44,7 @@ To see less fog while you edit, use `Fog` in the toolbar. That one only changes 
 
 A name with an even number of letters crashes a console. Lol yea
 
-The shipped levels' file names are 7 letters long.
+The vanilla levels' file names are 7 letters long.
 
 ---
 

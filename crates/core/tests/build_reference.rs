@@ -31,7 +31,7 @@ fn env(test: &str) -> Option<&'static Env> {
         Some(Env { game: Arc::new(game), reference, refhome })
     });
     if e.is_none() {
-        println!("{test}: skipped, GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not all set");
+        println!("{test}: skipped, GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME aren't all set");
     }
     e.as_ref()
 }
@@ -420,7 +420,7 @@ fn imported_models_match_the_reference() {
     let _ = std::fs::remove_dir_all(&fresh);
     let maker = GameBackend::new(e.game.clone(), &fresh, None);
     // The reference's bank of a model was cut out with libgarib's `objbank-tool split`, which orders the parts of a
-    // bank differently from run to run. Packed again, it is the bank made here.
+    // bank differently from run to run. Packed again, it's the bank made here.
     let same_files = |set: &str, id: &str| {
         let file = |home: &Path, name: &str| read(&home.join("custom").join(set).join(name));
         let (mine, theirs) = (file(&fresh, &format!("{id}.obj.bin")), file(&home, &format!("{id}.obj.bin")));
@@ -429,7 +429,7 @@ fn imported_models_match_the_reference() {
         assert!(mine == glovebox_core::objbank::pack(&theirs, &none).unwrap(), "{set}/{id}.obj.bin differs");
         assert!(file(&fresh, "textures.tex.bin") == file(&home, "textures.tex.bin"), "{set}/textures.tex.bin differs");
     };
-    // A kit model is converted by `custom` from the glTF file `kit` writes. Those bytes are not the reference's, so
+    // A kit model is converted by `custom` from the glTF file `kit` writes. Those bytes aren't the reference's, so
     // the set and its ids differ. The model itself is the same.
     let made = maker.make_kit(want["kit"]["item"].as_str().unwrap(), &json!({})).unwrap();
     for key in ["name", "scale", "triangles", "size"] {

@@ -4,7 +4,7 @@
     python3 tools/licenses.py OUT [--target x86_64-pc-windows-msvc]
 
 It asks `cargo metadata` for the crates the `glovebox` program links for the target: its dependencies and theirs.
-Build and test dependencies are left out, and so are procedural macro crates: they run in the compiler and are not
+Build and test dependencies are left out, and so are procedural macro crates: they run in the compiler and aren't
 in the program.
 
 OUT gets `CRATES.txt`, one entry per crate (name, version, the license as Cargo.toml states it, source, its files),
@@ -31,7 +31,7 @@ packages = {p["id"]: p for p in meta["packages"]}
 nodes = {n["id"]: n for n in meta["resolve"]["nodes"]}
 root = next(p["id"] for p in meta["packages"] if p["name"] == "glovebox")
 
-# Normal dependencies only: a build or test dependency is not part of the program, and neither is a procedural macro
+# Normal dependencies only: a build or test dependency isn't part of the program, and neither is a procedural macro
 def is_macro(pid):
     return any("proc-macro" in t["kind"] for t in packages[pid]["targets"])
 

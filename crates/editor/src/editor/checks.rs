@@ -58,13 +58,13 @@ pub struct Violation {
     /// The top-level element (or the root) and the element inside it that the rule is about.
     pub top: NodeId,
     pub sub: Option<NodeId>,
-    /// Names the finding: the same key in the shipped level means the shipped level does it too.
+    /// Names the finding: the same key in the vanilla level means the vanilla level does it too.
     pub key: String,
     pub msg: String,
     pub level: &'static str,
     /// Where the game prints its own warning: (file, line).
     pub diag: Option<(String, String)>,
-    pub shipped: bool,
+    pub vanilla: bool,
 }
 
 /// How added scenery changes the heap. `free` is what is left after the 16 KB the game needs during play.
@@ -148,7 +148,7 @@ impl Editor {
         let flags = self.flag_enum();
         let mut out: Vec<Violation> = Vec::new();
         let mut add = |top: NodeId, key: String, msg: String, diag: Option<&str>, sub: Option<NodeId>, level: &'static str| {
-            out.push(Violation { top, sub, key, msg, level, diag: diag.and_then(|d| self.diag_for(d)), shipped: false });
+            out.push(Violation { top, sub, key, msg, level, diag: diag.and_then(|d| self.diag_for(d)), vanilla: false });
         };
         let mut tags_so_far: Vec<f64> = Vec::new();
         let mut plat_index = 0;
@@ -297,7 +297,7 @@ impl Editor {
         let name = doc.get(root, "name").unwrap_or("");
         if !name.is_empty() && (name.chars().count() % 2 == 0 || !name.is_ascii()) {
             let msg = format!(
-                "The level's file name \u{201c}{}\u{201d} must be ASCII with an odd length (shipped levels use 7). Otherwise every command sits at an odd address and a console crashes.",
+                "The level's file name \u{201c}{}\u{201d} must be ASCII with an odd length (vanilla levels use 7). Otherwise every command sits at an odd address and a console crashes.",
                 name
             );
             add(root, "level:name".into(), msg, None, None, "err");
@@ -312,7 +312,7 @@ impl Editor {
         }
         let lights = doc.kids(root, "DiffuseLight").len();
         if lights == 0 {
-            let msg = "The level has no directional light. Every shipped level has at least one.";
+            let msg = "The level has no directional light. Every vanilla level has at least one.";
             add(root, "level:nolight".into(), msg.to_string(), None, None, "warn");
         }
         if doc.first(root, "AmbientLight").is_none() {
@@ -341,7 +341,7 @@ impl Editor {
         if let Some(g) = doc.first(root, "SetGravity") {
             let v = num0(doc, g, "strength");
             if (v - 1.2).abs() > 1e-6 {
-                let msg = format!("Gravity is {} (the game's own is 1.2): jumps and falls differ from the shipped levels.", fmt_g(v));
+                let msg = format!("Gravity is {} (the game's own is 1.2): jumps and falls differ from the vanilla levels.", fmt_g(v));
                 add(g, "level:gravity".into(), msg, None, None, "warn");
             }
         }
@@ -433,7 +433,7 @@ impl Editor {
     /// Imports are loaded from the player's ROM at run time by the game mod (mod/banks.c), unless the author
     /// chooses to copy them into the level's banks. Copied imports put game data in patches. They work without the
     /// Expansion Pak when they fit in the game's own heap (`needs_pak_heap`). Imported custom models are always
-    /// copied: they are not in the player's ROM.
+    /// copied: they aren't in the player's ROM.
     pub fn runtime_imports(&self) -> bool {
         self.current_imports().iter().any(|i| !self.is_custom(i)) && !self.copy_imports
     }
@@ -489,7 +489,7 @@ impl Editor {
         h.get("free").and_then(|f| f.as_i64().or_else(|| f.as_f64().map(|v| v as i64)))
     }
 
-    /// The scenery cost of the shipped level, worked out once for each level.
+    /// The scenery cost of the vanilla level, worked out once for each level.
     pub(crate) fn prime_orig_cost(&mut self) {
         let Some(orig) = self.orig_xml.clone() else { return };
         if self.orig_cost.as_ref().is_some_and(|(x, _)| *x == orig) {
@@ -501,7 +501,28 @@ impl Editor {
         }
     }
 
-    /// How the scenery added or removed since the shipped level changes the heap. None for an unchanged level or
+    /// The draw load of the vanilla level, worked out once for each level. A restored draft is set aside while it
+    /// is measured: the entities are built for the vanilla level, then for the draft again.
+    pub(crate) fn prime_orig_load(&mut self) {
+        let Some(orig) = self.orig_xml.clone().filter(|_| self.has_level) else { return };
+        if self.orig_load.as_ref().is_some_and(|(x, _)| *x == orig) {
+            return;
+        }
+        let n = if self.serialize() == orig {
+            self.draw_load().worst.0
+        } else {
+            let Ok(d) = Doc::parse(&orig) else { return };
+            let draft = std::mem::replace(&mut self.doc, d);
+            self.build_entities();
+            let n = self.draw_load().worst.0;
+            self.doc = draft;
+            self.build_entities();
+            n
+        };
+        self.orig_load = Some((orig, n));
+    }
+
+    /// How the scenery added or removed since the vanilla level changes the heap. None for an unchanged level or
     /// one with no measured heap.
     pub fn scenery_budget(&self) -> Option<SceneryBudget> {
         let free = self.heap_free(self.scene_id())?;
@@ -541,7 +562,7 @@ impl Editor {
             out.push((
                 "imp",
                 format!(
-                    "Model {} comes from {}; it is imported into {} at ROM build ({:.1} KB).",
+                    "Model {} comes from {}; it's imported into {} at ROM build ({:.1} KB).",
                     oid.unwrap_or(""),
                     c.bank,
                     self.scene_str("importObjectBank"),
@@ -553,12 +574,12 @@ impl Editor {
             out.push(("err", "No model is known for this enemy type.".to_string()));
         }
         if ent.kind == "enemy" && ent.imported {
-            out.push(("note", "Enemy from another world: its own model is imported, but projectiles it fires come from the game\u{2019}s bullet table and stay invisible if their model isn\u{2019}t loaded (FindObject non-vital).".to_string()));
+            out.push(("note", "Enemy from another world: its own model is imported, but projectiles it fires come from the game's bullet table and stay invisible if their model isn't loaded (FindObject non-vital).".to_string()));
         }
         for v in &self.violations {
             if v.top == ent.node && (v.sub.is_none() || v.sub == ent.sub) {
-                let tail = if v.shipped { " (the shipped level does this too)" } else { "" };
-                out.push((if v.shipped { "note" } else { v.level }, format!("{}{}", v.msg, tail)));
+                let tail = if v.vanilla { " (the vanilla level does this too)" } else { "" };
+                out.push((if v.vanilla { "note" } else { v.level }, format!("{}{}", v.msg, tail)));
             }
         }
         out
@@ -576,7 +597,7 @@ impl Editor {
         self.prime_orig_cost();
         let mut violations = self.run_rules(&self.doc);
         for v in violations.iter_mut() {
-            v.shipped = self.orig_violations.iter().any(|o| o.key == v.key);
+            v.vanilla = self.orig_violations.iter().any(|o| o.key == v.key);
         }
         self.violations = violations;
         let whole: Vec<EntId> = (0..self.entities.len()).filter(|&i| self.whole(i)).collect();
@@ -592,16 +613,16 @@ impl Editor {
             let first = self.issues_for(i).into_iter().next().map(|x| x.1).unwrap_or_default();
             out.push(Check::new("err", format!("{}: {}", self.entities[i].label, first)).click(Click::Select(Some(i))));
         }
-        // Last come the findings that the shipped level has too
-        for shipped in [false, true] {
-            for v in self.violations.iter().filter(|v| v.shipped == shipped) {
+        // Last come the findings that the vanilla level has too
+        for vanilla in [false, true] {
+            for v in self.violations.iter().filter(|v| v.vanilla == vanilla) {
                 let ent = whole.iter().copied().find(|&i| {
                     let e = &self.entities[i];
                     e.node == v.top && (v.sub.is_none() || e.sub == v.sub)
                 });
                 let label = ent.map(|i| format!("{}: ", self.entities[i].label)).unwrap_or_default();
-                let tail = if v.shipped { " Also in the shipped level." } else { "" };
-                let mut c = Check::new(if v.shipped { "note" } else { v.level }, format!("{}{}{}", label, v.msg, tail));
+                let tail = if v.vanilla { " Also in the vanilla level." } else { "" };
+                let mut c = Check::new(if v.vanilla { "note" } else { v.level }, format!("{}{}{}", label, v.msg, tail));
                 c.click = ent.map(|i| Click::Select(Some(i)));
                 c.link = v.diag.as_ref().map(|(file, line)| (self.source_link(file, line), format!("{}:{}", file, line)));
                 out.push(c);
@@ -619,7 +640,7 @@ impl Editor {
                 ),
             ));
         }
-        let fresh = self.violations.iter().filter(|v| !v.shipped).count();
+        let fresh = self.violations.iter().filter(|v| !v.vanilla).count();
         if missing.is_empty() && fresh == 0 {
             out.push(Check::new(
                 "ok",
@@ -647,7 +668,7 @@ impl Editor {
         if let Some(sb) = self.scenery_budget() {
             let kb = |v: i64| py_round(v as f64 / 1024.0) as i64;
             let text = format!(
-                "Added scenery takes about {} KB more heap than the shipped level and {} more of the game's 1,280 heap blocks. ",
+                "Added scenery takes about {} KB more heap than the vanilla level and {} more of the game's 1,280 heap blocks. ",
                 kb(sb.delta),
                 sb.blocks
             );
@@ -657,7 +678,7 @@ impl Editor {
                 Check::new(
                     "note",
                     format!(
-                        "{}That is more than the game's own heap has, so Build ROM and Export patch add the Expansion Pak game mod: about {} KB stays free with it. The ROM then needs the Expansion Pak.",
+                        "{}That's more than the game's own heap has, so Build ROM and Export patch add the Expansion Pak game mod: about {} KB stays free with it. The ROM then needs the Expansion Pak.",
                         text,
                         kb(sb.free_pak)
                     ),
@@ -791,7 +812,7 @@ impl Editor {
             let d = num0(&self.doc, fog, "fog_distance");
             if d >= 1000.0 {
                 let msg = format!(
-                    "Fog: fog_distance is {}. It is where the fog starts on the game's 0 to 1000 scale (gSPFogPosition) and must stay under 1000.",
+                    "Fog: fog_distance is {}. It's where the fog starts on the game's 0 to 1000 scale (gSPFogPosition) and must stay under 1000.",
                     fmt_g(d)
                 );
                 out.push(Check::new("err", msg).click(Click::Select(None)));
@@ -799,16 +820,23 @@ impl Editor {
         }
         let dl = self.draw_load();
         let (n, Some(at)) = dl.worst else { return out };
-        let level = if n >= LOAD_STOP {
+        // Vanilla levels reach these numbers too: the estimate says 261 for hub 1. A level warns or fails only when
+        // it's busier than the vanilla level.
+        let orig = self.orig_xml.as_ref().and_then(|x| self.orig_load.as_ref().filter(|(o, _)| o == x)).map(|(_, n)| *n);
+        let busier = orig.is_none_or(|o| n > o);
+        let level = if n >= LOAD_STOP && busier {
             "err"
-        } else if n >= LOAD_SLOW {
+        } else if n >= LOAD_SLOW && busier {
             "warn"
+        } else if n >= LOAD_SLOW {
+            "note"
         } else {
             "ok"
         };
         let what = match level {
             "err" => format!("That's at or near the limit: past {} the game stops, and before that it crawls.", MATRICES),
             "warn" => "The game slows down here. Fewer pieces in reach or a shorter far plane fix it.".to_string(),
+            "note" => format!("The vanilla level reaches about {}, and the game runs it.", orig.unwrap_or(n)),
             _ => "Fine.".to_string(),
         };
         let far = fmt_g(dl.far);
@@ -842,18 +870,19 @@ impl Editor {
         hits.first().map(|h| h.point)
     }
 
-    /// Glover starts at the first checkpoint (or the GloverSpawnPoint) and restarts at the last one he touched:
-    /// one with no solid ground under it drops him into a pit every time.
+    /// Glover starts at the first checkpoint (or the GloverSpawnPoint in a level with none) and restarts at the last
+    /// one he touched: one with no solid ground under it drops him into a pit every time.
     pub fn ground_checks(&self) -> Vec<Check> {
         let mut out = Vec::new();
         if self.scene.is_some() && self.scene_str("group") == "System" {
             return out; // the cutscenes and the flythrus aren't played
         }
+        let gates = self.entities.iter().any(|e| e.gate.is_some());
         for (i, e) in self.entities.iter().enumerate() {
             let what = if e.gate.is_some() {
                 "checkpoint"
-            } else if e.tag == "GloverSpawnPoint" {
-                "Glover\u{2019}s start"
+            } else if e.tag == "GloverSpawnPoint" && !gates {
+                "Glover's start"
             } else {
                 continue;
             };
@@ -872,7 +901,7 @@ impl Editor {
     // Imports and the memory budget. Imports are derived from the XML and never stored separately. Undo, redo and
     // XML export always match what the ROM build adds.
 
-    /// The models the level uses from banks it does not load, each once, in level order.
+    /// The models the level uses from banks it doesn't load, each once, in level order.
     pub fn current_imports(&self) -> Vec<String> {
         let mut ids: Vec<String> = Vec::new();
         for e in &self.entities {
@@ -891,7 +920,7 @@ impl Editor {
         PlanJob { backend: self.backend.clone(), sid: self.scene_id().to_string(), ids, serial: self.plan_serial }
     }
 
-    /// Asks for the import plan again. With `delays` it is worked out in the background, a moment later.
+    /// Asks for the import plan again. With `delays` it's worked out in the background, a moment later.
     pub fn schedule_import_plan(&mut self) {
         let ids = self.current_imports();
         self.plan_pending = None;

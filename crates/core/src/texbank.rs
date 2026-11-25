@@ -56,7 +56,7 @@ pub struct Texture<'a> {
     pub id: u32,
     pub palette_anim_idx_min: u8,
     pub palette_anim_idx_max: u8,
-    /// Bit 4 means the palette is animated. The others are not known.
+    /// Bit 4 means the palette is animated. The others aren't known.
     pub flags: u16,
     pub frame_increment: i16,
     pub frame_counter: i16,
@@ -164,7 +164,7 @@ impl<'a> Texture<'a> {
             }
             (color::IA, _) => {
                 return err(format!(
-                    "Unsupported image format ({}/{}) for texture {}",
+                    "unsupported image format ({}/{}) for texture {}",
                     self.compression_format, self.color_format, self.id
                 ))
             }
@@ -209,7 +209,7 @@ impl<'a> Texture<'a> {
             }
             _ => {
                 return err(format!(
-                    "Unsupported image format ({}/{}) for texture {}",
+                    "unsupported image format ({}/{}) for texture {}",
                     self.compression_format, self.color_format, self.id
                 ))
             }
@@ -234,7 +234,7 @@ pub struct TexBank<'a> {
 }
 
 impl<'a> TexBank<'a> {
-    /// Reads a bank. `data` is not compressed (see `fla2::data`).
+    /// Reads a bank. `data` isn't compressed (see `fla2::data`).
     pub fn parse(data: &'a [u8]) -> Result<TexBank<'a>, TexError> {
         if data.len() < 4 {
             return err("the texture bank is cut short");
@@ -272,7 +272,7 @@ pub fn ids(data: &[u8]) -> Result<Vec<u32>, TexError> {
 
 /// A bank's records and names.
 pub struct Records<'a> {
-    /// Each texture's id and its whole record. A record whose size was not a multiple of 8 has zeros at its end
+    /// Each texture's id and its whole record. A record whose size wasn't a multiple of 8 has zeros at its end
     /// and a corrected size field.
     pub records: Vec<(u32, Cow<'a, [u8]>)>,
     /// What follows the records, split at the zero bytes, at most one piece for each record. A bank without names
@@ -281,7 +281,7 @@ pub struct Records<'a> {
 }
 
 /// Splits a bank into records. The pixels of the next record start 4 bytes into an 8-byte word of the bank. Every
-/// record's size must be a multiple of 8, or the next record's pixels are not on a 64-bit boundary. The console
+/// record's size must be a multiple of 8, or the next record's pixels aren't on a 64-bit boundary. The console
 /// needs that boundary when it loads a texture.
 pub fn records(data: &[u8]) -> Result<Records<'_>, TexError> {
     if data.len() < 4 {

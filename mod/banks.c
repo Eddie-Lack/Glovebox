@@ -14,9 +14,9 @@
  * (0x80) makes the extra banks win when a texture id is in both the level's own banks and an extra bank. Two
  * worlds can hold different pictures under the same id (the Atlantis whale's mouth and a Space texture).
  *
- * Extra banks stay loaded until the next level is parsed. If the game has not started the heap again since
+ * Extra banks stay loaded until the next level is parsed. If the game hasn't started the heap again since
  * the mod loaded them (heap.c counts this in modHeapGen), the mod frees them first. Animated textures in extra
- * banks do not animate: the mod gives LoadTextureBank an empty cyclingTextures list and puts the level's list
+ * banks don't animate: the mod gives LoadTextureBank an empty cyclingTextures list and puts the level's list
  * back after. CycleTextures never holds a pointer into a bank the mod frees, and the list's 20 entries never
  * overflow.
  */
@@ -201,7 +201,7 @@ static void FreeExtraBanks(void) {
 }
 
 /* Loads a texture bank and an object bank from the ROM as the game's LoadTextureBank and LoadObjectBank do (banks.c), into the
-   mod's lists. Animated textures are not supported. */
+   mod's lists. Animated textures aren't supported. */
 static void LoadCustomBanks(CustomEntry *e) {
     s32 *tptr;
     u8 *optr;

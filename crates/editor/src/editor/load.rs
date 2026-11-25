@@ -104,7 +104,7 @@ pub struct PlanJob {
 pub struct PlanResult {
     pub sid: String,
     pub serial: u64,
-    /// None when the back end could not plan.
+    /// None when the back end couldn't plan.
     pub plan: Option<Plan>,
 }
 
@@ -149,7 +149,7 @@ impl BuildJob {
                     let boot = if request.quickboot { "boots straight into the level" } else { "starts the game normally" };
                     let what = match imp {
                         Some(i) if i.runtime > 0 => format!(
-                            " The game mod loads its {} imported model(s) from the player\u{2019}s ROM; the patch contains no game data.",
+                            " The game mod loads its {} imported model(s) from the player's ROM; the patch contains no game data.",
                             i.objects
                         ),
                         Some(i) if i.objects > 0 => format!(
@@ -255,7 +255,7 @@ impl Editor {
     pub fn apply_level(&mut self, data: LevelData) -> Result<(), String> {
         self.flush_draft(); // finish saving the level we're leaving
         let sid = data.sid.as_str();
-        let row = self.scene_row(sid).cloned().ok_or_else(|| format!("There is no level {}", sid))?;
+        let row = self.scene_row(sid).cloned().ok_or_else(|| format!("There's no level {}", sid))?;
         let doc = Doc::parse(&data.xml).map_err(|e| e.0)?;
         self.scene = Some(row);
         self.puzzle_index = None;
@@ -286,20 +286,21 @@ impl Editor {
                     self.doc = root;
                     self.draft_saved_at = Some(draft.saved_at);
                     let msg = format!(
-                        "Restored your edits from {} (autosave). Undo or Reset level to go back to the shipped level.",
+                        "Restored your edits from {} (autosave). Undo or Reset level to go back to the vanilla level.",
                         (self.format_time)(draft.saved_at)
                     );
                     restored = Some((msg, "ok"));
                 }
                 None => {
                     let why = res.errors.first().cloned().unwrap_or_default();
-                    restored = Some((format!("An autosave for this level failed validation and was not loaded ({}).", why), "err"));
+                    restored = Some((format!("An autosave for this level failed validation and wasn't loaded ({}).", why), "err"));
                 }
             }
         }
         self.model_cache = data.prefabs;
         self.exit_verts.borrow_mut().clear();
         self.build_entities();
+        self.prime_orig_load();
         self.frame_level();
         if let Some(st) = self.settings.as_mut() {
             st.set_value("scene", sid);
@@ -334,7 +335,7 @@ impl Editor {
 
     // -----------------------------------------------------------------------------------------------------------
     // Import XML: the window reads the file and checks it with `sanitize_level_xml`. Only after it passes does it
-    // replace the level, as an undoable edit that is then autosaved.
+    // replace the level, as an undoable edit that's then autosaved.
 
     pub fn confirm_import(&mut self, res: &SanitizeResult) {
         let Some(root) = res.root.as_ref().filter(|_| res.ok) else { return };
@@ -371,7 +372,7 @@ impl Editor {
         let mut notes = Vec::new();
         if !matches!(fmt_, "rom" | "bps") && !imports.is_empty() {
             notes.push(format!(
-                "Note: {} imported model{} only exist in a ROM built here; this {} alone references models the game won\u{2019}t find.",
+                "Note: {} imported model{} only exist in a ROM built here; this {} alone references models the game won't find.",
                 imports.len(),
                 if imports.len() == 1 { "" } else { "s" },
                 if fmt_ == "lev" { ".lev" } else { "XML" }
@@ -415,7 +416,7 @@ impl Editor {
     // Every edited level in one ROM or patch
 
     /// The levels with edits: a draft, a title, music or clock, or the open level's unsaved edits, as (id, name,
-    /// XML). The XML is None for a level whose file is the shipped one.
+    /// XML). The XML is None for a level whose file is the vanilla one.
     pub fn project_levels(&mut self) -> Vec<(String, String, Option<String>)> {
         self.flush_draft();
         let mut sids: BTreeSet<String> = self.drafts.list().into_keys().collect();
@@ -444,10 +445,10 @@ impl Editor {
     /// What `build_all` needs for one level: its XML, the models it imports, its table row. And whether it needs
     /// the game mod (rotations, imports from the ROM, an extra level, or more scenery than the game's heap holds).
     pub fn level_entry(&self, sid: &str, xml: Option<&str>) -> Result<(BuildAllEntry, bool), String> {
-        let shipped = |ed: &Editor| ed.backend.level_xml(sid).map_err(|e| e.0).and_then(|x| Doc::parse(&x).map_err(|e| e.0));
+        let vanilla = |ed: &Editor| ed.backend.level_xml(sid).map_err(|e| e.0).and_then(|x| Doc::parse(&x).map_err(|e| e.0));
         let root = match xml {
             Some(x) => Doc::parse(x).map_err(|e| e.0)?,
-            None => shipped(self)?,
+            None => vanilla(self)?,
         };
         let is_open = self.scene.is_some() && sid == self.scene_id();
         let loaded = if is_open { self.loaded.clone() } else { self.backend.loaded_ids(sid).map_err(|e| e.0)? };
@@ -465,7 +466,7 @@ impl Editor {
         let mut heap = is_open && self.use_mod();
         if let (false, Some(free), true) = (heap, self.heap_free(sid), xml.is_some()) {
             // Added scenery (scenery_budget) and copied imports against the level's measured free heap
-            let delta = self.scenery_cost(&root).0 - self.scenery_cost(&shipped(self)?).0;
+            let delta = self.scenery_cost(&root).0 - self.scenery_cost(&vanilla(self)?).0;
             let copied: i64 = if runtime { 0 } else { imports.iter().map(|i| self.catalog.get(i).map_or(0, |c| c.bytes as i64)).sum() };
             heap = free - 16 * 1024 - delta.max(0) - copied < 0;
         }

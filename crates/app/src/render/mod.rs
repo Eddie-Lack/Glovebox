@@ -11,7 +11,7 @@
 //! grows.
 //!
 //! GPU copies of geometry, lines and textures are made on first use and kept by the id of the scene object.
-//! `collect` frees the copies of what is no longer drawn.
+//! `collect` frees the copies of what's no longer drawn.
 
 pub mod icons;
 
@@ -868,7 +868,7 @@ impl Renderer {
     /// background. The colors are multiplied by the alpha (where the model covers half a pixel, the pixel holds
     /// half the color and an alpha of a half). None for a model without a vertex.
     ///
-    /// It is drawn at `size` pixels with the renderer's multisampling.
+    /// It's drawn at `size` pixels with the renderer's multisampling.
     pub fn render_thumbnail(&mut self, model: &Prefab, size: u32) -> Option<Vec<u8>> {
         let mut scene = Scene::new();
         let root = model.instance(&mut scene);

@@ -113,7 +113,7 @@ fn run(args: &[String]) -> Result<(), String> {
         "import" if args.len() >= 3 => {
             let (home, rest) = options(&args[3..], &["--scale"])?;
             let scale = match rest.iter().find(|(k, _)| k == "--scale") {
-                Some((_, v)) => v.parse::<f64>().map_err(|_| format!("--scale {v} is not a number"))?,
+                Some((_, v)) => v.parse::<f64>().map_err(|_| format!("--scale {v} isn't a number"))?,
                 None => 1.0,
             };
             let be = GameBackend::open(Path::new(&args[1]), home).map_err(|e| e.to_string())?;
@@ -126,7 +126,7 @@ fn run(args: &[String]) -> Result<(), String> {
             Ok(())
         }
         "modelbanks" if args.len() == 3 => {
-            // The converter needs no ROM. With no ROM it cannot avoid the game's ids. g64coopdx refuses a pack
+            // The converter needs no ROM. With no ROM it can't avoid the game's ids. g64coopdx refuses a pack
             // with the game's ids when it has the ROM.
             let data = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
             let name = Path::new(&args[1]).file_stem().and_then(|s| s.to_str()).unwrap_or("model");

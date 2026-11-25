@@ -513,7 +513,7 @@ mod tests {
                 assert_eq!(c == rib, x % 4 == 0, "rib at {x},{y}");
             }
         }
-        // The face's edges are skin too: its first column is a rib, and its last column is not.
+        // The face's edges are skin too: its first column is a rib, and its last column isn't.
         for kind in 0..8 {
             let face = pumpkin_face(kind);
             for y in 0..face.h {

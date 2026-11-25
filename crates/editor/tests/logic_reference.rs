@@ -37,7 +37,7 @@ fn q4(v: &Value) -> [f64; 4] {
     [a[0], a[1], a[2], a[3]]
 }
 /// The wording was changed to American English after the recordings were made. A recorded text goes through this
-/// table (old words, new words) before it is compared.
+/// table (old words, new words) before it's compared.
 const AMERICAN: [(&str, &str); 3] =
     [("Turns about its centre", "Turns about its center"), ("fly towards a point", "fly toward a point"), ("swings round to", "swings around to")];
 

@@ -213,7 +213,7 @@ fn editor_on_the_fixture() {
     let two = ent(&ed, |e| e.kind == "trigger" && !e.zone);
     ed.select(two, false);
     ed.remove();
-    t.check("a volume of a two-condition puzzle stays", puzzles(&ed) == 2 && ed.last_status.0.contains("can\u{2019}t be duplicated"));
+    t.check("a volume of a two-condition puzzle stays", puzzles(&ed) == 2 && ed.last_status.0.contains("can't be duplicated"));
     let zone = ent(&ed, |e| e.zone).unwrap();
     ed.select(Some(zone), false);
     let znode = ed.entities[zone].node;
@@ -312,7 +312,7 @@ fn editor_on_the_fixture() {
     ed.load_scene("10").unwrap();
     t.detail("the draft comes back", ed.serialize() == xml && ed.last_status.0.contains("Restored your edits"), ed.last_status.0.clone());
     ed.reset_level();
-    t.check("Reset level goes back to the shipped level and drops the draft", !ed.is_edited() && ed.drafts.load("10").is_none());
+    t.check("Reset level goes back to the vanilla level and drops the draft", !ed.is_edited() && ed.drafts.load("10").is_none());
     ed.undo();
     t.check("undo brings the edits back after a reset", ed.serialize() == xml);
 
@@ -345,6 +345,23 @@ fn editor_on_the_fixture() {
     t.check("the draw load check is there", dl.len() == 1);
     ed.click_check(dl[0].click.as_ref().unwrap());
     t.check("clicking it shows the far plane", ed.far_sphere.is_some());
+    // The vanilla level's own load gives no warning. Copies of its landscape past 190 do.
+    let vanilla = ed.draw_load().worst.0;
+    let level_of = |ed: &Editor| ed.load_checks().into_iter().find(|c| c.text.starts_with("Draw load")).map(|c| c.level).unwrap_or_default();
+    t.check("the fixture's own draw load is fine", vanilla < glovebox_editor::editor::LOAD_SLOW && level_of(&ed) == "ok");
+    let mut copies = 0;
+    while ed.draw_load().worst.0 < glovebox_editor::editor::LOAD_SLOW && copies < 6 {
+        let land: Vec<EntId> = (0..ed.entities.len()).filter(|&i| ed.entities[i].kind == "land" && !ed.entities[i].derived).collect();
+        ed.set_selection(land);
+        ed.duplicate();
+        copies += 1;
+    }
+    let busy = ed.draw_load().worst.0;
+    t.detail("a busier level than the vanilla one warns", busy >= glovebox_editor::editor::LOAD_SLOW && ["warn", "err"].contains(&level_of(&ed)), format!("{vanilla} {busy} {copies}"));
+    for _ in 0..copies {
+        ed.undo();
+    }
+    t.check("undo brings the vanilla load back", ed.draw_load().worst.0 == vanilla);
 
     // Rules from the decomp: a bad trigger volume
     let vol = ed.doc.iter_tags(ed.root(), &["PuzzleCondBallWithinRangeOfPoint"])[0];
@@ -451,7 +468,7 @@ fn editor_on_the_fixture() {
     t.check("fog and ambient light can't be removed", kept);
     ed.add_enemy("unknown-type");
     let new = *ed.doc.kids(ed.root(), "Enemy").last().unwrap();
-    t.check("an enemy with no shipped script gets a rest instruction", tags(&ed, new) == ["NormalInstructions", "EnemyFinalize"]);
+    t.check("an enemy with no vanilla script gets a rest instruction", tags(&ed, new) == ["NormalInstructions", "EnemyFinalize"]);
     let ins = ed.doc.first(ed.doc.first(new, "NormalInstructions").unwrap(), "EnemyInstruction").unwrap();
     t.check("its only normal instruction can't be removed", ed.removal_refused(ins).is_some());
     let grp = ed.doc.make("AttackInstructions", &[]);
@@ -493,7 +510,7 @@ fn editor_on_the_fixture() {
     ed.add_puzzle_part(p, "PuzzleAction", 45);
     let a = *ed.doc.kids(p, "PuzzleAction").last().unwrap();
     ed.set_attr(body(&ed.doc, a).unwrap(), "platform_tag", "-201");
-    t.check("a negative nudge tag with no platform is an error", has_check(&mut ed, Some("err"), "crashes when there is none"));
+    t.check("a negative nudge tag with no platform is an error", has_check(&mut ed, Some("err"), "crashes when there's none"));
     undo_to(&mut ed, mark);
     ed.open_puzzle(None);
 
@@ -644,7 +661,7 @@ fn exit_triggers_on_the_fixture() {
     assert!(node.visible && node.pos == t.center && (node.scale[0] - corner).abs() < 1e-4);
     let (obj_box, sphere_box) = (ed.obj_box(goal), ed.graph.bounds(sphere));
     assert!(sphere_box.max[0] - sphere_box.min[0] > obj_box.max[0] - obj_box.min[0] + 10.0);
-    // A click on the sphere, beside the block, selects what is behind it: nothing here, or the ground
+    // A click on the sphere, beside the block, selects what's behind it: nothing here, or the ground
     let none = Mods::default();
     let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
     let beside = px(&ed, vec::add(t.center, vec::scale(across, (corner - 3.0) / vec::norm(across))));

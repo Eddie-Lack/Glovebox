@@ -38,23 +38,25 @@ pub fn kind_color(kind: &str) -> &'static str {
     KINDS.iter().find(|k| k.0 == kind).map(|k| k.2).unwrap_or("#ffffff")
 }
 
-// Why some objects cannot rotate or scale: each reason is a fact about the level format or the game code.
+// Why some objects can't rotate or scale: each reason is a fact about the level format or the game code.
 pub const WHY_NO_ORIENTATION: &str = "No orientation in the level format. In a group rotation it moves around the pivot.";
 pub const WHY_SPRITE: &str = "Garibs, Mr. Tip and the start markers are flat sprites or points in the game. They have no rotation or size to set. In a group rotation they move around the pivot.";
 pub const WHY_NO_SCALE: &str = "No size in the level format.";
 // Rotation and scale on these objects need the Expansion Pak game mod (mod/transforms.c), which Build ROM adds
 pub const WHY_ROT_ENEMY: &str = "Turning about Y sets y_rotation, the facing its script starts from. Tilt about X or Z is a SetActorRotation the game mod applies when drawing.";
-pub const WHY_ROT_PLATFORM: &str = "SetActorRotation, applied by the game mod before the platform\u{2019}s collision is built. For a spinning platform it adds to the spin angles.";
-pub const WHY_ROT_PICKUP: &str = "SetActorRotation, applied by the game mod under the powerup\u{2019}s own spin about Y.";
-pub const WHY_ROT_WATER: &str = "SetActorRotation, applied by the game mod to the water\u{2019}s model. Its swimming volume (left/top/front\u{2026}) stays an axis-aligned box.";
-pub const WHY_SCALE_ENEMY: &str = "SetActorScale, a factor on the type\u{2019}s size. The game mod also scales the collision sphere by the mean of the three axes.";
-pub const WHY_SCALE_PICKUP: &str = "SetActorScale, a factor on the powerup\u{2019}s size (0.4 in the game\u{2019}s code).";
-pub const WHY_SCALE_WATER: &str = "SetActorScale on the water\u{2019}s model. Its swimming volume keeps its own size.";
-pub const WHY_CUSTOM_PLATFORM: &str = "A platform must use a model from the game. A converted model\u{2019}s first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn\u{2019}t). Place it as Scenery or Background.";
+pub const WHY_ROT_PLATFORM: &str = "SetActorRotation, applied by the game mod before the platform's collision is built. For a spinning platform it adds to the spin angles.";
+pub const WHY_ROT_PICKUP: &str = "SetActorRotation, applied by the game mod under the powerup's own spin about Y.";
+pub const WHY_ROT_WATER: &str = "SetActorRotation, applied by the game mod to the water's model. Its swimming volume (left/top/front\u{2026}) stays an axis-aligned box.";
+pub const WHY_SCALE_ENEMY: &str = "SetActorScale, a factor on the type's size. The game mod also scales the collision sphere by the mean of the three axes.";
+pub const WHY_SCALE_PICKUP: &str = "SetActorScale, a factor on the powerup's size (0.4 in the game's code).";
+pub const WHY_SCALE_WATER: &str = "SetActorScale on the water's model. Its swimming volume keeps its own size.";
+pub const WHY_CUSTOM_PLATFORM: &str = "In a ROM, a platform must use a model from the game. A converted model's first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn't). Place it as Scenery or Background.";
 pub const WHY_TRIGGER_ROT: &str = "Puzzle trigger volumes are axis-aligned: the game tests boxes with IsPointWithinBox, spheres and cylinders by distance.";
-pub const WHY_TRIGGER_EDIT: &str = "This trigger volume is one of several conditions of its puzzle. It can\u{2019}t be duplicated or deleted on its own.";
+pub const WHY_TRIGGER_EDIT: &str = "This trigger volume is one of several conditions of its puzzle. It can't be duplicated or deleted on its own.";
 pub const WHY_WIND_ROT: &str = "Wind volumes are axis-aligned boxes (left/top/front + width/height/depth).";
-pub const WHY_START_ROT: &str = "Set by the first checkpoint platform\u{2019}s theta.";
+/// The label of a GloverSpawnPoint in a level with a checkpoint. The game starts Glover at the first checkpoint.
+pub const UNUSED_SPAWN: &str = "Glover spawn point (not used: the first checkpoint is the start)";
+pub const WHY_START_ROT: &str = "Set by the first checkpoint platform's theta.";
 
 pub const EULER_ORDER: &str = "YZX";
 
@@ -89,7 +91,7 @@ fn set_xyz(doc: &mut Doc, e: NodeId, v: V3) {
     }
 }
 
-/// Sets a child's x, y and z. A missing child is not added for the value that changes nothing.
+/// Sets a child's x, y and z. A missing child isn't added for the value that changes nothing.
 fn set_child_xyz(doc: &mut Doc, node: NodeId, tag: &str, v: V3, identity: f64) {
     let c = doc.first(node, tag);
     if c.is_none() && (0..3).all(|i| (v[i] - identity).abs() < 1e-6) {
@@ -110,7 +112,7 @@ pub fn set_child_scale(doc: &mut Doc, node: NodeId, v: V3) {
     set_child_xyz(doc, node, "SetActorScale", v, 1.0)
 }
 
-/// A spin's axis as 0, 1 or 2. A value the format does not know reads as y (the checks report it).
+/// A spin's axis as 0, 1 or 2. A value the format doesn't know reads as y (the checks report it).
 pub fn axis_index(doc: &Doc, spin: NodeId) -> usize {
     match doc.get(spin, "axis") {
         Some("x") => 0,
@@ -475,7 +477,7 @@ pub struct Ent {
     /// How it turns and scales: "xyz", "box" or nothing.
     pub rot: Option<&'static str>,
     pub scl: Option<&'static str>,
-    /// Why it cannot turn or scale, or what the rotation and the scale are stored as.
+    /// Why it can't turn or scale, or what the rotation and the scale are stored as.
     pub why_rot: Option<&'static str>,
     pub why_scl: Option<&'static str>,
     pub xform: Option<Xform>,
@@ -486,7 +488,7 @@ pub struct Ent {
     pub object_id: Option<String>,
     /// The model is in the catalog and not in the banks the level loads.
     pub imported: bool,
-    /// The level names a model the editor does not have. The renderer also sets it when a model fails to load.
+    /// The level names a model the editor doesn't have. The renderer also sets it when a model fails to load.
     pub missing_model: bool,
     /// A handle on a part of another entity (a path point, a buzzer end), and that entity.
     pub is_handle: bool,
@@ -991,7 +993,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             }
             "Powerup" => {
                 let v = num0(doc, node, "type");
-                // A type that is not a number reads as type 0.
+                // A type that isn't a number reads as type 0.
                 let t = if v.is_finite() { v.trunc() as i64 } else { 0 };
                 let name = decomp_enum_name(cx.format.decomp, "Pickup", Some(t)).filter(|n| !n.is_empty());
                 let mut ent = Ent::new("pickup", node, tag, Look::Start).why(WHY_ROT_PICKUP, WHY_SCALE_PICKUP);
@@ -1093,20 +1095,22 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             _ => {}
         }
     }
-    // The start marker sits on the first restart gate (PlatCheckpoint). It is left out when the level has a
-    // GloverSpawnPoint. parse.c TOKEN_RESTART: the first gate is the start, its theta Glover's facing (hub levels
-    // override it by world).
+    // The start marker sits on the first restart gate (PlatCheckpoint), its theta Glover's facing (hub levels
+    // override it by world). The game starts Glover there also when the level has a GloverSpawnPoint: the parser
+    // puts him at the spawn point (parse.c TOKEN_HAND_START), and the first gate's restart moves him to the gate
+    // (TOKEN_RESTART sets its restartTimer to 65, and RestartPlayer in platform.c acts on it).
     if let Some(g) = first_gate {
-        if !ents.iter().any(|e| e.tag == "GloverSpawnPoint") {
-            let mut ent = Ent::new("spawn", ents[g].node, "Platform", Look::Start);
-            ent.label = "Glover start (first checkpoint)".to_string();
-            ent.derived = true;
-            ent.selects = Some(g);
-            ent.why_rot = Some(WHY_START_ROT);
-            ent.why_scl = Some(WHY_NO_SCALE);
-            ent.icons.push(("\u{270b}", "#ffffff", 18, [0.0, 22.0, 0.0]));
-            ents.push(ent);
+        for e in ents.iter_mut().filter(|e| e.tag == "GloverSpawnPoint") {
+            e.label = UNUSED_SPAWN.to_string();
         }
+        let mut ent = Ent::new("spawn", ents[g].node, "Platform", Look::Start);
+        ent.label = "Glover start (first checkpoint)".to_string();
+        ent.derived = true;
+        ent.selects = Some(g);
+        ent.why_rot = Some(WHY_START_ROT);
+        ent.why_scl = Some(WHY_NO_SCALE);
+        ent.icons.push(("\u{270b}", "#ffffff", 18, [0.0, 22.0, 0.0]));
+        ents.push(ent);
     }
     Level { ents, fog, ambient }
 }
@@ -1135,7 +1139,7 @@ pub fn cam_action(t: i64) -> Option<&'static str> {
 /// A camera zone's settings. A missing one is `None`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Zone {
-    /// The zone's box. `None` only in settings that were not read from a puzzle.
+    /// The zone's box. `None` only in settings that weren't read from a puzzle.
     pub vol: Option<NodeId>,
     pub look: Option<f64>,
     pub speed: Option<f64>,
@@ -1220,14 +1224,14 @@ pub const CAM_PRESETS: [(&str, &str, &str); 8] = [
     ("high", "High", "rises and looks down"),
     ("side", "Side", "swings around to the right of the way on"),
     ("left", "Other side", "swings around to the left"),
-    ("front", "Front", "faces Glover: you can\u{2019}t see where you go"),
-    ("low", "Low", "drops to Glover\u{2019}s height and comes close"),
+    ("front", "Front", "faces Glover: you can't see where you go"),
+    ("low", "Low", "drops to Glover's height and comes close"),
     ("far", "Far", "stands far back and high"),
     ("fixed", "Fixed", "flies to a point ahead and watches from there"),
 ];
 
 /// The settings of a preset, for a player who walks the way `facing` points (radians about y, 0 along +z). Angles
-/// are from the camera to Glover. `None` for a key that is not a preset.
+/// are from the camera to Glover. `None` for a key that isn't a preset.
 pub fn preset_zone(key: &str, facing: f64, center: V3) -> Option<Zone> {
     let z = |look: Option<f64>, speed: Option<f64>, distance: Option<f64>, height: Option<f64>| Zone {
         vol: None,
@@ -1294,6 +1298,26 @@ mod tests {
         };
         let l = build(&doc, doc.root(), &cx);
         (doc, l)
+    }
+
+    /// The game starts Glover at the first checkpoint, also when the level has a GloverSpawnPoint. Without a
+    /// checkpoint he starts at the spawn point.
+    #[test]
+    fn where_glover_starts() {
+        let labels = |l: &Level| l.ents.iter().map(|e| (e.kind, e.label.clone())).collect::<Vec<_>>();
+        let gate = r#"<Platform object_id="0x1" name="gate"><PlatSetInitialPos x="5.0" y="0.0" z="0.0"/><PlatCheckpoint theta="1.0"/></Platform>"#;
+        let spawn = r#"<GloverSpawnPoint x="0.0" y="70.0" z="250.0"/>"#;
+        let (_, both) = level(&format!("<Level>{spawn}{gate}</Level>"));
+        assert_eq!(
+            labels(&both),
+            [("spawn", UNUSED_SPAWN.to_string()), ("platform", "gate".to_string()), ("spawn", "Glover start (first checkpoint)".to_string())]
+        );
+        let start = &both.ents[2];
+        assert!(start.derived && start.selects == Some(1) && matches!(start.look, Look::Start));
+        let (_, alone) = level(&format!("<Level>{spawn}</Level>"));
+        assert_eq!(labels(&alone), [("spawn", "Glover start".to_string())]);
+        let (_, gate_only) = level(&format!("<Level>{gate}</Level>"));
+        assert_eq!(gate_only.ents.last().map(|e| e.label.as_str()), Some("Glover start (first checkpoint)"));
     }
 
     #[test]

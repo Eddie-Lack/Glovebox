@@ -29,7 +29,7 @@ impl Wrap {
 pub enum AlphaMode {
     #[default]
     Opaque,
-    /// Pixels with alpha under `Material::alpha_cutoff` are not drawn.
+    /// Pixels with alpha under `Material::alpha_cutoff` aren't drawn.
     Mask,
     Blend,
 }
@@ -257,7 +257,7 @@ impl Model {
         out
     }
 
-    /// Each node's scale as the editor poses it. A node that does not inherit scale has its scale divided by the
+    /// Each node's scale as the editor poses it. A node that doesn't inherit scale has its scale divided by the
     /// scale of its parent's world matrix.
     pub fn posed_scales(&self) -> Vec<[f64; 3]> {
         let raw: Vec<[f64; 3]> = self.nodes.iter().map(|n| n.scale).collect();

@@ -94,7 +94,7 @@ pub fn is_jump(t: i128) -> bool {
     matches!(t, 18 | 20)
 }
 
-/// The instr_type of an instruction. -1 when it is not a number.
+/// The instr_type of an instruction. -1 when it isn't a number.
 pub fn code(doc: &Doc, node: NodeId) -> i128 {
     int0(doc.get(node, "instr_type")).unwrap_or(-1)
 }

@@ -24,7 +24,7 @@ pub fn decompress(src: &[u8]) -> Result<Vec<u8>, Fla2Error> {
     }
     let length = u32::from_le_bytes([src[4], src[5], src[6], src[7]]) as usize;
     if length > 64 << 20 {
-        return Err(Fla2Error("the FLA2 stream claims an absurd size"));
+        return Err(Fla2Error("the FLA2 stream gives a size over 64 MiB"));
     }
     let mut out = Vec::with_capacity(length);
     let mut window = [0u8; 0x1000];
@@ -70,7 +70,7 @@ pub fn decompress(src: &[u8]) -> Result<Vec<u8>, Fla2Error> {
     }
 }
 
-/// A bank's data: decompressed when it is an FLA2 stream, as it is otherwise.
+/// A bank's data: decompressed when it's an FLA2 stream, as it is otherwise.
 pub fn data(src: &[u8]) -> Result<Vec<u8>, Fla2Error> {
     if src.len() >= 4 && &src[..4] == MAGIC {
         decompress(src)

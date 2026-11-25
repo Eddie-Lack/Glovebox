@@ -66,7 +66,7 @@ _See [The Expansion Pak game mod](Game-mod.md) for what "needs the mod" means_
 Opens a palette with a picture of each entry:
 
 - `Collectables`: garib types, every powerup, Mr. Tip
-- `Enemies`: all 52 types. A new enemy copies the shortest script that type has in a shipped level
+- `Enemies`: all 52 types. A new enemy copies the shortest script that type has in a vanilla level
 - `Models`: all 1,522 models in the game. Place them as Scenery (solid), Background (no collision) or Platform
 - `Kit`: props the editor makes itself, free to share _(see [Kit](#kit))_
 - `Presets`: ready-made platforms _(see [Presets](#presets))_
@@ -88,7 +88,7 @@ A bank is a group of models that the game loads together. Each level loads a few
 
 - In `Grid`, click a picture and it's in your level
 - On `Models` the radio buttons over the grid say what a click places: `Scenery`, `Background` or `Platform`
-- On `Kit` they are `Background` and `Scenery`
+- On `Kit` they're `Background` and `Scenery`
 - The choice stays until you change it. The editor remembers it, and the view
 - Hover over a picture for its name, its bank and its notes
 - A corner mark means a boss (on `Enemies`) or one of your own models (on `Models`)
@@ -133,7 +133,7 @@ Every object's card has buttons:
 - `×` removes it, and anything that only worked with it
 - `Tidy` (on platforms) puts commands the game would read wrong back in order
 
-New commands start with the values the shipped levels use, and go where the game reads them right
+New commands start with the values the vanilla levels use, and go where the game reads them right
 
 ## Puzzles
 
@@ -164,7 +164,7 @@ The checks show an error when a list could run off its end: its last instruction
 With nothing selected you get the level's settings:
 
 - `Look` sets the lights and fog to a preset: dark, colored moods or daylight
-- `File name` is the name inside the level file. Keep it 7 letters, like the shipped levels' names. An even length crashes a console
+- `File name` is the name inside the level file. Keep it 7 letters, like the vanilla levels' names. An even length crashes a console
 - `Title, music and clock`: the title in the level select, the music, and a countdown like a bonus level's
 - On a Space level, `Title, music and clock` also has `Extra level (Expansion Pak)` _(see [The Expansion Pak game mod](Game-mod.md#extra-levels))_
 - `+ Add` adds fog, lights, a backdrop, gravity or an ambient sound
@@ -187,7 +187,7 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - `fog_distance` of 1000 or more, in `FogConfiguration`
 - Platforms made from your own models _(a console stops on them)_
 
-Some checks link to the game's code. Problems a shipped level already has are labeled
+Some checks link to the game's code. Problems a vanilla level already has are labeled
 
 The links go to _[gloveworld](https://github.com/Eddie-Lack/gloveworld)_, the game's code turned back into C
 
@@ -204,6 +204,8 @@ Each part of a model the game draws takes one object matrix, and so does each sh
 | Under 190 | Fine |
 | 190 to 239 | It slows down |
 | 240 or more | At or near the limit |
+
+Some vanilla levels are over 190 too, and hub 1 is over 240. Your level only gets a warning or an error when it's busier than the vanilla one
 
 Click the `Draw load` row to see the spot and the far plane
 
@@ -430,4 +432,4 @@ Note: a level that uses the game mod needs the emulator's Expansion Pak on _(mos
 
 Every ROM and patch the editor builds uses Easy ball controls on every difficulty
 
-On Medium and Hard, the shipped game pushes the ball the opposite way to the stick. Lives, garibs per life and the bosses still follow the difficulty
+On Medium and Hard, the vanilla game pushes the ball the opposite way to the stick. Lives, garibs per life and the bosses still follow the difficulty

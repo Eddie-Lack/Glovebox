@@ -3,7 +3,7 @@
 //! The test drives the real window through `egui_kittest`: it clicks the widgets it finds by their labels, types
 //! into fields, presses the shortcut keys, and sends pointer events at pixel positions into the 3D view (picking,
 //! the gizmo, box select, the path tool). Checks named "click: ..." come last: one for each button the earlier
-//! checks do not click.
+//! checks don't click.
 //!
 //! `GLOVEBOX_ROM=PATH GLOVEBOX_GUIDE=DIR` also runs `guide_shots`, which saves the pictures of the guide (`guide/mod.rs`).
 //!
@@ -188,7 +188,7 @@ impl T {
     }
 
     /// True when a text of the window holds `part`: a label in a panel, or a tooltip that is open. A tooltip that
-    /// is not open does not count.
+    /// isn't open doesn't count.
     fn reads(&self, part: &str) -> bool {
         self.find(part, false).iter().any(|n| n.accesskit_node().role() == egui::accesskit::Role::Label)
     }
@@ -286,7 +286,7 @@ impl T {
         found
     }
 
-    /// Clicks the `n`th widget with this label. False when there is none.
+    /// Clicks the `n`th widget with this label. False when there's none.
     fn click_nth(&mut self, label: &str, n: usize) -> bool {
         self.press(label, true, n, false)
     }
@@ -723,7 +723,7 @@ fn editor_on_the_fixture() {
     t.settle();
     t.click("Delete");
     let (n, status) = (puzzles(t.ed()), t.status());
-    t.detail("a volume of a two-condition puzzle stays", n == 2 && status.contains("can\u{2019}t be duplicated"), status);
+    t.detail("a volume of a two-condition puzzle stays", n == 2 && status.contains("can't be duplicated"), status);
     // The camera zone panel's preset list
     let ed = t.ed();
     let zone = ent(ed, |e| e.zone).unwrap();
@@ -896,7 +896,7 @@ fn editor_on_the_fixture() {
     t.click("Yes");
     let ed = t.ed();
     let ok = !ed.is_edited() && ed.drafts.load("10").is_none();
-    t.check("Reset level goes back to the shipped level and drops the draft", ok);
+    t.check("Reset level goes back to the vanilla level and drops the draft", ok);
     t.click("Undo");
     let same = t.ed().serialize() == xml;
     t.check("undo brings the edits back after a reset", same);
@@ -1155,7 +1155,7 @@ fn editor_on_the_fixture() {
     ed.add_enemy("unknown-type");
     let new = *ed.doc.kids(ed.root(), "Enemy").last().unwrap();
     let ok = tags(ed, new) == ["NormalInstructions", "EnemyFinalize"];
-    t.check("an enemy with no shipped script gets a rest instruction", ok);
+    t.check("an enemy with no vanilla script gets a rest instruction", ok);
     let ed = t.ed();
     let ins = ed.doc.first(ed.doc.first(new, "NormalInstructions").unwrap(), "EnemyInstruction").unwrap();
     let ok = ed.removal_refused(ins).is_some();
@@ -1223,7 +1223,7 @@ fn editor_on_the_fixture() {
     ed.add_puzzle_part(p, "PuzzleAction", 45);
     let a = *ed.doc.kids(p, "PuzzleAction").last().unwrap();
     ed.set_attr(body(&ed.doc, a).unwrap(), "platform_tag", "-201");
-    let ok = t.has_check(Some("err"), "crashes when there is none");
+    let ok = t.has_check(Some("err"), "crashes when there's none");
     t.check("a negative nudge tag with no platform is an error", ok);
     t.shot("07-puzzle");
     t.undo_to(mark);
@@ -1326,7 +1326,7 @@ fn editor_on_the_fixture() {
     t.finish();
 }
 
-/// One click for each button the earlier checks do not click.
+/// One click for each button the earlier checks don't click.
 fn more_clicks(t: &mut T) {
     let none = Modifiers::default();
     // The toolbar's tools
@@ -1452,7 +1452,7 @@ fn more_clicks(t: &mut T) {
     t.undo_to(n);
     t.pick("clock", "No clock");
     let bt = t.ed().level_info().bonus_time;
-    t.pick("clock", "Keep the shipped clock");
+    t.pick("clock", "Keep the vanilla clock");
     let kept = t.ed().level_info().bonus_time.is_none();
     t.check("click: the bonus clock", bt == Some(-1) && kept);
     // A camera zone
@@ -1464,9 +1464,9 @@ fn more_clicks(t: &mut T) {
     t.pick("preset", "Fixed: flies");
     let cam = t.ed().camera.pos;
     t.shot("10-camera-zone");
-    let has = t.click("Look from the zone’s camera");
+    let has = t.click("Look from the zone's camera");
     let moved = t.ed().camera.pos != cam;
-    t.check("click: Look from the zone’s camera", has && moved);
+    t.check("click: Look from the zone's camera", has && moved);
     let before = t.ed().undo_stack.len();
     t.click("distance");
     let changed = t.ed().undo_stack.len() == before + 1;
@@ -1497,7 +1497,7 @@ fn more_clicks(t: &mut T) {
     t.click("Apply");
     t.until(20, |w| w.jobs.running == 0 && w.loading.is_empty());
     let status = t.status();
-    t.detail("click: Apply (new look)", status.contains("Could not make a new look"), status);
+    t.detail("click: Apply (new look)", status.contains("Couldn't make a new look"), status);
     t.click("Try another");
     t.until(20, |w| w.jobs.running == 0 && w.loading.is_empty());
     let seed = t.w().inspector.reskin_seed;
@@ -1813,7 +1813,7 @@ fn review_fixes(t: &mut T) {
     let closed2 = t.w().dialog.is_none();
     t.detail("Esc and Enter close a note", asked && closed && closed2 && status.contains("Test level needs an emulator."), status);
 
-    // Fly mode: Shift typed into a text box, or held at a dialog, does not move the camera
+    // Fly mode: Shift typed into a text box, or held at a dialog, doesn't move the camera
     t.ed().set_selection(Vec::new());
     t.settle();
     t.click("Fly");
@@ -1864,7 +1864,7 @@ fn review_fixes(t: &mut T) {
     let cleared = t.w().palette.query.is_empty() && !t.has("Clear search");
     t.check("click: the search's clear button", cleared);
 
-    // The kit: a value an item can't be made with does not stop its picture for good
+    // The kit: a value an item can't be made with doesn't stop its picture for good
     t.click("Kit");
     t.until(120, |w| w.side_jobs.running == 0 && w.palette.kit_picture("grave").is_some());
     t.fill("Lean", "x");
@@ -2103,7 +2103,7 @@ fn number_fields_drag() {
         t.undo_to(mark);
     }
 
-    // A text field does not change on a drag
+    // A text field doesn't change on a drag
     t.ed().select(None, false);
     t.settle();
     let ed = t.ed();
@@ -2126,7 +2126,7 @@ fn number_fields_drag() {
 }
 
 /// The window at 1280 by 720, at 1920 by 1080, and at 1920 by 1080 with a display scale of 1.5: the view has room,
-/// it is drawn at the display's scale, and buttons work.
+/// it's drawn at the display's scale, and buttons work.
 #[test]
 fn small_and_scaled_windows() {
     for (name, size, scale) in [("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5), ("1920x1080", [1920.0, 1080.0], 1.0)] {
@@ -3164,7 +3164,7 @@ fn add_grid() {
     for _ in 0..10 {
         t.h.step();
     }
-    let why = t.reads("A platform must use a model from the game");
+    let why = t.reads("In a ROM, a platform must use a model from the game");
     t.shot("grid/fixture-models-platform");
     t.detail("grid: a converted model is refused as a platform, with the list's reason", is_platform && off && n2 == n && status == WHY_CUSTOM_PLATFORM && why, format!("{custom:?} {is_platform} {off} {n} {n2} {why} {status}"));
     t.click("Place as Scenery");
@@ -3326,7 +3326,7 @@ fn panel_layout() {
     let (p, v) = (t.w().panels, t.w().view.rect);
     let gone = !p.inspector.is_positive() && !p.slot(PanelId::Inspector).is_positive() && near(v.right(), 1280.0) && near(v.width(), v0.width() + INSPECTOR_WIDTH);
     t.detail("layout: hiding the inspector too gives the view the right side", hid && gone, format!("{hid} {p:?} {v:?}"));
-    // A selection does not bring the inspector back, and the status line says what it is
+    // A selection doesn't bring the inspector back, and the status line says what it is
     let enemy = ent(t.ed(), |e| e.kind == "enemy" && !e.is_handle);
     let ed = t.ed();
     let at = enemy.map(|e| px(ed, ed.obj_pos(e))).unwrap_or((100.0, 100.0));
@@ -3566,7 +3566,7 @@ fn setup_refuses_a_wrong_file() {
     t.check("the setup screen asks for the ROM", shown);
     t.h.get_by_label("Choose the ROM…").click();
     t.settle();
-    let refused = t.has_containing("is not a Nintendo 64 ROM");
+    let refused = t.has_containing("isn't a Nintendo 64 ROM");
     t.shot("30-setup");
     let still = t.h.state_mut().window().is_none();
     t.check("a file that is no ROM is refused", refused && still);
@@ -3621,7 +3621,7 @@ fn the_rom() {
         if matches!(sid.as_str(), "0a" | "1b" | "3c") {
             t.shot(&format!("41-rom-{sid}"));
         }
-        // The exits of the level as the game sizes them. The check on them must stay silent on a shipped level.
+        // The exits of the level as the game sizes them. The check on them must stay silent on a vanilla level.
         let ed = t.ed();
         let list = ed.exits();
         for &i in &list {
@@ -3658,8 +3658,8 @@ fn the_rom() {
             t.ed().select(None, false);
         }
     }
-    t.detail("the exit check is silent on all 48 shipped levels", fired.is_empty(), format!("{fired:?}"));
-    t.detail("the editor can measure every shipped exit", unknown.is_empty(), format!("{unknown:?}"));
+    t.detail("the exit check is silent on all 48 vanilla levels", fired.is_empty(), format!("{fired:?}"));
+    t.detail("the editor can measure every vanilla exit", unknown.is_empty(), format!("{unknown:?}"));
     t.detail("all 48 levels open through the level list and say No new problems", bad.is_empty(), format!("{bad:?}"));
 
     // Build ROM for one level, through the button

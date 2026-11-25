@@ -12,15 +12,15 @@ built ROM has to keep on a console.
   else from the ROM goes in: no ROM, levels, models, textures, patches or emulator screenshots.
 - **Never use leaked original source code.** Facts about the game come from the
   [gloveworld](https://github.com/Eddie-Lack/gloveworld) decompilation, the ROM's own code, or tests in an emulator.
-- **A rule that fires on a shipped level is wrong.** Every check the editor makes must pass on all 48 shipped levels.
+- **A rule that fires on a vanilla level is wrong.** Every check the editor makes must pass on all 48 vanilla levels.
 - **A ROM that plays in an emulator can still freeze a console.** Keep to "Real hardware" in docs/technical.md, and
   keep the hardware check (`crates/core/src/hwcheck.rs`) in the build: the mod patcher (`modpatch.rs`) runs it on
   every ROM it builds.
-- Put what you learn in docs/technical.md, in the section it belongs to. Correct or remove what is no longer true.
+- Put what you learn in docs/technical.md, in the section it belongs to. Correct or remove what's no longer true.
 
 ## Pull requests
 
-- Merge your own pull requests once they are ready. No one else reviews them.
+- Merge your own pull requests once they're ready. No one else reviews them.
 - A pull request is ready when the tests that apply to the change pass and nothing is left to fix.
 - After a merge, restart your branch from the latest `main` before the next change.
 
@@ -42,7 +42,7 @@ is written out in the practice ROM's CLAUDE.md, "Writing style for docs" (github
 In short: talk to the player as "you", casually; one fact per line; no period at the end of table cells, bullets or
 one-line paragraphs; links in italics; choices in backticks; important warnings in headings with "!".
 
-The owner edits `README.md` and `app/README.txt` himself. They are the model for this style: match them, and keep his
+The owner edits `README.md` and `app/README.txt` himself. They're the model for this style: match them, and keep his
 wording when you change something near it.
 
 ## Running it from source
@@ -82,7 +82,7 @@ cargo run -p glovebox-core --example gbtool -- hwcheck ROM     # a built ROM aga
 - A test that lacks its data prints that it was skipped, and passes.
 - The comparison tests (`*_reference.rs` and a few others) compare the Rust code with recorded reference outputs, on
   the whole game. They need the reference dumps (`GLOVEBOX_REFERENCE`, and for some `GLOVEBOX_REFHOME`). The dumps hold
-  game data and are not in the repository. Without them these tests skip themselves. docs/technical.md, "Reference
+  game data and aren't in the repository. Without them these tests skip themselves. docs/technical.md, "Reference
   tests", says what they check.
 - `gbtool` (`crates/core/examples/gbtool.rs`) is the back end on the command line: `gbtool xml ROM LEVEL` prints a
   level's XML, `gbtool build ROM LEVEL XML OUT [--quickboot] [--expansion] [--bps]` builds a ROM or a patch.
@@ -111,7 +111,7 @@ cargo build --release -p glovebox                                # the app: targ
 - The tables in `crates/core/data/` are committed. Developer tools in `tools/` write them again after a change to
   their sources: `gen_formats.py` and `gen_rom_map.py` (from `formats/`), `build_xref.py --gloveworld DIR` and
   `game_banks.py --gloveworld DIR --numbers` (from gloveworld), `measure_heap.py` (in the emulator). `scenes.json` and
-  `noclip_tables.json` have no tool: they describe the retail game and do not change.
+  `noclip_tables.json` have no tool: they describe the retail game and don't change.
 - The Python tools need Python 3 and PyYAML only (`python3 -m venv .venv && .venv/bin/pip install pyyaml`).
 - The `Desktop app` workflow (`.github/workflows/app.yml`) runs the tests on Windows and Linux, builds the Windows
   app, runs its `--self-test` and packs the archive. A tag that starts with `v` publishes a release.

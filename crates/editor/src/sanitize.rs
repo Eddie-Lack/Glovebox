@@ -1,11 +1,11 @@
 //! Strict validation of level XML from outside the editor (Import XML, drag and drop, autosaved drafts).
 //!
-//! The file is checked as text and parsed by the hardened parser (no DTD, no entities). It is validated against the
+//! The file is checked as text and parsed by the hardened parser (no DTD, no entities). It's validated against the
 //! level format (the decomp table): every element is a known command or type, every attribute a field of it, every
-//! value within its field's type. It is copied element by element into a fresh tree. Only that copy reaches the
+//! value within its field's type. It's copied element by element into a fresh tree. Only that copy reaches the
 //! editor. Comments and processing instructions are dropped, with a warning for those inside `<Level>`. Unknown
 //! attributes on `<Level>` are dropped with a warning too. These are errors: a namespaced element, an unknown
-//! element, an attribute of any other element that is not one of its fields, and text that is not blank. A file
+//! element, an attribute of any other element that isn't one of its fields, and text that isn't blank. A file
 //! with errors gives no tree.
 
 use crate::commands::{as_list, truthy};
@@ -175,7 +175,7 @@ impl<'a> FormatModel<'a> {
     }
 }
 
-/// What is wrong with an attribute's value. `None` when it is fine.
+/// What is wrong with an attribute's value. `None` when it's fine.
 pub fn check_value(model: &FormatModel, tag: &str, field: &Value, value: &str) -> Option<String> {
     if value.chars().count() > MAX_ATTR_LENGTH {
         return Some(format!("is longer than {} characters", MAX_ATTR_LENGTH));
@@ -195,7 +195,7 @@ pub fn check_value(model: &FormatModel, tag: &str, field: &Value, value: &str) -
     }
     if t == "f4" || t == "f8" {
         if !is_float_text(value) {
-            return Some("is not a number".into());
+            return Some("isn't a number".into());
         }
         let n = pyfmt::parse_float(value).unwrap_or(f64::NAN);
         if n.is_nan() || n.abs() > 3.4e38 {
@@ -218,12 +218,12 @@ pub fn check_value(model: &FormatModel, tag: &str, field: &Value, value: &str) -
         let Some(n) = n else {
             if let Some(e) = &enums {
                 return Some(format!(
-                    "is not one of the allowed values ({}{})",
+                    "isn't one of the allowed values ({}{})",
                     e.iter().take(8).copied().collect::<Vec<_>>().join(", "),
                     if e.len() > 8 { ", \u{2026}" } else { "" }
                 ));
             }
-            return Some("is not an integer".into());
+            return Some("isn't an integer".into());
         };
         if n < lo || n > hi {
             return Some(format!("is out of range for {} ({}\u{2026}{})", t, lo, hi));
@@ -316,7 +316,7 @@ fn uri_of<'s>(scope: &'s Scope, prefix: &str) -> Option<&'s str> {
     scope.iter().find(|(p, _)| p == prefix).map(|(_, u)| u.as_str()).filter(|u| !u.is_empty())
 }
 
-/// An element's name as (namespace, local name). A prefix that is not declared stays in the local name.
+/// An element's name as (namespace, local name). A prefix that isn't declared stays in the local name.
 fn element_name<'s>(scope: &'s Scope, tag: &'s str) -> (Option<&'s str>, &'s str) {
     match tag.split_once(':') {
         Some((p, local)) => match uri_of(scope, p) {
@@ -440,7 +440,7 @@ impl Walk<'_, '_> {
             let is_type = m.type_(tag).is_some();
             let is_group = m.groups.contains_key(tag);
             if command.is_none() && !is_type && !is_group {
-                self.errors.push(format!("{}: <{}> is not a level command libgarib knows.", path, tag));
+                self.errors.push(format!("{}: <{}> isn't a level command libgarib knows.", path, tag));
                 continue;
             }
             let inside = |c: &Value| as_list(c.get("modifies")).iter().any(|k| m.declares(k, parent_tag));
@@ -539,7 +539,7 @@ pub fn sanitize_level_xml(text: &str, model: &FormatModel, source: &str) -> Sani
     };
     let root = src.root();
     if let Some(name) = unbound_prefix(&src, root, &Scope::new()) {
-        return fail(format!("Not well-formed XML: the namespace prefix of {} is not defined", clip(&name, 60)));
+        return fail(format!("Not well-formed XML: the namespace prefix of {} isn't defined", clip(&name, 60)));
     }
     let scope = scope_of(&src, root, &Scope::new());
     if src.tag(root) != "Level" || uri_of(&scope, "").is_some() {
@@ -556,7 +556,7 @@ pub fn sanitize_level_xml(text: &str, model: &FormatModel, source: &str) -> Sani
             continue;
         }
         if value.chars().count() > MAX_ROOT_ATTR_LENGTH || !is_printable(&value) {
-            w.errors.push(format!("<Level {}> is not short printable text.", name));
+            w.errors.push(format!("<Level {}> isn't short printable text.", name));
             continue;
         }
         w.out.set(out_root, &name, &value);
@@ -576,7 +576,7 @@ pub fn sanitize_level_xml(text: &str, model: &FormatModel, source: &str) -> Sani
     } else if ends.is_empty() && errors.is_empty() {
         let e = out.new_element("EndLevelData");
         out.append(out_root, e);
-        warnings.push("Added the missing <EndLevelData/> terminator the game parses until.".into());
+        warnings.push("Added the missing <EndLevelData/> at the end. The game reads the level up to it.".into());
     }
     if out.len(out_root) <= 1 {
         errors.push("The level has no commands.".into());
@@ -640,7 +640,7 @@ mod tests {
             [
                 "Dropped unknown attribute odd on <Level>.",
                 "Dropped 2 comments or processing instructions.",
-                "Added the missing <EndLevelData/> terminator the game parses until."
+                "Added the missing <EndLevelData/> at the end. The game reads the level up to it."
             ]
         );
         assert_eq!(r.root.unwrap().serialize(), r#"<Level><Platform object_id="0x1" name="a"/><EndLevelData/></Level>"#);
@@ -678,14 +678,14 @@ mod tests {
             [
                 "Level: unexpected text \u{201c}text\u{201d}.",
                 "Level: unexpected text \u{201c}tail\u{201d}.",
-                "Level \u{203a} Platform[1]: object_id=\"0x123456789\" is not an integer.",
+                "Level \u{203a} Platform[1]: object_id=\"0x123456789\" isn't an integer.",
                 "Level \u{203a} Platform[1]: name=\"waytoolong\" is longer than the 8 bytes the format stores.",
                 "Level \u{203a} Platform[1]: <Platform> has no field \u{201c}extra\u{201d}.",
                 "Level \u{203a} b[2]: namespaced elements aren't part of level XML.",
-                "Level \u{203a} Nope[3]: <Nope> is not a level command libgarib knows.",
+                "Level \u{203a} Nope[3]: <Nope> isn't a level command libgarib knows.",
                 "Level \u{203a} PlatSetTag[4]: <PlatSetTag> belongs inside <NullPlatform> or <Platform>.",
                 "Level \u{203a} PlatSetTag[4]: tag=\"-1\" is out of range for u2 (0\u{2026}65535).",
-                "Level \u{203a} Enemy[5]: type=\"zz\" is not one of the allowed values (bovva, cannon, samtex, mallet, generalw, lionfish, chester, keg, \u{2026}).",
+                "Level \u{203a} Enemy[5]: type=\"zz\" isn't one of the allowed values (bovva, cannon, samtex, mallet, generalw, lionfish, chester, keg, \u{2026}).",
                 "Level \u{203a} Enemy[5]: x=\"1e39\" is out of range for a 32-bit float.",
                 "Level \u{203a} Enemy[5]: namespaced attribute {http://www.w3.org/XML/1998/namespace}lang.",
                 "Level \u{203a} Enemy[5] \u{203a} Puzzle[1]: <Puzzle> can't appear inside <Enemy>.",

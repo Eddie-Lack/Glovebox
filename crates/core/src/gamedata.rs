@@ -343,12 +343,12 @@ impl GameData {
         level::disassemble(self.level_file(sid)?).map_err(|e| GameError(format!("level {sid}: {}", e.0)))
     }
 
-    /// A shipped level as XML text.
+    /// A vanilla level as XML text.
     pub fn level_xml(&self, sid: &str) -> Result<String, GameError> {
         Ok(self.level_doc(sid)?.pretty_no_newline())
     }
 
-    /// The size of a shipped level's file.
+    /// The size of a vanilla level's file.
     pub fn orig_lev_size(&self, sid: &str) -> Option<usize> {
         self.level_file(sid).ok().map(|l| l.len())
     }
@@ -372,7 +372,7 @@ impl GameData {
     }
 
     /// A bank's data, not compressed, by its file name in noclip's data set (`HUB_PART1.obj.fla`,
-    /// `HUB_TEX_BANK.tex.fla`). The `custom:` banks are not here (see `imports.rs`).
+    /// `HUB_TEX_BANK.tex.fla`). The `custom:` banks aren't here (see `imports.rs`).
     pub fn raw_bank(&self, file: &str) -> Result<&[u8], GameError> {
         if let Some(name) = file.strip_suffix(".tex.fla") {
             if let Some(b) = self.tex_bank(file) {
@@ -391,13 +391,13 @@ impl GameData {
         self.rom.bank("objbank", name).map(|r| r.key().clone())
     }
 
-    /// The region a build replaces for a texture bank, by its name. For LEVELEND_TEX_BANK it is bank 1,
+    /// The region a build replaces for a texture bank, by its name. For LEVELEND_TEX_BANK it's bank 1,
     /// while `raw_bank` gives bank 14.
     pub fn texture_bank_key(&self, name: &str) -> Option<Key> {
         self.rom.bank("texbank", name).map(|r| r.key().clone())
     }
 
-    /// The ids of a texture bank's textures, by its file name. Empty for a bank the ROM does not have.
+    /// The ids of a texture bank's textures, by its file name. Empty for a bank the ROM doesn't have.
     pub fn texture_ids(&self, file: &str) -> &BTreeSet<u32> {
         static NONE: BTreeSet<u32> = BTreeSet::new();
         self.tex_bank(file).map_or(&NONE, |b| &b.ids)
@@ -484,7 +484,7 @@ impl GameData {
             .clone()
     }
 
-    /// The model of one object of one bank with a scene's textures. None when libgarib does not export the object
+    /// The model of one object of one bank with a scene's textures. None when libgarib doesn't export the object
     /// (see `objbank::object_model`).
     fn bank_model(&self, s: &Scene, bank: &str, id: u32, sizes: &Sizes) -> Option<Arc<Model>> {
         let key = (s.texture_tag(), bank.to_string(), id);
@@ -602,9 +602,9 @@ impl GameData {
         Some(ids)
     }
 
-    // -- What the shipped levels use
+    // -- What the vanilla levels use
 
-    /// The backdrop textures a level can show: the ids the shipped levels use as backdrops and that the level's
+    /// The backdrop textures a level can show: the ids the vanilla levels use as backdrops and that the level's
     /// texture banks hold, most used first.
     pub fn backdrops(&self, sid: &str) -> Result<Vec<u32>, GameError> {
         let s = scene(sid)?;
@@ -629,7 +629,7 @@ impl GameData {
         Ok(used.iter().copied().filter(have).collect())
     }
 
-    /// For each enemy type, the shortest script a shipped level gives it. The types are in the order the levels first use them.
+    /// For each enemy type, the shortest script a vanilla level gives it. The types are in the order the levels first use them.
     pub fn enemy_templates(&self) -> &[EnemyTemplate] {
         const CUTSCENES: [&str; 5] = ["2b", "2c", "2d", "2e", "2f"];
         const BOSSES: [&str; 8] = ["0d", "12", "17", "1c", "21", "26", "27", "28"];
@@ -701,7 +701,7 @@ fn decode(bank: &[u8], id: u32) -> Result<Image, GameError> {
     Ok(Image { width: t.width as u32, height: t.height as u32, rgba })
 }
 
-/// The pixels of one texture of a texture bank that is not the game's (an imported model's bank).
+/// The pixels of one texture of a texture bank that isn't the game's (an imported model's bank).
 pub fn texture_of(bank: &[u8], id: u32) -> Result<Image, GameError> {
     let data = fla2::data(bank).map_err(|e| GameError(e.to_string()))?;
     decode(&data, id)

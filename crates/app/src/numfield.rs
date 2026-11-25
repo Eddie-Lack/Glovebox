@@ -7,7 +7,7 @@
 //! A field without the keyboard focus is drawn as a text box that takes no input, under an area that takes the
 //! click and the drag. A field with the focus is the plain text box: a drag in it selects text.
 //!
-//! The fields do not know the editor. They leave signals (`Signal`) that the window reads once a frame: it opens
+//! The fields don't know the editor. They leave signals (`Signal`) that the window reads once a frame: it opens
 //! one undo step when a drag begins and closes it when the drag ends.
 
 use egui::{Id, Response, Sense, Ui};

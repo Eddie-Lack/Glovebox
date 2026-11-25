@@ -60,7 +60,7 @@ impl IniSettings {
         IniSettings { path: Some(path), values }
     }
 
-    /// Settings that are not written anywhere.
+    /// Settings that aren't written anywhere.
     pub fn in_memory() -> IniSettings {
         IniSettings { path: None, values: BTreeMap::new() }
     }

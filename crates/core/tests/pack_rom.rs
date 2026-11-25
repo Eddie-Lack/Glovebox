@@ -1,4 +1,4 @@
-//! Level packs on the real game: every shipped level's own XML must make a pack.
+//! Level packs on the real game: every vanilla level's own XML must make a pack.
 //!
 //! `GLOVEBOX_ROM` is the ROM's path. Without it the test prints that it was skipped and passes.
 
@@ -8,9 +8,9 @@ use std::collections::HashSet;
 use std::path::Path;
 
 #[test]
-fn every_shipped_level_makes_a_pack() {
+fn every_vanilla_level_makes_a_pack() {
     let Ok(rom) = std::env::var("GLOVEBOX_ROM") else {
-        println!("every_shipped_level_makes_a_pack: skipped (GLOVEBOX_ROM is not set)");
+        println!("every_vanilla_level_makes_a_pack: skipped (GLOVEBOX_ROM is not set)");
         return;
     };
     let home = std::env::temp_dir().join(format!("glovebox-pack-rom-{}", std::process::id()));
@@ -23,8 +23,8 @@ fn every_shipped_level_makes_a_pack() {
         // A pack of an unchanged level holds the level file as the game has it: it starts with its own size.
         pack::check_level(&p.level).unwrap();
         assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level, None, None));
-        // The export with the level's imports finds none in a shipped level: it uses only its own banks.
-        let e = be.level_pack(&scene.id, &xml, "Shipped").unwrap_or_else(|e| panic!("level {} does not export: {}", scene.id, e));
+        // The export with the level's imports finds none in a vanilla level: it uses only its own banks.
+        let e = be.level_pack(&scene.id, &xml, "Vanilla").unwrap_or_else(|e| panic!("level {} does not export: {}", scene.id, e));
         assert_eq!((e.models.as_deref(), e.level.as_slice()), (None, p.level.as_slice()), "level {}", scene.id);
         made += 1;
     }
@@ -145,6 +145,19 @@ fn a_pack_with_imports() {
     assert_eq!(worlds.len(), 5, "{worlds:?}");
     let e = be.level_pack("0a", &with(&lines), "Five").unwrap_err().0;
     assert!(e.contains("can name 4 at most"), "{e}");
+    // The cube as a platform. A console ROM must not draw a converted model as a platform, but g64coopdx can: the
+    // pack's object bank has the rotation key of no turn in place of the converter's key of zeros.
+    let end = xml.find("  <EndLevelData").expect("the level ends with EndLevelData");
+    let plat = format!("  <Platform object_id=\"{cube}\" name=\"cube\">\n    <PlatSetInitialPos x=\"0.0\" y=\"40.0\" z=\"0.0\"/>\n  </Platform>\n");
+    let plat_xml = format!("{}{}{}", &xml[..end], plat, &xml[end..]);
+    let p = be.level_pack("0a", &plat_xml, "Cube platform").expect("the pack of the cube as a platform");
+    let m = p.models.as_ref().expect("the pack has the cube's banks");
+    assert!(u32::from_be_bytes([m[0], m[1], m[2], m[3]]) > 0 && u32::from_be_bytes([m[4], m[5], m[6], m[7]]) > 0);
+    assert!(pack::object_refs(&p.level).unwrap().contains(&(98, gamedata::parse_id(&cube).unwrap())), "the platform names the cube");
+    // GLOVEBOX_PACK_OUT keeps the pack, for a check with g64coopdx's `g64pack check DIR --rom ROM`
+    if let Ok(out) = std::env::var("GLOVEBOX_PACK_OUT") {
+        p.write_to(Path::new(&out)).expect("the pack is written");
+    }
     // A cameo of the cube, and a model that is in no bank
     let cameo = format!("  <AnimatedBackgroundActor object_id=\"{cube}\" name=\"cube\" x=\"0.0\" y=\"40.0\" z=\"0.0\"/>\n");
     assert!(be.level_pack("0a", &with(&cameo), "Cameo").unwrap_err().0.contains("cameo"));

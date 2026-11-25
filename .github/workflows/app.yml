@@ -90,7 +90,7 @@ jobs:
           $p.WaitForExit()
           Get-Content self-test.txt, self-test-errors.txt
           if ($p.ExitCode -ne 0) { throw "The self-test failed with exit code $($p.ExitCode)" }
-          if (-not (Select-String -Path self-test.txt -SimpleMatch "Glovebox $env:APP_VERSION" -Quiet)) { throw "The program does not say it is version $env:APP_VERSION" }
+          if (-not (Select-String -Path self-test.txt -SimpleMatch "Glovebox $env:APP_VERSION" -Quiet)) { throw "The program doesn't say it's version $env:APP_VERSION" }
       - name: Archive
         shell: pwsh
         run: |
@@ -108,7 +108,7 @@ jobs:
           # The release job attaches the archive to the release, so the run's copy is only kept for a week.
           retention-days: 7
 
-  # The same tests on Linux, drawn by Mesa's software Vulkan (lavapipe). The app is not built for release here.
+  # The same tests on Linux, drawn by Mesa's software Vulkan (lavapipe). The app isn't built for release here.
   test-linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 45

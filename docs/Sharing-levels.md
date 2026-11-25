@@ -21,6 +21,7 @@ Note: only share levels that use models you have the right to share
 
 - A pack is a folder. Give it a name (1 to 32 plain ASCII characters), then pick where the folder goes
 - Your imported models go in the pack's `models.bin`
+- In a pack, an imported model can be a platform. g64coopdx draws it. A ROM for the console can't have one. The Models tab doesn't offer it
 - Models from other levels don't: the pack names their banks, and each player's game loads them from their own ROM
 - A bank is a group of models or textures that the game loads together
 - The pack also names the texture banks of those models' sprites (flat pictures, like garibs). g64coopdx needs them
@@ -31,7 +32,7 @@ It refuses:
 
 - a level with rotations or scales that only the Expansion Pak game mod applies (on enemies, platforms, powerups or water)
 - a model made with `New look` (other textures on one of the game's models)
-- an imported model as a cameo (a background the game animates). Use it as `Scenery` or `Background`
+- an imported model as a cameo (a background the game animates). Use it as `Scenery`, `Background` or `Platform`
 - an imported model with the name of the ball or the hand (`gball`, `cball`, `GShinL`, `GShinR`, `gbl_bt`). That name comes from the file's name when you imported it. `Remove` the model in the Models tab, give its file another name, import it again and place the new model
 - more than 4 MB of imported models, or models from more than 4 banks of each kind (object banks and texture banks). The texture banks of the sprites count too
 

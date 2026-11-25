@@ -57,7 +57,7 @@ pub enum Target {
 }
 
 impl Target {
-    /// The part to light when this one is not in the window.
+    /// The part to light when this one isn't in the window.
     fn fallback(self) -> Option<Target> {
         match self {
             Target::Inspector | Target::Checks => Some(Target::RightPanel),
@@ -67,7 +67,7 @@ impl Target {
     }
 }
 
-/// What a step shows in the window while it is open.
+/// What a step shows in the window while it's open.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Show {
     /// Nothing selected, the Add panel closed.
@@ -92,7 +92,7 @@ pub const STEPS: [Step; 12] = [
     Step { title: "Selecting", text: "Click something in the view or in this list to select it. Its details show in the Inspector on the right", target: Target::LevelPanel, show: Show::Selection },
     Step { title: "Move, Rotate, Scale", text: "Press W, E or R to pick a tool. Then drag its handles in the view, or drag a number sideways in the Inspector", target: Target::Tools, show: Show::Selection },
     Step { title: "+ Add", text: "This adds collectables, enemies, models from any level and kit models to your level. A opens it too", target: Target::Add, show: Show::AddPanel },
-    Step { title: "The Inspector", text: "This shows details about what you have selected. Deselect everything to see the level's settings and its puzzles", target: Target::Inspector, show: Show::Selection },
+    Step { title: "The Inspector", text: "This shows details about what you've selected. Deselect everything to see the level's settings and its puzzles", target: Target::Inspector, show: Show::Selection },
     Step { title: "Checks", text: "After every edit, this checks the level on the game's rules. Click a line to see where the problem is", target: Target::Checks, show: Show::Plain },
     Step { title: "Test level and Build ROM", text: "Test level opens your level in your emulator. Build ROM saves a ROM. With boot here on, the ROM starts in this level", target: Target::Build, show: Show::Plain },
     Step { title: "Export patch", text: "Export a patch to share your level. Patcher ↗ at the end of the row opens the page where players patch their ROM", target: Target::Patch, show: Show::Plain },
@@ -171,7 +171,7 @@ impl State {
         self.targets.get(&target).copied()
     }
 
-    /// The part of the window to light for a target: the target, or its fallback when it is not in the window.
+    /// The part of the window to light for a target: the target, or its fallback when it isn't in the window.
     pub fn spot(&self, target: Target, window: Rect) -> Option<Rect> {
         let mut next = Some(target);
         while let Some(t) = next {
@@ -242,7 +242,7 @@ impl Window {
         if self.palette_open != b.palette_open {
             self.toggle_palette(Some(b.palette_open));
         }
-        // The tour's own changes to the layout were not written to the settings
+        // The tour's own changes to the layout weren't written to the settings
         self.layout = b.layout;
         self.front = b.front;
         if self.ed.selection != b.selection {

@@ -46,7 +46,7 @@ fn budget(ui: &mut egui::Ui, text: &str, ratio: f64, warning: &str, small: &str,
         ui.set_width(ui.available_width());
         ui.label(text);
         style::meter(ui, ratio as f32, over);
-        // What is over the budget is about this level and always shows. How the budget is measured is a note.
+        // What's over the budget is about this level and always shows. How the budget is measured is a note.
         if !warning.is_empty() {
             style::src(ui, warning);
         }
@@ -99,7 +99,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
         if !rt.object_banks.is_empty() || !rt.texture_banks.is_empty() {
             let (no, nt) = (rt.object_banks.len(), rt.texture_banks.len());
             let text = format!(
-                "Build ROM and Export patch add the Expansion Pak game mod. When this level starts, it loads {no} model bank{} and {nt} texture bank{} ({} KB) from the player’s own ROM. The ROM and patch contain no game data from those banks. The ROM then needs the Expansion Pak.",
+                "Build ROM and Export patch add the Expansion Pak game mod. When this level starts, it loads {no} model bank{} and {nt} texture bank{} ({} KB) from the player's own ROM. The ROM and patch contain no game data from those banks. The ROM then needs the Expansion Pak.",
                 plural(no),
                 plural(nt),
                 kb(rt.bytes as f64)
@@ -109,7 +109,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
         if let (true, Some(copy)) = (copied > 0, &plan.copy) {
             let (n, t) = (copy.objects.len(), copy.textures.len());
             let text = format!(
-                "{n} piece{} of your imported models ({} KB with {t} texture{}) are copied into {} and {}. The ROM and patch contain them. The game mod gives them the Expansion Pak’s memory.",
+                "{n} piece{} of your imported models ({} KB with {t} texture{}) are copied into {} and {}. The ROM and patch contain them. The game mod gives them the Expansion Pak's memory.",
                 plural(n),
                 kb(copied as f64),
                 plural(t),

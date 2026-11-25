@@ -101,7 +101,7 @@ impl Camera {
         [(n[0] + 1.0) / 2.0 * self.width, (1.0 - n[1]) / 2.0 * self.height, n[2]]
     }
 
-    /// The ray through pixel (x, y): origin and unit direction. `None` when the camera's matrices cannot be
+    /// The ray through pixel (x, y): origin and unit direction. `None` when the camera's matrices can't be
     /// inverted (a view with no size).
     pub fn ray(&self, x: f64, y: f64) -> Option<(V3, V3)> {
         let nx = x / at_least_1(self.width) * 2.0 - 1.0;

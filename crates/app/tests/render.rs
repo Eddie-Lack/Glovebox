@@ -253,7 +253,7 @@ fn textures_wrap_and_cut_out() {
     assert_eq!([at(0, 0.17, -0.17), at(1, 0.17, -0.17), at(2, 0.17, -0.17)], [white, white, white]);
     assert_eq!(at(2, -0.83, -0.83), blue);
 
-    // A cut-out: texels under the alpha test are not drawn, and vertex colors tint the rest
+    // A cut-out: texels under the alpha test aren't drawn, and vertex colors tint the rest
     let mut s = Scene::new();
     let world = s.node("world");
     let mut rgba = Vec::new();
@@ -353,7 +353,7 @@ fn settings(r: &mut Renderer, json: &serde_json::Value) {
 }
 
 /// The mean difference of the colors of two pictures, of 255, and the share of pixels that differ by more than
-/// 40 in some channel. Saves the differences as a picture (white where they are the same).
+/// 40 in some channel. Saves the differences as a picture (white where they're the same).
 fn compare(dir: &Path, name: &str, w: u32, h: u32, ours: &[u8], theirs: &[u8]) -> (f64, f64) {
     assert_eq!(ours.len(), theirs.len());
     let (mut sum, mut far) = (0u64, 0u64);
@@ -374,7 +374,7 @@ fn compare(dir: &Path, name: &str, w: u32, h: u32, ours: &[u8], theirs: &[u8]) -
 #[test]
 fn the_made_up_scene_matches_the_reference() {
     let Some(dir) = reference() else {
-        println!("the_made_up_scene_matches_the_reference: skipped, GLOVEBOX_REFERENCE is not set");
+        println!("the_made_up_scene_matches_the_reference: skipped, GLOVEBOX_REFERENCE isn't set");
         return;
     };
     let read = |name: &str| std::fs::read(dir.join(name)).unwrap();
@@ -457,7 +457,7 @@ impl Models {
 #[test]
 fn a_level_matches_the_reference() {
     let (Some(dir), Some(home)) = (reference(), std::env::var_os("GLOVEBOX_REFHOME")) else {
-        println!("a_level_matches_the_reference: skipped, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not both set");
+        println!("a_level_matches_the_reference: skipped, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME aren't both set");
         return;
     };
     let read = |name: &str| std::fs::read(dir.join(name)).unwrap();

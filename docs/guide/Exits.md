@@ -6,7 +6,7 @@ Every exit is a platform with an `Exit` command.
 
 ## See the sphere
 
-`Exits` in the toolbar shows or hides the green spheres. They are drawn at their real size.
+`Exits` in the toolbar shows or hides the green spheres. They're drawn at their real size.
 
 ![The exit at the end of Atlantis 1: a small green sphere in front of the temple door](img/exit-trigger.png)
 

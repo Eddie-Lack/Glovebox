@@ -36,7 +36,7 @@ enum Val<'a> {
     F(f64),
     I(i64),
     S(&'a str),
-    /// A platform tag. It is written "None" when there is none.
+    /// A platform tag. It's written "None" when there's none.
     Tag(Option<i64>),
 }
 
@@ -98,7 +98,7 @@ fn ring(doc: &mut Doc, p: [f64; 3], facing: f64, height: f64) -> NodeId {
 
 fn heart(doc: &mut Doc, p: [f64; 3], facing: f64, behavior: i64, scale: Option<[f64; 3]>) -> NodeId {
     let n = platform(doc, HEART, p, scale, true);
-    // A spin of speed 0 only turns the heart. It is safe here because the heart is updated every frame.
+    // A spin of speed 0 only turns the heart. It's safe here because the heart is updated every frame.
     add(
         doc,
         n,
@@ -207,7 +207,7 @@ pub fn preset(key: &str) -> Option<&'static Preset> {
 
 /// The elements of a preset at ground point `p`, facing the view's direction, as new elements without a parent, in
 /// level order. `tag` is a free platform tag. `model` is the selected object's (id, name), for the presets that
-/// take any model. `ground(q)` gives the ground height under a point. `None` for a key that is not a preset.
+/// take any model. `ground(q)` gives the ground height under a point. `None` for a key that isn't a preset.
 pub fn build(
     doc: &mut Doc,
     key: &str,

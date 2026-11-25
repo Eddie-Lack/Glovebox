@@ -1,4 +1,4 @@
-//! The application: the setup screen or the editor's window, and what the window does that is not one panel's
+//! The application: the setup screen or the editor's window, and what the window does that isn't one panel's
 //! own: starting, opening levels, the editor's events, builds, Test level and the keyboard.
 
 use crate::dialogs::{Dialog, FileDialogs};
@@ -70,7 +70,7 @@ impl App {
     }
 }
 
-/// Opens the ROM copy of the user folder. The error is None when there is no copy yet.
+/// Opens the ROM copy of the user folder. The error is None when there's no copy yet.
 fn open_rom(home: &Path) -> Result<Arc<dyn Backend>, Option<String>> {
     let rom = shell::rom_path(home);
     if !rom.is_file() {
@@ -165,7 +165,7 @@ pub struct Window {
     pub(crate) sizes_dirty: bool,
     /// The sizes of the last frame.
     pub(crate) sizes_seen: BTreeMap<String, f32>,
-    /// Counts the resets of the layout. It is part of the panels' ids.
+    /// Counts the resets of the layout. It's part of the panels' ids.
     pub(crate) layout_gen: u32,
     /// The welcome and the tour.
     pub tour: tour::State,
@@ -279,7 +279,7 @@ impl Window {
                     Ok(c) => w.ed.set_catalog(c),
                     Err(e) => {
                         w.ed.set_catalog(BTreeMap::new());
-                        w.set_status(&format!("Couldn’t index the game’s models: {e}"), "err");
+                        w.set_status(&format!("Couldn't index the game's models: {e}"), "err");
                     }
                 }
                 w.busy = false;
@@ -311,8 +311,8 @@ impl Window {
             |w: &mut Window, res| {
                 let res = res.and_then(|data| w.ed.apply_level(data));
                 if let Err(e) = res {
-                    shell::log(&format!("Failed to load level: {e}"));
-                    w.set_status(&format!("Failed to load level: {e}"), "err");
+                    shell::log(&format!("Couldn't load the level: {e}"));
+                    w.set_status(&format!("Couldn't load the level: {e}"), "err");
                 }
                 w.busy = false;
                 w.loading.clear();
@@ -325,7 +325,7 @@ impl Window {
         );
     }
 
-    /// Opens a level, then runs `then` when it is the open level.
+    /// Opens a level, then runs `then` when it's the open level.
     pub fn load_scene_then(&mut self, sid: &str, then: Act) {
         if self.busy {
             return;
@@ -461,11 +461,11 @@ impl Window {
     pub fn reset_level(&mut self) {
         let name = self.ed.scene.as_ref().map(|x| s(x, "name").to_string()).unwrap_or_default();
         if !self.ed.is_edited() {
-            return self.set_status(&format!("{name} is already the shipped level."), "");
+            return self.set_status(&format!("{name} is already the vanilla level."), "");
         }
         self.dialog = Some(Dialog::Confirm {
             title: "Reset level".to_string(),
-            text: format!("Reset {name} to the shipped level? This discards your edits and their autosave. You can still undo it in this session."),
+            text: format!("Reset {name} to the vanilla level? This discards your edits and their autosave. You can still undo it in this session."),
             yes: Some(Box::new(|w: &mut Window| w.ed.reset_level())),
         });
     }
@@ -483,7 +483,7 @@ impl Window {
                         w.reload_catalog();
                         w.ed.place_custom(s(&meta, "set"), as_, None);
                     }
-                    Err(e) => w.set_status(&format!("Could not make {}: {e}", name.to_lowercase()), "err"),
+                    Err(e) => w.set_status(&format!("Couldn't make {}: {e}", name.to_lowercase()), "err"),
                 }
             },
         );
@@ -511,14 +511,14 @@ impl Window {
                 w.loading.clear();
                 let new = match res {
                     Ok(n) => n,
-                    Err(e) => return w.set_status(&format!("Could not make a new look: {e}"), "err"),
+                    Err(e) => return w.set_status(&format!("Couldn't make a new look: {e}"), "err"),
                 };
                 w.reload_catalog();
                 // The level may have changed while the job ran (undo, another level): find the piece again
                 let ed = &mut w.ed;
                 let node = if ed.scene_id() == sid { ed.doc.node_at(&wher) } else { None };
                 let Some(node) = node.filter(|n| ed.doc.get(*n, "object_id").map(str::to_string) == had) else {
-                    return ed.set_status("The new look is ready, but the piece changed meanwhile. It is listed with your imported models.", "");
+                    return ed.set_status("The new look is ready, but the piece changed meanwhile. It's listed with your imported models.", "");
                 };
                 let piece = ed.catalog.get(&new).and_then(|c| c.custom.as_ref()).map(|c| c.piece.clone()).filter(|p| !p.is_empty());
                 let name: String = piece.unwrap_or_else(|| ed.doc.attr(node, "name").to_string()).chars().take(7).collect();
@@ -527,7 +527,7 @@ impl Window {
                     ed.doc.set(node, "name", &name);
                 });
                 let titles: Vec<String> = worlds.iter().map(|x| title_case(x)).collect();
-                ed.set_status(&format!("The model now has textures from {}. It is copied into the level's banks at ROM build.", titles.join(", ")), "ok");
+                ed.set_status(&format!("The model now has textures from {}. It's copied into the level's banks at ROM build.", titles.join(", ")), "ok");
             },
         );
     }
@@ -618,7 +618,7 @@ impl Window {
                 }
                 let id = match pack.write_to(&dir) {
                     Ok(id) => id,
-                    Err(e) => return w.set_status(&format!("Couldn’t save {}: {e}", dir.display()), "err"),
+                    Err(e) => return w.set_status(&format!("Couldn't save {}: {e}", dir.display()), "err"),
                 };
                 if let Some(parent) = dir.parent() {
                     w.settings.set("saveDir", &parent.to_string_lossy());
@@ -646,7 +646,7 @@ impl Window {
             return false;
         };
         if let Err(e) = std::fs::write(&path, &data) {
-            self.set_status(&format!("Couldn’t save {}: {e}", path.display()), "err");
+            self.set_status(&format!("Couldn't save {}: {e}", path.display()), "err");
             return false;
         }
         if let Some(dir) = path.parent() {
@@ -732,7 +732,7 @@ impl Window {
             move || -> Result<PathBuf, String> {
                 let out = job.run()?;
                 let path = folder.join(format!("glover-{sid}-test.z64"));
-                std::fs::create_dir_all(&folder).and_then(|_| std::fs::write(&path, &out.data)).map_err(|e| format!("Couldn’t save {}: {e}", path.display()))?;
+                std::fs::create_dir_all(&folder).and_then(|_| std::fs::write(&path, &out.data)).map_err(|e| format!("Couldn't save {}: {e}", path.display()))?;
                 Ok(path)
             },
             move |w: &mut Window, res| {
@@ -762,7 +762,7 @@ impl Window {
                 self.ctx.open_url(egui::OpenUrl::new_tab(url));
                 self.set_status(&format!("The patcher page is {}. Share it with your patch.", path.display()), "ok");
             }
-            Err(e) => self.set_status(&format!("Couldn’t write {}: {e}", path.display()), "err"),
+            Err(e) => self.set_status(&format!("Couldn't write {}: {e}", path.display()), "err"),
         }
     }
 
@@ -970,7 +970,7 @@ pub fn title_case(s: &str) -> String {
     out
 }
 
-/// The entry of the catalog for an id, when there is one.
+/// The entry of the catalog for an id, when there's one.
 pub fn cat<'a>(ed: &'a Editor, oid: &str) -> Option<&'a CatalogEntry> {
     ed.catalog.get(oid)
 }

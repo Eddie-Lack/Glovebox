@@ -13,8 +13,8 @@ process. It installs and unpacks nothing, and the only other program it starts i
 | Source | Used for |
 |---|---|
 | **libgarib** (naclomi) | The formats and the ROM tools. Its descriptions of the level file and of the retail ROM's layout are in `formats/`. Its algorithms are ported to Rust in `crates/core`: `.lev` ↔ XML (the round trip gives the same bytes on all 48 levels), the XML's rules, object banks and their models, texture banks, FLA2, repacking and relocating the ROM's data, and the `copyskip` and `quickboot` patches. `copyskip` skips the copyright screen. `quickboot` boots straight into one level. |
-| **noclip.website** | The level list. Its scene table supplies level names and the object and texture banks of each level (`crates/core/data/scenes.json`), and its enemy and powerup model tables are `noclip_tables.json`. The editor does not use its placement logic: noclip rotates actors in the order `ZYX` and swaps the X and Z scales (see "Selecting, rotating, scaling, adding"). The editor names a bank by the file name that noclip's ROM splitter gives it (`HUB_PART1.obj.fla`). The splitter is noclip's tool that writes the ROM's banks to files. The editor does not run it. |
-| **gloveworld** decompilation (`../gloveworld`) | What each opcode means. The decomp names each opcode (`enum Token`) and points to the C that parses it. It gives real names for 31 opcodes that libgarib only has placeholders for (e.g. `PlatMvspn0x58` = `TOKEN_SPINTOMOVE`). It also supplies enum names for enemy types, puzzle conditions/actions and enemy instructions. The editor's checks also come from it: they run the game's own level-parser warnings on your edits, and the limits past which the game calls `Crash()`, its error report. `tools/build_xref.py`, `tools/game_banks.py`, `tools/measure_heap.py` and `tools/build_mod.py` read a gloveworld checkout. `build_mod.py` looks in `../gloveworld` by default. The program does not need one. |
+| **noclip.website** | The level list. Its scene table supplies level names and the object and texture banks of each level (`crates/core/data/scenes.json`), and its enemy and powerup model tables are `noclip_tables.json`. The editor doesn't use its placement logic: noclip rotates actors in the order `ZYX` and swaps the X and Z scales (see "Selecting, rotating, scaling, adding"). The editor names a bank by the file name that noclip's ROM splitter gives it (`HUB_PART1.obj.fla`). The splitter is noclip's tool that writes the ROM's banks to files. The editor doesn't run it. |
+| **gloveworld** decompilation (`../gloveworld`) | What each opcode means. The decomp names each opcode (`enum Token`) and points to the C that parses it. It gives real names for 31 opcodes that libgarib only has placeholders for (e.g. `PlatMvspn0x58` = `TOKEN_SPINTOMOVE`). It also supplies enum names for enemy types, puzzle conditions/actions and enemy instructions. The editor's checks also come from it: they run the game's own level-parser warnings on your edits, and the limits past which the game calls `Crash()`, its error report. `tools/build_xref.py`, `tools/game_banks.py`, `tools/measure_heap.py` and `tools/build_mod.py` read a gloveworld checkout. `build_mod.py` looks in `../gloveworld` by default. The program doesn't need one. |
 
 ## Where things are
 
@@ -25,7 +25,7 @@ process. It installs and unpacks nothing, and the only other program it starts i
 | `crates/app` | `glovebox`, the program: the window, the panels, the renderer, the user folder, and the click tests (`tests/ui.rs`). The user folder is where the app keeps its copy of the ROM, the drafts, the settings and the other files it writes ("The Windows app"). |
 | `crates/core/examples/gbtool.rs` | The back end on the command line: a level's XML, a ROM or patch build, the hardware check, a level pack for g64coopdx, the import of a glTF model, and a glTF model as a pack's `models.bin`. |
 | `crates/core/data/` | The tables compiled into the program (below). None holds bytes copied from the ROM. |
-| `formats/` | libgarib's description of the level file (`glover.lev.ksy`, with one change of ours: `SetActorRotation` and `SetActorScale` may also sit in a platform, enemy, powerup or water) and its map of the retail ROM. The program does not read them: `tools/gen_formats.py` and `tools/gen_rom_map.py` turn them into JSON tables. |
+| `formats/` | libgarib's description of the level file (`glover.lev.ksy`, with one change of ours: `SetActorRotation` and `SetActorScale` may also sit in a platform, enemy, powerup or water) and its map of the retail ROM. The program doesn't read them: `tools/gen_formats.py` and `tools/gen_rom_map.py` turn them into JSON tables. |
 | `mod/` | The Expansion Pak game mod ("Expansion Pak game mod", under "Selecting, rotating, scaling, adding"): `transforms.c` (rotation and scale for every object), `heap.c` (larger heap), `banks.c` (models and textures from other banks), `guard.c` (the matrix guard, which skips draws that would pass the frame's 256 object matrices), `slots.c` (extra levels), which run from 0x807E0000; `aligned.c` (the mod's one buffer that must sit on a 16 byte boundary, the header of an extra level's file); `loader.c` (the loader, written over `ScreenShot`, a debug function the game never calls); and the committed build outputs `mod.bin` and `mod.json`, which the program compiles in. |
 | `tools/build_mod.py` | Builds `mod/` with gloveworld's GCC 2.7.2 against gloveworld's `build/NGVE.elf`, finds the call sites to hook and writes `mod.json`. |
 | `web/patcher.html`, `tools/build_patcher.py` | The offline patcher page for players. It applies a BPS patch to the player's own ROM ("Sharing levels: patches and the patcher"). After editing the page's script, run `tools/build_patcher.py`. It writes the script's new hash into the page's Content-Security-Policy. |
@@ -53,7 +53,7 @@ nothing else. The program never runs them.
 - `scenes.json` and `noclip_tables.json` were made once from noclip.website's scene table and enemy tables
   (`src/Glover/scenes.ts` and `enemy.ts` in noclip.website's source) joined with the banks the game's `LoadLevel`
   loads. `tools/game_banks.py` prints those banks, and with `--compare crates/core/data/scenes.json` it compares them
-  with the table. It does not write the table. The two tables describe the retail game, which does not change. They
+  with the table. It doesn't write the table. The two tables describe the retail game, which doesn't change. They
   are committed data without a generator.
 
 `crates/core` by module:
@@ -110,7 +110,7 @@ nothing else. The program never runs them.
 
 - A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
   `Backend::texture` give the model and the pixels.
-- The level XML is a `Doc` tree. Undo snapshots and "is this the shipped level?" compare its serialized text.
+- The level XML is a `Doc` tree. Undo snapshots and "is this the vanilla level?" compare its serialized text.
 - Every edit rebuilds the entities from the XML. Models are parsed once per level.
 - Drawing: opaque meshes are merged into one world-space buffer per material after each rebuild (`make_batches`).
   What moves without a rebuild (a gizmo drag, the motion preview) is drawn on its own. The renderer draws into its
@@ -120,7 +120,7 @@ nothing else. The program never runs them.
 - Picking runs on the CPU: a ray against each mesh's triangles, sprites as camera-facing squares, lines
   within 5 pixels.
 - The round icons of things without a model (garibs, Mr. Tip) are drawn by the program's own shapes
-  (`render/icons.rs`). They do not depend on a system font.
+  (`render/icons.rs`). They don't depend on a system font.
 
 ## Panels
 
@@ -135,7 +135,7 @@ nothing else. The program never runs them.
     tool off, and `+ Add`, `A`, `Path` and `P` show it again.
   - Each side is one column (`Window::columns`), an egui side panel. `Tabbed` draws a row of tabs and the panel
     in front. A column with one panel has a title bar and no tabs. `Stacked` draws the panels one under the other,
-    each with its title bar, as egui top panels with a divider to drag. The checks are never a tab: they are the
+    each with its title bar, as egui top panels with a divider to drag. The checks are never a tab: they're the
     lowest part of their column, with a divider over them, or a bottom panel under the view.
   - `Window::front` lists the tabbed panels, the one chosen last first. A column shows the first of its panels in
     that list. Opening Add to level or Path, a click on a tab, and moving a panel to another side bring it to the
@@ -158,12 +158,12 @@ nothing else. The program never runs them.
   - The controls: `Options` > `Panels` (`layout::menu`, a submenu that stays open while its entries are clicked)
     has a checkbox and a side for each panel, `Stacked` or `Tabbed` for each side, and `Reset layout`. Each title bar,
     each row of tabs and the checks' heading has a small menu (`panel_menu`): `Move to left`, `Move to right`,
-    `Move to bottom` for the checks, and `Hide`. Panels are not dragged to dock them.
+    `Move to bottom` for the checks, and `Hide`. Panels aren't dragged to dock them.
   - `Window::panels` has the rectangles of the last frame: the columns of Level and of the inspector, the checks,
     the column the tool panels have for themselves, and each panel's own part of the window (`slots`).
   - With the inspector hidden, a selection writes what was selected to the status line at the bottom of the window
     (`Window::pump`).
-  - `egui_dock` is not used. Its newest release (0.21.1) needs egui 0.36, and the app uses 0.37.
+  - `egui_dock` isn't used. Its newest release (0.21.1) needs egui 0.36, and the app uses 0.37.
 - A panel's size comes from its default and from drags on its edge. The default widths are in `layout.rs`:
   `LEVEL_WIDTH` 270, `INSPECTOR_WIDTH` 380, and `ADD_WIDTH` 360 for Add to level and Path. The checks start at 36%
   of their column's height (180 to 320 points), and at 200 points under the view. A column has the default and the
@@ -177,10 +177,10 @@ nothing else. The program never runs them.
     and the click test `panels_resize` checks that this is zero for every kind of object, all objects selected at
     once, a puzzle, the level's settings, every tab of Add to level and the Path panel.
   - A widget that is too wide also widens every row after it in the same `Ui`: egui moves the layout's right edge.
-  - The 3D view does not take the pointer in the strips along its left and right sides (egui's
+  - The 3D view doesn't take the pointer in the strips along its left and right sides (egui's
     `resize_grab_radius_side`), nor in the strip along its bottom when the checks are under it. The view is added after the panels, and it would otherwise take the half of each resize handle that
     lies over it.
-- A color is picked in the inspector. There is no color dialog.
+- A color is picked in the inspector. There's no color dialog.
 
 ## Themes
 
@@ -210,7 +210,7 @@ nothing else. The program never runs them.
     the color of the main action's letters. Good, warning and bad are a green, an amber and a red that suit the
     palette. Coral's bad is a crimson, which differs from its coral main color. The 3D view of a level without fog is a dark tone
     of the palette.
-  - `Theme::disabled` is the opacity of a control that cannot be used (egui's `disabled_alpha`): 1 is fully opaque.
+  - `Theme::disabled` is the opacity of a control that can't be used (egui's `disabled_alpha`): 1 is fully opaque.
     1998 and the styled themes have 0.55. The plain ones have 0.6 or 0.62 and the palette ones 0.6 to 0.71: their disabled text keeps a
     contrast of 4.5.
 
@@ -240,8 +240,8 @@ nothing else. The program never runs them.
     and the styled themes, then the palette themes. A click calls `Window::set_theme`. It writes the id to `settings.ini` as `theme` and
     applies the theme after the frame. `App::new` reads the setting before the first frame, for the setup screen
     too. An unknown or missing id is `1998`.
-  - egui's buttons, text boxes and separators get their shapes from egui's widget themes, which are not the app's
-    themes. The app's widget theme is `Look`: it draws those widgets in the shapes of the active theme. It is
+  - egui's buttons, text boxes and separators get their shapes from egui's widget themes, which aren't the app's
+    themes. The app's widget theme is `Look`: it draws those widgets in the shapes of the active theme. It's
     registered with `replace_widget_theme`, which needs egui's `experimental` feature. A toolbar switch that is on
     has the class `CLASS_ON`, the main action (Build ROM) `CLASS_PRIMARY`. An entry of a list or a menu is flat:
     the chosen one and the one under the pointer take the theme's tones `sel` and `hover`.
@@ -250,7 +250,7 @@ nothing else. The program never runs them.
   - An egui frame has one stroke. A bevel is a light stroke and a dark hard shadow of one pixel. A key's lip is a
     hard shadow under it. The line under a Paper field is a hard shadow that shows below its tint only.
   - Title bars (`title_bar`, `h4`, the head of a `card`) show their text in capitals. The accessible name keeps the
-    text as written. A card whose title is a command's tag (`FogConfiguration`) is not put in capitals: in capitals
+    text as written. A card whose title is a command's tag (`FogConfiguration`) isn't put in capitals: in capitals
     its words would run together.
   - Checkboxes are drawn by `style::checkbox`. The Level panel has a layer for each kind of object the level has,
     and one for the exit triggers. Each layer has a checkbox that shows or hides it. A layer's box takes the
@@ -269,7 +269,7 @@ nothing else. The program never runs them.
       colored box, and shades a mark with a see-through white or black.
     - The panels, the cards, the toolbar and the pop-ups are all dark or all light: `text` and `muted` are read on
       each of them.
-    - Layout does not depend on the theme: the same margins, row heights and frame widths (`RIDGE`). Only the
+    - Layout doesn't depend on the theme: the same margins, row heights and frame widths (`RIDGE`). Only the
       width of the text differs.
     - A switch that is on, the main action, the keyboard focus, the chosen row, and good, warning and bad must
       each be clear at a glance.
@@ -290,7 +290,7 @@ nothing else. The program never runs them.
   - Every note is drawn by the helpers under "Notes" in `style.rs`: `note`, `note_at`, `note_on`, `card_note`,
     `src_on`, `para`, `para_at`, `para_on`, and the `sub` line of `check_line`. The state is in the egui
     context's data (`style::info`), as the theme is.
-  - A text about the player's own level is not a note and always shows: values, counts, status lines, the main
+  - A text about the player's own level isn't a note and always shows: values, counts, status lines, the main
     line of a check, a wrong value's message, refusals, the notices about the Expansion Pak. Those use `muted`,
     `remark`, `src` or `check_line`.
   - `Shown` draws the note as a label. `Off` draws nothing. `On hover` draws nothing in the panel and lays an
@@ -317,21 +317,21 @@ nothing else. The program never runs them.
     depends on the Info texts setting (`last_text`), and it has the link to the guide.
   - A `Target` names a part of the window. The toolbar, the panels and the view report their rectangles in every
     frame with `tour::State::mark`. Several widgets of one target give the rectangle around them all (`Move`,
-    `Rotate` and `Scale`). No position is written in the code. A target that is not in the window has a fallback:
+    `Rotate` and `Scale`). No position is written in the code. A target that isn't in the window has a fallback:
     the toolbar, or the column of the inspector.
   - A `Show` says what the window shows during the step: nothing selected, one thing near Glover's start selected
     and framed, or Add to level open. `Window::enter_step` sets it when the step opens.
   - A step on the Level panel, the inspector or the checks shows that panel when the player hid it, and brings it
     in front of its tabs. Each step starts from the player's layout: a panel shown for one step is hidden again
-    in the next. These changes are not written to the settings.
-  - The tour does not edit the level. `Window::end_tour` puts back the layout and the tabs in front, the selection,
+    in the next. These changes aren't written to the settings.
+  - The tour doesn't edit the level. `Window::end_tour` puts back the layout and the tabs in front, the selection,
     the open puzzle, Add to level
     and its tab, box select, the fly camera and the camera's place.
   - The picture: `style::spotlight` dims the window around the target with the theme's scrim and draws a line in the
     focus color. The scrim is the color that dims the window behind a dialog. `style::callout` draws the bubble in
     the colors of the menus, with a pointer. `tour::place` puts the bubble under, over or beside the target, inside the window and never over the target.
     Beside a target it can be narrower. The bubble's size comes from its texts, which are laid out first.
-  - The tour is an `egui::Modal` over the whole window. Clicks do not reach the window under it.
+  - The tour is an `egui::Modal` over the whole window. Clicks don't reach the window under it.
     `Window::modal` is true during a dialog, the welcome and the tour: the editor's keys, the view's mouse and
     dropped files are off. Esc ends the tour, the arrow keys and Enter move between the steps.
   - The click tests start with `tour=seen` in the settings (`T::with_theme`). The test `welcome_and_tour` starts
@@ -372,7 +372,7 @@ nothing else. The program never runs them.
   - Its Content-Security-Policy has `connect-src 'none'`: the browser itself blocks any network request.
     The script is pinned by hash (`tools/build_patcher.py`; run it after editing the script).
   - Its look follows the practice ROM's patch page (glover.love): a 1998 game web site, with a star background,
-    a ridge-framed column, red title bars and gray beveled buttons. It is all inline CSS and `data:` SVG.
+    a ridge-framed column, red title bars and gray beveled buttons. It's all inline CSS and `data:` SVG.
     Nothing in it comes from the ROM. A change to the style or the markup needs no new hash.
   - Every read and copy in the decoder is bounds-checked.
   - A wrong ROM, damaged patch or malformed patch is refused with a plain explanation; nothing is saved.
@@ -393,7 +393,7 @@ It reads a level from a **level pack**, not from a patched ROM. A pack is a fold
 - `models.bin`, only when the level needs models that its own banks lack. g64coopdx's `docs/discovery/model-banks.md`
   has its format: a header with the numbers of the game's banks it needs, then a texture bank and an object bank of
   the pack's own, uncompressed. A pack that needs only the game's banks has no banks of its own.
-- `script.lua`, optional: a Lua script for g64coopdx. Glovebox does not write one.
+- `script.lua`, optional: a Lua script for g64coopdx. Glovebox doesn't write one.
 
 A pack holds no game data. Its level file names models and textures by their ids. The pack's level takes the place of
 the level it was made for, and the game loads that level's banks with it. Each player's own ROM supplies them.
@@ -431,12 +431,12 @@ the level it was made for, and the game loads that level's banks with it. Each p
   pack names them.
 - The game reads a sprite's texture with no test, and crashes on a sprite whose texture no loaded bank has. So
   g64coopdx refuses a pack that names an object bank of the game's whose sprites need a texture from no bank the level
-  has (`g64_pack_check_retail_sprites`). It checks every object of the bank, also the ones the level does not place.
+  has (`g64_pack_check_retail_sprites`). It checks every object of the bank, also the ones the level doesn't place.
   The banks it counts are the font's (10), GENERIC (2), the level's own and the texture banks that `models.bin` names.
   `pack::add_sprite_banks` runs after `plan_runtime` and adds texture banks until every sprite texture of each named
   object bank is in one. It tries the texture banks of the levels that load the object bank first, then every other
   one. The added banks come after the plan's own. More than 4 in all is refused, and so is a sprite texture in no
-  bank. `plan_runtime` itself does not change: the game mod's builds do not use the rule.
+  bank. `plan_runtime` itself doesn't change: the game mod's builds don't use the rule.
 - Example: Carnival's shared bank (object bank 19) has a body, 0x23313E06, whose faces need no texture bank of
   Carnival's. Other objects of the bank have sprites with a texture of Carnival's texture bank (4). Without the rule
   the pack for Atlantis 1 named object bank 19 alone, and `g64pack check` refused it. With it, the pack names texture
@@ -444,21 +444,26 @@ the level it was made for, and the game loads that level's banks with it. Each p
   the Wayroom, gives a pack that passes `g64pack check`.
 - The flag of `models.bin` (the game's texture banks win over the level's own) is always 0. The game mod's builds never
   set it either.
-- All 48 shipped levels export with no `models.bin` (`every_shipped_level_makes_a_pack`).
+- All 48 vanilla levels export with no `models.bin` (`every_vanilla_level_makes_a_pack`).
 - `pack::pack_models` refuses, with a message:
   - a reskin: a set whose `meta.json` names the model it was made from
   - a model whose id is one that the game finds an enemy, a bullet or a pick-up by (`pack::GAME_NAME_IDS`, copied from
     g64coopdx's `g64_models_game_ids`)
   - a cameo (AnimatedBackgroundActor) of an imported model. The game animates a cameo, and the model has no animation.
+    The message uses the palette's names: Scenery, Background and Platform.
   - a model with a mesh named `gball`, `cball`, `GShinL`, `GShinR` or `gbl_bt`. The game points the ball's and the
-    hand's textures at those. The export does not rename it. The mesh's name comes from the file's name when it was
+    hand's textures at those. The export doesn't rename it. The mesh's name comes from the file's name when it was
     imported. A set's folder name comes from the file's bytes and the scale alone, so an import of the same file under
     another name gives back the old set. The author removes the model, renames the file, imports it again and places
     the new model.
   - models over 4 MiB, more than 4 of the game's banks of a kind, the font or generic texture banks (10 and 2), and
     object banks 0 and 1
+- An imported model as a platform is allowed. `model_banks` writes the rotation key of no turn ("models.bin"
+  below), and g64coopdx's `make models` test plays such platforms. A ROM for the console still must not have one
+  ("Platforms from converted models").
 - The refusals need no ROM. Their tests are in `pack.rs`. `a_pack_with_imports` (in `crates/core/tests/pack_rom.rs`)
-  runs the export with the ROM.
+  runs the export with the ROM. It also exports the cube as a platform of Atlantis 1. With `GLOVEBOX_PACK_OUT=DIR` it
+  writes that pack to DIR, and g64coopdx's `g64pack check DIR --rom ROM` passes it.
 
 ### models.bin
 
@@ -466,8 +471,8 @@ the level it was made for, and the game loads that level's banks with it. Each p
   pieces alone, linked with no game bank under them. Two pieces with the same id are an error. The texture bank holds
   the records the pieces use, padded to a multiple of 8 bytes with their size fixed, and no names after them. It ends
   with 4 zero bytes, so its size is a multiple of 8 too.
-- The converter writes a rotation key of all zeros. The game turns it into a matrix of values that are not numbers.
-  `model_banks` writes the key of no turn (0, 0, 0, 1) in its place. The converter itself does not change.
+- The converter writes a rotation key of all zeros. The game turns it into a matrix of values that aren't numbers.
+  `model_banks` writes the key of no turn (0, 0, 0, 1) in its place. The converter itself doesn't change.
 - `pack::models_bin` writes the file: the header, the numbers of the game's banks, zeros up to a multiple of 8, then
   the two banks.
 - `gbtool modelbanks GLTF OUT` converts a glTF file at scale 1 and writes `models.bin`. It needs no ROM, so it does
@@ -487,13 +492,13 @@ the level it was made for, and the game loads that level's banks with it. Each p
 - **Autosave**: after every edit the level's XML is saved in the user folder (`drafts/<level id>.json`,
   `crates/editor/src/drafts.rs`). Reopening the level, restarting the editor or switching levels and back restores it. The HUD
   chip shows "Edited · autosaved HH:MM", and the level list marks edited levels with ●. Undo after a restore
-  goes back to the shipped level.
-- **Reset level** discards a level's edits and its autosave, after a confirmation. It is undoable in the
+  goes back to the vanilla level.
+- **Reset level** discards a level's edits and its autosave, after a confirmation. It's undoable in the
   current session.
 - **Import XML** (or drop an .xml on the window) checks the file before any of it reaches the level
   (`crates/editor/src/sanitize.rs`):
   - It refuses DOCTYPEs, entity declarations, stylesheet instructions, XInclude and CDATA before parsing.
-    Entity expansion and external-entity reads cannot happen.
+    Entity expansion and external-entity reads can't happen.
   - Every element must be a command or type from libgarib's format, in a place that format allows (a `Garib`
     inside a `GaribGroup`, `PlatScale` inside a platform…).
   - Every attribute must be a field of that element. Every value must fit its type: finite 32-bit floats,
@@ -503,7 +508,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
   - It requires a single `EndLevelData` at the end: the game parses until that token. A missing one is
     added and a misplaced one is refused.
   - The validated content is copied into a fresh document, which is what reaches the editor. Comments,
-    namespaces and anything unknown are not copied.
+    namespaces and anything unknown aren't copied.
   - The dialog reports problems by element path, matches the file to its level by name, and imports as an
     undoable edit.
   - Autosaved drafts go through the same validation when they're restored.
@@ -536,9 +541,9 @@ the level it was made for, and the game loads that level's banks with it. Each p
 
   The transform math comes from the decomp: rotation is `GetQuaternionFromXYZRot` with `rotOrder` {1,2,0}
   (R = Ry·Rz·Rx, Euler order `YZX`), and scale is `guScaleF(x, y, z)` with no axis swap. noclip uses `ZYX`
-  and swaps X/Z. Shipped levels only use Y rotation and uniform scale. The two agree on shipped data.
+  and swaps X/Z. Vanilla levels only use Y rotation and uniform scale. The two agree on vanilla data.
   An edited level rendered from the emulator's exact camera (`guLookAt(actualCamPos, actualCamTargetPos)`, read
-  from memory) under both conventions showed it: the decomp's matches the game and noclip's does not.
+  from memory) under both conventions showed it: the decomp's matches the game and noclip's doesn't.
 - **Expansion Pak game mod.** A small game mod (`mod/`) uses the N64 Expansion Pak for five things:
   - **Rotation and scale for every 3D object.** The unmodded game applies `SetActorRotation` and
     `SetActorScale` only to landscape and background actors. The mod applies them to enemies, platforms,
@@ -550,7 +555,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
     parsed, the mod loads them from the ROM with the game's own `LoadObjectBank` and `LoadTextureBank`: it
     empties the slots for the call, then moves the new bank into its own lists and puts the level's banks
     back. `FindObject` and `FindTexture` are redirected to versions that search the game's slots first, then
-    the mod's lists. The extra banks are freed before the next level loads. Animated textures in them do not
+    the mod's lists. The extra banks are freed before the next level loads. Animated textures in them don't
     animate.
   - **The matrix guard** (`mod/guard.c`). It skips draws that would pass the frame's 256 object matrices ("Real
     hardware", RDP and RSP).
@@ -561,20 +566,20 @@ the level it was made for, and the game loads that level's banks with it. Each p
     copies fit the game's own heap). The checks panel and the export dialog say so. A build with an extra level also
     gets the mod. Other levels are built without the mod.
   - **Where the mod is stored and runs.**
-    - The mod is about 5 KB of code, built from C against the gloveworld decomp. It is stored in the ROM at 12 MiB,
+    - The mod is about 5 KB of code, built from C against the gloveworld decomp. It's stored in the ROM at 12 MiB,
       past anything the ROM builder writes, and runs from Expansion Pak RAM at 0x807E0000.
     - A 620-byte loader replaces `ScreenShot`, a debug function the game never calls. It runs once at boot.
     - The game's own code keeps its exact layout. The ROM changes are 16 same-size `jal` changes. At boot, with
       an Expansion Pak, the mod also writes a jump over the first two instructions of `FindObject` and
-      `FindTexture` in memory. The ROM builder finds the game's pointers at fixed code offsets, and these offsets do not move.
+      `FindTexture` in memory. The ROM builder finds the game's pointers at fixed code offsets, and these offsets don't move.
   - **The heap.** `MainProc` starts the heap before the loader can run (the loader needs `dmaMessageQ`, which
     is created later). Nothing is allocated in between. The mod starts the heap again with the larger size.
     The three calls that restart the heap on level changes (`game.c`, `frontend.c`) go through the mod, which
     keeps the larger size. Jalloc itself has no 4 MB limits: static blocks grow down from the end, dynamic ones
     up from the start, and sizes are 32-bit. Nothing else in the game masks addresses to 4 MB.
   - **The commands the mod applies.** The level parser sends `SetActorRotation`/`SetActorScale` to the most recent object of any
-    kind, not only the last landscape actor. In all 48 shipped levels, every one of these commands follows a
-    landscape-type actor. Shipped levels behave as in the retail game.
+    kind, not only the last landscape actor. In all 48 vanilla levels, every one of these commands follows a
+    landscape-type actor. Vanilla levels behave as in the retail game.
     - Water takes the rotation and scale on its model. Its swimming volume stays an axis-aligned box.
     - A platform takes the rotation before its collision is built. It collides as drawn. A spinning platform
       gets the rotation added to its spin angles.
@@ -584,7 +589,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
       own axes, as for landscape actors. An enemy's collision sphere and shadow scale with it, by the mean of
       the three axes, and again when it respawns.
   - **Without an Expansion Pak**, the loader puts the original instructions back. It keeps one small parser
-    filter that skips these commands. The game then ignores the extra rotations and scales; it does not apply
+    filter that skips these commands. The game then ignores the extra rotations and scales; it doesn't apply
     them to the previous landscape piece. The heap keeps its original size. A level whose copied imports
     need the larger heap runs out of memory and stops. A level whose imports load at run time can't find those
     models, and the game stops it as "LEVEL UNPLAYABLE" (`gameInfo.mode` 13) before play starts.
@@ -596,7 +601,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
     - A tilted platform, and a General Wu lying on its side at twice its size, appear and play. The level stays
       in play mode.
     - The editor's preview, rendered from the emulator's camera, matches the game. A preview with the opposite
-      rotation order does not match it.
+      rotation order doesn't match it.
     - With the loader's Expansion Pak check forced to fail, the mod doesn't load. Glover, the camera and the
       enemy then end up exactly where they do in the control ROM, at the same game frame.
 - **+ Add** (A) opens a palette. Each entry shows a picture of its model, drawn when the entry scrolls into
@@ -617,13 +622,13 @@ the level it was made for, and the game loads that level's banks with it. Each p
   - The grid scrolls virtually (`tile_grid`, egui's `ScrollArea::show_rows`): the columns are as many 80 point
     tiles as fit the panel, the tiles stretch to fill the row, and only the rows in view are laid out. The Models
     grid has every model the search leaves. The list stops at 150 rows.
-  - Model pictures are bounded. At most `THUMBS_MAX` (320) are kept: when there are more, the ones that are not in
+  - Model pictures are bounded. At most `THUMBS_MAX` (320) are kept: when there are more, the ones that aren't in
     view go, the ones seen longest ago first (`palette::work`). At most 32 models are read at a time. A tile that
     is still in view asks again in the next frame.
   - The search box has an id of its own. Its clear button comes and goes before it in the row, and an id made by
     counting would move the keyboard focus to that button after the first letter.
   - **Collectables**: garib types, every powerup (`Pickup` enum), Mr. Tip.
-  - **Enemies**: all 52 types. A new enemy copies the shortest script that type has in a shipped level, with
+  - **Enemies**: all 52 types. A new enemy copies the shortest script that type has in a vanilla level, with
     its absolute points (`home_*`, `destination_*`, `lookat_*`, attention box) moved to the new spot.
   - **Models**: all 1,522 models in the game, from every object bank, placed as Scenery (`LandActor`, solid),
     Background (no collision) or Platform. **Import model…** adds a model of your own (see [Import model](Import-model.md)).
@@ -665,9 +670,9 @@ the level it was made for, and the game loads that level's banks with it. Each p
   Pink is Glover, orange the ball, purple the camera. Move them with the gizmo and resize them with scale or
   the inspector's size fields; the inspector shows the whole puzzle. Duplicate and Delete copy or remove the
   whole puzzle when the volume is its only one (a camera zone, for one). A volume of a puzzle with several
-  can't be duplicated or deleted on its own. The shipped levels hold 209 boxes and no spheres or cylinders.
+  can't be duplicated or deleted on its own. The vanilla levels hold 209 boxes and no spheres or cylinders.
   Clicks pass through the translucent fill to objects inside.
-- **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It is the same switch as the
+- **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It's the same switch as the
   "Puzzle triggers" layer. The setting is remembered between sessions. Hidden volumes can't be picked, and the
   level keeps them.
 - **Exit triggers** are drawn as a green translucent sphere with three rings around each platform whose
@@ -676,14 +681,14 @@ the level it was made for, and the game loads that level's banks with it. Each p
   `exits::radius` walks the platform's commands in the level file's order, on the vertices that the faces of the
   model's root mesh use (`Backend::root_vertices`, read from the object bank with
   `objbank::root_face_vertices`). The sphere is a node of its own in the world (`EntNodes::exit`). A click
-  goes through it, and it is in no selection box. The rings are drawn a second time, faint and without the
+  goes through it, and it's in no selection box. The rings are drawn a second time, faint and without the
   depth test: the hub's entrances sit inside their doors. It follows the platform when the platform moves, when its
   scale changes and when its commands change. A radius of 0 draws nothing, and so do a model the editor
-  cannot read and an exit of type 3 (it tests no distance). The inspector's "Exit trigger" block gives the exit type, the radius, who must come within it
+  can't read and an exit of type 3 (it tests no distance). The inspector's "Exit trigger" block gives the exit type, the radius, who must come within it
   and the other conditions of `CheckForExit` for that type and level (`exits::rule`). The editor draws the
   exit post's model at a scale of 1.5 on every axis; the game uses 1.5, 2, 1.5, and the radius is computed
   with the game's.
-- **exits** (toolbar checkbox) shows or hides the exit triggers. It is the same switch as the "Exit triggers"
+- **exits** (toolbar checkbox) shows or hides the exit triggers. It's the same switch as the "Exit triggers"
   layer, which counts the platforms with an exit. The layer's key in `Editor::hidden` is `exit`; no entity has
   that kind. The setting is remembered between sessions as `exits`. Hiding the platforms hides their spheres.
 - **fog** (toolbar checkbox) shows or hides the level's fog in the editor view. The setting is remembered
@@ -695,7 +700,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
 ### Camera zones
 
 **+ Add → Camera** adds a camera zone: a box where the camera moves a set way while Glover is inside it. When he
-leaves, the camera goes back to the level's own. The shipped levels have about 170 of these. Each is a puzzle
+leaves, the camera goes back to the level's own. The vanilla levels have about 170 of these. Each is a puzzle
 with one condition (Glover inside a box, `cond_type` 35) and camera actions only, so it needs no game mod.
 
 | Preset | While Glover is in the box, the camera |
@@ -716,7 +721,7 @@ with one condition (Glover inside a box, `cond_type` 35) and camera actions only
   - **fly to**: `FlyTowardsPoint`
 - A dashed line runs from the middle of the zone to about where its camera stands. **Look from the zone's
   camera** shows about what the player sees.
-- The shipped zones of this shape show the panel too.
+- The vanilla zones of this shape show the panel too.
 - How the actions work (`camera.c`, `puzzle.c`): the look angle is `atan2(dx, dz)` of Glover minus the camera,
   and the camera puts the level's own settings back on every frame Glover is in no zone.
 
@@ -731,10 +736,15 @@ The checks estimate how hard the busiest spot of the level is to draw.
 - The far plane is `FogConfiguration`'s `near_clip` (1000 without one).
 - The editor counts the object nodes of every model within reach of a camera 130 behind and 50 over Glover,
   facing four ways, at every garib, powerup, checkpoint, enemy and camera zone.
-- From 190 it's a warning, from 240 an error. Click the row to see the spot and the far plane.
+- From 190 it's a warning, from 240 an error. Both need an estimate over the vanilla level's own. Vanilla levels
+  reach these numbers too: hub 1 261, hubs 2 to 6 and hub 8 209 to 239, Pirates 2 198, and the two flythrus 225 and
+  213. A level over 190 that isn't busier than the vanilla one gets a note. The vanilla level's estimate is worked out when the
+  level opens (`prime_orig_load`), also under a restored draft. Click the row to see the spot and the far plane.
+- `the_draw_load_of_vanilla_levels` (`crates/editor/tests/vanilla_rom.rs`, with `GLOVEBOX_ROM`) checks that no
+  vanilla level gets the warning or the error, and that hub 1 with more landscape gets the error, also from its draft.
 - Checked against the game's own count (the mod's `modPeakMatrices`) at 8 spots from quiet to busy in each of five
   levels. In Atlantis 1, Carnival 1, Carnival Bonus and Pirates 2 the estimate was within
-  35 of the game at every spot. In hub 1 it said up to 63 more than the game. The shipped hub 1 asks for 228 at
+  35 of the game at every spot. In hub 1 it said up to 63 more than the game. The vanilla hub 1 asks for 228 at
   its fountain (the estimate says 261), and Pirates 2 for 199 (198).
   A hub built with the editor slowed down on a console at 206 to 228.
 - The checks also report a `fog_distance` of 1000 or more.
@@ -742,7 +752,9 @@ The checks estimate how hard the busiest spot of the level is to draw.
 ### Ground under checkpoints
 
 Glover starts at the first checkpoint and restarts at the last one he touched. A checkpoint, or a
-`GloverSpawnPoint`, with no solid ground within 400 under it is a warning. Solid means a landscape piece
+`GloverSpawnPoint` in a level with no checkpoint, with no solid ground within 400 under it is a warning. The view
+marks the first checkpoint as Glover's start, also in a level with a `GloverSpawnPoint`. The spawn point is then
+labeled as not used. No vanilla level has both. Solid means a landscape piece
 (`LandActor`) or a platform. Background actors have no collision.
 
 ### The kit
@@ -762,10 +774,10 @@ model ([Import model](Import-model.md)), and it then shows with the imported mod
 
 - The shapes and textures come from seeded random numbers (`kit/rng.rs`: the Mersenne Twister with CPython's seeding).
   On Linux the geometry is fixed bit for bit, and the reference tests hold it. Sines, cosines and `atan2` come
-  from the system's math library: on Windows a coordinate can differ in its last bit. This was not measured.
+  from the system's math library: on Windows a coordinate can differ in its last bit. This wasn't measured.
 - The textures are drawn by `kit/image.rs`, which follows Pillow's drawing rules.
 - The words on gravestones and signs use the kit's own letter shapes (`kit/font.rs`, a stroke font on a 5 by 7 grid).
-  The letters sit in cells with the measures of Pillow's built-in font. That font is not copied.
+  The letters sit in cells with the measures of Pillow's built-in font. That font isn't copied.
 - The game repeats every texture: the object format has no setting that stops it. A kit texture that must show
   once (a face, a board with words) is laid inside its own picture, with coordinates from 0 to 1. A unit test in
   `kit/mod.rs` checks this for every item.
@@ -791,7 +803,8 @@ guide in the editor and isn't saved.
 
 A platform must use a model from the game. A converted model (imported or from the kit) has a first rotation
 key of all zeros. A console stops when it draws one as a platform. An emulator runs on. The Models tab doesn't
-offer **Platform** for them, and the checks flag a converted model that is used as a platform.
+offer **Platform** for them, and the checks flag a converted model that is used as a platform. This rule is for
+ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64coopdx").
 
 ## Commands, puzzles, enemy scripts, extra levels
 
@@ -803,8 +816,8 @@ offer **Platform** for them, and the checks flag a converted model that is used 
 | `crates/editor/src/presets.rs` | Platform presets (rings, exits, lifts, spikes, teleport, the extra-levels entry zone). |
 | `mod/slots.c` | Extra level slots: the loader, the levelInfo swap, the save swap and its EEPROM record, the world exit, tag 77 rings. |
 
-- The 48 shipped levels give no error from these checks, and `tidy()` changes none of them. A rule that fires on a
-  shipped level is wrong. Shipped levels put PlatScale after PlatSetInitialPos on moving or face-freed platforms,
+- The 48 vanilla levels give no error from these checks, and `tidy()` changes none of them. A rule that fires on a
+  vanilla level is wrong. Vanilla levels put PlatScale after PlatSetInitialPos on moving or face-freed platforms,
   PlatSetCollisionYOffset after placement, a path sound anywhere after its point, and PlatVentAdvanceFrames before
   points; all of these are fine.
 - `xmlutil::num` reads the XML's hex ints (`0x4000`).
@@ -882,7 +895,7 @@ offer **Platform** for them, and the checks flag a converted model that is used 
   (`UpdatePickups` spins `rot.y` and eases `scale`) are rewritten every frame. Spinning platforms rebuild
   `rotQuat` from `motion->rot`. Landscape matrices are baked once (`CalculateStaticMatrices`).
 - `SetActorRotation`/`SetActorScale` (`TOKEN_LANDROT`/`TOKEN_LANDSCALE`) go to `lastLandscape`, set only for
-  landscape, background and animated background actors. In the 48 shipped levels all 725 of them follow such
+  landscape, background and animated background actors. In the 48 vanilla levels all 725 of them follow such
   an actor.
 - `QuaternionMultiply(dst, a, b)` is the Hamilton product a·b; `GetQuaternionFromXYZRot` chains qY·qZ·qX with it.
 - Puzzle trigger volumes (parse.c `TOKEN_CONDITION`, puzzle.c `PuzzleEvaluateCondition`): condition ids 35-41
@@ -893,11 +906,11 @@ offer **Platform** for them, and the checks flag a converted model that is used 
 - Exits (parse.c `TOKEN_EXITDOOR`, `TOKEN_PLATFORM`, `TOKEN_POS`, `TOKEN_SCALE`; platform.c `InitPlatformInfo`;
   game.c `CheckForExit`):
   - An exit is a platform with a `SetExit`. `behavior` is the game's `exitType`. `UpdatePlatform` calls
-    `CheckForExit` for every platform whose `exitType` is not 0. `type` 0 (`loading_zone`) sets `alpha = 0` and
+    `CheckForExit` for every platform whose `exitType` isn't 0. `type` 0 (`loading_zone`) sets `alpha = 0` and
     `flags |= 4`, and frees the collision faces.
   - The test is `DistanceBetweenPoints(pos, &platform->actor.pos) < platform->actor.radius`: a sphere around the
     platform's position. `pos` is the hand for exit types 6 to 12 and 21, for type 13 outside the Assault
-    Course, and in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1. Otherwise it is the ball.
+    Course, and in the Wayroom, the Atlantis bonus, Atlantis 3 and Carnival 1. Otherwise it's the ball.
   - Exit type 3 tests no distance: the ball must be on the platform (`ball.obj->platform`) while Glover holds it.
   - In the Wayroom, the Castle Cave, Atlantis 3 and Carnival 1, and for types 6 to 12, the distance is the
     whole test. Atlantis 3 and Carnival 1 then end 50 frames later (`newLevExitTimer`).
@@ -907,7 +920,7 @@ offer **Platform** for them, and the checks flag a converted model that is used 
     boss). In the Assault Course that needs the ball held.
   - In the hub stages (levels 0 to 7) an exit other than 12 and 21 does nothing while `ballStatic` is 0,
     `hubTarget` differs from `hubLevel` and `worldComplete[exitType - 5]` is 0.
-  - For types 6 to 12 a ball that Glover does not hold is popped when it comes within the radius
+  - For types 6 to 12 a ball that Glover doesn't hold is popped when it comes within the radius
     (`ballLeftBehind`).
   - `actor.radius` starts at 0 and only grows. `exitpost.ndo` (`0x7FDADB91`) starts at 20, with a scale of
     1.5, 2, 1.5. `InitPlatformInfo` grows the radius to the longest vertex of the faces of `obj->mesh` (the
@@ -916,11 +929,11 @@ offer **Platform** for them, and the checks flag a converted model that is used 
     `PlatNoClip` or a `PlatSpike` already read has set 4.
   - `InitPlatformInfo` runs from `SetPlatformPos`: when the parser reads `PlatSetInitialPos` and the first
     `PlatPathPoint` (an orbiting platform takes no path point). It also runs for the pieces of a rope bridge.
-    `actor.scale` is what `PlatScale` set before that moment (`PlatScale` is not read after the first path
+    `actor.scale` is what `PlatScale` set before that moment (`PlatScale` isn't read after the first path
     point), or the game mod's `SetActorScale` (mod/transforms.c). A scale that comes after the position is
-    drawn and does not change the radius.
+    drawn and doesn't change the radius.
   - So a loading-zone `SetExit` before the position leaves the radius at 0, and the exit can never fire. The
-    check "The exit can never fire" reports it. The 48 shipped
+    check "The exit can never fire" reports it. The 48 vanilla
     levels have 126 platforms with an exit, and none has a radius of 0. The exit posts of the levels have 20,
     their start value. The hub's entrances are `ballbit` models of 18.0 to 57.4,
     the Wayroom's doors 87.6, the Castle Cave's 131.4. The end of Carnival 1 is a `ballbit` at scale 10
@@ -930,11 +943,11 @@ offer **Platform** for them, and the checks flag a converted model that is used 
     kept (the largest difference was 0.05). The list is `platformList` (0x802904D0): a count, then a sentinel
     `Platform` at +4 whose `next` (+0x00) starts the chain. In a `Platform`, `flags` is at +0x14, `exitType` at
     +0x18 and the actor at +0x80; in the actor, `radius` is at +0x30, `pos` at +0x34 and `scale` at +0xBC.
-    Levels 0x28, 0x2e and 0x2f did not reach play mode by quickboot; they have no exits.
+    Levels 0x28, 0x2e and 0x2f didn't reach play mode by quickboot; they have no exits.
 - Camera zones ("Level tools", above): a puzzle with one `PuzzleCondGloverWithinVolume` and only actions 70
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is
-  in no zone (unless he is falling). The shipped levels hold about 170 of this shape. `camera_zone()` in
+  in no zone (unless he is falling). The vanilla levels hold about 170 of this shape. `camera_zone()` in
   `crates/editor/src/entities.rs` reads one, `set_camera_zone()` writes its actions.
 - Drawing: the game counts one object matrix per object node it draws (all nodes of the object tree, `CountNodes` in
   `mod/guard.c`), plus shadows and footprints. In the editor's models (`crates/core/src/model.rs`) these are the nodes with a mesh; a node
@@ -951,26 +964,26 @@ offer **Platform** for them, and the checks flag a converted model that is used 
 
 ## Real hardware
 
-mupen64plus runs ROMs that a console does not run, and most of the editor's checks are tested on mupen64plus only. A ROM that works in the
+mupen64plus runs ROMs that a console doesn't run, and most of the editor's checks are tested on mupen64plus only. A ROM that works in the
 emulator can freeze on a console. The rules below come from the PI, the caches, the RDP and the boot code. `crates/core/src/hwcheck.rs` checks the
 ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tools/build_mod.py` checks the alignment of the mod's own buffers.
 
 **Boot and ROM**
 - The header holds two CRCs over the first megabyte of code (0x1000 to 0x101000, the CIC-NUS-6102 algorithm). The boot code of a console
-  does not start a ROM with wrong CRCs. `hwcheck.rs` has its own copy of the algorithm and compares it with the header (the ROM builder's).
+  doesn't start a ROM with wrong CRCs. `hwcheck.rs` has its own copy of the algorithm and compares it with the header (the ROM builder's).
 - The ROM is a whole number of MiB (the build pads to it) and every address the mod reads lies inside it. The ROM header is Glover's
   (`NGVE`). A flash cart that looks up the save type by the game ID finds EEPROM.
 - A warm start (an EverDrive can start a game without a power cycle) leaves RAM with the last program's data. Nothing in the mod may
-  read RAM it has not written: `Mod_Init` clears the mod's bss, `JallocAlloc(size, 0, ...)` returns junk and every user of it fills it.
+  read RAM it hasn't written: `Mod_Init` clears the mod's bss, `JallocAlloc(size, 0, ...)` returns junk and every user of it fills it.
 
 **DMA (PI)** from the ROM into RAM
 - The ROM address is even (everything the mod stores is on a multiple of 16), the RAM address is 8 byte aligned (16 here), the length is
-  even and the mod keeps it a multiple of 16. The PI writes whole 8 byte words: a length that is not a multiple of 8 can write past the
+  even and the mod keeps it a multiple of 16. The PI writes whole 8 byte words: a length that isn't a multiple of 8 can write past the
   end, and an unaligned RAM address loses bytes. The game's allocator hands out 16 byte aligned blocks of a multiple of 16 bytes.
 - Use the game's own loaders (`DMAMemory`, `DMAGetSize`: they invalidate the data cache over the target first). The mod's loader uses
   `DMAMemory` too. The mod stores every custom bank padded with zeros to a multiple of 16 and reads the padded length
   (`modpatch.rs`: `custom_table`).
-- A ROM address that does not match a file (a zero or absurd size word) shows the game's own `LEVEL UNPLAYABLE - NO LEV FILE` screen.
+- A ROM address that doesn't match a file (a zero or absurd size word) shows the game's own `LEVEL UNPLAYABLE - NO LEV FILE` screen.
 - GCC 2.7.2 keeps at most 8 bytes of an `aligned(16)` attribute, so the address of such a variable depends on the code linked before it. Data
   that needs 16 bytes has to go first in its section after an `ALIGN(16)` in the linker script (`tools/build_mod.py`), and the build should check
   the linked address. `mod/aligned.c` holds the mod's one such buffer, the header of an extra level's file.
@@ -986,12 +999,12 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
 
 **RDP and RSP**
 - A texture's pixels start on a 64 bit boundary. A bank's records are each a multiple of 8 bytes long (the bank's own count word makes the
-  first record start 4 bytes in, and the 0x24 byte header does the rest). libgarib's `texbank-tool pack` does not pad: `texbank::records`
+  first record start 4 bytes in, and the 0x24 byte header does the rest). libgarib's `texbank-tool pack` doesn't pad: `texbank::records`
   pads every record it reads and corrects its size field. Custom banks and every imported model use padded records.
   Without the padding, every second texture of a custom bank is only 4 byte aligned, and the console reads such a texture as shifted pixels.
 - Set every RDP mode a picture needs before drawing it. The game leaves its modes in many states.
 - `gDPFillRectangle` and `gSPTextureRectangle` have unsigned 10 and 12 bit corners: a negative or too large value wraps. Clip first.
-- A task's display list must stay under 20000 bytes. At 20000 bytes or more the game does not create the task and stops swapping frames. This looks like
+- A task's display list must stay under 20000 bytes. At 20000 bytes or more the game doesn't create the task and stops swapping frames. This looks like
   a freeze (`CleanupAndSendDisplayList`).
 - A texture load of a 16 bit texture holds at most 2048 texels (the converter keeps to it) and the whole of TMEM is 4096 bytes.
 - A frame has 256 object matrices (`Dynamic.objectMtx`). Every drawn object node, shadow and footprint takes one, unchecked: past 256 they overwrite the camera's
@@ -1003,8 +1016,8 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   EverDrive's save type to **EEP 4K** (a 16K chip works too; SRAM, FlashRAM and none do not).
 
 **CPU**
-- Word and halfword accesses are aligned (the compiler uses `lwl`/`lwr` where it cannot know). A float load or store is 4 byte aligned.
-  GCC 2.7.2 does not align a `.bss` variable after an odd-sized one (two `s32` landed on a 2 byte boundary after a 30 byte array): `tools/build_mod.py`
+- Word and halfword accesses are aligned (the compiler uses `lwl`/`lwr` where it can't know). A float load or store is 4 byte aligned.
+  GCC 2.7.2 doesn't align a `.bss` variable after an odd-sized one (two `s32` landed on a 2 byte boundary after a 30 byte array): `tools/build_mod.py`
   checks every data symbol of the mod against its size.
 - The console traps floating point operations on denormal numbers and on NaN or infinity converted to an integer. Keep both out of the
   mod's math and out of generated level data.
@@ -1022,7 +1035,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   alpha 0) also needs no `PlatConstantSpin`: its rotation stays zero.
 
 **Testing**
-- mupen64plus does not show the hardware faults in this section. The matrix overflow is an exception: it stopped the game in
+- mupen64plus doesn't show the hardware faults in this section. The matrix overflow is an exception: it stopped the game in
   mupen64plus (`mod/guard.c`). Keep `crates/core/src/hwcheck.rs` in the build, and test on the console.
 
 ## Imported models
@@ -1034,7 +1047,7 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
 - The editor stores each import in `custom/<set>/` in the user folder: `meta.json`, one single-object bank per piece
   (`<id>.obj.bin`) and `textures.tex.bin`. `<set>` is a hash of the file and the scale. `meta.json` lists the pieces
   and, for each texture, its ID and the length of its record. The pictures in the lists are drawn from the banks when
-  a row scrolls into view. They are not stored.
+  a row scrolls into view. They aren't stored.
 - An object's ID is `hash_str` of the root node's name (libgarib's rule), and the mesh name is its first 8
   characters. The converter pads the short name with NULs and appends a hash.
 - A texture is named by a hash of its pixels and its size. The same picture in two models is one texture. Every
@@ -1131,7 +1144,7 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
 - Without both variables the test does nothing and passes. `GLOVEBOX_GUIDE_ONLY=add,exit` makes the pictures of
   some steps only (the names are in `run`).
 - The test opens the real window at 1280 by 800 in the Sage theme with the fog off, takes the ROM on the setup
-  screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the shipped level.
+  screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the vanilla level.
 - Its settings name the default layout of the panels and the list view of Add to level, and the test checks the
   layout before the first picture. The step `panels` moves the panels for `window-panels.png` and puts the default
   layout back. The step `add` switches to the grid for two pictures and back to the list.
@@ -1154,7 +1167,7 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
 ## Reference tests
 
 The comparison tests check the Rust code against recorded reference outputs ("reference dumps"), on the whole game.
-The dumps hold game data and are not in the repository. Without them each test prints that it was skipped, and
+The dumps hold game data and aren't in the repository. Without them each test prints that it was skipped, and
 passes. `GLOVEBOX_ROM` names the ROM, `GLOVEBOX_REFERENCE` the folder of dumps and `GLOVEBOX_REFHOME` a folder with
 the split ROM and libgarib's exported files.
 
@@ -1165,10 +1178,10 @@ the split ROM and libgarib's exported files.
 | `rom_reference.rs` | The ROM's regions against libgarib's dump and noclip's split files, the pointer pairs, rebuilt ROMs, ROMs with the mod, the hardware check's findings, BPS patches | The retail ROM |
 | `build_reference.rs` | Level XML, the catalog, loaded and texture IDs, enemy templates, backdrops and face counts, import plans, built ROMs and patches, imported models | The whole game and the build scenarios |
 | `custom_reference.rs` | Import model: `meta.json`, object banks and texture bank, the error texts, decoded and resized pictures against Pillow, the stored set, `reskin` | A set of reference models |
-| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel. The pumpkin was corrected after the recordings: its skin triangles' texture, its GLB and its preview are not compared | Every kit item with several settings |
+| `kit_reference.rs` | The kit's geometry bit for bit, and its textures without words pixel for pixel. The pumpkin was corrected after the recordings: its skin triangles' texture, its GLB and its preview aren't compared | Every kit item with several settings |
 | `crates/editor/tests/logic_reference.rs` | The vector math, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
 | `editor_reference.rs` | The editor's state after loading, and the XML after each recorded edit step | All 48 levels |
-| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean color difference: two renderers do not give equal pixels |
+| `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean color difference: two renderers don't give equal pixels |
 
 The Rust code gives the reference outputs for these reasons:
 
@@ -1185,7 +1198,7 @@ The Rust code gives the reference outputs for these reasons:
 - Every built ROM and patch walks the ball with Easy's controls on every difficulty: on Medium and Hard the game
   otherwise pushes the ball the opposite way to the stick. Only the controls change; lives, garibs per life and the
   bosses still follow the chosen difficulty (`crates/core/src/modpatch.rs`, `EASY_CONTROLS_ROM`).
-- A ROM without the game mod is not padded to a whole number of MiB and does not go through the hardware check: it is
+- A ROM without the game mod isn't padded to a whole number of MiB and doesn't go through the hardware check: it is
   the retail ROM with its data repacked. A ROM with the mod is padded and checked (`modpatch::apply_mod`).
 - Every built ROM comes from your ROM. Keep it local.
 - libgarib's behavior that the Rust code reproduces on purpose:
@@ -1203,7 +1216,7 @@ The Rust code gives the reference outputs for these reasons:
   - The `quickboot` and `copyskip` patches are the instruction words libgarib's assembler produced, written as
     numbers (`rom.rs`). The program holds no assembler and no CPU emulator.
 - The Rust code differs from libgarib in these places. Models: it handles animated models, missing textures,
-  zero-length normals, and meshes with and without textures in one object. Packing: vertex indices do not
+  zero-length normals, and meshes with and without textures in one object. Packing: vertex indices don't
   overflow, a normal of exactly 1 fits its byte, a mesh without vertex colors gets a display list, and more than
   four texture coordinates at one position are allowed.
 - `quickboot` takes the level's number as a number. libgarib's assembler reads a bare `10` in text as hex, and that

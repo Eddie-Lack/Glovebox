@@ -231,7 +231,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         if ui.button("Build all…").on_hover_text("Build every edited level into one ROM or patch").clicked() {
             crate::dialogs::open_all_dialog(w);
         }
-        if ui.button("Patcher ↗").on_hover_text("Open the patcher page for players. It works offline, and the ROM is not uploaded").clicked() {
+        if ui.button("Patcher ↗").on_hover_text("Open the patcher page for players. It works offline, and the ROM isn't uploaded").clicked() {
             w.open_patcher();
         }
     });

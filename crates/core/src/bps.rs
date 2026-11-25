@@ -290,7 +290,7 @@ pub fn metadata_of(patch: &[u8]) -> Option<&[u8]> {
 mod tests {
     use super::*;
 
-    /// Made-up bytes that do not repeat soon.
+    /// Made-up bytes that don't repeat soon.
     fn noise(n: usize, seed: u32) -> Vec<u8> {
         let mut x = seed | 1;
         (0..n)

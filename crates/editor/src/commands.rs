@@ -4,7 +4,7 @@
 //! "modifies" a kind (PLATFORM, ENEMY...) goes inside an element that "declares" that kind. The game reads the level
 //! as a stream of tokens and each child acts on the last declared object. A child's place among its siblings is its
 //! place in the stream, and the order matters (gloveworld src/parse.c):
-//!   - A platform builds its collision when it is placed (PlatSetInitialPos or the first PlatPathPoint), from its
+//!   - A platform builds its collision when it's placed (PlatSetInitialPos or the first PlatPathPoint), from its
 //!     scale and rotation at that moment. A platform that never moves never rebuilds it.
 //!   - PlatScale after the first point is refused and its data is then read as tokens.
 //!   - Spin, orbit, crumble and breakable modifiers write through the structure their main command makes, with no
@@ -30,7 +30,7 @@ pub const OWN_TOOLS: &[&str] = &[
 pub const FIRST: &[&str] = &["SetActorRotation", "SetActorScale"];
 pub const LAST: &[&str] = &["EnemyFinalize"];
 pub const PLATFORMS: &[&str] = &["Platform", "NullPlatform"];
-/// Commands the menus leave out: unused in the shipped levels, or they crash on a wrong value (Actor0xbf).
+/// Commands the menus leave out: unused in the vanilla levels, or they crash on a wrong value (Actor0xbf).
 pub const HIDDEN: &[&str] = &["PlatStrobe", "Rope", "PlatSine", "PlatOrbit", "Actor0xbf"];
 
 pub const MOTION: &[&str] = &[
@@ -52,7 +52,7 @@ pub const ORBIT_MODS: &[&str] = &["PlatOrbitPause", "PlatOrbitFlip0x77", "PlatOr
 pub const FREES_FACES: &[&str] = &["PlatNoClip", "PlatSpike"];
 /// The phase of the children that no phase names: features.
 pub const FEATURES: usize = 4;
-/// The set-up commands that change the collision that the platform builds when it is placed.
+/// The set-up commands that change the collision that the platform builds when it's placed.
 pub const SETUP: &[&str] = &["SetActorRotation", "SetActorScale", "PlatScale"];
 /// Pairs that write the same field: the game refuses the second one and reads its data as tokens.
 pub const EXCLUSIVE: &[&[&str]] = &[
@@ -118,13 +118,13 @@ fn has(set: &[&str], tag: &str) -> bool {
     set.contains(&tag)
 }
 
-/// PlatCopySpinFromParent makes a motion too, but does not reset one that is there.
+/// PlatCopySpinFromParent makes a motion too, but doesn't reset one that's there.
 pub fn is_motion_maker(tag: &str) -> bool {
     has(MOTION, tag) || tag == "PlatCopySpinFromParent"
 }
 
 /// What a NullPlatform (a platform with no model: a parent or orbit center) may hold. The rest use the model or
-/// the collision, which it does not have (parse.c TOKEN_DUMMY).
+/// the collision, which it doesn't have (parse.c TOKEN_DUMMY).
 pub fn null_ok(tag: &str) -> bool {
     has(NULL_OK_BASE, tag) || has(ORBIT_MODS, tag)
 }
@@ -212,7 +212,7 @@ pub fn needs(tag: &str) -> Option<Need> {
     }
 }
 
-/// Values for a new command, where the type-neutral 0 would be wrong (the shipped levels' usual values, or tested
+/// Values for a new command, where the type-neutral 0 would be wrong (the vanilla levels' usual values, or tested
 /// ones).
 pub fn special_defaults(tag: &str) -> &'static [(&'static str, &'static str)] {
     match tag {
@@ -531,7 +531,7 @@ pub fn placement(tags: &[&str]) -> (Option<usize>, Option<usize>) {
     )
 }
 
-/// A platform that never moves and has collision: the game builds the collision once, when it is placed.
+/// A platform that never moves and has collision: the game builds the collision once, when it's placed.
 pub fn keeps_collision(doc: &Doc, node: NodeId) -> bool {
     doc.tag(node) == "Platform"
         && !doc.children(node).iter().any(|c| is_mover(doc.tag(*c)))
@@ -539,7 +539,7 @@ pub fn keeps_collision(doc: &Doc, node: NodeId) -> bool {
 }
 
 /// The first child in the wrong place and the index it should go before. Only what the game needs is checked: the
-/// shipped levels put most children in any order.
+/// vanilla levels put most children in any order.
 pub fn misplaced(doc: &Doc, node: NodeId) -> Option<(NodeId, usize)> {
     let ch = doc.children(node);
     let tags = tags_of(doc, node);
@@ -590,7 +590,7 @@ pub fn tidy(doc: &mut Doc, parent: NodeId) -> bool {
     moved
 }
 
-/// What a new child with this tag needs and the parent does not have yet. With `before`, only the children before
+/// What a new child with this tag needs and the parent doesn't have yet. With `before`, only the children before
 /// that index count.
 pub fn missing_need(doc: &Doc, parent: NodeId, tag: &str, before: Option<usize>) -> Option<&'static str> {
     let need = needs(tag)?;
@@ -606,7 +606,7 @@ pub fn missing_need(doc: &Doc, parent: NodeId, tag: &str, before: Option<usize>)
     }
 }
 
-/// Why the parent cannot take another child with this tag. `None` when it can.
+/// Why the parent can't take another child with this tag. `None` when it can.
 pub fn refusal(doc: &Doc, parent: NodeId, tag: &str) -> Option<String> {
     let have = tags_of(doc, parent);
     let ptag = doc.tag(parent);

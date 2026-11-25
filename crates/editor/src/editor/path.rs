@@ -1,5 +1,5 @@
 //! The path tool (P): click the ground to lay a path, then place garibs or copies of the selection along it. The
-//! path is only a guide in the editor. The level keeps what is placed. Each placed thing is dropped onto the
+//! path is only a guide in the editor. The level keeps what's placed. Each placed thing is dropped onto the
 //! ground. Also: placing the pieces of an imported model.
 
 use super::{Editor, Event, PATH_COPY, PATH_MAX};

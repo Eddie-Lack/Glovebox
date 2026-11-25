@@ -85,7 +85,7 @@ pub fn claim_home(home: &Path) -> Result<(), String> {
     }
     let made = std::fs::create_dir_all(home)
         .and_then(|_| std::fs::write(home.join(MARKER), "This folder belongs to Glovebox. The app deletes and rewrites the files it made here.\n"));
-    made.map_err(|e| format!("The app could not make its user folder {}: {e}", home.display()))
+    made.map_err(|e| format!("The app couldn't make its user folder {}: {e}", home.display()))
 }
 
 /// Holds `editor.lock` while the app runs.
@@ -150,10 +150,10 @@ pub fn rom_path(home: &Path) -> PathBuf {
     home.join("rom").join("glover.z64")
 }
 
-/// Reads a file the player chose as their ROM. A file too big to be one is not read whole.
+/// Reads a file the player chose as their ROM. A file too big to be one isn't read whole.
 pub fn read_rom_file(path: &Path) -> Result<Vec<u8>, String> {
     use std::io::Read;
-    let fail = |e: std::io::Error| format!("The app could not read {}: {e}", path.display());
+    let fail = |e: std::io::Error| format!("The app couldn't read {}: {e}", path.display());
     let f = std::fs::File::open(path).map_err(fail)?;
     let mut data = Vec::new();
     f.take(ROM_MAX as u64 + 1).read_to_end(&mut data).map_err(fail)?;
@@ -175,7 +175,7 @@ pub fn take_rom(home: &Path, data: &[u8]) -> Result<(), String> {
         std::fs::write(&tmp, &rom)?;
         std::fs::rename(&tmp, &path)
     };
-    write().map_err(|e| format!("The app could not keep a copy of the ROM in {}: {e}", path.display()))
+    write().map_err(|e| format!("The app couldn't keep a copy of the ROM in {}: {e}", path.display()))
 }
 
 /// `--reset`: the app asks for the ROM again.
@@ -214,7 +214,7 @@ fn rank(info: &wgpu::AdapterInfo) -> (u8, u8) {
     (kind, api)
 }
 
-/// The adapter the app draws with. A software adapter (WARP on Windows) is taken when there is nothing better.
+/// The adapter the app draws with. A software adapter (WARP on Windows) is taken when there's nothing better.
 pub fn choose_adapter(adapters: &[wgpu::Adapter], surface: Option<&wgpu::Surface<'_>>) -> Result<wgpu::Adapter, String> {
     let fits = |a: &&wgpu::Adapter| surface.is_none_or(|s| a.is_surface_supported(s));
     match adapters.iter().filter(fits).min_by_key(|a| rank(&a.get_info())) {
@@ -301,7 +301,7 @@ pub fn self_test(home: &Path) -> i32 {
                 let models = b.catalog().map(|c| c.len()).unwrap_or(0);
                 say(models > 1000, format!("catalog: {models} models"));
                 // A level with a kit model: the ROM then has the game mod and its custom banks, which is what
-                // hwcheck's own test breaks. It is made in a folder of its own, not in the user folder.
+                // hwcheck's own test breaks. It's made in a folder of its own, not in the user folder.
                 drop(b);
                 let work = std::env::temp_dir().join(format!("glovebox-self-test-{}", std::process::id()));
                 let built = (|| -> Result<Vec<u8>, String> {
@@ -314,7 +314,7 @@ pub fn self_test(home: &Path) -> i32 {
                     ed.load_scene("0a")?;
                     ed.place_custom(&set, "LandActor", None);
                     if ed.current_imports().is_empty() {
-                        return Err("the kit model was not placed".to_string());
+                        return Err("the kit model wasn't placed".to_string());
                     }
                     let request = glovebox_core::build::BuildRequest {
                         sid: "0a".to_string(),
@@ -352,7 +352,7 @@ pub fn self_test(home: &Path) -> i32 {
             Err(e) => say(false, format!("the ROM in {}: {e}", rom.display())),
         }
     } else {
-        println!("skip  no ROM in {}: the game data and hwcheck were not tested", rom.display());
+        println!("skip  no ROM in {}: the game data and hwcheck weren't tested", rom.display());
     }
     println!("{} in {:.1} s", if failed == 0 { "self-test passed".to_string() } else { format!("{failed} checks failed") }, t.elapsed().as_secs_f64());
     i32::from(failed != 0)
@@ -372,7 +372,7 @@ pub fn local_date_time(secs: f64) -> String {
     local_time(secs, "%Y-%m-%d %H:%M")
 }
 
-/// Opens a file with a program (Test level's emulator). False when the program did not start.
+/// Opens a file with a program (Test level's emulator). False when the program didn't start.
 pub fn launch(program: &Path, file: &Path) -> bool {
     use std::process::{Command, Stdio};
     let mut cmd = if cfg!(target_os = "macos") && program.extension().is_some_and(|e| e == "app") {

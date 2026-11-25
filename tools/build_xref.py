@@ -12,7 +12,7 @@ It also exports the decomp enums the editor uses to label numeric fields (enemy 
 puzzle conditions/actions, enemy instructions, level IDs).
 
 The editor compiles the JSON in. Run the tool after a change to gloveworld's names or to the ksy file, and commit
-the result. The file records gloveworld's commit. It needs PyYAML. gloveworld does not need to be built.
+the result. The file records gloveworld's commit. It needs PyYAML. gloveworld doesn't need to be built.
 """
 import argparse, json, os, re, sys
 

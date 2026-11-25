@@ -8,7 +8,7 @@
 //! frames for its translation, rotation and scale, and may have geometry, a display list and sprites.
 //!
 //! The parts are in three layers. `Bank::parse` reads a bank and borrows from its bytes. `Linker` holds segments
-//! with pointers between them and writes a bank; it does not care where the segments come from. `split`, `pack`,
+//! with pointers between them and writes a bank; it doesn't care where the segments come from. `split`, `pack`,
 //! `model`, `texture_ids` and `faces` are what the editor calls.
 
 use crate::fla2;
@@ -251,7 +251,7 @@ pub struct Bank<'a> {
 }
 
 impl<'a> Bank<'a> {
-    /// Reads a bank. `data` is not compressed (see `fla2::data`). Every pointer and count is checked; a bank with
+    /// Reads a bank. `data` isn't compressed (see `fla2::data`). Every pointer and count is checked; a bank with
     /// one bad structure is refused whole.
     pub fn parse(data: &'a [u8]) -> Result<Bank<'a>, ObjError> {
         let mut objects = Vec::new();
@@ -296,7 +296,7 @@ fn parse_object<'a>(data: &'a [u8], dir_id: u32, ptr: u32) -> Result<Object<'a>,
         None
     };
     let mut meshes: Vec<Mesh<'a>> = Vec::new();
-    // What is left to read: a mesh's pointer, the mesh that points to it, and whether it is that mesh's child.
+    // What's left to read: a mesh's pointer, the mesh that points to it, and whether it's that mesh's child.
     let mut todo: Vec<(u32, Option<(u32, bool)>)> = Vec::new();
     if mesh_ptr != 0 {
         todo.push((mesh_ptr, None));
@@ -313,7 +313,7 @@ fn parse_object<'a>(data: &'a [u8], dir_id: u32, ptr: u32) -> Result<Object<'a>,
             Some((parent, false)) => meshes[parent as usize].sibling = Some(index),
             None => {}
         }
-        // The child is read first: it is pushed last.
+        // The child is read first: it's pushed last.
         if sibling_ptr != 0 {
             todo.push((sibling_ptr, Some((index, false))));
         }
@@ -328,7 +328,7 @@ fn parse_mesh<'a>(data: &'a [u8], ptr: u32) -> Result<(Mesh<'a>, u32, u32), ObjE
     let raw = rd(data, ptr, MESH, "a mesh")?;
     let name = &raw[4..12];
     if !name.is_ascii() {
-        return err(format!("the mesh at 0x{ptr:X} has a name that is not ASCII"));
+        return err(format!("the mesh at 0x{ptr:X} has a name that isn't ASCII"));
     }
     let name = std::str::from_utf8(name).unwrap_or("").trim_matches('\0');
     let at = |field: u32| u32_at(raw, field as usize);
@@ -578,7 +578,7 @@ impl<'a> Linker<'a> {
     }
 
     /// Adds one parsed object's segments and returns its actor. `data` is the bank the object was parsed from.
-    /// The directory is not changed.
+    /// The directory isn't changed.
     pub fn add_object(&mut self, data: &'a [u8], obj: &Object<'a>) -> Result<SegId, ObjError> {
         let actor = self.bytes(Kind::Actor, obj.raw);
         if let Some(anim) = &obj.animation {
@@ -704,8 +704,8 @@ impl<'a> Linker<'a> {
     }
 }
 
-/// True when libgarib knows the opcode and can read the command's arguments, and the command does not point to
-/// data that `objbank-tool` cannot move (a matrix, a light, another display list).
+/// True when libgarib knows the opcode and can read the command's arguments, and the command doesn't point to
+/// data that `objbank-tool` can't move (a matrix, a light, another display list).
 fn movable_command(hi: u32, lo: u32) -> bool {
     let op = hi >> 24;
     let known = matches!(op, 0..=9 | 175..=192 | 200..=207 | 228..=240 | 242..=255);
@@ -729,7 +729,7 @@ fn relocatable_display_list(data: &[u8], dl: &[u8]) -> Result<(Vec<u8>, Vec<(u32
     for (i, c) in dl.chunks_exact(8).enumerate() {
         let (hi, lo) = (u32_at(c, 0), u32_at(c, 4));
         if !movable_command(hi, lo) {
-            return err(format!("a display list has a command (0x{:02X}) that cannot be moved", hi >> 24));
+            return err(format!("a display list has a command (0x{:02X}) that can't be moved", hi >> 24));
         }
         if hi >> 24 == 0x04 {
             let region = rd(data, lo, (hi & 0x3FF) as usize + 1, "the vertices of a display list")?;
@@ -785,7 +785,7 @@ pub fn split(bank: &[u8]) -> Result<Vec<Single>, ObjError> {
 
 /// `base` with the objects of each bank of `singles` added, in order (`objbank-tool.py pack --output-file OUT BASE
 /// single...`). An object that is in the result already is replaced and moves to the end. Every input may be
-/// compressed. The result is not compressed.
+/// compressed. The result isn't compressed.
 pub fn pack<S: AsRef<[u8]>>(base: &[u8], singles: &[S]) -> Result<Vec<u8>, ObjError> {
     let mut datas = Vec::with_capacity(singles.len() + 1);
     datas.push(plain(base)?);
@@ -800,7 +800,7 @@ pub fn pack<S: AsRef<[u8]>>(base: &[u8], singles: &[S]) -> Result<Vec<u8>, ObjEr
 }
 
 /// The number of collision faces of the model in a single-object bank: the faces of its root mesh, which the game
-/// turns into planes for a landscape actor. 0 when the bank does not have them (`backend.faces`).
+/// turns into planes for a landscape actor. 0 when the bank doesn't have them (`backend.faces`).
 pub fn faces(single: &[u8]) -> u32 {
     let u4 = |at: u32| single.get(at as usize..).and_then(|d| d.get(..4)).map(|d| u32_at(d, 0));
     let geometry = (|| {
@@ -816,7 +816,7 @@ pub fn faces(single: &[u8]) -> u32 {
 /// The vertices that the faces of the root mesh use, in the model's own units. The root mesh is the first mesh of
 /// the bank's first object, the one the game calls `obj->mesh`. The vertices are the mesh's own: the game puts no
 /// key frame of the mesh on them when it builds a platform's collision (`InitPlatformInfo`). A vertex that several
-/// faces use is given once. None when the bank cannot be read. Empty when the root mesh has no faces.
+/// faces use is given once. None when the bank can't be read. Empty when the root mesh has no faces.
 pub fn root_face_vertices(single: &[u8]) -> Option<Vec<[f32; 3]>> {
     let bank = Bank::parse(single).ok()?;
     let root = bank.objects.first()?.root()?;
@@ -859,7 +859,7 @@ impl MatKey {
     }
 }
 
-/// The primitive of `key` in `prims`, added at the end when it is new.
+/// The primitive of `key` in `prims`, added at the end when it's new.
 fn prim_of(prims: &mut Vec<(MatKey, Primitive)>, key: MatKey) -> &mut Primitive {
     let at = match prims.iter().position(|(k, _)| *k == key) {
         Some(at) => at,
@@ -935,7 +935,7 @@ fn display_list_prims(data: &[u8], dl: &[u8], lit: bool) -> Result<Vec<(MatKey, 
                         .ok()
                         .and_then(|at| rd(data, at, DL_VERTEX, "the vertices of a display list").ok());
                     let (Some(raw), Some(slot)) = (raw, cache.get_mut((first + i) as usize)) else {
-                        return err("a display list loads vertices that are not there");
+                        return err("a display list loads vertices that aren't there");
                     };
                     *slot = DlVertex {
                         pos: [i16_at(raw, 0), i16_at(raw, 2), i16_at(raw, 4)],
@@ -983,7 +983,7 @@ fn display_list_prims(data: &[u8], dl: &[u8], lit: bool) -> Result<Vec<(MatKey, 
             0xF2 => tile = (f64::from(lo >> 12 & 0xFFF) / 4.0, f64::from(lo & 0xFFF) / 4.0),
             // Geometry mode, culling, the sync commands, texture loads and the other mode: nothing to draw
             0xB7 | 0xB6 | 0xBE | 0xE6 | 0xE8 | 0xE7 | 0xF3 | 0xF0 | 0xBA => {}
-            op => return err(format!("a display list has a command (0x{op:02X}) the editor cannot draw")),
+            op => return err(format!("a display list has a command (0x{op:02X}) the editor can't draw")),
         }
     }
     Ok(prims)
@@ -1008,7 +1008,7 @@ fn geometry_prims(
                 let size = match key.texture {
                     Some(id) => match textures(id) {
                         Some(size) => Some(size),
-                        None => return err(format!("Need dimensions of texture 0x{id:08X}")),
+                        None => return err(format!("the size of texture 0x{id:08X} isn't known")),
                     },
                     None => None,
                 };
@@ -1021,7 +1021,7 @@ fn geometry_prims(
         for corner in 0..3 {
             let v = u16_at(faces, f * FACE + corner * 2) as usize;
             if v >= geo.num_vertices as usize {
-                return err("a face uses a vertex that is not there");
+                return err("a face uses a vertex that isn't there");
             }
             p.indices.push(p.positions.len() as u32);
             p.positions.push([0, 4, 8].map(|k| f32_at(vertices, v * VERTEX + k)));
@@ -1049,8 +1049,8 @@ fn geometry_prims(
 /// The model of one parsed object, as libgarib's glTF export with a scale of 1 gives it. `data` is the bank the
 /// object was parsed from. `textures` gives the size of a texture that the level's texture banks hold, or none.
 ///
-/// An error means libgarib does not export the object, and the editor has no model for it: a mesh without
-/// a display list uses a texture that `textures` does not know, or the object lacks a part the export needs.
+/// An error means libgarib doesn't export the object, and the editor has no model for it: a mesh without
+/// a display list uses a texture that `textures` doesn't know, or the object lacks a part the export needs.
 pub fn object_model(
     data: &[u8],
     obj: &Object,
@@ -1099,7 +1099,7 @@ fn mesh_node(
     let mode = mesh.render_mode;
     let mut prims = if let Some(dl) = mesh.display_list {
         let prims = display_list_prims(data, dl, mode & render_mode::UNLIT == 0)?;
-        // libgarib also copies the display list into the glTF file, and fails when it cannot.
+        // libgarib also copies the display list into the glTF file, and fails when it can't.
         relocatable_display_list(data, dl)?;
         prims
     } else {
@@ -1210,7 +1210,7 @@ pub fn model(
 /// The ids of the textures that an object's meshes and sprites use. `textures` gives the
 /// size of a texture that some texture bank of the game holds, or none.
 ///
-/// The set is empty when libgarib does not export the object with those textures (see `object_model`): the
+/// The set is empty when libgarib doesn't export the object with those textures (see `object_model`): the
 /// ids are those of the exported model. A display list or a sprite may name a texture that no
 /// bank holds; that id is in the set.
 pub fn texture_ids(
@@ -1410,7 +1410,7 @@ mod tests {
         let singles = split(&data).unwrap();
         assert_eq!(singles.len(), 2);
         assert_eq!((singles[0].id, singles[0].name.as_str()), (0x11, "root"));
-        // A single relinked alone does not change, and its model is the model in the full bank.
+        // A single relinked alone doesn't change, and its model is the model in the full bank.
         for s in &singles {
             assert_eq!(pack(&s.bytes, &[] as &[&[u8]]).unwrap(), s.bytes);
             assert_eq!(split(&s.bytes).unwrap()[0].bytes, s.bytes);
@@ -1452,7 +1452,7 @@ mod tests {
     fn model_of_object() {
         let data = two_objects();
         let bank = Bank::parse(&data).unwrap();
-        // The geometry mesh uses a texture that is not known: no model, and no texture ids.
+        // The geometry mesh uses a texture that isn't known: no model, and no texture ids.
         assert!(model(&bank, 0x11, &all).is_err());
         assert!(texture_ids(&bank, 0x11, &all).is_empty());
         assert!(model(&bank, 0x99, &all).is_err());
@@ -1554,7 +1554,7 @@ mod tests {
 
     #[test]
     fn display_list_rules() {
-        // A display list that calls another one cannot be moved or drawn.
+        // A display list that calls another one can't be moved or drawn.
         assert!(!movable_command(0x0600_0000, 0));
         assert!(movable_command(0xFC00_0000, 0));
         assert!(!movable_command(0xC100_0000, 0));

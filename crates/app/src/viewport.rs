@@ -63,7 +63,7 @@ pub struct View {
     pub background: [f64; 3],
     /// The button that went down in the view, until it comes up.
     held: Option<Button>,
-    /// Why the 3D view could not start.
+    /// Why the 3D view couldn't start.
     pub error: Option<String>,
     /// The number of frames drawn.
     pub frames: u64,
@@ -75,7 +75,7 @@ impl View {
         ed.icon_maker = Some(Box::new(move |glyph, color| Some(icons.borrow_mut().texture(glyph, color))));
         let sel_node = ed.graph.lines_node(Lines::new(Vec::new(), [0.95, 0.76, 0.31], LineMode::Segments));
         let renderer = rs.as_ref().map(|rs| Renderer::new(&rs.device, &rs.queue));
-        let error = renderer.is_none().then(|| "The 3D view could not start: the window has no graphics device.".to_string());
+        let error = renderer.is_none().then(|| "The 3D view couldn't start: the window has no graphics device.".to_string());
         View {
             rs,
             renderer,
@@ -256,7 +256,7 @@ fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
 /// Moves the fly camera by the keys held.
 fn fly_step(w: &mut Window, ui: &egui::Ui) {
     let view = &mut w.view;
-    // Keys typed into a text box or at a dialog are not the camera's
+    // Keys typed into a text box or at a dialog aren't the camera's
     if !view.fly.on || w.dialog.is_some() || w.tour.active() || ui.ctx().egui_wants_keyboard_input() {
         return;
     }
@@ -289,7 +289,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let grab = ui.style().interaction.resize_grab_radius_side;
     ui.allocate_rect(rect, egui::Sense::hover());
     let mut area = rect.shrink2(egui::vec2(grab, 0.0));
-    // And the strip along its bottom to the handle of the checks, when they are under it
+    // And the strip along its bottom to the handle of the checks, when they're under it
     if w.panels.checks.is_positive() && w.layout.side(crate::layout::PanelId::Checks) == crate::layout::Side::Bottom {
         area.max.y -= grab;
     }

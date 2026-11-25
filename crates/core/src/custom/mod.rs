@@ -33,7 +33,7 @@ pub const MAX_MODEL: usize = 64 << 20;
 /// Texture coordinates are signed 10.5 fixed point in texels. The converter keeps them within this many texels.
 const MAX_TEXELS_COORD: f64 = 1000.0;
 
-/// Why a model could not be imported, in words for the player.
+/// Why a model couldn't be imported, in words for the player.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModelError(pub String);
 
@@ -120,7 +120,7 @@ fn n64_texture(im: &Rgba, factor: &[f64]) -> Result<Rgba, ModelError> {
     let mut out = image::resize(im, w, h);
     if factor.iter().any(|f| (f - 1.0).abs() > 1e-3) {
         if factor.len() != 4 && factor.len() != 1 {
-            return err("A material of the model has a color that is not four numbers");
+            return err("A material of the model has a color that isn't four numbers");
         }
         for p in out.px.chunks_exact_mut(4) {
             for (c, v) in p.iter_mut().enumerate() {
@@ -172,7 +172,7 @@ struct Material {
 }
 
 /// Moves a piece's texture coordinates near zero. A repeating texture can move coordinates by whole repeats (two
-/// for a mirrored one). The coordinates of one material move as one, or each triangle's on its own if that is not
+/// for a mirrored one). The coordinates of one material move as one, or each triangle's on its own if that isn't
 /// enough. A triangle that still spans too much is clamped.
 fn near_zero(uv: &mut [[[f64; 2]; 3]], m: &[i64], materials: &BTreeMap<i64, Material>) {
     let used: HashSet<i64> = m.iter().copied().collect();
@@ -305,7 +305,7 @@ pub fn convert(
         return err("Every triangle of the model is too small at this scale");
     }
     if n.iter().flatten().flatten().any(|c| !c.is_finite()) || uv.iter().flatten().flatten().any(|c| !c.is_finite()) {
-        return err("The model has normals or texture coordinates that are not numbers");
+        return err("The model has normals or texture coordinates that aren't numbers");
     }
     let digest = &sha1_hex(&[data, pyfmt::repr(scale).as_bytes()])[..8];
 
@@ -318,7 +318,7 @@ pub fn convert(
         let src = match g.image(tex_index)? {
             Some(bytes) => match image::decode(&bytes) {
                 Ok(im) => im,
-                Err(e) => return err(format!("Could not read an image in the model: {e}")),
+                Err(e) => return err(format!("Couldn't read an image in the model: {e}")),
             },
             None => Rgba::filled(8, 8, [255; 4]),
         };
@@ -421,7 +421,7 @@ pub fn convert(
     for piece in &pieces {
         let thin = |t: &u32| textures.iter().any(|x| x.1 == *t && (x.2.w == 1 || x.2.h == 1));
         if piece.textures.iter().any(thin) {
-            return err(format!("libgarib could not read back piece {}", hex_id(piece.id)));
+            return err(format!("libgarib couldn't read back piece {}", hex_id(piece.id)));
         }
     }
 
@@ -559,7 +559,7 @@ pub fn is_set_id(text: &str) -> bool {
     text.len() == 10 && text.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
-/// `{set: meta.json}` for every imported model, in the order of the set names. A set whose `meta.json` cannot be
+/// `{set: meta.json}` for every imported model, in the order of the set names. A set whose `meta.json` can't be
 /// read is left out.
 pub fn custom_sets(home: &Path) -> BTreeMap<String, Value> {
     let mut out = BTreeMap::new();
@@ -650,7 +650,7 @@ fn custom_ids(home: &Path) -> (HashSet<u32>, HashSet<u32>) {
 }
 
 fn io_err(what: &str, e: std::io::Error) -> ModelError {
-    ModelError(format!("Could not {what}: {e}"))
+    ModelError(format!("Couldn't {what}: {e}"))
 }
 
 /// Writes a set's files into a temporary folder, then renames it to `<home>/custom/<set>`.
@@ -673,7 +673,7 @@ fn store(home: &Path, set: &str, files: &[(String, &[u8])]) -> Result<(), ModelE
 }
 
 /// Converts a glTF model into a new set of custom models in `<home>/custom` and returns the set's ID. A file and
-/// scale that were imported before give the set that is there. `taken_ids` and `taken_textures` hold the IDs of
+/// scale that were imported before give the set that's there. `taken_ids` and `taken_textures` hold the IDs of
 /// the game's own objects and textures; the IDs of the other imported models are added here.
 pub fn import_custom(
     home: &Path,
@@ -704,7 +704,7 @@ pub fn import_custom(
     Ok(set)
 }
 
-/// Removes an imported model. False when `set` is not the name of a set.
+/// Removes an imported model. False when `set` isn't the name of a set.
 pub fn delete_custom(home: &Path, set: &str) -> bool {
     if !is_set_id(set) {
         return false;
@@ -780,10 +780,11 @@ pub fn reskin(
         new = rnd.next_u32();
     }
     let new_id = hex_id(new);
-    let Some(old) = parse_id(model.oid) else { return err(format!("{} is not an object ID", model.oid)) };
+    let Some(old) = parse_id(model.oid) else { return err(format!("{} isn't an object ID", model.oid)) };
     let data = model.bank;
-    if count(data, &old.to_be_bytes()) != 2 {
-        return err(format!("the object ID of {} isn't where it should be", model.oid));
+    let found = count(data, &old.to_be_bytes());
+    if found != 2 {
+        return err(format!("the bank of {} holds its object ID {} times, not 2", model.oid, found));
     }
     let mut words: Vec<([u8; 4], [u8; 4])> = vec![(old.to_be_bytes(), new.to_be_bytes())];
     for (a, b) in &swap {

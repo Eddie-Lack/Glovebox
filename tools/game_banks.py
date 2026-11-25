@@ -12,7 +12,7 @@ src/banks.c.
 
     python3 tools/game_banks.py --gloveworld ../gloveworld --numbers
         writes crates/core/data/bank_numbers.json: the number of every bank, by name. The editor compiles it in.
-        It reads only src/banks.c and include/enums.h: gloveworld does not need to be built.
+        It reads only src/banks.c and include/enums.h: gloveworld doesn't need to be built.
     python3 tools/game_banks.py --gloveworld ../gloveworld [--rom baserom.z64]
         prints the banks the game loads for each level
     python3 tools/game_banks.py --gloveworld ../gloveworld [--rom baserom.z64] --compare crates/core/data/scenes.json

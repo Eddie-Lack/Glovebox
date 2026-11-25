@@ -14,7 +14,7 @@ use std::sync::Arc;
 fn setup() -> Option<(Arc<dyn Backend>, PathBuf)> {
     let get = |k: &str| std::env::var(k).ok();
     let (Some(rom), Some(reference), Some(home)) = (get("GLOVEBOX_ROM"), get("GLOVEBOX_REFERENCE"), get("GLOVEBOX_REFHOME")) else {
-        println!("skipped: GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not all set");
+        println!("skipped: GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME aren't all set");
         return None;
     };
     let backend = GameBackend::open(Path::new(&rom), home).expect("the ROM opens");
@@ -88,7 +88,7 @@ fn differences(got: &Value, want: &Value) -> Vec<String> {
 }
 
 /// Every level: the entities, the checks, the draw load and the ground checks are the reference's, and no check fires
-/// on a shipped level.
+/// on a vanilla level.
 #[test]
 fn all_levels_match_the_reference() {
     let Some((backend, dir)) = setup() else { return };
@@ -105,7 +105,7 @@ fn all_levels_match_the_reference() {
         }
         let texts: Vec<&str> = got["checks"].as_array().unwrap().iter().map(|c| c[1].as_str().unwrap()).collect();
         if !texts.iter().any(|t| t.starts_with("No new problems")) {
-            bad.push(format!("{sid}: a check fires on the shipped level: {texts:?}"));
+            bad.push(format!("{sid}: a check fires on the vanilla level: {texts:?}"));
         }
     }
     let _ = std::fs::remove_dir_all(&home);
@@ -204,7 +204,7 @@ fn apply(ed: &mut Editor, op: &Value) {
             ed.set_attr(n, s(a(2)), s(a(3)));
         }
         "apply_look" => ed.apply_look(s(a(1))),
-        other => panic!("an operation the test does not know: {other}"),
+        other => panic!("an operation the test doesn't know: {other}"),
     }
 }
 
