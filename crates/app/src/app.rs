@@ -279,7 +279,7 @@ impl Window {
                     Ok(c) => w.ed.set_catalog(c),
                     Err(e) => {
                         w.ed.set_catalog(BTreeMap::new());
-                        w.set_status(&format!("Couldn’t index the game’s models: {e}"), "err");
+                        w.set_status(&format!("Couldn't index the game's models: {e}"), "err");
                     }
                 }
                 w.busy = false;
@@ -618,7 +618,7 @@ impl Window {
                 }
                 let id = match pack.write_to(&dir) {
                     Ok(id) => id,
-                    Err(e) => return w.set_status(&format!("Couldn’t save {}: {e}", dir.display()), "err"),
+                    Err(e) => return w.set_status(&format!("Couldn't save {}: {e}", dir.display()), "err"),
                 };
                 if let Some(parent) = dir.parent() {
                     w.settings.set("saveDir", &parent.to_string_lossy());
@@ -646,7 +646,7 @@ impl Window {
             return false;
         };
         if let Err(e) = std::fs::write(&path, &data) {
-            self.set_status(&format!("Couldn’t save {}: {e}", path.display()), "err");
+            self.set_status(&format!("Couldn't save {}: {e}", path.display()), "err");
             return false;
         }
         if let Some(dir) = path.parent() {
@@ -732,7 +732,7 @@ impl Window {
             move || -> Result<PathBuf, String> {
                 let out = job.run()?;
                 let path = folder.join(format!("glover-{sid}-test.z64"));
-                std::fs::create_dir_all(&folder).and_then(|_| std::fs::write(&path, &out.data)).map_err(|e| format!("Couldn’t save {}: {e}", path.display()))?;
+                std::fs::create_dir_all(&folder).and_then(|_| std::fs::write(&path, &out.data)).map_err(|e| format!("Couldn't save {}: {e}", path.display()))?;
                 Ok(path)
             },
             move |w: &mut Window, res| {
@@ -762,7 +762,7 @@ impl Window {
                 self.ctx.open_url(egui::OpenUrl::new_tab(url));
                 self.set_status(&format!("The patcher page is {}. Share it with your patch.", path.display()), "ok");
             }
-            Err(e) => self.set_status(&format!("Couldn’t write {}: {e}", path.display()), "err"),
+            Err(e) => self.set_status(&format!("Couldn't write {}: {e}", path.display()), "err"),
         }
     }
 

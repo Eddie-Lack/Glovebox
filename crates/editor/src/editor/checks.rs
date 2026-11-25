@@ -553,7 +553,7 @@ impl Editor {
             out.push(("err", "No model is known for this enemy type.".to_string()));
         }
         if ent.kind == "enemy" && ent.imported {
-            out.push(("note", "Enemy from another world: its own model is imported, but projectiles it fires come from the game\u{2019}s bullet table and stay invisible if their model isn\u{2019}t loaded (FindObject non-vital).".to_string()));
+            out.push(("note", "Enemy from another world: its own model is imported, but projectiles it fires come from the game's bullet table and stay invisible if their model isn't loaded (FindObject non-vital).".to_string()));
         }
         for v in &self.violations {
             if v.top == ent.node && (v.sub.is_none() || v.sub == ent.sub) {
@@ -853,7 +853,7 @@ impl Editor {
             let what = if e.gate.is_some() {
                 "checkpoint"
             } else if e.tag == "GloverSpawnPoint" {
-                "Glover\u{2019}s start"
+                "Glover's start"
             } else {
                 continue;
             };

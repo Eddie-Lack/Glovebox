@@ -44,10 +44,10 @@ impl Zero {
         match self {
             Zero::Null => "A NullPlatform has no model, and the game measures the radius on the model.".to_string(),
             Zero::Before(what) => format!(
-                "{what} comes before the platform\u{2019}s position. The game then skips the measuring. Move it after the position."
+                "{what} comes before the platform's position. The game then skips the measuring. Move it after the position."
             ),
             Zero::NoPosition => "The platform has no PlatSetInitialPos and no PlatPathPoint. The game measures the radius when it reads one.".to_string(),
-            Zero::NoFaces => "The model\u{2019}s root mesh has no faces to measure.".to_string(),
+            Zero::NoFaces => "The model's root mesh has no faces to measure.".to_string(),
             Zero::NoSize => "The scale in force when the game reads the position is 0.".to_string(),
         }
     }

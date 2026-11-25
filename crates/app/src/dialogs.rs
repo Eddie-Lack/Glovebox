@@ -144,7 +144,7 @@ fn read_xml(w: &Window, d: &mut ImportXml, path: &Path) {
         return;
     }
     let Some(text) = std::fs::read(path).ok().and_then(|b| String::from_utf8(b).ok()) else {
-        d.lines.push(("err", "The file couldn’t be read.".to_string()));
+        d.lines.push(("err", "The file couldn't be read.".to_string()));
         return;
     };
     let ed = &w.ed;
@@ -165,7 +165,7 @@ fn read_xml(w: &Window, d: &mut ImportXml, path: &Path) {
     }
     let matches: Vec<String> = match_scenes(res.info.name.as_deref(), ed.scenes.iter()).into_iter().map(|m| s(m, "id").to_string()).collect();
     let named = res.info.name.as_deref().filter(|n| !n.is_empty()).map(|n| format!("“{n}”, ")).unwrap_or_default();
-    d.lines.push(("ok", format!("Valid level XML: {named}{} commands. Every element, field and value checked against libgarib’s level format.", res.info.elements)));
+    d.lines.push(("ok", format!("Valid level XML: {named}{} commands. Every element, field and value checked against libgarib's level format.", res.info.elements)));
     d.lines.extend(res.warnings.iter().map(|x| ("note", x.clone())));
     if let Some(root) = &res.root {
         let rules = ed.run_rules(root);
@@ -211,12 +211,12 @@ pub fn open_patch_dialog(w: &mut Window) {
     let game = imports.iter().filter(|i| ed.catalog.get(*i).is_none_or(|c| c.custom.is_none())).count();
     let custom = imports.len() - game;
     if custom > 0 {
-        lines.push(("note", format!("Uses {custom} piece(s) of your imported models. The patch contains them, in this level’s rebuilt model bank ({obj_bank}) and texture bank ({tex_bank}).")));
+        lines.push(("note", format!("Uses {custom} piece(s) of your imported models. The patch contains them, in this level's rebuilt model bank ({obj_bank}) and texture bank ({tex_bank}).")));
     }
     if game > 0 && ed.runtime_imports() {
-        lines.push(("ok", format!("Uses {game} model(s) from other levels. The game mod loads them from the player’s own ROM. The patch contains no game data. Players need the Expansion Pak.")));
+        lines.push(("ok", format!("Uses {game} model(s) from other levels. The game mod loads them from the player's own ROM. The patch contains no game data. Players need the Expansion Pak.")));
     } else if game > 0 {
-        lines.push(("note", format!("Uses {game} model(s) from other levels. The patch then contains this level’s rebuilt model bank ({obj_bank}) and texture bank ({tex_bank}) in full, game data included. It is much larger than a plain edit.")));
+        lines.push(("note", format!("Uses {game} model(s) from other levels. The patch then contains this level's rebuilt model bank ({obj_bank}) and texture bank ({tex_bank}) in full, game data included. It is much larger than a plain edit.")));
     } else if custom == 0 {
         lines.push(("ok", "No imported models: the patch contains only what your edits add.".to_string()));
     }
@@ -224,7 +224,7 @@ pub fn open_patch_dialog(w: &mut Window) {
         lines.push(("note", "Rotates or scales enemies, platforms, powerups or water. The patch adds the Expansion Pak game mod (about 5 KB). Players need the Expansion Pak; without one the game skips those rotations and scales.".to_string()));
     }
     if ed.needs_pak_heap() {
-        lines.push(("note", "The imported models need more memory than the game’s own heap. The patch adds the Expansion Pak game mod, which makes the heap about 4 MB larger. Players need the Expansion Pak; without one the game runs out of memory in this level.".to_string()));
+        lines.push(("note", "The imported models need more memory than the game's own heap. The patch adds the Expansion Pak game mod, which makes the heap about 4 MB larger. Players need the Expansion Pak; without one the game runs out of memory in this level.".to_string()));
     }
     w.dialog = Some(Dialog::Patch { lines, quickboot: false });
 }

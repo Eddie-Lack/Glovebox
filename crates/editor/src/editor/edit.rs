@@ -242,7 +242,7 @@ impl Editor {
                 self.draft_saved_at = Some(wall_clock());
             }
         } else {
-            self.set_status("Couldn\u{2019}t autosave: the user folder can\u{2019}t be written. Export XML to keep your edits.", "err");
+            self.set_status("Couldn't autosave: the user folder can't be written. Export XML to keep your edits.", "err");
         }
         self.events.push(Event::Edited);
     }

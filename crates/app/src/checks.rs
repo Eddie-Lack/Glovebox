@@ -99,7 +99,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
         if !rt.object_banks.is_empty() || !rt.texture_banks.is_empty() {
             let (no, nt) = (rt.object_banks.len(), rt.texture_banks.len());
             let text = format!(
-                "Build ROM and Export patch add the Expansion Pak game mod. When this level starts, it loads {no} model bank{} and {nt} texture bank{} ({} KB) from the player’s own ROM. The ROM and patch contain no game data from those banks. The ROM then needs the Expansion Pak.",
+                "Build ROM and Export patch add the Expansion Pak game mod. When this level starts, it loads {no} model bank{} and {nt} texture bank{} ({} KB) from the player's own ROM. The ROM and patch contain no game data from those banks. The ROM then needs the Expansion Pak.",
                 plural(no),
                 plural(nt),
                 kb(rt.bytes as f64)
@@ -109,7 +109,7 @@ fn imports(w: &mut Window, ui: &mut egui::Ui) {
         if let (true, Some(copy)) = (copied > 0, &plan.copy) {
             let (n, t) = (copy.objects.len(), copy.textures.len());
             let text = format!(
-                "{n} piece{} of your imported models ({} KB with {t} texture{}) are copied into {} and {}. The ROM and patch contain them. The game mod gives them the Expansion Pak’s memory.",
+                "{n} piece{} of your imported models ({} KB with {t} texture{}) are copied into {} and {}. The ROM and patch contain them. The game mod gives them the Expansion Pak's memory.",
                 plural(n),
                 kb(copied as f64),
                 plural(t),

@@ -723,7 +723,7 @@ fn editor_on_the_fixture() {
     t.settle();
     t.click("Delete");
     let (n, status) = (puzzles(t.ed()), t.status());
-    t.detail("a volume of a two-condition puzzle stays", n == 2 && status.contains("can\u{2019}t be duplicated"), status);
+    t.detail("a volume of a two-condition puzzle stays", n == 2 && status.contains("can't be duplicated"), status);
     // The camera zone panel's preset list
     let ed = t.ed();
     let zone = ent(ed, |e| e.zone).unwrap();
@@ -1464,9 +1464,9 @@ fn more_clicks(t: &mut T) {
     t.pick("preset", "Fixed: flies");
     let cam = t.ed().camera.pos;
     t.shot("10-camera-zone");
-    let has = t.click("Look from the zone’s camera");
+    let has = t.click("Look from the zone's camera");
     let moved = t.ed().camera.pos != cam;
-    t.check("click: Look from the zone’s camera", has && moved);
+    t.check("click: Look from the zone's camera", has && moved);
     let before = t.ed().undo_stack.len();
     t.click("distance");
     let changed = t.ed().undo_stack.len() == before + 1;

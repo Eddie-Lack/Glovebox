@@ -149,7 +149,7 @@ impl BuildJob {
                     let boot = if request.quickboot { "boots straight into the level" } else { "starts the game normally" };
                     let what = match imp {
                         Some(i) if i.runtime > 0 => format!(
-                            " The game mod loads its {} imported model(s) from the player\u{2019}s ROM; the patch contains no game data.",
+                            " The game mod loads its {} imported model(s) from the player's ROM; the patch contains no game data.",
                             i.objects
                         ),
                         Some(i) if i.objects > 0 => format!(
@@ -371,7 +371,7 @@ impl Editor {
         let mut notes = Vec::new();
         if !matches!(fmt_, "rom" | "bps") && !imports.is_empty() {
             notes.push(format!(
-                "Note: {} imported model{} only exist in a ROM built here; this {} alone references models the game won\u{2019}t find.",
+                "Note: {} imported model{} only exist in a ROM built here; this {} alone references models the game won't find.",
                 imports.len(),
                 if imports.len() == 1 { "" } else { "s" },
                 if fmt_ == "lev" { ".lev" } else { "XML" }

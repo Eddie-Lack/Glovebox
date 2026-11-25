@@ -213,7 +213,7 @@ fn editor_on_the_fixture() {
     let two = ent(&ed, |e| e.kind == "trigger" && !e.zone);
     ed.select(two, false);
     ed.remove();
-    t.check("a volume of a two-condition puzzle stays", puzzles(&ed) == 2 && ed.last_status.0.contains("can\u{2019}t be duplicated"));
+    t.check("a volume of a two-condition puzzle stays", puzzles(&ed) == 2 && ed.last_status.0.contains("can't be duplicated"));
     let zone = ent(&ed, |e| e.zone).unwrap();
     ed.select(Some(zone), false);
     let znode = ed.entities[zone].node;

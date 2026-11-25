@@ -17,7 +17,7 @@ use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
-const NEW_OBJECTS: &str = "New objects appear where the view’s center meets the ground.";
+const NEW_OBJECTS: &str = "New objects appear where the view's center meets the ground.";
 
 pub const TABS: [&str; 6] = ["Collectables", "Enemies", "Models", "Kit", "Presets", "Camera"];
 
@@ -49,11 +49,11 @@ const MODELS_AS: [As; 3] = [
 ];
 const KIT_AS: [As; 2] = [
     As { key: "background", label: "Background", tag: "BackgroundActor", tip: "Decoration without collision (BackgroundActor)" },
-    As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "Solid, built from the model’s triangles (LandActor)" },
+    As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "Solid, built from the model's triangles (LandActor)" },
 ];
 
 const ENEMIES_NOTE: &str = "A new enemy copies the shortest script that type has in a shipped level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.";
-const KIT_NOTE: &str = "Props made by the editor, free to share. Background has no collision; Scenery is solid. They are copied into the level’s banks at ROM build, like imported models.";
+const KIT_NOTE: &str = "Props made by the editor, free to share. Background has no collision; Scenery is solid. They are copied into the level's banks at ROM build, like imported models.";
 const NO_MODELS: &str = "No model matches.";
 const NO_ENEMY_MODEL: &str = "This enemy has no model.";
 
@@ -352,7 +352,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 }
             }
             _ => {
-                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels’ camera zones, so it needs no game mod. The zone expects the player to walk the way the view looks; change it in the inspector.");
+                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels' camera zones, so it needs no game mod. The zone expects the player to walk the way the view looks; change it in the inspector.");
                 for (key, lab, about) in CAM_PRESETS {
                     ui.push_id(key, |ui| {
                         if px.prow(ui, |_, _| {}, lab, None, about, &[("Add", "", true)], |_, _| {}).is_some() {
@@ -415,7 +415,7 @@ fn collect(px: &mut Px, ui: &mut egui::Ui) {
             w.ed.add_garib(p, t);
         }));
     }
-    style::para_at(ui, head, "Added to the selected garib’s group, or a new visible group.");
+    style::para_at(ui, head, "Added to the selected garib's group, or a new visible group.");
     h4(ui, "POWERUPS");
     let ed = &px.w.ed;
     let pickups: Vec<(String, i64)> = ed
@@ -704,14 +704,14 @@ fn model_rows<'a>(px: &mut Px, ui: &mut egui::Ui, catalog: &'a Catalog) -> (Vec<
         let banks: std::collections::BTreeSet<&str> = catalog.values().map(|c| c.bank.as_str()).collect();
         let shown = match st.bank.as_str() {
             "" => "All banks",
-            "@level" => "This level’s banks",
+            "@level" => "This level's banks",
             b => b,
         }
         .to_string();
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let r = egui::ComboBox::from_id_salt("bank").icon(style::combo_icon).selected_text(shown).width(120.0).truncate().height(400.0).show_ui(ui, |ui| {
                 let mut pick = None;
-                for (v, text) in [("", "All banks"), ("@level", "This level’s banks")].into_iter().chain(banks.iter().map(|b| (*b, *b))) {
+                for (v, text) in [("", "All banks"), ("@level", "This level's banks")].into_iter().chain(banks.iter().map(|b| (*b, *b))) {
                     if ui.selectable_label(st.bank == v, text).clicked() {
                         pick = Some(v.to_string());
                     }

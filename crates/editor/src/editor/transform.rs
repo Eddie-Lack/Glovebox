@@ -128,7 +128,7 @@ impl Editor {
         self.after_edit(None, false);
         if unsupported > 0 {
             let (did, what) = if mode == Mode::Rotate { ("Rotated", "a rotation") } else { ("Scaled", "a size") };
-            let msg = format!("{} {} objects; {} can\u{2019}t store {} and were only moved around the pivot.", did, n, unsupported, what);
+            let msg = format!("{} {} objects; {} can't store {} and were only moved around the pivot.", did, n, unsupported, what);
             self.set_status(&msg, "");
         }
     }

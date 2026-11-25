@@ -804,7 +804,7 @@ fn transform_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 let why = if ent.tag == "Platform" {
                     "PlatScale. The game ignores it after the first path point. The editor keeps it before them."
                 } else {
-                    ent.why_scl.unwrap_or("SetActorScale: x, y, z in the model’s own axes (guScaleF in object.c).")
+                    ent.why_scl.unwrap_or("SetActorScale: x, y, z in the model's own axes (guScaleF in object.c).")
                 };
                 note(ui, why);
             }
@@ -829,7 +829,7 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
     let Some(t) = cx.ed.exit_trigger(i) else { return };
     card(ui, "Exit trigger", None, |_| {}, |ui| {
         let who = match t.rule.who {
-            Who::Glover => "Glover (the hand\u{2019}s center)",
+            Who::Glover => "Glover (the hand's center)",
             Who::Ball => "the ball (its center)",
             Who::OnPlatform => "the ball, resting on the platform",
         };
@@ -844,10 +844,10 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 card_note(ui, "The game tests no distance for this exit type. The view draws no sphere.");
             }
             (_, None) => {
-                card_note(ui, "The editor does not have this model\u{2019}s vertices. It cannot tell the size, and draws no sphere.");
+                card_note(ui, "The editor does not have this model's vertices. It cannot tell the size, and draws no sphere.");
             }
             (_, Some(r)) if r > 0.0 => {
-                card_note(ui, "The exit fires when the center comes closer to the platform\u{2019}s position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
+                card_note(ui, "The exit fires when the center comes closer to the platform's position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
             }
             _ => {
                 let why = t.zero.as_ref().map(|z| z.text()).unwrap_or_default();
@@ -968,7 +968,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
         style::widen(ui, line.response.rect);
         note(ui, "FlyTowardsPoint: the camera flies to this point and watches Glover from there.");
         if let Some(view) = zone_camera(&ed.doc, &z) {
-            let look = ui.button("Look from the zone’s camera");
+            let look = ui.button("Look from the zone's camera");
             if look.clicked() {
                 cx.act(move |w| {
                     w.ed.camera.pos = view.1;
@@ -1088,7 +1088,7 @@ fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
                 let lower = ksy.to_lowercase();
                 let placeholder = lower.contains("todo") || lower.match_indices("0x").any(|(i, _)| lower[i + 2..].starts_with(|ch: char| ch.is_ascii_hexdigit()));
                 if placeholder && !token.is_empty() {
-                    ui.label(" · names libgarib’s placeholder");
+                    ui.label(" · names libgarib's placeholder");
                     ui.label(RichText::new(&ksy).monospace());
                 }
             });
@@ -1238,7 +1238,7 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                     });
                     if name == "object_id" {
                         let text = match hex_id(Some(value)) {
-                            Some(oid) if ed.loaded.contains(&oid) => "model loaded from this level’s object banks".to_string(),
+                            Some(oid) if ed.loaded.contains(&oid) => "model loaded from this level's object banks".to_string(),
                             Some(oid) if ed.catalog.contains_key(&oid) => format!("imported from {} at ROM build", ed.catalog[&oid].bank),
                             _ => "⚠ not in any object bank".to_string(),
                         };
@@ -1325,7 +1325,7 @@ fn multi_panel(cx: &mut Cx, ui: &mut egui::Ui) {
             }
         });
         cx.acts.extend(go);
-        let pivot = if ed.pivot_mode == "group" { "group center (positions rotate and scale around it)" } else { "each object’s own origin" };
+        let pivot = if ed.pivot_mode == "group" { "group center (positions rotate and scale around it)" } else { "each object's own origin" };
         remark(ui, &format!("Pivot: {pivot}. {rot} of {} can store a rotation and {scl} a size; the rest only move.", tset.len()));
     });
     for (n, &i) in sel.iter().take(200).enumerate() {

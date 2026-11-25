@@ -44,17 +44,17 @@ pub const WHY_SPRITE: &str = "Garibs, Mr. Tip and the start markers are flat spr
 pub const WHY_NO_SCALE: &str = "No size in the level format.";
 // Rotation and scale on these objects need the Expansion Pak game mod (mod/transforms.c), which Build ROM adds
 pub const WHY_ROT_ENEMY: &str = "Turning about Y sets y_rotation, the facing its script starts from. Tilt about X or Z is a SetActorRotation the game mod applies when drawing.";
-pub const WHY_ROT_PLATFORM: &str = "SetActorRotation, applied by the game mod before the platform\u{2019}s collision is built. For a spinning platform it adds to the spin angles.";
-pub const WHY_ROT_PICKUP: &str = "SetActorRotation, applied by the game mod under the powerup\u{2019}s own spin about Y.";
-pub const WHY_ROT_WATER: &str = "SetActorRotation, applied by the game mod to the water\u{2019}s model. Its swimming volume (left/top/front\u{2026}) stays an axis-aligned box.";
-pub const WHY_SCALE_ENEMY: &str = "SetActorScale, a factor on the type\u{2019}s size. The game mod also scales the collision sphere by the mean of the three axes.";
-pub const WHY_SCALE_PICKUP: &str = "SetActorScale, a factor on the powerup\u{2019}s size (0.4 in the game\u{2019}s code).";
-pub const WHY_SCALE_WATER: &str = "SetActorScale on the water\u{2019}s model. Its swimming volume keeps its own size.";
-pub const WHY_CUSTOM_PLATFORM: &str = "A platform must use a model from the game. A converted model\u{2019}s first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn\u{2019}t). Place it as Scenery or Background.";
+pub const WHY_ROT_PLATFORM: &str = "SetActorRotation, applied by the game mod before the platform's collision is built. For a spinning platform it adds to the spin angles.";
+pub const WHY_ROT_PICKUP: &str = "SetActorRotation, applied by the game mod under the powerup's own spin about Y.";
+pub const WHY_ROT_WATER: &str = "SetActorRotation, applied by the game mod to the water's model. Its swimming volume (left/top/front\u{2026}) stays an axis-aligned box.";
+pub const WHY_SCALE_ENEMY: &str = "SetActorScale, a factor on the type's size. The game mod also scales the collision sphere by the mean of the three axes.";
+pub const WHY_SCALE_PICKUP: &str = "SetActorScale, a factor on the powerup's size (0.4 in the game's code).";
+pub const WHY_SCALE_WATER: &str = "SetActorScale on the water's model. Its swimming volume keeps its own size.";
+pub const WHY_CUSTOM_PLATFORM: &str = "A platform must use a model from the game. A converted model's first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn't). Place it as Scenery or Background.";
 pub const WHY_TRIGGER_ROT: &str = "Puzzle trigger volumes are axis-aligned: the game tests boxes with IsPointWithinBox, spheres and cylinders by distance.";
-pub const WHY_TRIGGER_EDIT: &str = "This trigger volume is one of several conditions of its puzzle. It can\u{2019}t be duplicated or deleted on its own.";
+pub const WHY_TRIGGER_EDIT: &str = "This trigger volume is one of several conditions of its puzzle. It can't be duplicated or deleted on its own.";
 pub const WHY_WIND_ROT: &str = "Wind volumes are axis-aligned boxes (left/top/front + width/height/depth).";
-pub const WHY_START_ROT: &str = "Set by the first checkpoint platform\u{2019}s theta.";
+pub const WHY_START_ROT: &str = "Set by the first checkpoint platform's theta.";
 
 pub const EULER_ORDER: &str = "YZX";
 
@@ -1220,8 +1220,8 @@ pub const CAM_PRESETS: [(&str, &str, &str); 8] = [
     ("high", "High", "rises and looks down"),
     ("side", "Side", "swings around to the right of the way on"),
     ("left", "Other side", "swings around to the left"),
-    ("front", "Front", "faces Glover: you can\u{2019}t see where you go"),
-    ("low", "Low", "drops to Glover\u{2019}s height and comes close"),
+    ("front", "Front", "faces Glover: you can't see where you go"),
+    ("low", "Low", "drops to Glover's height and comes close"),
     ("far", "Far", "stands far back and high"),
     ("fixed", "Fixed", "flies to a point ahead and watches from there"),
 ];
