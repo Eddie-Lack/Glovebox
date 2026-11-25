@@ -1,8 +1,7 @@
 //! Platform presets: common platforms (rings, exits, lifts, spikes...) as one click each.
 //!
 //! Each preset makes whole elements with the children in the order the game reads them (`commands`). The values
-//! were tested in the emulator and on a console. Platforms use the game's own models: a platform with an imported
-//! custom model makes a console trap (`entities::WHY_CUSTOM_PLATFORM`).
+//! were tested in the emulator and on a console. The presets that take any model also take an imported one.
 
 use crate::xmlutil::{float_bits, fmt};
 use glovebox_core::xml::{Doc, NodeId};

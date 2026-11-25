@@ -116,11 +116,9 @@ Ready-made platforms, with their commands in the order the game reads them _(see
 - `Teleport pad`: sends Glover and the ball ahead. Change where in the inspector
 - `Extra levels entry`: for hubs only _(see [The Expansion Pak game mod](Game-mod.md#extra-levels))_
 
-Moving platform, spinner, conveyor and ice use the selected object's model if you've selected one
+Moving platform, spinner, conveyor and ice use the selected object's model if you've selected one. Your imported models work too
 
 `Motion` in the toolbar spins the spinning platforms in the view
-
-Note: give a platform one of the game's own models. A platform with an imported model crashes a console
 
 ## Commands
 
@@ -185,7 +183,6 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - Exits that can never fire
 - A checkpoint or start with no solid ground under it
 - `fog_distance` of 1000 or more, in `FogConfiguration`
-- Platforms made from your own models _(a console stops on them)_
 
 Some checks link to the game's code. Problems a vanilla level already has are labeled
 

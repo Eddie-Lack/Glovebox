@@ -243,13 +243,15 @@ fn created_of(patch: &[u8]) -> Option<String> {
     meta["created"].as_str().map(String::from)
 }
 
-fn run(b: &dyn Backend, e: &Env, c: &Value, created: Option<String>) -> Result<Built, String> {
+/// One build of a reference file. With `stored`, the build reads those imported models instead of the backend's
+/// (`stored_customs`).
+fn run(b: &dyn Backend, e: &Env, c: &Value, created: Option<String>, stored: Option<&Customs>) -> Result<Built, String> {
     let xml = |name: &Value| String::from_utf8(read(&e.reference.join("gamedata/xml").join(name.as_str().unwrap()))).unwrap();
     let kw = &c["kw"];
     let flag = |key: &str| kw[key].as_bool().unwrap_or(false);
     let format = c["fmt"].as_str().unwrap().to_string();
     let built = if c["call"] == "build" {
-        b.build(&BuildRequest {
+        let req = BuildRequest {
             sid: c["sid"].as_str().unwrap().into(),
             xml: xml(&c["xml"]),
             format,
@@ -259,7 +261,11 @@ fn run(b: &dyn Backend, e: &Env, c: &Value, created: Option<String>) -> Result<B
             copy: flag("copy"),
             info: info(&kw["info"]),
             created,
-        })
+        };
+        match stored {
+            Some(customs) => glovebox_core::build::build(&e.game, customs, &req),
+            None => b.build(&req).map_err(|err| err.0),
+        }
     } else {
         let entry = |v: &Value| BuildAllEntry {
             sid: v["sid"].as_str().unwrap().into(),
@@ -268,16 +274,31 @@ fn run(b: &dyn Backend, e: &Env, c: &Value, created: Option<String>) -> Result<B
             info: info(&v["info"]),
             extra: v["extra"].as_bool().unwrap_or(false),
         };
-        b.build_all(&BuildAllRequest {
+        let req = BuildAllRequest {
             entries: c["entries"].as_array().unwrap().iter().map(entry).collect(),
             format,
             quickboot: kw["quickboot"].as_str().map(String::from),
             expansion: flag("expansion"),
             copy: flag("copy"),
             created,
-        })
+        };
+        match stored {
+            Some(customs) => glovebox_core::build::build_all(&e.game, customs, &req),
+            None => b.build_all(&req).map_err(|err| err.0),
+        }
     };
-    built.map_err(|err| err.0)
+    built
+}
+
+/// The imported models of `home` with their banks as stored. `imports::load_customs` gives each converted piece the
+/// rotation key of no turn in place of a key of all zeros. The reference's sets and builds hold the zero keys of the
+/// earlier converter.
+fn stored_customs(home: &Path) -> Customs {
+    let mut customs = imports::load_customs(home);
+    for (id, m) in customs.models.iter_mut() {
+        m.bank = read(&home.join("custom").join(&m.set).join(format!("{id}.obj.bin")));
+    }
+    customs
 }
 
 /// The facts of a build as the reference dumps hold them: a JSON object of headers.
@@ -303,14 +324,17 @@ fn headers(built: &Built, several: bool) -> Value {
 
 /// Runs the builds of a reference file and compares each with the recorded output. Returns the numbers of ROMs,
 /// patches, level files and refused builds, and the slowest build.
-fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usize, usize, usize, usize, (f64, String)) {
+///
+/// With `stored`, each build that the reference made is compared with a build from those models. The backend then
+/// builds it again from the models as `load_customs` reads them, and that ROM must keep the console's rules.
+fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str, stored: Option<&Customs>) -> (usize, usize, usize, usize, (f64, String)) {
     let (mut roms, mut patches, mut levs, mut refused) = (0, 0, 0, 0);
     let mut slowest = (0.0, String::new());
     for c in cases {
         let name = c["name"].as_str().unwrap();
         assert!(c.get("crash").is_none(), "{name}: the reference build crashed");
         let Some(sha1) = c["sha1"].as_str() else {
-            let message = run(b, e, c, None).err().unwrap_or_else(|| panic!("{name}: built, the reference refuses"));
+            let message = run(b, e, c, None, stored).err().unwrap_or_else(|| panic!("{name}: built, the reference refuses"));
             assert_eq!(json!(message), c["error"], "{name}");
             refused += 1;
             continue;
@@ -321,7 +345,7 @@ fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usi
         let created = if format == "bps" { created_of(&theirs) } else { None };
         assert_eq!(created.is_some(), format == "bps");
         let t = Instant::now();
-        let built = run(b, e, c, created).unwrap_or_else(|err| panic!("{name}: {err}"));
+        let built = run(b, e, c, created.clone(), stored).unwrap_or_else(|err| panic!("{name}: {err}"));
         let took = t.elapsed().as_secs_f64();
         if took > slowest.0 {
             slowest = (took, name.to_string());
@@ -336,6 +360,13 @@ fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str) -> (usi
                 assert_eq!(n64::header_crc(&built.data).unwrap(), n64::stored_crc(&built.data).unwrap(), "{name}");
                 if built.needs_mod {
                     assert_eq!(glovebox_core::hwcheck::check_rom(&built.data), Vec::<String>::new(), "{name}");
+                }
+                if stored.is_some() {
+                    let mended = run(b, e, c, created.clone(), None).unwrap_or_else(|err| panic!("{name}: {err}"));
+                    assert_eq!(n64::header_crc(&mended.data).unwrap(), n64::stored_crc(&mended.data).unwrap(), "{name}");
+                    if mended.needs_mod {
+                        assert_eq!(glovebox_core::hwcheck::check_rom(&mended.data), Vec::<String>::new(), "{name}");
+                    }
                 }
                 roms += 1
             }
@@ -358,11 +389,11 @@ fn builds_match_the_reference() {
     let cases = json_file(&e.reference.join("gamedata/builds.json"));
     let cases = cases.as_array().unwrap();
     let b = backend(e);
-    let (roms, patches, levs, refused, slowest) = check_builds(b.as_ref(), e, cases, "");
+    let (roms, patches, levs, refused, slowest) = check_builds(b.as_ref(), e, cases, "", None);
     assert!(roms + patches >= 25 && patches >= 8 && refused >= 10, "{roms} {patches} {refused}");
     // A patch made now carries the time of now
     let first = cases.iter().find(|c| c["fmt"] == "bps" && c.get("sha1").is_some()).unwrap();
-    let now = created_of(&run(b.as_ref(), e, first, None).unwrap().data).unwrap();
+    let now = created_of(&run(b.as_ref(), e, first, None, None).unwrap().data).unwrap();
     assert!(now.len() == 20 && now.ends_with('Z') && now.as_str() > "2026-01-01", "{now}");
     println!(
         "builds_match_the_reference: {roms} ROMs, {patches} patches and {levs} level files equal; {refused} refused with the \
@@ -412,7 +443,7 @@ fn imported_models_match_the_reference() {
         same_plan(&format!("plan_runtime {what}"), imports::plan_runtime(&e.game, &customs, sid, &ids), &c["plan_runtime"]);
         same_plan(&format!("plan {what}"), b.plan(sid, &ids).map_err(|err| err.0), &c["backend"]);
     }
-    let (roms, patches, _, refused, _) = check_builds(b.as_ref(), e, want["builds"].as_array().unwrap(), "custom-");
+    let (roms, patches, _, refused, _) = check_builds(b.as_ref(), e, want["builds"].as_array().unwrap(), "custom-", Some(&stored_customs(&home)));
     assert!(roms >= 4 && patches >= 2 && refused >= 1);
 
     // Making the same models again in an empty folder gives the reference's files

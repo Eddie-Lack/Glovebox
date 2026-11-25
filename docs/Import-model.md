@@ -31,6 +31,8 @@ After `Remove`, levels that use the model show a placeholder. They can't be buil
 
 Each piece is also in the model list, for use as Background or Platform
 
+Models you imported with an older version of the editor work as platforms too. You don't have to import them again
+
 Imported models are kept in the editor's user folder (`custom/`) and you can use them in every level
 
 The user folder is `%LOCALAPPDATA%\Glovebox` on Windows and `~/.local/share/glovebox` on Linux
@@ -42,6 +44,5 @@ The user folder is `%LOCALAPPDATA%\Glovebox` on Windows and `~/.local/share/glov
 - The editor can't read a few rare kinds of JPEG: arithmetic-coded, CMYK and 12-bit ones. Save the texture as PNG instead
 - Enemies, doors, water and scripts from another game don't carry over. Rebuild them with Glover's objects and puzzles
 - A big map can need more memory than the game has, even with the Expansion Pak. `Checks` shows how much memory the level has left
-- On a real console, don't use an imported model as a Platform. Use Scenery or Background
 
 Note: the patch you export holds the models, so only share levels with models you have the right to share

@@ -5,7 +5,7 @@ use super::nodes::fog_of;
 use super::{format_of, look_name, Editor, Event, ModelIndex, ENTRY_TAG, EXTRA_SLOTS, LIGHTS_MAX, LOOKS, LOOK_ONE};
 use crate::drafts::LevelInfo;
 use crate::entities::{
-    self, attached_points, lone_trigger, preset_zone, set_camera_zone, trigger_volumes, Context, EntId, CAM_PRESETS, WHY_CUSTOM_PLATFORM,
+    self, attached_points, lone_trigger, preset_zone, set_camera_zone, trigger_volumes, Context, EntId, CAM_PRESETS,
     WHY_TRIGGER_EDIT,
 };
 use crate::presets;
@@ -446,9 +446,6 @@ impl Editor {
             if let Some(e) = self.selected().map(|s| &self.entities[s]).filter(|e| !e.is_handle) {
                 if let Some(raw) = self.doc.get(e.node, "object_id").filter(|o| !o.is_empty()) {
                     let oid = hex_id(Some(raw)).unwrap_or_default();
-                    if self.catalog.get(&oid).is_some_and(|c| c.custom.is_some()) {
-                        return self.set_status(WHY_CUSTOM_PLATFORM, "err");
-                    }
                     let name = self.doc.get(e.node, "name").filter(|n| !n.is_empty()).unwrap_or("deck");
                     model = Some((oid, name.to_string()));
                 }

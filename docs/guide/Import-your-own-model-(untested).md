@@ -29,11 +29,7 @@ The pieces appear as Scenery in the middle of the view. One `Undo` takes them al
 - `Place` adds all the pieces again
 - `Remove` deletes the model
 
-You can use your models in every level.
-
-### Don't make a platform from your own model!
-
-It crashes a console. Use `Scenery` or `Background`.
+You can use your models in every level, as `Scenery`, `Background` or `Platform`.
 
 Note: the patch you export holds your models. Only share models you have the right to share.
 

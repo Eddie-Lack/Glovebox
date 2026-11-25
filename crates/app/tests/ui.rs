@@ -3000,7 +3000,7 @@ impl T {
 ///
 /// `Grid` shows tiles and no rows, on each of the three tabs. A click on a tile adds the thing: an enemy, a model as
 /// the radio buttons say (the level's XML gets a LandActor, a BackgroundActor or a Platform), a kit item with its
-/// settings as they are. A converted model is refused as a platform. The view and the radio buttons stay through
+/// settings as they are. A converted model is placed as a platform, from a tile and from a row. The view and the radio buttons stay through
 /// closing the panel and through a new window. The search narrows the grid, a wider panel has more columns, and a
 /// tile's tooltip has its name.
 ///
@@ -3009,7 +3009,6 @@ impl T {
 #[test]
 fn add_grid() {
     use glovebox::palette::THUMBS_MAX;
-    use glovebox_editor::entities::WHY_CUSTOM_PLATFORM;
     let fixture = || -> Option<Arc<dyn Backend>> { Some(Arc::new(FixtureBackend::new())) };
     let mut t = T::new("grid", fixture(), [1280.0, 720.0]);
     t.idle();
@@ -3151,22 +3150,33 @@ fn add_grid() {
     t.click("Close settings");
     t.shot("grid/fixture-kit");
 
-    // A converted model can't be a platform: its tile is off under Platform, and a click says why
+    // A converted model can be a platform: its tile is on under Platform, and a click places it. Its row in the
+    // list has a Platform button that does the same. The Checks find nothing wrong with it.
     t.click("Models");
     let custom = t.ed().catalog.iter().find(|c| c.1.custom.is_some()).map(|c| (c.0.clone(), c.1.name.clone())).unwrap_or_default();
     t.fill("Search models", &custom.0);
     t.pictures();
     let is_platform = t.w().palette.places().0 == "Platform";
-    let off = t.tile_node(&custom.1).is_some_and(|n| n.accesskit_node().is_disabled());
+    let on = t.tile_node(&custom.1).is_some_and(|n| !n.accesskit_node().is_disabled());
     let n = t.count_tag("Platform");
     t.click_tile(&custom.1);
-    let (n2, status) = (t.count_tag("Platform"), t.status());
-    for _ in 0..10 {
-        t.h.step();
-    }
-    let why = t.reads("In a ROM, a platform must use a model from the game");
+    let n2 = t.count_tag("Platform");
+    let uses = |t: &mut T| {
+        let doc = &t.ed().doc;
+        doc.kids(doc.root(), "Platform").into_iter().filter(|p| doc.get(*p, "object_id") == Some(custom.0.as_str())).count()
+    };
+    let used = uses(&mut t);
     t.shot("grid/fixture-models-platform");
-    t.detail("grid: a converted model is refused as a platform, with the list's reason", is_platform && off && n2 == n && status == WHY_CUSTOM_PLATFORM && why, format!("{custom:?} {is_platform} {off} {n} {n2} {why} {status}"));
+    t.detail("grid: a click on a converted model's tile places it as a platform", is_platform && on && n2 == n + 1 && used == 1, format!("{custom:?} {is_platform} {on} {n} {n2} {used}"));
+    t.click("List");
+    let n = t.count_tag("Platform");
+    let clicked = t.click(&format!("Platform {}", custom.1));
+    let (n2, used) = (t.count_tag("Platform"), uses(&mut t));
+    t.detail("grid: a converted model's row places it as a platform", clicked && n2 == n + 1 && used == 2, format!("{clicked} {n} {n2} {used}"));
+    t.click("Grid");
+    t.ed().checks();
+    let flagged = t.ed().violations.iter().filter(|v| v.key.ends_with(":custom")).count();
+    t.detail("grid: the Checks don't flag a converted model as a platform", flagged == 0, format!("{flagged}"));
     t.click("Place as Scenery");
     let on = t.tile_node(&custom.1).is_some_and(|n| !n.accesskit_node().is_disabled());
     let n = t.count_tag("LandActor");

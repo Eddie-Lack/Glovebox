@@ -28,6 +28,13 @@ fn ids(v: &Value) -> HashSet<u32> {
     v.as_array().unwrap().iter().map(|i| i.as_u64().unwrap() as u32).collect()
 }
 
+/// A reference bank with the rotation key of no turn in place of each key of all zeros. The reference's converter
+/// wrote zero keys, and the converter here writes the key of no turn.
+fn mended(mut bank: Vec<u8>) -> Vec<u8> {
+    custom::pack::identity_rotations(&mut bank).unwrap();
+    bank
+}
+
 /// Every bank of a set loads back: the object banks through the bank parser and the model reader, the texture
 /// bank through the texture reader.
 fn loads_back(set: &CustomSet) {
@@ -114,7 +121,7 @@ fn sets_match_the_reference() {
         }
         for p in &set.pieces {
             let path = out.join(format!("0x{:08X}.obj.bin", p.id));
-            match std::fs::read(&path) {
+            match std::fs::read(&path).map(mended) {
                 Ok(bytes) if bytes == p.bank => {}
                 Ok(_) => problems.push(format!("bank 0x{:08X} differs", p.id)),
                 Err(_) => problems.push(format!("the reference has no bank 0x{:08X}", p.id)),
@@ -232,7 +239,9 @@ fn storage_matches_the_reference() {
     expect.sort();
     assert_eq!(names, expect);
     for name in names.iter().filter(|n| n.ends_with(".bin")) {
-        assert!(std::fs::read(stored.join(name)).unwrap() == std::fs::read(out.join(name)).unwrap(), "{name}");
+        let theirs = std::fs::read(out.join(name)).unwrap();
+        let theirs = if name.ends_with(".obj.bin") { mended(theirs) } else { theirs };
+        assert!(std::fs::read(stored.join(name)).unwrap() == theirs, "{name}");
     }
     // The text of meta.json is the reference's, but for the preview's file name and the PNG sizes
     let ours = std::fs::read_to_string(stored.join("meta.json")).unwrap();

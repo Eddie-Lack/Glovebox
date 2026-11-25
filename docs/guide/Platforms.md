@@ -58,13 +58,9 @@ The gray ones can't go on this platform. Hover over one to see why.
 
 Select an object in the level first and these four use its model.
 
+Your imported models work for these too.
+
 `Motion` in the toolbar spins the spinning platforms in the view.
-
-### A platform with your own model crashes a console!
-
-Always give a platform one of the game's own models.
-
-Use your imported models as `Scenery` or `Background`.
 
 ---
 
