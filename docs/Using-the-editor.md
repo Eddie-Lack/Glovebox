@@ -88,7 +88,7 @@ A bank is a group of models that the game loads together. Each level loads a few
 
 - In `Grid`, click a picture and it's in your level
 - On `Models` the radio buttons over the grid say what a click places: `Scenery`, `Background` or `Platform`
-- On `Kit` they are `Background` and `Scenery`
+- On `Kit` they're `Background` and `Scenery`
 - The choice stays until you change it. The editor remembers it, and the view
 - Hover over a picture for its name, its bank and its notes
 - A corner mark means a boss (on `Enemies`) or one of your own models (on `Models`)

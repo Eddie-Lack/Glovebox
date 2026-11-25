@@ -170,7 +170,7 @@ fn vertex_score(active: usize, cache_position: i32) -> f64 {
     score
 }
 
-/// `vertex_cache_optimizer.optimize` with a cache of 32. It is kept as libgarib has it: a vertex starts with
+/// `vertex_cache_optimizer.optimize` with a cache of 32. It's kept as libgarib has it: a vertex starts with
 /// cache position 0, which reads as "in the cache already", so in practice the cache stays empty. The result is
 /// the best first triangle, then the others in their order.
 fn cache_order(m: &mut Mesh) {
@@ -299,11 +299,11 @@ fn flatten(prims: &[Prim]) -> Result<Flat, ModelError> {
     Ok(Flat { mesh, face_texture, sizes })
 }
 
-/// Python's `int(x)` packed as a signed number of `bits` bits. libgarib stops when it does not fit.
+/// Python's `int(x)` packed as a signed number of `bits` bits. libgarib stops when it doesn't fit.
 fn fixed(v: f64, bits: u32) -> Result<i64, ModelError> {
     let limit = 1i64 << (bits - 1);
     if !v.is_finite() || v.trunc() < -(limit as f64) || v.trunc() >= limit as f64 {
-        return err("A coordinate of the model does not fit a Glover model. Use a smaller scale.");
+        return err("A coordinate of the model doesn't fit a Glover model. Use a smaller scale.");
     }
     Ok(v.trunc() as i64)
 }
@@ -335,7 +335,7 @@ fn geometry(f: &Flat) -> GeometryParts<'static> {
         }
         for c in n {
             let c = c * 127.0;
-            // libgarib packs a number that is not finite as 0
+            // libgarib packs a number that isn't finite as 0
             norms.push(if c.is_finite() { c as i64 as i8 as u8 } else { 0 });
         }
         norms.push(0);
@@ -413,7 +413,7 @@ fn display_list(f: &Flat) -> Result<DisplayList, ModelError> {
         unique.sort_unstable();
         unique.dedup();
         if cursor == start {
-            return err("A piece of the model could not be put in a display list");
+            return err("A piece of the model couldn't be put in a display list");
         }
         let mut block = Vec::with_capacity(unique.len() * layout::DL_VERTEX);
         let mut slot: HashMap<u32, u8> = HashMap::new();
@@ -501,7 +501,7 @@ fn display_list(f: &Flat) -> Result<DisplayList, ModelError> {
                             return err("A piece of the model has a broken vertex variant");
                         };
                         if old[0] != new[0] || old[1] != new[1] {
-                            // libgarib packs the coordinates before they are scaled by the texture's size
+                            // libgarib packs the coordinates before they're scaled by the texture's size
                             let u = fixed(new[0] as f64 * 32.0, 16)? as i16 as u16 as u64;
                             let v = fixed(new[1] as f64 * 32.0, 16)? as i16 as u16 as u64;
                             cmd(cmds, 0xB2 << 56 | 0x14 << 48 | (s as u64 * 2) << 32 | u << 16 | v);
@@ -597,7 +597,7 @@ const IDENTITY_ROTATION: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 /// - The texture bank holds the records the pieces use, each padded to a multiple of 8 bytes with its size field
 ///   fixed, in rising order of id. No list of names follows them. The bank ends with zeros up to a multiple of 8.
 /// - Each rotation key of all zeros becomes the key of no turn (0, 0, 0, 1). The game turns a zero key into a
-///   matrix of values that are not numbers. The converter still writes zero keys; only this copy changes.
+///   matrix of values that aren't numbers. The converter still writes zero keys; only this copy changes.
 ///
 /// `texture_banks` are the banks that hold the pieces' textures, such as `CustomSet::texture_bank`. A texture in two
 /// of them is taken from the first.

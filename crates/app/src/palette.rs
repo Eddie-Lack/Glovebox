@@ -53,7 +53,7 @@ const KIT_AS: [As; 2] = [
 ];
 
 const ENEMIES_NOTE: &str = "A new enemy copies the shortest script that type has in a shipped level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.";
-const KIT_NOTE: &str = "Props made by the editor, free to share. Background has no collision; Scenery is solid. They are copied into the level's banks at ROM build, like imported models.";
+const KIT_NOTE: &str = "Props made by the editor, free to share. Background has no collision; Scenery is solid. They're copied into the level's banks at ROM build, like imported models.";
 const NO_MODELS: &str = "No model matches.";
 const NO_ENEMY_MODEL: &str = "This enemy has no model.";
 
@@ -170,7 +170,7 @@ fn work(w: &mut Window, ctx: &egui::Context) {
         w.palette.thumbs.insert(oid, handle);
         ctx.request_repaint();
     }
-    // Too many pictures: the ones that are not in view go, the oldest first
+    // Too many pictures: the ones that aren't in view go, the oldest first
     let st = &mut w.palette;
     if st.thumbs.len() > THUMBS_MAX {
         let mut old: Vec<(u64, String)> = st.thumbs.keys().map(|k| (st.thumbs_used.get(k).copied().unwrap_or(0), k.clone())).filter(|x| x.0 < st.frame).collect();
@@ -200,7 +200,7 @@ fn thumb_box(ui: &mut egui::Ui, texture: Option<&egui::TextureHandle>) -> egui::
 struct Px<'a> {
     w: &'a mut Window,
     acts: Vec<Act>,
-    /// The note at the top of the open tab, when it is not drawn there: it is the tooltip of the tab's button.
+    /// The note at the top of the open tab, when it isn't drawn there: it's the tooltip of the tab's button.
     intro: Option<&'static str>,
 }
 
@@ -231,7 +231,7 @@ impl Px<'_> {
     }
 
     /// The picture of a model for a tile in view, and whether the model is known to have none. Asks for the
-    /// picture when there is none yet.
+    /// picture when there's none yet.
     fn picture(&mut self, oid: Option<&str>) -> (Option<egui::TextureHandle>, bool) {
         let Some(o) = oid else { return (None, true) };
         let st = &mut self.w.palette;
@@ -352,7 +352,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 }
             }
             _ => {
-                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It is a puzzle like the shipped levels' camera zones, so it needs no game mod. It is made for a player who walks the way the view looks. Change that in the Inspector.");
+                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It's a puzzle like the shipped levels' camera zones, so it needs no game mod. It's made for a player who walks the way the view looks. Change that in the Inspector.");
                 for (key, lab, about) in CAM_PRESETS {
                     ui.push_id(key, |ui| {
                         if px.prow(ui, |_, _| {}, lab, None, about, &[("Add", "", true)], |_, _| {}).is_some() {
@@ -499,7 +499,7 @@ struct Tile {
     blank: bool,
     /// The color of the mark in the tile's corner.
     mark: Option<egui::Color32>,
-    /// Why a click does not place the thing.
+    /// Why a click doesn't place the thing.
     refuse: Option<&'static str>,
     /// The tile has a corner that opens settings.
     settings: bool,

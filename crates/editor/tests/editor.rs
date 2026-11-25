@@ -510,7 +510,7 @@ fn editor_on_the_fixture() {
     ed.add_puzzle_part(p, "PuzzleAction", 45);
     let a = *ed.doc.kids(p, "PuzzleAction").last().unwrap();
     ed.set_attr(body(&ed.doc, a).unwrap(), "platform_tag", "-201");
-    t.check("a negative nudge tag with no platform is an error", has_check(&mut ed, Some("err"), "crashes when there is none"));
+    t.check("a negative nudge tag with no platform is an error", has_check(&mut ed, Some("err"), "crashes when there's none"));
     undo_to(&mut ed, mark);
     ed.open_puzzle(None);
 
@@ -661,7 +661,7 @@ fn exit_triggers_on_the_fixture() {
     assert!(node.visible && node.pos == t.center && (node.scale[0] - corner).abs() < 1e-4);
     let (obj_box, sphere_box) = (ed.obj_box(goal), ed.graph.bounds(sphere));
     assert!(sphere_box.max[0] - sphere_box.min[0] > obj_box.max[0] - obj_box.min[0] + 10.0);
-    // A click on the sphere, beside the block, selects what is behind it: nothing here, or the ground
+    // A click on the sphere, beside the block, selects what's behind it: nothing here, or the ground
     let none = Mods::default();
     let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
     let beside = px(&ed, vec::add(t.center, vec::scale(across, (corner - 3.0) / vec::norm(across))));

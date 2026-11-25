@@ -83,7 +83,7 @@ pub struct CatalogEntry {
     pub world: Option<String>,
     /// The first scene that can draw it. None for an imported model.
     pub first_scene: Option<String>,
-    /// None when there is no model to draw
+    /// None when there's no model to draw
     pub model: Option<ModelRef>,
     pub custom: Option<CustomEntry>,
 }
@@ -129,7 +129,7 @@ pub trait Backend: Send + Sync {
     /// The number of collision faces of a model, or 0.
     fn faces(&self, oid: &str) -> u32;
     /// The vertices that the faces of a model's root mesh use, in the model's own units. The game measures a
-    /// platform's radius on them. None when the back end cannot tell.
+    /// platform's radius on them. None when the back end can't tell.
     fn root_vertices(&self, oid: &str) -> Option<Vec<[f32; 3]>>;
     fn models(&self, sid: &str) -> Result<SceneModels>;
     /// The size of a shipped level's file.
@@ -224,7 +224,7 @@ impl GameBackend {
             .map_err(|e| BackendError(e.0))?;
         let meta = custom::custom_sets(&self.home).remove(&set);
         let Some(Value::Object(meta)) = meta else {
-            return Err(BackendError("The imported model could not be read back".into()));
+            return Err(BackendError("The imported model couldn't be read back".into()));
         };
         let mut out = serde_json::Map::new();
         out.insert("set".into(), Value::String(set));
@@ -464,7 +464,7 @@ impl Backend for GameBackend {
         let _guard = self.custom_lock.lock().unwrap_or_else(|e| e.into_inner());
         let set = custom::reskin(&self.home, &model, &worlds, seed, &record).map_err(|e| BackendError(e.0))?;
         let made = custom::custom_catalog(&self.home).into_iter().find(|c| c.custom == set);
-        made.map(|c| c.id).ok_or_else(|| BackendError("The reskinned model could not be read back".into()))
+        made.map(|c| c.id).ok_or_else(|| BackendError("The reskinned model couldn't be read back".into()))
     }
 
     fn kit_items(&self) -> Result<Value> {

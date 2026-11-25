@@ -82,7 +82,7 @@ impl Editor {
         self.redo_stack.clear();
     }
 
-    /// Runs an edit. When it changed the XML, that is one undo step and the entities are built again. `f` returns
+    /// Runs an edit. When it changed the XML, that's one undo step and the entities are built again. `f` returns
     /// the elements to select afterward, or None to keep the selection. True when the level changed.
     pub fn mutate(&mut self, f: impl FnOnce(&mut Editor) -> Option<Vec<NodeId>>) -> bool {
         let before = self.serialize();
@@ -199,7 +199,7 @@ impl Editor {
         self.finish_edit(keys, None, true);
     }
 
-    /// Restores a snapshot. The open puzzle stays open only when it is still the same one.
+    /// Restores a snapshot. The open puzzle stays open only when it's still the same one.
     fn restore_keeping_puzzle(&mut self, xml: &str) {
         let before = self.puzzle_shown().map(|p| self.doc.serialize_node(p));
         let count = self.doc.kids(self.doc.root(), "Puzzle").len();

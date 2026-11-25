@@ -22,7 +22,7 @@ pub fn theme(ctx: &egui::Context) -> &'static Theme {
     ctx.data(|d| d.get_temp::<&'static Theme>(egui::Id::NULL)).unwrap_or(THEMES[0])
 }
 
-/// The bold font's family. It is the text font when the computer has no bold one.
+/// The bold font's family. It's the text font when the computer has no bold one.
 pub fn bold() -> FontFamily {
     FontFamily::Name("bold".into())
 }
@@ -43,7 +43,7 @@ pub fn hex(s: &str) -> Color32 {
     Color32::from_rgb((v >> 16) as u8, (v >> 8) as u8, v as u8)
 }
 
-/// A font file of the computer, when it is there and smaller than 8 MiB.
+/// A font file of the computer, when it's there and smaller than 8 MiB.
 fn system_font(names: &[&str]) -> Option<Vec<u8>> {
     let mut dirs: Vec<std::path::PathBuf> = Vec::new();
     if let Some(win) = std::env::var_os("WINDIR") {
@@ -327,7 +327,7 @@ pub fn row_radius(th: &Theme) -> f32 {
 /// The arrow of a combo box, in the color of its button's text.
 pub fn combo_icon(ui: &Ui, rect: Rect, visuals: &egui::style::WidgetVisuals, open: bool) {
     let th = theme(ui.ctx());
-    // egui hands over the colors of the button's state. The pointer is on the button when they are the lit ones.
+    // egui hands over the colors of the button's state. The pointer is on the button when they're the lit ones.
     let lit = open || visuals.fg_stroke.color == th.hover_text;
     let rect = Rect::from_center_size(rect.center(), egui::vec2(rect.width() * 0.7, rect.height() * 0.45));
     ui.painter().add(egui::Shape::rotated_triangle(rect, 0.0, if lit { th.button_hover.text } else { th.button.text }));
@@ -437,7 +437,7 @@ pub fn spotlight(painter: &egui::Painter, window: Rect, spot: Option<Rect>) {
 pub const POINTER: f32 = 9.0;
 
 /// The bubble of the tour: a box in the colors of the theme's menus, with a pointer whose tip is `tip`. The
-/// pointer leaves the side of the box that is nearest to the tip.
+/// pointer leaves the side of the box that's nearest to the tip.
 pub fn callout(painter: &egui::Painter, rect: Rect, tip: Option<egui::Pos2>) {
     let th = theme(painter.ctx());
     let round = f32::from(th.round);
@@ -470,8 +470,8 @@ pub fn callout(painter: &egui::Painter, rect: Rect, tip: Option<egui::Pos2>) {
     painter.line_segment([point, base + side], edge);
 }
 
-/// Shows a panel's contents in the room the panel has now. The contents cannot make the panel larger: what
-/// does not fit is clipped. A panel's size then comes from its default and from drags on its edge only.
+/// Shows a panel's contents in the room the panel has now. The contents can't make the panel larger: what
+/// doesn't fit is clipped. A panel's size then comes from its default and from drags on its edge only.
 pub fn fixed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
     let rect = ui.available_rect_before_wrap();
     ui.set_min_size(rect.size());
@@ -593,7 +593,7 @@ pub fn divider(ui: &mut Ui) {
     }
 }
 
-/// The name of the app in the theme's logo. Screen readers and tests get the text as it is written.
+/// The name of the app in the theme's logo. Screen readers and tests get the text as it's written.
 pub fn logo(ui: &mut Ui, text: &str, size: f32) -> Response {
     let th = theme(ui.ctx());
     let [front, second, third] = th.logo_colors;
@@ -828,7 +828,7 @@ fn bar_shape(th: &Theme, rect: Rect, text: Rect, rank: Rank) -> egui::Shape {
     egui::Shape::Vec(shapes)
 }
 
-/// Shows `text` in a title bar's letters. Screen readers and tests get the text as it is written.
+/// Shows `text` in a title bar's letters. Screen readers and tests get the text as it's written.
 fn bar_label(ui: &mut Ui, text: &str, size: f32, wrap: bool, rank: Rank) -> Response {
     let label = egui::Label::new(bar_text(theme(ui.ctx()), text, size, rank));
     let r = ui.add(if wrap { label.wrap() } else { label.truncate() });
@@ -912,7 +912,7 @@ pub fn remark(ui: &mut Ui, text: &str) -> Response {
 //
 // Every such text goes through `note`, `note_on`, `card_note`, `para` or `para_on`, or is the second line of
 // `check_line`. The Info texts setting says how they show. A text about the player's own level (a value, a
-// status, a warning) is not a note: it uses `muted` or `remark`.
+// status, a warning) isn't a note: it uses `muted` or `remark`.
 
 /// The key of the Info texts setting in the settings file.
 pub const INFO_SETTING: &str = "info";
@@ -1015,8 +1015,8 @@ pub fn span(ui: &Ui, top: f32) -> Rect {
     Rect::from_min_max(egui::pos2(r.min.x, top.min(r.max.y)), r.max)
 }
 
-/// A note in the state of the Info texts setting. `place` is the thing it explains. Without one it is the
-/// thing `anchor` named last, when that is just over the note.
+/// A note in the state of the Info texts setting. `place` is the thing it explains. Without one it's the
+/// thing `anchor` named last, when that's just over the note.
 fn explain(ui: &mut Ui, text: &str, size: Option<f32>, place: Option<(Rect, Option<(Rect, Color32)>)>) {
     let th = theme(ui.ctx());
     match info(ui.ctx()) {
@@ -1061,7 +1061,7 @@ pub fn note_at(ui: &mut Ui, at: Option<Anchor>, text: &str) {
     explain(ui, text, Some(12.0), at.map(|m| (m.hover, m.cue)));
 }
 
-/// A small note about what is in `hover`. The cue goes under `cue`, in the color of muted text.
+/// A small note about what's in `hover`. The cue goes under `cue`, in the color of muted text.
 pub fn note_on(ui: &mut Ui, hover: Rect, cue: Option<Rect>, text: &str) {
     let color = theme(ui.ctx()).muted;
     explain(ui, text, Some(12.0), Some((hover, cue.map(|c| (c, color)))));
@@ -1072,7 +1072,7 @@ pub fn src_on(ui: &mut Ui, hover: Rect, text: &str) {
     explain(ui, text, Some(11.0), Some((hover, None)));
 }
 
-/// A small note about the whole card it is in. The tooltip is on the card as far as it is drawn, the cue under
+/// A small note about the whole card it is in. The tooltip is on the card as far as it's drawn, the cue under
 /// the card's title.
 pub fn card_note(ui: &mut Ui, text: &str) {
     let title = ui.data(|d| d.get_temp::<(Rect, Color32)>(ui.scope_id().with("card title")));
@@ -1089,7 +1089,7 @@ pub fn para_at(ui: &mut Ui, at: Option<Anchor>, text: &str) {
     explain(ui, text, None, at.map(|m| (m.hover, m.cue)));
 }
 
-/// `para` about what is in `hover`.
+/// `para` about what's in `hover`.
 pub fn para_on(ui: &mut Ui, hover: Rect, cue: Option<Rect>, text: &str) {
     let color = theme(ui.ctx()).muted;
     explain(ui, text, None, Some((hover, cue.map(|c| (c, color)))));
@@ -1175,13 +1175,13 @@ fn menu_of(ui: &mut Ui, b: egui::Button, label: &str, tip: &str, add: impl FnOnc
     }
 }
 
-/// A checkbox: a box in the theme's shape, filled with a check mark when it is on.
+/// A checkbox: a box in the theme's shape, filled with a check mark when it's on.
 pub fn checkbox(ui: &mut Ui, on: &mut bool, text: impl Into<egui::WidgetText>) -> Response {
     let lit = theme(ui.ctx()).check;
     colored_checkbox(ui, on, text.into(), lit)
 }
 
-/// A checkbox whose box takes a color when it is on: a layer of the level list.
+/// A checkbox whose box takes a color when it's on: a layer of the level list.
 pub fn colored_checkbox(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32) -> Response {
     const SIDE: f32 = 14.0;
     let th = theme(ui.ctx());
@@ -1398,7 +1398,7 @@ fn plain_words(title: &str) -> bool {
     !b.windows(2).any(|w| w[0].is_ascii_lowercase() && w[1].is_ascii_uppercase())
 }
 
-/// A titled box: a title bar, then the body. `head` adds the buttons at the bar's right, `body` what is under
+/// A titled box: a title bar, then the body. `head` adds the buttons at the bar's right, `body` what's under
 /// the bar.
 ///
 /// The title wraps in the room the buttons leave. Their width is the one measured in the frame before.
@@ -1457,7 +1457,7 @@ pub fn card<R>(ui: &mut Ui, title: &str, op: Option<&str>, head: impl FnOnce(&mu
 }
 
 /// A one-line text box that hands back its text when the player is done with it (Enter, or the focus leaves) and
-/// the text is not `shown` any more. While it has the focus it keeps what was typed.
+/// the text isn't `shown` any more. While it has the focus it keeps what was typed.
 pub fn commit_text(ui: &mut Ui, id: egui::Id, shown: &str, edit: impl FnOnce(egui::TextEdit) -> egui::TextEdit) -> (Option<String>, Response) {
     commit_number(ui, id, shown, None, edit)
 }

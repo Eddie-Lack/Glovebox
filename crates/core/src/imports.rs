@@ -118,7 +118,7 @@ pub struct Runtime {
 /// What a build has to add for a level's imports.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Plan {
-    /// The imports the level has not loaded, each once, in the order given
+    /// The imports the level hasn't loaded, each once, in the order given
     pub objects: Vec<String>,
     pub target_bank: String,
     /// Each texture the level lacks and the bank it comes from
@@ -127,7 +127,7 @@ pub struct Plan {
     pub object_bytes: u64,
     /// None until a build or `Backend::plan` has set it
     pub tex_bytes: Option<u64>,
-    /// With the game mod: the imported models, which are not in the ROM and are copied
+    /// With the game mod: the imported models, which aren't in the ROM and are copied
     pub copy: Option<CopyPlan>,
     /// With the game mod: the banks it loads
     pub runtime: Option<Runtime>,
@@ -294,10 +294,10 @@ pub fn plan_imports(gd: &GameData, customs: &Customs, sid: &str, imports: &[Stri
     })
 }
 
-/// The plan with the game mod. Imports from the game are not copied into the ROM: the mod loads the banks they come
+/// The plan with the game mod. Imports from the game aren't copied into the ROM: the mod loads the banks they come
 /// from, from the player's own ROM, when the level starts (mod/banks.c). This picks those banks: each model's object
 /// bank, and texture banks for the textures the level's own banks lack, the model's own world first. Imported custom
-/// models are not in the ROM: `copy` is the part of the plan that copies them into the level's banks.
+/// models aren't in the ROM: `copy` is the part of the plan that copies them into the level's banks.
 pub fn plan_runtime(gd: &GameData, customs: &Customs, sid: &str, imports: &[String]) -> Result<Plan, String> {
     let mut plan = plan_imports(gd, customs, sid, imports)?;
     let s = scene(sid).map_err(|e| e.0)?;
@@ -377,7 +377,7 @@ pub fn plan_runtime(gd: &GameData, customs: &Customs, sid: &str, imports: &[Stri
 }
 
 /// The enlarged banks of a build: each region to replace with its new data, not compressed. The game reads a bank
-/// that is not compressed as it reads a compressed one.
+/// that isn't compressed as it reads a compressed one.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ImportBanks {
     pub banks: Vec<(Key, Vec<u8>)>,

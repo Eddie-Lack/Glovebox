@@ -1,4 +1,4 @@
-//! Helpers on the level XML that `Doc` and `pyfmt` do not have: attributes as numbers, object ids as hex text,
+//! Helpers on the level XML that `Doc` and `pyfmt` don't have: attributes as numbers, object ids as hex text,
 //! `%g` formatting, and small ordered attribute lists.
 
 use glovebox_core::pyfmt;
@@ -6,7 +6,7 @@ use glovebox_core::xml::{Doc, NodeId};
 
 pub use glovebox_core::pyfmt::fmt;
 
-/// An attribute as a number. `d` when the node or the attribute is missing. NaN when the text is not a number.
+/// An attribute as a number. `d` when the node or the attribute is missing. NaN when the text isn't a number.
 pub fn num(doc: &Doc, e: Option<NodeId>, a: &str, d: f64) -> f64 {
     match e.and_then(|e| doc.get(e, a)) {
         Some(v) => pyfmt::num(v),
@@ -154,7 +154,7 @@ pub fn body(doc: &Doc, node: NodeId) -> Option<NodeId> {
 }
 
 /// A whole number in any of Python's bases (`pyfmt::parse_int`). Missing or empty text is 0. `None` for text
-/// that is not a number.
+/// that isn't a number.
 pub fn int0(s: Option<&str>) -> Option<i128> {
     match s {
         Some(v) if !v.is_empty() => pyfmt::parse_int(v),
@@ -200,7 +200,7 @@ pub fn float_bits(v: f64) -> String {
     format!("0x{:08X}", (v as f32).to_bits())
 }
 
-/// The float a 32-bit pattern holds. 0.0 when the text is not an integer.
+/// The float a 32-bit pattern holds. 0.0 when the text isn't an integer.
 pub fn float_from_bits(s: Option<&str>) -> f64 {
     match s.and_then(pyfmt::parse_int) {
         Some(v) => f32::from_bits(v as u32) as f64,

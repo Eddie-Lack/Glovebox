@@ -103,7 +103,7 @@ impl Doc {
     pub fn get(&self, id: NodeId, name: &str) -> Option<&str> {
         self.n(id).attrs.iter().find(|(k, _)| k == name).map(|(_, v)| v.as_str())
     }
-    /// The attribute, or "" when it is missing.
+    /// The attribute, or "" when it's missing.
     pub fn attr(&self, id: NodeId, name: &str) -> &str {
         self.get(id, name).unwrap_or("")
     }
@@ -301,7 +301,7 @@ impl Doc {
     }
 
     pub fn parse_bytes(xml: &[u8]) -> Result<Doc, XmlError> {
-        let s = std::str::from_utf8(xml).map_err(|_| XmlError("the XML is not valid UTF-8".into()))?;
+        let s = std::str::from_utf8(xml).map_err(|_| XmlError("the XML isn't valid UTF-8".into()))?;
         Doc::parse(s)
     }
 
@@ -445,7 +445,7 @@ impl<'a> Parser<'a> {
             None => self.err("the XML ends inside a comment or an instruction"),
         }
     }
-    /// Skips a comment. XML does not allow "--" inside one, and lxml refuses it.
+    /// Skips a comment. XML doesn't allow "--" inside one, and lxml refuses it.
     fn skip_comment(&mut self) -> Result<(), XmlError> {
         self.i += 4;
         match self.src[self.i..].find("--") {
@@ -484,7 +484,7 @@ impl<'a> Parser<'a> {
         self.element(&mut doc, None, 0)?;
         self.skip_misc()?;
         if self.i < self.s.len() {
-            return self.err("there is content after the root element");
+            return self.err("there's content after the root element");
         }
         Ok((doc, self.pieces))
     }
@@ -619,7 +619,7 @@ impl<'a> Parser<'a> {
                 }
                 self.skip_ws();
                 if !self.starts(">") {
-                    return self.err("a closing tag is not finished");
+                    return self.err("a closing tag isn't finished");
                 }
                 self.i += 1;
                 break;
@@ -645,7 +645,7 @@ impl<'a> Parser<'a> {
             if c == '&' {
                 let end = match rest.find(';') {
                     Some(e) => e,
-                    None => return self.err("an entity is not finished"),
+                    None => return self.err("an entity isn't finished"),
                 };
                 let ent = &rest[1..end];
                 let ch = match ent {
@@ -664,7 +664,7 @@ impl<'a> Parser<'a> {
                         };
                         match code.and_then(char::from_u32) {
                             Some(c) if c == '\t' || c == '\n' || c == '\r' || c >= ' ' => c,
-                            _ => return self.err("a character reference is not valid"),
+                            _ => return self.err("a character reference isn't valid"),
                         }
                     }
                 };

@@ -2,7 +2,7 @@
 //!
 //! Each letter is a few strokes on a grid 5 wide and 7 high, written below, and drawn into a cell. The table holds
 //! the layout as numbers: advances and cell boxes. They are the measures of Pillow's built-in font at sizes 7 to 10
-//! in 1-bit mode. That font is not copied here.
+//! in 1-bit mode. That font isn't copied here.
 
 use super::image::{Image, Rgba};
 

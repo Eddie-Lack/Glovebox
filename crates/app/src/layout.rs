@@ -3,7 +3,7 @@
 //!
 //! The view is in the middle and takes the room the panels leave. Each side of it has at most one column. A
 //! column holds the panels of its side, tabbed (a row of tabs, one panel shows) or stacked (one under the other,
-//! with a divider to drag). The Checks panel is never a tab: it is the lowest part of its column, or a strip along
+//! with a divider to drag). The Checks panel is never a tab: it's the lowest part of its column, or a strip along
 //! the bottom of the window under the view.
 //!
 //! `Add to level` and `Path` show while their tool is on. In a tabbed column of a wide window they get a column of
@@ -96,7 +96,7 @@ pub const WIDE: f32 = 1560.0;
 pub struct Layout {
     /// The side of each panel, by `PanelId`.
     side: [Side; 5],
-    /// Whether each panel shows. `Add to level` and `Path` follow their tools and are not kept here.
+    /// Whether each panel shows. `Add to level` and `Path` follow their tools and aren't kept here.
     shown: [bool; 5],
     /// How the left and the right side hold their panels.
     mode: [Mode; 2],
@@ -213,7 +213,7 @@ fn sizes_to_text(sizes: &BTreeMap<String, f32>) -> String {
     sizes.iter().map(|(k, v)| format!("{k}:{v:.0}")).collect::<Vec<_>>().join(",")
 }
 
-/// Where the panels were in the last frame. A rectangle is empty when its panel is not in the window.
+/// Where the panels were in the last frame. A rectangle is empty when its panel isn't in the window.
 #[derive(Clone, Copy, Debug)]
 pub struct Panels {
     /// The column with the Level panel.
@@ -347,13 +347,13 @@ impl Window {
         self.front.insert(0, p);
     }
 
-    /// The size the player gave a part, when there is one.
+    /// The size the player gave a part, when there's one.
     fn size(&self, name: &str) -> Option<f32> {
         self.sizes.get(name).copied()
     }
 
     /// Notes the size a part has now. A size that changed while a mouse button was down is a drag on the part's
-    /// edge: it is remembered.
+    /// edge: it's remembered.
     fn keep_size(&mut self, name: &str, now: f32) {
         let before = self.sizes_seen.insert(name.to_string(), now);
         let pressed = self.ctx.input(|i| i.pointer.any_down() || i.pointer.any_released());
@@ -363,7 +363,7 @@ impl Window {
         }
     }
 
-    /// The columns to show: for each side its panels, and a column for the tool panels where there is room.
+    /// The columns to show: for each side its panels, and a column for the tool panels where there's room.
     fn columns(&self, window: f32) -> Vec<Column> {
         let mut cols = Vec::new();
         for side in [Side::Left, Side::Right] {

@@ -2,10 +2,10 @@
 //!
 //! A draft is the edited level XML for one level id plus when it was saved. A file's layout:
 //! `{"id": "0a", "xml": "...", "savedAt": 1700000000.5}`. The caller validates a draft with the same
-//! checks as an imported file before it is used.
+//! checks as an imported file before it's used.
 //!
 //! `info.json` in the same folder holds each level's name, music and bonus clock for the game's level table. They
-//! are not in the level file.
+//! aren't in the level file.
 
 use glovebox_core::pyfmt;
 use serde_json::Value;
@@ -102,7 +102,7 @@ impl Drafts {
         }
     }
 
-    /// Saves a draft. False when the id is not a level id or the folder cannot be written.
+    /// Saves a draft. False when the id isn't a level id or the folder can't be written.
     pub fn save(&self, sid: &str, xml: &str) -> bool {
         self.save_at(sid, xml, now())
     }
@@ -124,7 +124,7 @@ impl Drafts {
         write_atomic(&path, &text).is_ok()
     }
 
-    /// The draft of a level. `None` when there is none or the file is damaged.
+    /// The draft of a level. `None` when there's none or the file is damaged.
     pub fn load(&self, sid: &str) -> Option<Draft> {
         let text = fs::read_to_string(self.path(sid)?).ok()?;
         let r: Value = serde_json::from_str(&text).ok()?;
@@ -183,7 +183,7 @@ impl Drafts {
         self.all_info().into_iter().find(|(k, _)| k == sid).map(|(_, v)| v).unwrap_or_default()
     }
 
-    /// Stores a level's info. Info with nothing set removes the level from the file. False when the folder cannot
+    /// Stores a level's info. Info with nothing set removes the level from the file. False when the folder can't
     /// be written.
     pub fn save_info(&self, sid: &str, info: &LevelInfo) -> bool {
         let mut all = self.all_info();

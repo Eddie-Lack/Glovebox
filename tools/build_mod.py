@@ -4,7 +4,7 @@
     python3 tools/build_mod.py [--gloveworld ../gloveworld]
 
 Needs a built gloveworld checkout: its GCC 2.7.2 (`make toolchain`), its headers and build/NGVE.elf, plus
-mips-linux-gnu binutils. The outputs are committed. Building ROMs does not need any of this.
+mips-linux-gnu binutils. The outputs are committed. Building ROMs doesn't need any of this.
 
 mod/aligned.c, mod/heap.c, mod/transforms.c, mod/banks.c, mod/guard.c and mod/slots.c (SOURCES) are linked at
 MOD_RAM, near the top of the Expansion Pak's memory, against the game's symbols, and are stored in the ROM at MOD_ROM.
@@ -138,7 +138,7 @@ def main():
         if gap and a % need:
             sys.exit("%s is at 0x%08X (%d bytes): it must be %d byte aligned (see docs/technical.md, Real hardware, CPU)" % (n, a, gap, need))
     if MOD_RAM % 16 or (len(blob) + 15) & ~15 > mod["modBssStart"][0] - MOD_RAM:
-        sys.exit("the mod's data does not end before its bss starts")
+        sys.exit("the mod's data doesn't end before its bss starts")
 
     # 2. The hooks: same-size `jal` changes in the game's code
     hooks = []
@@ -160,7 +160,7 @@ def main():
             if not (game["MainProc"][0] <= s < game["MainProc"][0] + game["MainProc"][1])]
     hook(heap, mod["Mod_JallocInit"][0], "JallocInit (heap end at MOD_RAM)")
 
-    # 3. The loader over ScreenShot; it restores the hooks above when there is no Expansion Pak
+    # 3. The loader over ScreenShot; it restores the hooks above when there's no Expansion Pak
     shot_ram, shot_size = game["ScreenShot"]
     loader_ram = (shot_ram + 15) & ~15  # the .text section is 16-byte aligned
     loader_max = shot_ram + shot_size - loader_ram

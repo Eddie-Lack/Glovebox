@@ -28,7 +28,7 @@ def run(emu):
             # gameInfo.mode 13 = "LEVEL UNPLAYABLE" (FindObject, banks.c); message at +0x14 (include/game.h)
             msg = bytes(emu.read(0x801E7530 + 0x14, 0x40)).split(b'\0')[0].decode('ascii', 'replace')
             print('  mode %d message %r' % (emu.r8(0x801E7530), msg), flush=True)
-            # enemies[] (Enemy is 0x300 bytes, Actor first; numberOfEnemies is not needed, unused slots read 0)
+            # enemies[] (Enemy is 0x300 bytes, Actor first; numberOfEnemies isn't needed, unused slots read 0)
             for i in range(int(os.environ.get('ENEMIES', '0'))):
                 base = 0x802996E8 + 0x300 * i + 0x34
                 print('  enemy %d pos %.1f %.1f %.1f' % ((i,) + tuple(emu.rf(base + 4 * k) for k in range(3))), flush=True)

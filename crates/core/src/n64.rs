@@ -85,7 +85,7 @@ pub fn write_bytes(data: &mut [u8], offset: usize, bytes: &[u8]) -> Result<(), O
 }
 
 /// The ROM in big-endian byte order (.z64), from any of the three dump formats. None when the first four bytes are
-/// not an N64 header in one of those orders, or the length does not fit the order.
+/// not an N64 header in one of those orders, or the length doesn't fit the order.
 pub fn to_z64(rom: &[u8]) -> Option<Vec<u8>> {
     let head = rom.get(..4)?;
     if head == [0x80, 0x37, 0x12, 0x40] {
@@ -123,7 +123,7 @@ pub fn is_supported_rom(z64: &[u8]) -> bool {
     sha1_hex(z64) == ROM_SHA1
 }
 
-/// Why a file is not the ROM the editor supports.
+/// Why a file isn't the ROM the editor supports.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RomFileError {
     /// Not .z64, .v64 or .n64.
@@ -135,10 +135,10 @@ pub enum RomFileError {
 impl std::fmt::Display for RomFileError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            RomFileError::NotN64 => write!(f, "That file is not a Nintendo 64 ROM (.z64, .v64 or .n64)."),
+            RomFileError::NotN64 => write!(f, "That file isn't a Nintendo 64 ROM (.z64, .v64 or .n64)."),
             RomFileError::WrongRom(sha) => write!(
                 f,
-                "That ROM is not the one the editor supports. It needs Glover (USA), with SHA-1 {} once in .z64 byte \
+                "That ROM isn't the one the editor supports. It needs Glover (USA), with SHA-1 {} once in .z64 byte \
                  order. This one's is {}.",
                 ROM_SHA1, sha
             ),
@@ -158,7 +158,7 @@ pub fn supported_rom(file: &[u8]) -> Result<Vec<u8>, RomFileError> {
     Ok(rom)
 }
 
-/// The boot code (CIC chip number) of a .z64 ROM, from the CRC-32 of 0x40 to 0x1000. None when it is not a known one.
+/// The boot code (CIC chip number) of a .z64 ROM, from the CRC-32 of 0x40 to 0x1000. None when it isn't a known one.
 pub fn identify_cic(rom: &[u8]) -> Option<u16> {
     let boot = rom.get(HEADER_SIZE..0x1000)?;
     match crc32fast::hash(boot) {

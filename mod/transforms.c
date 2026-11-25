@@ -136,7 +136,7 @@ static void ResolvePending(void) {
             }
             break;
         case KIND_PICKUP:
-            /* Pickup types 7 and 9 are not created (parse.c) */
+            /* Pickup types 7 and 9 aren't created (parse.c) */
             if (collectableList.count > pickupCount) {
                 curActor = &collectableList.head.next->actor;
             }

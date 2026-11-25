@@ -3,10 +3,10 @@
 //! `entities::build` reads the XML into entities. This module makes the nodes each entity draws, puts them where
 //! the XML says (`place_ent`), turns spinning platforms (`animate`) and hides layers (`apply_visibility`).
 //!
-//! The faint fill of a trigger volume is in the world. It is not pickable and changes no box.
+//! The faint fill of a trigger volume is in the world. It isn't pickable and changes no box.
 //!
 //! A platform with a SetExit also gets the sphere the game tests for the exit (`exit_nodes`). Like a trigger's fill
-//! it is in the world next to the entity's node: a click goes through it, and it is in no box.
+//! it's in the world next to the entity's node: a click goes through it, and it's in no box.
 
 use super::{Editor, Event};
 use crate::entities::{self, camera_zone, water_volume, zone_camera, Binding, EntId, Look, Xform, Zone};
@@ -26,7 +26,7 @@ use std::sync::Arc;
 pub struct EntNodes {
     /// The node the entity draws and is picked by.
     pub obj: NodeId,
-    /// More to draw that is not picked: a water volume, a platform's path, a trigger's fill.
+    /// More to draw that isn't picked: a water volume, a platform's path, a trigger's fill.
     pub extra: Option<NodeId>,
     /// A camera zone's line to where its camera stands, and whether the zone has one.
     pub marks: Option<NodeId>,
@@ -108,7 +108,7 @@ impl Editor {
         self.graph.sprite_node(s)
     }
 
-    /// Puts the model of `oid` under `obj`, or a placeholder box when there is none.
+    /// Puts the model of `oid` under `obj`, or a placeholder box when there's none.
     fn attach_model(&mut self, i: EntId, obj: NodeId, oid: Option<&str>, scale: f64, water: bool, decorative: bool) -> Option<usize> {
         let model = oid.and_then(|o| self.load_model(o));
         let Some(model) = model else {
@@ -283,8 +283,8 @@ impl Editor {
         group
     }
 
-    /// Puts an exit's sphere where the game tests it, at the radius the game gives it. Returns whether there is a
-    /// sphere to draw: a radius of 0, a model the editor cannot measure, and an exit that tests no distance (type
+    /// Puts an exit's sphere where the game tests it, at the radius the game gives it. Returns whether there's a
+    /// sphere to draw: a radius of 0, a model the editor can't measure, and an exit that tests no distance (type
     /// 3) draw nothing.
     fn place_exit(&mut self, i: EntId, n: &EntNodes) -> bool {
         let Some(node) = n.exit else { return false };
@@ -459,7 +459,7 @@ impl Editor {
         marks_on
     }
 
-    /// Moves an entity's nodes to where the XML now has it, and the nodes of the entity it is a handle of.
+    /// Moves an entity's nodes to where the XML now has it, and the nodes of the entity it's a handle of.
     pub fn place_ent(&mut self, i: EntId) {
         self.place_one(i);
         if let Some(o) = self.entities[i].owner {
@@ -509,7 +509,7 @@ impl Editor {
         }
     }
 
-    /// One frame of the motion preview, when it is on.
+    /// One frame of the motion preview, when it's on.
     pub fn animate_at(&mut self, now: f64) {
         if self.preview {
             self.animate(now - self.preview_t0);

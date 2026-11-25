@@ -46,7 +46,7 @@ fn budget(ui: &mut egui::Ui, text: &str, ratio: f64, warning: &str, small: &str,
         ui.set_width(ui.available_width());
         ui.label(text);
         style::meter(ui, ratio as f32, over);
-        // What is over the budget is about this level and always shows. How the budget is measured is a note.
+        // What's over the budget is about this level and always shows. How the budget is measured is a note.
         if !warning.is_empty() {
             style::src(ui, warning);
         }

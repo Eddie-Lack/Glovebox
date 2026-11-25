@@ -87,12 +87,12 @@ pub fn manifest(name: &str, level_index: usize) -> Result<Vec<u8>, String> {
 /// XML was made for, whose model and texture banks the game loads with it.
 ///
 /// A level that rotates or scales an enemy, a platform, a powerup or water is refused (`level::needs_mod`). On the
-/// console only the game mod applies `SetActorRotation` and `SetActorScale` to them, and g64coopdx does not.
+/// console only the game mod applies `SetActorRotation` and `SetActorScale` to them, and g64coopdx doesn't.
 pub fn make_pack(name: &str, level_index: usize, xml: &[u8]) -> Result<LevelPack, String> {
     let manifest = manifest(name, level_index)?;
     let (lev, needs_mod) = level::assemble_xml(xml).map_err(|e| e.to_string())?;
     if needs_mod {
-        return Err("This level uses features of the console's game mod, which g64coopdx does not have yet. A level pack cannot hold it".into());
+        return Err("This level uses features of the console's game mod, which g64coopdx doesn't have yet. A level pack can't hold it".into());
     }
     check_level(&lev)?;
     let id = pack_id(&manifest, &lev, None, None);
@@ -106,7 +106,7 @@ pub fn check_level(lev: &[u8]) -> Result<(), String> {
     }
     let size = u32::from_be_bytes([lev[0], lev[1], lev[2], lev[3]]) as usize;
     if size != lev.len() {
-        return Err("The level file does not start with its own size".into());
+        return Err("The level file doesn't start with its own size".into());
     }
     Ok(())
 }
@@ -131,7 +131,7 @@ pub const NOT_RETAIL_OBJECTS: [u8; 2] = [0, 1];
 /// - 12: the numbers of those texture banks, then of those object banks, one byte each.
 /// - Zeros up to the next multiple of 8, then the texture bank, then the object bank.
 ///
-/// Both of the pack's banks are empty or neither is. Each is a multiple of 8 bytes, and together they are at most
+/// Both of the pack's banks are empty or neither is. Each is a multiple of 8 bytes, and together they're at most
 /// `MODELS_MAX`. A file with no banks of its own names at least one of the game's.
 pub fn models_bin(first: bool, retail_textures: &[u8], retail_objects: &[u8], textures: &[u8], objects: &[u8]) -> Result<Vec<u8>, String> {
     if textures.is_empty() != objects.is_empty() {
@@ -149,17 +149,17 @@ pub fn models_bin(first: bool, retail_textures: &[u8], retail_objects: &[u8], te
     }
     if retail_textures.len() > RETAIL_MAX || retail_objects.len() > RETAIL_MAX {
         return Err(format!(
-            "The level needs {} texture banks and {} object banks of the game's that it does not load itself. A level pack names at most {} of each",
+            "The level needs {} texture banks and {} object banks of the game's that it doesn't load itself. A level pack names at most {} of each",
             retail_textures.len(),
             retail_objects.len(),
             RETAIL_MAX
         ));
     }
     if let Some(n) = retail_textures.iter().find(|n| NOT_RETAIL_TEXTURES.contains(n)) {
-        return Err(format!("A level pack cannot name texture bank {n}: every level loads the font and generic texture banks"));
+        return Err(format!("A level pack can't name texture bank {n}: every level loads the font and generic texture banks"));
     }
     if let Some(n) = retail_objects.iter().find(|n| NOT_RETAIL_OBJECTS.contains(n)) {
-        return Err(format!("A level pack cannot name object bank {n}: every level loads object banks 0 and 1"));
+        return Err(format!("A level pack can't name object bank {n}: every level loads object banks 0 and 1"));
     }
     for list in [retail_textures, retail_objects] {
         let unique: BTreeSet<&u8> = list.iter().collect();
@@ -257,7 +257,7 @@ pub fn export(gd: &GameData, customs: &Customs, sid: &str, name: &str, xml: &[u8
 /// g64coopdx's game reads a sprite's texture with no test. A sprite whose texture is in no loaded bank crashes it.
 /// So g64coopdx refuses a pack that names an object bank of the game's whose sprites need a texture from no bank the
 /// level has (`g64_pack_check_retail_sprites` in its src/client/packrom.c). It checks every object of the bank, also
-/// the ones the level does not place. The banks it counts are the font's, GENERIC, the level's own and the texture
+/// the ones the level doesn't place. The banks it counts are the font's, GENERIC, the level's own and the texture
 /// banks that `models.bin` names.
 ///
 /// The banks this adds come after the ones the plan has. The texture banks of the levels that load the object bank
@@ -308,7 +308,7 @@ fn add_sprite_banks(gd: &GameData, scene: &crate::gamedata::Scene, runtime: &mut
         if !need.is_empty() {
             let list: Vec<String> = need.iter().map(|id| hex(*id)).collect();
             return Err(format!(
-                "The game's object bank {obj} has sprites with textures {} that no texture bank has. A level pack cannot use models from it",
+                "The game's object bank {obj} has sprites with textures {} that no texture bank has. A level pack can't use models from it",
                 list.join(", ")
             ));
         }
@@ -342,11 +342,11 @@ pub fn pack_models(plan: &Plan, customs: &Customs, refs: &[(u32, u32)]) -> Resul
     let mut pieces: Vec<crate::custom::Piece> = Vec::new();
     let mut sets: Vec<&str> = Vec::new();
     for oid in copied {
-        let c = customs.get(oid).ok_or_else(|| format!("Object {oid} is not an imported model"))?;
-        let id = crate::gamedata::parse_id(oid).ok_or_else(|| format!("{oid} is not an object id"))?;
+        let c = customs.get(oid).ok_or_else(|| format!("Object {oid} isn't an imported model"))?;
+        let id = crate::gamedata::parse_id(oid).ok_or_else(|| format!("{oid} isn't an object id"))?;
         if c.reskin_from.is_some() {
             return Err(format!(
-                "{} is a copy of one of the game's models with other textures. A level pack cannot hold it: it holds the game's own data",
+                "{} is a copy of one of the game's models with other textures. A level pack can't hold it: it holds the game's own data",
                 c.name
             ));
         }
@@ -371,7 +371,7 @@ pub fn pack_models(plan: &Plan, customs: &Customs, refs: &[(u32, u32)]) -> Resul
                 ));
             }
         }
-        let textures = c.textures.iter().map(|t| crate::gamedata::parse_id(t).ok_or_else(|| format!("{t} is not a texture id")));
+        let textures = c.textures.iter().map(|t| crate::gamedata::parse_id(t).ok_or_else(|| format!("{t} isn't a texture id")));
         pieces.push(crate::custom::Piece {
             id,
             name: c.piece.clone(),
@@ -412,7 +412,7 @@ impl LevelPack {
         }
     }
 
-    /// Writes the pack's files into `dir`, which is made if it is not there, and returns the folder's pack id.
+    /// Writes the pack's files into `dir`, which is made if it isn't there, and returns the folder's pack id.
     /// g64coopdx finds `models.bin` by its presence, so an old one is removed when the pack has none. Glovebox
     /// writes no `script.lua`, but it keeps one that the folder has. The returned id counts that script, as
     /// g64coopdx does, so it can differ from `self.id`.

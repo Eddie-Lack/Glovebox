@@ -1,5 +1,5 @@
 //! Puzzles: what each condition and action does, in plain words, the order a puzzle's children go in, and the
-//! checks the format cannot make (gloveworld src/puzzle.c and src/parse.c).
+//! checks the format can't make (gloveworld src/puzzle.c and src/parse.c).
 //!
 //! How the game runs a puzzle: every frame, CheckPuzzles tests each puzzle's conditions. When they hold and the
 //! puzzle has firings left (PuzzleNumtimes; none means every frame), each action starts its wait (activation_delay,
@@ -134,7 +134,7 @@ pub const ENEMY_TAG: &[i128] = &[33, 60, 67];
 /// activation_delay is an s16 in the game.
 pub const DELAY_MAX: i64 = 32767;
 
-/// The body element a cond_type or action_type takes (the Default body for codes the format does not name).
+/// The body element a cond_type or action_type takes (the Default body for codes the format doesn't name).
 /// `kind` is "PuzzleCond" or "PuzzleAction".
 pub fn body_tag(fmt_: &Format, kind: &str, code: i128) -> String {
     match fmt_.switch_case(kind, code) {
@@ -206,7 +206,7 @@ pub fn insert(doc: &mut Doc, puzzle: NodeId, child: NodeId) -> NodeId {
     child
 }
 
-/// The cond_type or action_type of a part. -1 when it is not a number.
+/// The cond_type or action_type of a part. -1 when it isn't a number.
 pub fn code(doc: &Doc, node: NodeId, attr: &str) -> i128 {
     int0(doc.get(node, attr)).unwrap_or(-1)
 }
@@ -404,7 +404,7 @@ pub fn rules(doc: &Doc, root: NodeId, fmt_: &Format) -> Vec<Rule> {
             (num0(doc, *e, "puzzle_tag"), doc.kids(*e, "NormalInstructions").iter().map(|g| doc.len(*g)).sum::<usize>())
         })
         .collect();
-    // True when a platform with this tag does not have the part
+    // True when a platform with this tag doesn't have the part
     let lacks = |tag: f64, part: Part| {
         by_tag.iter().any(|(t, p)| *t == tag && !doc.children(*p).iter().any(|c| part.made_by(doc.tag(*c))))
     };
@@ -554,7 +554,7 @@ pub fn rules(doc: &Doc, root: NodeId, fmt_: &Format) -> Vec<Rule> {
                     add(
                         ":aplatneg".into(),
                         format!(
-                            "Start a path platform with the tag {}: the game moves the first platform with the tag {}, and crashes when there is none.",
+                            "Start a path platform with the tag {}: the game moves the first platform with the tag {}, and crashes when there's none.",
                             fmt_g(v),
                             fmt_g(-v)
                         ),

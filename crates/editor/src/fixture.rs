@@ -476,7 +476,7 @@ impl Backend for FixtureBackend {
     }
 
     /// A pack as the game's back end makes it. The fixture's plan names its made-up bank 9 for every model the
-    /// level does not load, and the fixture has no imported models to put in the pack's own banks.
+    /// level doesn't load, and the fixture has no imported models to put in the pack's own banks.
     fn level_pack(&self, sid: &str, xml: &str, name: &str) -> Result<pack::LevelPack> {
         let index = usize::from_str_radix(sid, 16).map_err(|_| BackendError(format!("no level {sid}")))?;
         let mut p = pack::make_pack(name, index, xml.as_bytes())?;

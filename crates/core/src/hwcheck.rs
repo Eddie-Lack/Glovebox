@@ -1,10 +1,10 @@
-//! Checks a built ROM against the rules of real N64 hardware, which an emulator does not enforce. The
+//! Checks a built ROM against the rules of real N64 hardware, which an emulator doesn't enforce. The
 //! reference tests hold the findings and their texts.
 //!
 //! `check_rom` returns a list of problems (empty: all fine). The mod patcher runs it on every ROM it builds and
 //! refuses a ROM with a problem. The rules (docs/technical.md, "Real hardware"):
 //!
-//! - The header holds the CRCs of the first megabyte of code. The boot code of a console does not start a ROM whose
+//! - The header holds the CRCs of the first megabyte of code. The boot code of a console doesn't start a ROM whose
 //!   CRCs are wrong.
 //! - The ROM is a whole number of mebibytes, and everything the mod reads from it lies inside it.
 //! - Every DMA the mod makes from the ROM starts at a multiple of 16 and has a length that is a multiple of 16.
@@ -46,7 +46,7 @@ fn check_texture_bank(data: &[u8], label: &str, problems: &mut Vec<String>) {
         let size = read_u32(data, pos + 20).unwrap_or(0);
         if size < 0x24 || size % 8 != 0 {
             problems.push(format!(
-                "{}: texture {} has size {}: not a multiple of 8, so the pixels of the next one are not on a 64 bit boundary",
+                "{}: texture {} has size {}: not a multiple of 8, so the pixels of the next one aren't on a 64 bit boundary",
                 label, i, size
             ));
             return;
@@ -208,7 +208,7 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
         }
     };
     if mod_rom % 16 != 0 || mod_size % 16 != 0 || mod_rom.saturating_add(mod_size) > len {
-        problems.push(format!("the mod (ROM 0x{:X}, {} bytes) is not 16 byte aligned or is not inside the ROM", mod_rom, mod_size));
+        problems.push(format!("the mod (ROM 0x{:X}, {} bytes) isn't 16 byte aligned or isn't inside the ROM", mod_rom, mod_size));
     }
     if let Some(symbols) = info.get("hw_symbols").and_then(Value::as_object) {
         for (name, addr) in symbols {
@@ -218,7 +218,7 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
         }
     }
     if mod_ram % 16 != 0 || mod_end > 0x80800000 {
-        problems.push("the mod does not fit in RAM below 0x80800000".to_string());
+        problems.push("the mod doesn't fit in RAM below 0x80800000".to_string());
     }
     for h in info["hooks"].as_array().map(Vec::as_slice).unwrap_or(&[]) {
         let why = h["why"].as_str().unwrap_or("");
@@ -234,7 +234,7 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
             None => false,
         };
         if !ok {
-            problems.push(format!("hook at {} is not a jal to {} ({})", ram, if loader { "the loader" } else { "a word inside the mod" }, why));
+            problems.push(format!("hook at {} isn't a jal to {} ({})", ram, if loader { "the loader" } else { "a word inside the mod" }, why));
         }
     }
     let at = |offset: u64| usize::try_from(mod_rom.saturating_add(offset)).unwrap_or(usize::MAX);
@@ -268,7 +268,7 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
                 if end > rom.len() {
                     problems.push(format!("{}: the DMA of {} bytes runs past the end of the ROM", label, end - r));
                 } else if rom[r + size..end].iter().any(|&b| b != 0) {
-                    problems.push(format!("{}: the padding after the file is not zero", label));
+                    problems.push(format!("{}: the padding after the file isn't zero", label));
                 }
             }
         }
@@ -309,7 +309,7 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
 }
 
 /// Breaks a good ROM in the ways that the rules name and says, for each break, whether `check_rom` finds it. The ROM
-/// must have the mod's custom banks. An error when it is too short to break.
+/// must have the mod's custom banks. An error when it's too short to break.
 pub fn self_test(rom: &[u8]) -> Result<Vec<(&'static str, bool)>, n64::OutOfBounds> {
     self_test_with(rom, tables::mod_info())
 }
@@ -394,14 +394,14 @@ mod tests {
         put(&mut d, 4 + 0x28 + 20, 0x28);
         assert!(tex(&d).is_empty());
         put(&mut d, 4 + 0x28 + 20, 0x2C);
-        assert_eq!(tex(&d), ["T: texture 1 has size 44: not a multiple of 8, so the pixels of the next one are not on a 64 bit boundary"]);
+        assert_eq!(tex(&d), ["T: texture 1 has size 44: not a multiple of 8, so the pixels of the next one aren't on a 64 bit boundary"]);
         put(&mut d, 4 + 0x28 + 20, 0x30);
         assert_eq!(tex(&d), ["T: the textures run past the end of the bank"]);
         put(&mut d, 0, 3);
         put(&mut d, 4 + 0x28 + 20, 0x28);
         assert_eq!(tex(&d), ["T: texture 2 starts past the end of the bank"]);
         put(&mut d, 4 + 20, 0x20);
-        assert_eq!(tex(&d)[0], "T: texture 0 has size 32: not a multiple of 8, so the pixels of the next one are not on a 64 bit boundary");
+        assert_eq!(tex(&d)[0], "T: texture 0 has size 32: not a multiple of 8, so the pixels of the next one aren't on a 64 bit boundary");
     }
 
     /// A bank with one entry, one instance at 0x10 and one object at 0x40 with a mesh at 0x80.
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn an_empty_rom_of_the_right_size() {
-        // 16 MiB of zeros with the right CRCs: the mod is not there, so only its tables are skipped
+        // 16 MiB of zeros with the right CRCs: the mod isn't there, so only its tables are skipped
         let mut rom = vec![0u8; 0x1000000];
         n64::fix_header_crc(&mut rom).unwrap();
         assert!(check_rom(&rom).is_empty());

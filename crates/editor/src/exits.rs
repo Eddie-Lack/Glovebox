@@ -75,7 +75,7 @@ fn flag_name(doc: &Doc, child: NodeId) -> Option<&'static str> {
     }
 }
 
-/// The radius the game gives a platform, and why when it is 0. `verts` are the vertices that the faces of the
+/// The radius the game gives a platform, and why when it's 0. `verts` are the vertices that the faces of the
 /// model's root mesh use (`Backend::root_vertices`).
 ///
 /// It walks the platform's commands in the order of the level file, as the game's parser does:
@@ -201,7 +201,7 @@ pub fn rule(exit_type: i64, level: i64) -> Rule {
         }
     }
     if door {
-        notes.push("A ball that Glover does not hold is popped when it comes within the radius. The game keeps it for his return.");
+        notes.push("A ball that Glover doesn't hold is popped when it comes within the radius. The game keeps it for his return.");
     }
     Rule { who, notes }
 }
@@ -247,7 +247,7 @@ mod tests {
         // A scale after the position is drawn, and the radius keeps the size of scale 1
         let after = of(&format!(r#"<Platform object_id="0x1">{POS}{scale}{SOLID}</Platform>"#));
         assert_eq!(after, plain);
-        // The first path point measures; PlatScale after it is not read at all
+        // The first path point measures; PlatScale after it isn't read at all
         let path = r#"<PlatPathPoint duration="1" x="0" y="0" z="0"/>"#;
         assert_eq!(of(&format!(r#"<Platform object_id="0x1">{scale}{path}{path}</Platform>"#)), before);
         assert_eq!(of(&format!(r#"<Platform object_id="0x1">{path}{scale}{POS}</Platform>"#)), plain);

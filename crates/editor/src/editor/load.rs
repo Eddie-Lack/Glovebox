@@ -104,7 +104,7 @@ pub struct PlanJob {
 pub struct PlanResult {
     pub sid: String,
     pub serial: u64,
-    /// None when the back end could not plan.
+    /// None when the back end couldn't plan.
     pub plan: Option<Plan>,
 }
 
@@ -255,7 +255,7 @@ impl Editor {
     pub fn apply_level(&mut self, data: LevelData) -> Result<(), String> {
         self.flush_draft(); // finish saving the level we're leaving
         let sid = data.sid.as_str();
-        let row = self.scene_row(sid).cloned().ok_or_else(|| format!("There is no level {}", sid))?;
+        let row = self.scene_row(sid).cloned().ok_or_else(|| format!("There's no level {}", sid))?;
         let doc = Doc::parse(&data.xml).map_err(|e| e.0)?;
         self.scene = Some(row);
         self.puzzle_index = None;
@@ -293,7 +293,7 @@ impl Editor {
                 }
                 None => {
                     let why = res.errors.first().cloned().unwrap_or_default();
-                    restored = Some((format!("An autosave for this level failed validation and was not loaded ({}).", why), "err"));
+                    restored = Some((format!("An autosave for this level failed validation and wasn't loaded ({}).", why), "err"));
                 }
             }
         }
@@ -335,7 +335,7 @@ impl Editor {
 
     // -----------------------------------------------------------------------------------------------------------
     // Import XML: the window reads the file and checks it with `sanitize_level_xml`. Only after it passes does it
-    // replace the level, as an undoable edit that is then autosaved.
+    // replace the level, as an undoable edit that's then autosaved.
 
     pub fn confirm_import(&mut self, res: &SanitizeResult) {
         let Some(root) = res.root.as_ref().filter(|_| res.ok) else { return };

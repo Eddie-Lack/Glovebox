@@ -72,7 +72,7 @@ fn data_uri(uri: &str) -> Option<Vec<u8>> {
     base64(uri.split_once(',')?.1)
 }
 
-/// A whole number field. JSON numbers with a fraction do not count.
+/// A whole number field. JSON numbers with a fraction don't count.
 fn int(v: &Value, key: &str) -> Option<i64> {
     let n = v.get(key)?;
     n.as_i64().or_else(|| n.as_f64().filter(|f| f.fract() == 0.0 && f.abs() < 9e15).map(|f| f as i64))

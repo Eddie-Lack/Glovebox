@@ -358,7 +358,7 @@ pub struct Rom {
 }
 
 impl Rom {
-    /// Splits a ROM in .z64 byte order. An error when it does not hold what the map of the retail ROM says.
+    /// Splits a ROM in .z64 byte order. An error when it doesn't hold what the map of the retail ROM says.
     pub fn parse(rom: &[u8]) -> Result<Rom, RomError> {
         let checksum = n64::stored_crc(rom)?;
         let mut regions = Vec::new();

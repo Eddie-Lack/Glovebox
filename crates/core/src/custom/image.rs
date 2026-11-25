@@ -82,7 +82,7 @@ fn decode_png(data: &[u8]) -> Result<Rgba, String> {
             let step = if info.color_type == ColorType::Grayscale { 2 } else { 4 };
             buf.chunks_exact(step).flat_map(|p| [if p[0] != 0 { 255 } else { p[1] }; 3].into_iter().chain([255])).collect()
         }
-        _ => return Err("the image has a format that is not supported".into()),
+        _ => return Err("the image has a format that isn't supported".into()),
     };
     if let Some(key) = key {
         // Pillow packs the transparent color into one number without cutting each part to 8 bits, and a pixel

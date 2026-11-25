@@ -2,7 +2,7 @@
 //! glyph, as a 64 by 64 texture for a sprite.
 //!
 //! The glyphs are shapes drawn by this module (stars, a heart, a hand, a note and so on). The icons look the same
-//! on every computer. Letters, digits, '?' and '!' use the kit's stroke font. A glyph this module does not know is
+//! on every computer. Letters, digits, '?' and '!' use the kit's stroke font. A glyph this module doesn't know is
 //! drawn as a dot.
 
 use glovebox_core::kit::font;

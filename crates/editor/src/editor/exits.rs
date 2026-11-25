@@ -13,7 +13,7 @@ pub struct ExitTrigger {
     pub exit_type: i64,
     /// The platform's position. For a platform that moves, where it starts.
     pub center: V3,
-    /// The radius of the sphere. None when the editor does not have the model's vertices.
+    /// The radius of the sphere. None when the editor doesn't have the model's vertices.
     pub radius: Option<f64>,
     /// Why the radius is 0.
     pub zero: Option<Zero>,

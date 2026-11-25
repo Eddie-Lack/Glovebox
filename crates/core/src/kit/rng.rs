@@ -14,7 +14,7 @@ pub struct Random {
 }
 
 impl Random {
-    /// `random.Random(seed)` for a whole number that is not negative.
+    /// `random.Random(seed)` for a whole number that isn't negative.
     pub fn new(seed: u64) -> Random {
         // CPython passes the number as 32 bit words, lowest first, to init_by_array.
         let mut key = vec![seed as u32];
@@ -138,7 +138,7 @@ pub fn hypot(x: f64, y: f64) -> f64 {
     let bits = max.to_bits();
     let raw = ((bits >> 52) & 0x7ff) as i32;
     if raw == 0 {
-        // A subnormal largest value does not happen in the kit. The C library's answer is close enough.
+        // A subnormal largest value doesn't happen in the kit. The C library's answer is close enough.
         return x.hypot(y);
     }
     let e = raw - 1022;

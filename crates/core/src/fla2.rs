@@ -70,7 +70,7 @@ pub fn decompress(src: &[u8]) -> Result<Vec<u8>, Fla2Error> {
     }
 }
 
-/// A bank's data: decompressed when it is an FLA2 stream, as it is otherwise.
+/// A bank's data: decompressed when it's an FLA2 stream, as it is otherwise.
 pub fn data(src: &[u8]) -> Result<Vec<u8>, Fla2Error> {
     if src.len() >= 4 && &src[..4] == MAGIC {
         decompress(src)

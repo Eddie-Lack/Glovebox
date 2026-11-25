@@ -16,7 +16,7 @@ fn main() {
     let out = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap_or_default());
     let ico = out.join("glovebox.ico");
     if let Err(e) = std::fs::write(&ico, icon::ico()) {
-        println!("cargo:warning=the icon could not be written: {e}");
+        println!("cargo:warning=the icon couldn't be written: {e}");
         return;
     }
     // Windows wants four numbers
@@ -33,6 +33,6 @@ fn main() {
     res.set_version_info(winresource::VersionInfo::PRODUCTVERSION, packed);
     res.set_version_info(winresource::VersionInfo::FILEVERSION, packed);
     if let Err(e) = res.compile() {
-        println!("cargo:warning=the icon and version were not written into the program: {e}");
+        println!("cargo:warning=the icon and version weren't written into the program: {e}");
     }
 }

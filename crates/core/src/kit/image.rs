@@ -89,7 +89,7 @@ impl Image {
         }
     }
 
-    // Pillow's line of width 1. The last point is not drawn.
+    // Pillow's line of width 1. The last point isn't drawn.
     fn line1(&mut self, mut x0: i32, mut y0: i32, x1: i32, y1: i32, c: Rgba) {
         let mut dy = y1 - y0;
         let ys = if dy < 0 { -1 } else { 1 };
@@ -417,7 +417,7 @@ impl Image {
                 data.extend_from_slice(&p[..n]);
             }
             data.resize(self.w.max(1) * self.h.max(1) * n, 0);
-            // Writing to a Vec cannot fail, and the header and data sizes agree.
+            // Writing to a Vec can't fail, and the header and data sizes agree.
             if let Ok(mut wr) = enc.write_header() {
                 let _ = wr.write_image_data(&data);
             }

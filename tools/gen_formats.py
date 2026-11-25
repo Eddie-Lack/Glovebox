@@ -4,7 +4,7 @@
     python3 tools/gen_formats.py            write the file
     python3 tools/gen_formats.py --check    fail when the file is out of date
 
-The editor does not read .ksy files. It compiles in the JSON this tool writes. Run the tool after a change to
+The editor doesn't read .ksy files. It compiles in the JSON this tool writes. Run the tool after a change to
 formats/glover.lev.ksy, and commit both files. It needs PyYAML.
 
 formats/glover.lev.ksy is libgarib's description of the level file (github.com/naclomi/libgarib, commit cf87929, MIT
@@ -109,7 +109,7 @@ def convert(ksy):
             pairs = []
             for value, name in members.items():
                 if not isinstance(value, int) or not isinstance(name, str):
-                    die("enum %s::%s: %r: %r is not an integer and a name" % (type_name, enum_name, value, name))
+                    die("enum %s::%s: %r: %r isn't an integer and a name" % (type_name, enum_name, value, name))
                 pairs.append([name, value])
             if len({p[0] for p in pairs}) != len(pairs):
                 die("enum %s::%s has a name twice" % (type_name, enum_name))
@@ -155,7 +155,7 @@ def convert(ksy):
                     elif isinstance(code, int):
                         cases.append([code, case_type])
                     else:
-                        die("type %s field %s: case %r is not an integer" % (type_name, fid, code))
+                        die("type %s field %s: case %r isn't an integer" % (type_name, fid, code))
                 field.update({"type": "switch", "on": on, "cases": cases, "default": default})
             elif ftype in PRIMITIVES:
                 field["type"] = ftype
@@ -194,9 +194,9 @@ def convert(ksy):
         if t["groups_into"] is not None:
             # libgarib's schema generator refuses other shapes
             if len(t["fields"]) != 1 or t["fields"][0]["type"] != "struct":
-                die("type %s groups into an element but is not one struct field" % t["id"])
+                die("type %s groups into an element but isn't one struct field" % t["id"])
         elif t["id"] != "cmd" and any(f["type"] == "struct" for f in t["fields"]):
-            die("type %s has a struct field outside a group; level.rs does not check that shape" % t["id"])
+            die("type %s has a struct field outside a group; level.rs doesn't check that shape" % t["id"])
 
         for f in t["fields"]:
             # libgarib pads or cuts a string given for a struct of a known size. No such struct exists today.
@@ -227,7 +227,7 @@ def build():
         upstream = upstream.replace(ours, theirs)
     upstream_sha1 = hashlib.sha1(upstream.encode("utf-8")).hexdigest()
     if upstream_sha1 != UPSTREAM_SHA1:
-        die("undoing Glovebox's change does not give libgarib's file (SHA-1 %s). A change to the format other than\n"
+        die("undoing Glovebox's change doesn't give libgarib's file (SHA-1 %s). A change to the format other than\n"
             "the nesting rules in UNDO also changes what a .lev file reads as. Update UNDO, or decide on a new\n"
             "data-format-version and change this check." % upstream_sha1)
 

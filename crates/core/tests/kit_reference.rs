@@ -1,13 +1,13 @@
 //! Compares the kit with the reference dumps in `$GLOVEBOX_REFERENCE/kit/dump`. Skipped when `GLOVEBOX_REFERENCE`
-//! is not set.
+//! isn't set.
 //!
 //! Geometry must be equal bit for bit, as float64 in the soup and as float32 in the GLB. Textures without words must
 //! be equal pixel for pixel. Textures with words differ in the letters only, because the kit draws its own font.
 //!
 //! The pumpkin's texturing was corrected after the recordings were made. The recorded pumpkin wraps the face
-//! texture three times around the body and relies on a clamp that the game does not have. The pumpkin now has the
+//! texture three times around the body and relies on a clamp that the game doesn't have. The pumpkin now has the
 //! face on its four front columns and a third texture, plain skin, on the other eight. For the pumpkin cases the
-//! test compares what did not change: the settings, the label, every position and normal, the stem's and the face
+//! test compares what didn't change: the settings, the label, every position and normal, the stem's and the face
 //! columns' texture coordinates, and the face and stem textures. It skips the skin triangles' texture and
 //! coordinates, the texture count, the GLB and the preview. Every other item is compared in full.
 
@@ -19,7 +19,7 @@ fn dump() -> Option<PathBuf> {
     match std::env::var("GLOVEBOX_REFERENCE") {
         Ok(p) => Some(PathBuf::from(p).join("kit").join("dump")),
         Err(_) => {
-            println!("skipped: GLOVEBOX_REFERENCE is not set");
+            println!("skipped: GLOVEBOX_REFERENCE isn't set");
             None
         }
     }
@@ -181,7 +181,7 @@ fn every_case_matches_the_reference() {
             }
             let want = r.u32();
             if reskinned {
-                assert_eq!(want, 0, "{name}: triangle {i} was not on the face texture");
+                assert_eq!(want, 0, "{name}: triangle {i} wasn't on the face texture");
             } else {
                 assert_eq!(t.mat as u32, want, "{name}: triangle {i} material");
             }
@@ -241,7 +241,7 @@ fn every_case_matches_the_reference() {
         for (k, im) in pj["images"].as_array().unwrap().iter().enumerate() {
             let bv = im["bufferView"].as_u64().unwrap();
             let mine = decode_png(view(&rj, &rbin, bv));
-            assert!(mine == soup.mats[used[k]], "{name}: glb picture {k} is not the soup's texture");
+            assert!(mine == soup.mats[used[k]], "{name}: glb picture {k} isn't the soup's texture");
             let d = differ(&mine, &decode_png(view(&pj, &pbin, bv)));
             assert!(if has_words(used[k]) { d <= 6.0 } else { d == 0.0 }, "{name}: glb picture {k} differs in {d:.2}%");
         }

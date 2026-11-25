@@ -27,7 +27,7 @@ pub struct LevelEntry {
     /// Object ids the level uses from other banks
     pub imports: Vec<String>,
     pub info: Option<Info>,
-    /// An extra level: it is stored behind the game mod in its Space slot and loads when the player comes in
+    /// An extra level: it's stored behind the game mod in its Space slot and loads when the player comes in
     /// through the entry zone (mod/slots.c). Only the slots 35, 36, 37, 38 and 41 take one. 39 and 40 have fixed
     /// game code.
     pub extra: bool,
@@ -116,7 +116,7 @@ pub fn build_levels(
             let info = e.info.clone().unwrap_or_default();
             let default_name: String = s.name.to_uppercase().chars().take(39).collect();
             let song = match info.song {
-                Some(n) => Some(u8::try_from(n).map_err(|_| format!("Song {n} is not a number from 0 to 255"))?),
+                Some(n) => Some(u8::try_from(n).map_err(|_| format!("Song {n} isn't a number from 0 to 255"))?),
                 None => None,
             };
             let slot = SlotLevel {
@@ -127,7 +127,7 @@ pub fn build_levels(
             };
             slots.insert(s.index as i64, slot);
         } else {
-            rom.replace_level(s.index, &e.lev).map_err(|err| format!("Could not build the ROM: {}", err.0))?;
+            rom.replace_level(s.index, &e.lev).map_err(|err| format!("Couldn't build the ROM: {}", err.0))?;
         }
         let (mut plan, runtime) = if with_mod && !copy {
             (plan_runtime(gd, customs, &e.sid, &e.imports)?, true)
@@ -170,7 +170,7 @@ pub fn build_levels(
         }
         plans.push((if e.extra { format!("x{}", e.sid) } else { e.sid.clone() }, plan));
     }
-    let failed = |err: crate::rom::RomError| format!("Could not build the ROM: {}", err.0);
+    let failed = |err: crate::rom::RomError| format!("Couldn't build the ROM: {}", err.0);
     let boot_extra = matches!(quickboot, Some(Quickboot::Extra(_)));
     if let Some(Quickboot::Level(q) | Quickboot::Extra(q)) = quickboot {
         let index = scene(q).map_err(|err| err.0)?.index;
@@ -185,7 +185,7 @@ pub fn build_levels(
         let slots = Slots { levels: slots, boot: boot_extra, entry_hub: entry.hub, entry_tag: entry.tag };
         let slots = (!slots.levels.is_empty()).then_some(&slots);
         out = modpatch::apply_mod(&out, Some(&extra), None, slots)
-            .map_err(|err| format!("Could not add the Expansion Pak game mod: {}", err.0))?;
+            .map_err(|err| format!("Couldn't add the Expansion Pak game mod: {}", err.0))?;
     }
     let mut rows: Vec<(i64, LevelInfo)> = Vec::new();
     for e in levels {
@@ -196,17 +196,17 @@ pub fn build_levels(
     }
     if !rows.is_empty() {
         out = modpatch::apply_level_info(&out, &rows)
-            .map_err(|err| format!("Could not set the level's name, music or clock: {}", err.0))?;
+            .map_err(|err| format!("Couldn't set the level's name, music or clock: {}", err.0))?;
     }
     // Every built ROM, and so every patch, walks the ball with Easy's controls (not inverted). This also recomputes
     // the header checksum.
-    let out = modpatch::apply_easy_controls(&out).map_err(|err| format!("Could not set Easy's controls: {}", err.0))?;
+    let out = modpatch::apply_easy_controls(&out).map_err(|err| format!("Couldn't set Easy's controls: {}", err.0))?;
     Ok((out, plans))
 }
 
 fn bonus(time: Option<i64>) -> Result<Option<i16>, String> {
     match time {
-        Some(t) => i16::try_from(t).map(Some).map_err(|_| format!("A bonus clock of {t} seconds does not fit the level table")),
+        Some(t) => i16::try_from(t).map(Some).map_err(|_| format!("A bonus clock of {t} seconds doesn't fit the level table")),
         None => Ok(None),
     }
 }
@@ -223,7 +223,7 @@ pub struct BuildRequest {
     pub format: String,
     pub quickboot: bool,
     pub imports: Vec<String>,
-    /// Build with the Expansion Pak game mod even when the level does not need it
+    /// Build with the Expansion Pak game mod even when the level doesn't need it
     pub expansion: bool,
     /// Copy imported models into the level's banks even with the mod
     pub copy: bool,

@@ -140,7 +140,7 @@ pub struct TypeDef {
     /// The element that collects runs of this command ("NormalInstructions"). Such a type has one struct field,
     /// and the XML holds that struct's element in place of the command's own.
     pub group_tag: Option<String>,
-    /// The command's code when it is a top-level command.
+    /// The command's code when it's a top-level command.
     pub opcode: Option<u32>,
     // The nesting rules libgarib's reader was made with. They differ from `declares` and `modifies`: see
     // tools/gen_formats.py.
@@ -221,7 +221,7 @@ impl Format {
         }
     }
     /// The element names that may sit inside an element after its switch child, in any order and number.
-    /// For `Level` these are the top-level tags. For a group element it is the one element it collects.
+    /// For `Level` these are the top-level tags. For a group element it's the one element it collects.
     pub fn valid_children(&self, tag: &str) -> Vec<&str> {
         if tag == "Level" {
             return self.top_level.iter().map(|s| s.as_str()).collect();
@@ -641,7 +641,7 @@ pub fn commands(lev: &[u8]) -> Result<Vec<(u32, usize)>, LevelError> {
         let code = u16::from_be_bytes([lev[start], lev[start + 1]]) as u32;
         out.push((code, start + 2));
         // The game stops at EndLevelData. The bytes after it pad the file to a multiple of 8, and their count can be
-        // odd, so they are not read as commands.
+        // odd, so they aren't read as commands.
         if Some(code) == f.opcode("EndLevelData") {
             break;
         }
@@ -739,7 +739,7 @@ impl<'a> Assembler<'a> {
         }
     }
 
-    /// libgarib's `prepareConstructDict`: the element's fields as values. A field that is not an attribute takes
+    /// libgarib's `prepareConstructDict`: the element's fields as values. A field that isn't an attribute takes
     /// the next element of the document, whatever it is.
     fn prepare(&mut self, node: NodeId, depth: usize) -> Result<(usize, Value), LevelError> {
         if depth > 64 {
@@ -1014,7 +1014,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// Attributes: all of `required`, and nothing else. Text: none. Namespace declarations with a prefix are not
+    /// Attributes: all of `required`, and nothing else. Text: none. Namespace declarations with a prefix aren't
     /// attributes for a schema.
     fn attributes(&mut self, node: NodeId, required: &[&str]) {
         let doc = self.doc;
@@ -1115,7 +1115,7 @@ impl<'a> Checker<'a> {
 }
 
 /// Checks the tree's structure as libgarib's RelaxNG schema does: which element sits where, and which attributes
-/// each one has. Values are not checked, apart from the code of a switch. Returns at most `MAX_MESSAGES` messages;
+/// each one has. Values aren't checked, apart from the code of a switch. Returns at most `MAX_MESSAGES` messages;
 /// an empty list means the tree is valid.
 pub fn validate(doc: &Doc) -> Vec<String> {
     let f = format();
@@ -1173,7 +1173,7 @@ fn forbidden(xml: &[u8]) -> bool {
 }
 
 /// Reads level XML from an untrusted source. Refuses more than 8 MB, a DOCTYPE, entities, stylesheets and
-/// XInclude, XML that is not well-formed, and a root that is not `<Level>`.
+/// XInclude, XML that isn't well-formed, and a root that isn't `<Level>`.
 pub fn parse_level_xml(xml: &[u8]) -> Result<Doc, LevelError> {
     if xml.len() > MAX_XML {
         return err(format!("Level XML is larger than {} MB", MAX_XML >> 20));
@@ -1224,7 +1224,7 @@ mod tests {
         }
         // PlatNoClip
         b.extend_from_slice(&[0x00, 0x64]);
-        // GloverSpawnPoint, which does not close the platform
+        // GloverSpawnPoint, which doesn't close the platform
         b.extend_from_slice(&[0x00, 0x01]);
         for v in [0.0f32, 1e-5, 3e10] {
             b.extend_from_slice(&be(v));
@@ -1305,7 +1305,7 @@ mod tests {
         assert!(disassemble(b"\0\0\0\x08NAME").is_err());
         // A level without commands: libgarib fails on it
         assert!(disassemble(b"\0\0\0\x08N\0\0\0").is_err());
-        // Text that is not ASCII
+        // Text that isn't ASCII
         let mut bad = lev.clone();
         bad[18] = 0xE9;
         assert!(disassemble(&bad).is_err());
@@ -1339,11 +1339,11 @@ mod tests {
         assert!(spin("w").is_err());
         assert!(spin("65536").is_err());
         assert!(spin("-1").is_err());
-        // Out of range, and a number that is not an integer
+        // Out of range, and a number that isn't an integer
         assert!(one("<AmbientLight r=\"65536\" g=\"0\" b=\"0\"/>").is_err());
         assert!(one("<AmbientLight r=\"1.0\" g=\"0\" b=\"0\"/>").is_err());
         assert!(one("<AmbientLight r=\"\" g=\"0\" b=\"0\"/>").is_err());
-        // Floats: an integer in hex is not a float; too large for 32 bits is an error; infinity is not
+        // Floats: an integer in hex isn't a float; too large for 32 bits is an error; infinity isn't
         assert!(one("<SetGravity strength=\"0x10\"/>").is_err());
         assert!(one("<SetGravity strength=\"1e39\"/>").is_err());
         assert_eq!(one("<SetGravity strength=\"inf\"/>").unwrap()[2..6], [0x7F, 0x80, 0, 0]);
@@ -1407,11 +1407,11 @@ mod tests {
         let back = disassemble(&lev).unwrap();
         assert!(back.serialize().contains("<NormalInstructions><EnemyInstruction instr_type=\"4\" lifetime=\"-1\""));
         assert!(back.serialize().contains("flags=\"face_player\" execution_condition=\"always\""));
-        // The code may be left out when the child stands for one code; libgarib takes that, the schema does not.
+        // The code may be left out when the child stands for one code; libgarib takes that, the schema doesn't.
         let without = level(&body.replace("instr_type=\"4\" ", ""));
         assert_eq!(assemble(&without).unwrap(), lev);
         assert!(!validate(&without).is_empty());
-        // A code that does not go with the child
+        // A code that doesn't go with the child
         let wrong = level(&body.replace("instr_type=\"4\"", "instr_type=\"5\""));
         assert!(!validate(&wrong).is_empty());
         let hex = level(&body.replace("instr_type=\"4\"", "instr_type=\"0x004\""));
@@ -1456,7 +1456,7 @@ mod tests {
         for body in cases {
             assert!(!validate(&level(body)).is_empty(), "{}", body);
         }
-        // What the schema takes although the assembler does not, and an unused namespace prefix
+        // What the schema takes although the assembler doesn't, and an unused namespace prefix
         for body in ["<Unknown/>", "<NormalInstructions/>", "<PlatNoClip xmlns:a=\"urn:x\"/>", "<PlatNoClip/><Noop/>"] {
             assert!(validate(&level(body)).is_empty(), "{}", body);
         }

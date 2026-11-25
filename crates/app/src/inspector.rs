@@ -1,4 +1,4 @@
-//! The inspector: what is selected, with its number fields, its commands and their fields, an enemy's script, a
+//! The inspector: what's selected, with its number fields, its commands and their fields, an enemy's script, a
 //! puzzle's conditions and actions, a camera zone's settings, and the level's settings when nothing is selected.
 
 use crate::app::{with_format, Act, Window};
@@ -133,7 +133,7 @@ fn row<R>(ui: &mut egui::Ui, name: &str, add: impl FnOnce(&mut egui::Ui) -> R) -
     r.inner.1
 }
 
-/// A field the game does not keep for this object: its name, and why as a note.
+/// A field the game doesn't keep for this object: its name, and why as a note.
 fn absent(ui: &mut egui::Ui, name: &str, why: &str) {
     if style::info(ui.ctx()) == style::Info::Shown {
         fieldname(ui, name);
@@ -844,7 +844,7 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 card_note(ui, "The game tests no distance for this exit type. The view draws no sphere.");
             }
             (_, None) => {
-                card_note(ui, "The editor does not have this model's vertices. It cannot tell the size, and draws no sphere.");
+                card_note(ui, "The editor doesn't have this model's vertices. It can't tell the size, and draws no sphere.");
             }
             (_, Some(r)) if r > 0.0 => {
                 card_note(ui, "The exit fires when the center comes closer to the platform's position than the radius: the sphere in the view. The game measures the radius once, on the model at the scale it has when the position is read.");
@@ -854,7 +854,7 @@ fn exit_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
                 check_line(ui, "err", &format!("The radius is 0. This exit can never fire. {why}"), false, None, None, None);
             }
         }
-        // What else the game asks of this exit. On hover it is one tooltip.
+        // What else the game asks of this exit. On hover it's one tooltip.
         if style::info(ui.ctx()) == style::Info::Shown {
             for n in &t.rule.notes {
                 card_note(ui, n);

@@ -128,7 +128,7 @@ pub const STORE: usize = 0x20000;
 // Easy's controls and the level table
 
 /// Ball walking (ProcessInput, gloveworld src/controller.c): on Medium and Hard the stick pushes the ball the other
-/// way from Easy. A `bnez` skips Easy's branch when the save slot's difficulty is not Easy. A nop in its place gives
+/// way from Easy. A `bnez` skips Easy's branch when the save slot's difficulty isn't Easy. A nop in its place gives
 /// every difficulty Easy's direction. Nothing else about the difficulty changes.
 const EASY_CONTROLS_ROM: usize = 0x3A6D0;
 const EASY_CONTROLS_RAM: &str = "0x801396D0";
@@ -153,7 +153,7 @@ pub struct LevelInfo {
 fn fix_crc(out: &mut [u8]) -> Result<(), ModError> {
     match n64::identify_cic(out) {
         Some(6101) | Some(6102) => {}
-        _ => return err("the ROM does not have the boot code of the retail Glover (USA) ROM"),
+        _ => return err("the ROM doesn't have the boot code of the retail Glover (USA) ROM"),
     }
     n64::fix_header_crc(out).map(|_| ()).or_else(|_| err("the ROM is too short to hold the game's code"))
 }
@@ -230,7 +230,7 @@ pub fn custom_table(entries: &BTreeMap<u8, CustomBanks>, base: usize, size: usiz
     out.extend_from_slice(&0x43555331u32.to_be_bytes());
     out.extend_from_slice(&(entries.len() as u32).to_be_bytes());
     let mut store = Vec::new();
-    let address = |n: usize| u32::try_from(n).or_else(|_| err("the custom banks do not fit in a ROM"));
+    let address = |n: usize| u32::try_from(n).or_else(|_| err("the custom banks don't fit in a ROM"));
     for (&key, banks) in entries {
         let ts = base + store.len();
         store.extend_from_slice(&banks.textures);
@@ -379,7 +379,7 @@ pub fn apply_mod_with(
             }
             let lev = &d.lev;
             if n64::read_u32(lev, 0).ok().map(|n| n as usize) != Some(lev.len()) || lev.len() % 4 != 0 {
-                return err(format!("the level file of slot {} is not in the game's size-prefixed format", slot));
+                return err(format!("the level file of slot {} isn't in the game's size-prefixed format", slot));
             }
             if lev.len() > MAX_LEVEL_FILE {
                 return err(format!("the level file of slot {} is {} KiB; the mod reads 256 KiB at most", slot, lev.len() / 1024));

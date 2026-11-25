@@ -55,7 +55,7 @@ pub const MATRICES: i64 = 256;
 // Measured in the emulator: the shipped hub 1 asks for 228 at its fountain, and a hub
 // built with the editor lagged on a console at 206 to 228. The estimate was within 35 of the game's count in four
 // levels, and up to 63 over in hub 1. Shipped levels pass both limits (hub 1's estimate is 261). A level gets the
-// warning or the error only when it is busier than the shipped one.
+// warning or the error only when it's busier than the shipped one.
 pub const LOAD_SLOW: i64 = 190;
 pub const LOAD_STOP: i64 = 240;
 /// Glover, the ball, their shadows and footprints.
@@ -333,7 +333,7 @@ pub struct Editor {
     pub(crate) icon_cache: HashMap<(String, String), Arc<Texture>>,
     pub(crate) shapes: HashMap<&'static str, Arc<Geometry>>,
     pub(crate) drag: Option<Drag>,
-    /// The level's XML when a number field's drag began. While it is set, edits add no undo step.
+    /// The level's XML when a number field's drag began. While it's set, edits add no undo step.
     pub(crate) scrub: Option<String>,
     pub(crate) events: Vec<Event>,
     pub(crate) draft_pending: Option<(String, String)>,
@@ -599,7 +599,7 @@ impl Editor {
         node
     }
 
-    /// Replaces the level with a snapshot. False when the text is not XML: the level then stays as it is.
+    /// Replaces the level with a snapshot. False when the text isn't XML: the level then stays as it is.
     pub fn restore(&mut self, xml: &str) -> bool {
         match Doc::parse(xml) {
             Ok(d) => {

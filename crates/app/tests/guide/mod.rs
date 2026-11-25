@@ -132,7 +132,7 @@ impl Pic {
     }
 
     /// Saves the picture as a PNG with a palette of at most 256 colors. The colors the window uses most (its
-    /// flat grounds and its text) keep their exact values. The rest, the shades of the 3D view, share what is left.
+    /// flat grounds and its text) keep their exact values. The rest, the shades of the 3D view, share what's left.
     pub fn save(&self, path: &std::path::Path) {
         let mut count: HashMap<[u8; 3], u32> = HashMap::new();
         for p in self.px.chunks_exact(3) {
@@ -295,7 +295,7 @@ impl G {
         r
     }
 
-    /// The open dialog: it is in the middle of the window, from over its first line to under its buttons.
+    /// The open dialog: it's in the middle of the window, from over its first line to under its buttons.
     fn dialog(&mut self, first: &str, last: &str) -> egui::Rect {
         let s = self.size();
         let top = self.t.find(first, false).iter().map(|n| n.rect().min.y).fold(f32::INFINITY, f32::min);

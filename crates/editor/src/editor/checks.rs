@@ -433,7 +433,7 @@ impl Editor {
     /// Imports are loaded from the player's ROM at run time by the game mod (mod/banks.c), unless the author
     /// chooses to copy them into the level's banks. Copied imports put game data in patches. They work without the
     /// Expansion Pak when they fit in the game's own heap (`needs_pak_heap`). Imported custom models are always
-    /// copied: they are not in the player's ROM.
+    /// copied: they aren't in the player's ROM.
     pub fn runtime_imports(&self) -> bool {
         self.current_imports().iter().any(|i| !self.is_custom(i)) && !self.copy_imports
     }
@@ -562,7 +562,7 @@ impl Editor {
             out.push((
                 "imp",
                 format!(
-                    "Model {} comes from {}; it is imported into {} at ROM build ({:.1} KB).",
+                    "Model {} comes from {}; it's imported into {} at ROM build ({:.1} KB).",
                     oid.unwrap_or(""),
                     c.bank,
                     self.scene_str("importObjectBank"),
@@ -678,7 +678,7 @@ impl Editor {
                 Check::new(
                     "note",
                     format!(
-                        "{}That is more than the game's own heap has, so Build ROM and Export patch add the Expansion Pak game mod: about {} KB stays free with it. The ROM then needs the Expansion Pak.",
+                        "{}That's more than the game's own heap has, so Build ROM and Export patch add the Expansion Pak game mod: about {} KB stays free with it. The ROM then needs the Expansion Pak.",
                         text,
                         kb(sb.free_pak)
                     ),
@@ -812,7 +812,7 @@ impl Editor {
             let d = num0(&self.doc, fog, "fog_distance");
             if d >= 1000.0 {
                 let msg = format!(
-                    "Fog: fog_distance is {}. It is where the fog starts on the game's 0 to 1000 scale (gSPFogPosition) and must stay under 1000.",
+                    "Fog: fog_distance is {}. It's where the fog starts on the game's 0 to 1000 scale (gSPFogPosition) and must stay under 1000.",
                     fmt_g(d)
                 );
                 out.push(Check::new("err", msg).click(Click::Select(None)));
@@ -821,7 +821,7 @@ impl Editor {
         let dl = self.draw_load();
         let (n, Some(at)) = dl.worst else { return out };
         // Shipped levels reach these numbers too: the estimate says 261 for hub 1. A level warns or fails only when
-        // it is busier than the shipped level.
+        // it's busier than the shipped level.
         let orig = self.orig_xml.as_ref().and_then(|x| self.orig_load.as_ref().filter(|(o, _)| o == x)).map(|(_, n)| *n);
         let busier = orig.is_none_or(|o| n > o);
         let level = if n >= LOAD_STOP && busier {
@@ -901,7 +901,7 @@ impl Editor {
     // Imports and the memory budget. Imports are derived from the XML and never stored separately. Undo, redo and
     // XML export always match what the ROM build adds.
 
-    /// The models the level uses from banks it does not load, each once, in level order.
+    /// The models the level uses from banks it doesn't load, each once, in level order.
     pub fn current_imports(&self) -> Vec<String> {
         let mut ids: Vec<String> = Vec::new();
         for e in &self.entities {
@@ -920,7 +920,7 @@ impl Editor {
         PlanJob { backend: self.backend.clone(), sid: self.scene_id().to_string(), ids, serial: self.plan_serial }
     }
 
-    /// Asks for the import plan again. With `delays` it is worked out in the background, a moment later.
+    /// Asks for the import plan again. With `delays` it's worked out in the background, a moment later.
     pub fn schedule_import_plan(&mut self) {
         let ids = self.current_imports();
         self.plan_pending = None;

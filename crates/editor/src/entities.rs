@@ -38,7 +38,7 @@ pub fn kind_color(kind: &str) -> &'static str {
     KINDS.iter().find(|k| k.0 == kind).map(|k| k.2).unwrap_or("#ffffff")
 }
 
-// Why some objects cannot rotate or scale: each reason is a fact about the level format or the game code.
+// Why some objects can't rotate or scale: each reason is a fact about the level format or the game code.
 pub const WHY_NO_ORIENTATION: &str = "No orientation in the level format. In a group rotation it moves around the pivot.";
 pub const WHY_SPRITE: &str = "Garibs, Mr. Tip and the start markers are flat sprites or points in the game. They have no rotation or size to set. In a group rotation they move around the pivot.";
 pub const WHY_NO_SCALE: &str = "No size in the level format.";
@@ -91,7 +91,7 @@ fn set_xyz(doc: &mut Doc, e: NodeId, v: V3) {
     }
 }
 
-/// Sets a child's x, y and z. A missing child is not added for the value that changes nothing.
+/// Sets a child's x, y and z. A missing child isn't added for the value that changes nothing.
 fn set_child_xyz(doc: &mut Doc, node: NodeId, tag: &str, v: V3, identity: f64) {
     let c = doc.first(node, tag);
     if c.is_none() && (0..3).all(|i| (v[i] - identity).abs() < 1e-6) {
@@ -112,7 +112,7 @@ pub fn set_child_scale(doc: &mut Doc, node: NodeId, v: V3) {
     set_child_xyz(doc, node, "SetActorScale", v, 1.0)
 }
 
-/// A spin's axis as 0, 1 or 2. A value the format does not know reads as y (the checks report it).
+/// A spin's axis as 0, 1 or 2. A value the format doesn't know reads as y (the checks report it).
 pub fn axis_index(doc: &Doc, spin: NodeId) -> usize {
     match doc.get(spin, "axis") {
         Some("x") => 0,
@@ -477,7 +477,7 @@ pub struct Ent {
     /// How it turns and scales: "xyz", "box" or nothing.
     pub rot: Option<&'static str>,
     pub scl: Option<&'static str>,
-    /// Why it cannot turn or scale, or what the rotation and the scale are stored as.
+    /// Why it can't turn or scale, or what the rotation and the scale are stored as.
     pub why_rot: Option<&'static str>,
     pub why_scl: Option<&'static str>,
     pub xform: Option<Xform>,
@@ -488,7 +488,7 @@ pub struct Ent {
     pub object_id: Option<String>,
     /// The model is in the catalog and not in the banks the level loads.
     pub imported: bool,
-    /// The level names a model the editor does not have. The renderer also sets it when a model fails to load.
+    /// The level names a model the editor doesn't have. The renderer also sets it when a model fails to load.
     pub missing_model: bool,
     /// A handle on a part of another entity (a path point, a buzzer end), and that entity.
     pub is_handle: bool,
@@ -993,7 +993,7 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             }
             "Powerup" => {
                 let v = num0(doc, node, "type");
-                // A type that is not a number reads as type 0.
+                // A type that isn't a number reads as type 0.
                 let t = if v.is_finite() { v.trunc() as i64 } else { 0 };
                 let name = decomp_enum_name(cx.format.decomp, "Pickup", Some(t)).filter(|n| !n.is_empty());
                 let mut ent = Ent::new("pickup", node, tag, Look::Start).why(WHY_ROT_PICKUP, WHY_SCALE_PICKUP);
@@ -1139,7 +1139,7 @@ pub fn cam_action(t: i64) -> Option<&'static str> {
 /// A camera zone's settings. A missing one is `None`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Zone {
-    /// The zone's box. `None` only in settings that were not read from a puzzle.
+    /// The zone's box. `None` only in settings that weren't read from a puzzle.
     pub vol: Option<NodeId>,
     pub look: Option<f64>,
     pub speed: Option<f64>,
@@ -1231,7 +1231,7 @@ pub const CAM_PRESETS: [(&str, &str, &str); 8] = [
 ];
 
 /// The settings of a preset, for a player who walks the way `facing` points (radians about y, 0 along +z). Angles
-/// are from the camera to Glover. `None` for a key that is not a preset.
+/// are from the camera to Glover. `None` for a key that isn't a preset.
 pub fn preset_zone(key: &str, facing: f64, center: V3) -> Option<Zone> {
     let z = |look: Option<f64>, speed: Option<f64>, distance: Option<f64>, height: Option<f64>| Zone {
         vol: None,

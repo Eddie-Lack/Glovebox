@@ -100,7 +100,7 @@ impl Bits<'_> {
                 };
             }
         }
-        bad("a Huffman code is not in its table")
+        bad("a Huffman code isn't in its table")
     }
 
     /// Steps over a restart marker.
@@ -192,7 +192,7 @@ pub fn decode(data: &[u8], check: &dyn Fn(u64, u64) -> Res<()>) -> Res<(usize, u
         pos += len;
         match marker {
             0xC0..=0xC2 => d.frame(seg, marker == 0xC2, check)?,
-            0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF => return Err("this kind of JPEG file is not supported".into()),
+            0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF => return Err("this kind of JPEG file isn't supported".into()),
             0xC4 => d.huffman(seg)?,
             0xDB => d.quant_tables(seg)?,
             0xDD => d.restart = be16(seg, 0)?,
@@ -225,7 +225,7 @@ impl Decoder {
         (self.height, self.width) = (be16(seg, 1)?, be16(seg, 3)?);
         let count = seg[5] as usize;
         if count == 4 {
-            return Err("CMYK JPEG files are not supported".into());
+            return Err("CMYK JPEG files aren't supported".into());
         }
         if (count != 1 && count != 3) || seg.len() < 6 + count * 3 {
             return bad("the frame has a bad number of components");
@@ -609,11 +609,11 @@ fn idct(coefs: &[i16], q: &[u16; 64]) -> [u8; 64] {
 }
 
 /// A component's plane at the picture's size, as libjpeg's upsampler makes it. The plane has `cw` by `ch` samples
-/// of picture data in rows of `stride`. `fx` and `fy` are how many times it is enlarged.
+/// of picture data in rows of `stride`. `fx` and `fy` are how many times it's enlarged.
 #[allow(clippy::too_many_arguments)]
 fn upsample(plane: &[u8], stride: usize, cw: usize, ch: usize, fx: usize, fy: usize, odd: usize, w: usize, h: usize) -> Res<Vec<u8>> {
     if odd != 0 {
-        return Err("JPEG files with fractional sampling are not supported".into());
+        return Err("JPEG files with fractional sampling aren't supported".into());
     }
     let row = |y: usize| &plane[y * stride..y * stride + cw];
     // The rows after enlarging down: each one from its row and, for the smooth kinds, the row next to it

@@ -1,4 +1,4 @@
-//! The application: the setup screen or the editor's window, and what the window does that is not one panel's
+//! The application: the setup screen or the editor's window, and what the window does that isn't one panel's
 //! own: starting, opening levels, the editor's events, builds, Test level and the keyboard.
 
 use crate::dialogs::{Dialog, FileDialogs};
@@ -70,7 +70,7 @@ impl App {
     }
 }
 
-/// Opens the ROM copy of the user folder. The error is None when there is no copy yet.
+/// Opens the ROM copy of the user folder. The error is None when there's no copy yet.
 fn open_rom(home: &Path) -> Result<Arc<dyn Backend>, Option<String>> {
     let rom = shell::rom_path(home);
     if !rom.is_file() {
@@ -165,7 +165,7 @@ pub struct Window {
     pub(crate) sizes_dirty: bool,
     /// The sizes of the last frame.
     pub(crate) sizes_seen: BTreeMap<String, f32>,
-    /// Counts the resets of the layout. It is part of the panels' ids.
+    /// Counts the resets of the layout. It's part of the panels' ids.
     pub(crate) layout_gen: u32,
     /// The welcome and the tour.
     pub tour: tour::State,
@@ -325,7 +325,7 @@ impl Window {
         );
     }
 
-    /// Opens a level, then runs `then` when it is the open level.
+    /// Opens a level, then runs `then` when it's the open level.
     pub fn load_scene_then(&mut self, sid: &str, then: Act) {
         if self.busy {
             return;
@@ -483,7 +483,7 @@ impl Window {
                         w.reload_catalog();
                         w.ed.place_custom(s(&meta, "set"), as_, None);
                     }
-                    Err(e) => w.set_status(&format!("Could not make {}: {e}", name.to_lowercase()), "err"),
+                    Err(e) => w.set_status(&format!("Couldn't make {}: {e}", name.to_lowercase()), "err"),
                 }
             },
         );
@@ -511,14 +511,14 @@ impl Window {
                 w.loading.clear();
                 let new = match res {
                     Ok(n) => n,
-                    Err(e) => return w.set_status(&format!("Could not make a new look: {e}"), "err"),
+                    Err(e) => return w.set_status(&format!("Couldn't make a new look: {e}"), "err"),
                 };
                 w.reload_catalog();
                 // The level may have changed while the job ran (undo, another level): find the piece again
                 let ed = &mut w.ed;
                 let node = if ed.scene_id() == sid { ed.doc.node_at(&wher) } else { None };
                 let Some(node) = node.filter(|n| ed.doc.get(*n, "object_id").map(str::to_string) == had) else {
-                    return ed.set_status("The new look is ready, but the piece changed meanwhile. It is listed with your imported models.", "");
+                    return ed.set_status("The new look is ready, but the piece changed meanwhile. It's listed with your imported models.", "");
                 };
                 let piece = ed.catalog.get(&new).and_then(|c| c.custom.as_ref()).map(|c| c.piece.clone()).filter(|p| !p.is_empty());
                 let name: String = piece.unwrap_or_else(|| ed.doc.attr(node, "name").to_string()).chars().take(7).collect();
@@ -527,7 +527,7 @@ impl Window {
                     ed.doc.set(node, "name", &name);
                 });
                 let titles: Vec<String> = worlds.iter().map(|x| title_case(x)).collect();
-                ed.set_status(&format!("The model now has textures from {}. It is copied into the level's banks at ROM build.", titles.join(", ")), "ok");
+                ed.set_status(&format!("The model now has textures from {}. It's copied into the level's banks at ROM build.", titles.join(", ")), "ok");
             },
         );
     }
@@ -970,7 +970,7 @@ pub fn title_case(s: &str) -> String {
     out
 }
 
-/// The entry of the catalog for an id, when there is one.
+/// The entry of the catalog for an id, when there's one.
 pub fn cat<'a>(ed: &'a Editor, oid: &str) -> Option<&'a CatalogEntry> {
     ed.catalog.get(oid)
 }

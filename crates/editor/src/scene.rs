@@ -1,6 +1,6 @@
 //! A small scene graph for the 3D view: nodes with transforms, and the meshes, lines and sprites they draw.
 //!
-//! It is plain data. The renderer in the app crate draws it. This module also finds what a ray hits (picking, the ground under a
+//! It's plain data. The renderer in the app crate draws it. This module also finds what a ray hits (picking, the ground under a
 //! point) and the boxes around things, on the CPU. Transforms and picking use `f64`. Vertex data is `f32`.
 //!
 //! Its shape:
@@ -40,7 +40,7 @@ pub struct Geometry {
 }
 
 impl Geometry {
-    /// Triangles that name a vertex the geometry does not have are dropped.
+    /// Triangles that name a vertex the geometry doesn't have are dropped.
     pub fn new(positions: Vec<[f32; 3]>, indices: Option<Vec<[u32; 3]>>) -> Geometry {
         let mut bounds = Box3::new();
         for p in &positions {
@@ -60,7 +60,7 @@ impl Geometry {
         Geometry::new(pos, indices.map(|i| i.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect()))
     }
 
-    /// Attributes whose length is not the vertex count are left out.
+    /// Attributes whose length isn't the vertex count are left out.
     pub fn with(mut self, normals: Option<Vec<[f32; 3]>>, uvs: Option<Vec<[f32; 2]>>, colors: Option<Vec<[f32; 4]>>) -> Geometry {
         let n = self.positions.len();
         self.normals = normals.filter(|v| v.len() == n);
@@ -96,7 +96,7 @@ fn to64(p: [f32; 3]) -> V3 {
 }
 
 /// RGBA pixels, 8 bits each, `width * height * 4` bytes in rows. Row 0 is at v = 0. For a model that is the top
-/// of the picture. For a sprite it is the bottom of the square.
+/// of the picture. For a sprite it's the bottom of the square.
 #[derive(Debug, Clone)]
 pub struct Texture {
     pub id: u64,
@@ -108,7 +108,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    /// None when the pixel data does not fit the size or the size is 0.
+    /// None when the pixel data doesn't fit the size or the size is 0.
     pub fn new(width: u32, height: u32, rgba: Vec<u8>) -> Option<Texture> {
         if width == 0 || height == 0 || rgba.len() as u64 != u64::from(width) * u64::from(height) * 4 {
             return None;
@@ -123,7 +123,7 @@ pub struct Material {
     pub texture: Option<Arc<Texture>>,
     pub vertex_colors: bool,
     pub lit: bool,
-    /// Pixels with alpha under this are not drawn.
+    /// Pixels with alpha under this aren't drawn.
     pub alpha_test: f64,
     pub transparent: bool,
     pub opacity: f64,
@@ -270,7 +270,7 @@ pub struct Node {
     pub quat: Quat,
     pub scale: V3,
     pub items: Vec<Item>,
-    /// A hidden node hides everything under it. Hidden things are not drawn and not picked.
+    /// A hidden node hides everything under it. Hidden things aren't drawn and not picked.
     pub visible: bool,
     /// The editor's entity the node stands for (an index or id the editor chooses).
     pub entity: Option<u64>,
@@ -444,7 +444,7 @@ impl Scene {
         self[child].parent = None;
     }
 
-    /// Detaches `child` when it is a child of `parent`.
+    /// Detaches `child` when it's a child of `parent`.
     pub fn remove(&mut self, parent: NodeId, child: NodeId) {
         if self.get(child).and_then(|n| n.parent) == Some(parent) {
             self.detach(child);
@@ -477,7 +477,7 @@ impl Scene {
     }
 
     /// A deep copy of the node and everything under it, detached. Meshes share their geometry and material.
-    /// Lines get a new id. `entity` is not copied.
+    /// Lines get a new id. `entity` isn't copied.
     pub fn copy_tree(&mut self, id: NodeId) -> Option<NodeId> {
         let src = self.get(id)?.clone();
         let kids = src.children.clone();
@@ -568,7 +568,7 @@ impl Scene {
         out
     }
 
-    /// `walk` with world matrices. A hidden parent above `id` does not hide it here.
+    /// `walk` with world matrices. A hidden parent above `id` doesn't hide it here.
     pub fn world_walk(&self, id: NodeId, visible_only: bool) -> Vec<(NodeId, Mat4)> {
         match self.get(id) {
             Some(_) => self.walk(id, Some(self.world_matrix(id)), visible_only),
@@ -632,7 +632,7 @@ impl Scene {
     }
 
     /// Every mesh triangle and sprite the ray meets under `roots`, nearest first. Hidden nodes are left out.
-    /// A mesh gives its nearest triangle only, and both faces count. Its material does not matter: a translucent
+    /// A mesh gives its nearest triangle only, and both faces count. Its material doesn't matter: a translucent
     /// fill is hit like any mesh. Sprites count as squares that face the camera. Lines count when
     /// they pass within `line_px` pixels on screen.
     pub fn raycast(&self, roots: &[NodeId], origin: V3, direction: V3, o: &RayOptions) -> Vec<Hit> {
@@ -946,11 +946,11 @@ pub struct Prefab {
 }
 
 impl Prefab {
-    /// Builds the scene data of a model. `texture` gives the pixels of a texture id, or none when they are missing (the material is then drawn without a texture).
+    /// Builds the scene data of a model. `texture` gives the pixels of a texture id, or none when they're missing (the material is then drawn without a texture).
     ///
     /// The material: the base color and its alpha as opacity, `Blend` as transparent, the
-    /// cutoff of `Mask` as the alpha test, and an alpha test of 0.3 for any other textured material. It is
-    /// always lit and double-sided: `unlit`, `billboard` and `inherit_rotation` are not read.
+    /// cutoff of `Mask` as the alpha test, and an alpha test of 0.3 for any other textured material. It's
+    /// always lit and double-sided: `unlit`, `billboard` and `inherit_rotation` aren't read.
     pub fn from_model(model: &Model, texture: &mut dyn FnMut(u32) -> Option<Arc<Texture>>) -> Prefab {
         let mut textures: HashMap<u32, Option<Arc<Texture>>> = HashMap::new();
         let mut materials: HashMap<(u32, bool), Arc<Material>> = HashMap::new();
@@ -1005,7 +1005,7 @@ impl Prefab {
                 triangles += list.iter().map(|m| m.geometry.triangle_count()).sum::<usize>();
                 items = list.clone();
             }
-            // A child that names a missing node, itself, or a node that is not its child is dropped
+            // A child that names a missing node, itself, or a node that isn't its child is dropped
             let children = n
                 .children
                 .iter()
@@ -1344,7 +1344,7 @@ mod tests {
         s[b].visible = false;
         assert_eq!(s.walk(a, None, true).len(), 1);
         assert!(!s.shown(c));
-        // a node cannot go under itself
+        // a node can't go under itself
         s.add(c, a);
         assert_eq!(s[a].parent(), None);
         s.remove(a, b);
@@ -1353,7 +1353,7 @@ mod tests {
         s.delete(b);
         assert!(s.get(c).is_none() && s.get(b).is_none());
         assert_eq!(s.len(), 1);
-        // a reused slot does not answer to the old name
+        // a reused slot doesn't answer to the old name
         let d = s.node("d");
         assert!(s.get(c).is_none() || s.get(b).is_none());
         assert_eq!(s[d].name, "d");
@@ -1364,7 +1364,7 @@ mod tests {
         let b = box_geometry(1.0, 2.0, 3.0);
         assert_eq!((b.positions.len(), b.triangle_count()), (24, 12));
         assert_eq!((b.bounds().min, b.bounds().max), ([-0.5, -1.0, -1.5], [0.5, 1.0, 1.5]));
-        // every face winds the same way: inward (it is drawn double-sided)
+        // every face winds the same way: inward (it's drawn double-sided)
         for i in 0..12 {
             let t = b.triangle(i);
             let n = vec::cross(vec::sub(t[1], t[0]), vec::sub(t[2], t[0]));
@@ -1420,11 +1420,11 @@ mod tests {
         // near and far limits
         let lim = RayOptions { near: 20.0, far: 30.0, ..o };
         assert_eq!(s.raycast(&[root], [0.0, 0.0, 20.0], [0.0, 0.0, -1.0], &lim).len(), 1);
-        // a hidden node is not hit, and a ray that points away hits nothing
+        // a hidden node isn't hit, and a ray that points away hits nothing
         s[near].visible = false;
         assert_eq!(s.raycast(&[root], [0.0, 0.0, 20.0], [0.0, 0.0, -1.0], &o)[0].node, far);
         assert!(s.raycast(&[root], [0.0, 0.0, 20.0], [0.0, 0.0, 1.0], &o).is_empty());
-        // a ray along an axis beside the box misses, and one in a face's plane does not divide by zero
+        // a ray along an axis beside the box misses, and one in a face's plane doesn't divide by zero
         assert!(s.raycast(&[root], [5.0, 0.0, 20.0], [0.0, 0.0, -1.0], &o).is_empty());
         // a node squashed flat has no inverse and is skipped
         s[far].scale = [1.0, 0.0, 1.0];
@@ -1459,7 +1459,7 @@ mod tests {
         let out = cam.to_pixels([2.1, 0.0, 0.0]);
         let (o, d) = ray(out[0], out[1]);
         assert!(s.raycast(&[root], o, d, &with).is_empty());
-        // the line: 4 pixels off is a hit, 7 is not, and meshes_only leaves it out
+        // the line: 4 pixels off is a hit, 7 isn't, and meshes_only leaves it out
         let on = cam.to_pixels([3.0, 6.0, 0.0]);
         let (o, d) = ray(on[0], on[1] + 4.0);
         assert_eq!(s.raycast(&[root], o, d, &with)[0].node, l);
@@ -1589,7 +1589,7 @@ mod tests {
         s[made[1]].set_euler(0.0, std::f64::consts::FRAC_PI_2, 0.0);
         let (batches, _) = make_batches(&s, &[made[1]], &|_, _| false);
         let n = batches[0].geometry.normals.as_ref().unwrap();
-        // the first face's normal is +x (the box winds inward). Turned a quarter about y it is -z.
+        // the first face's normal is +x (the box winds inward). Turned a quarter about y it's -z.
         assert!((n[0][2] + 1.0).abs() < 1e-6, "{:?}", n[0]);
     }
 

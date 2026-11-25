@@ -95,7 +95,7 @@ impl Editor {
     }
 
     /// Objects the transform applies to. Path handles whose platform is also selected and child platforms whose
-    /// parent is selected are left out: they are stored relative to it and would move twice.
+    /// parent is selected are left out: they're stored relative to it and would move twice.
     pub fn transform_set(&self) -> Vec<EntId> {
         let sel = &self.selection;
         sel.iter()
@@ -248,7 +248,7 @@ impl Editor {
         self.camera.height = if height > 1.0 { height } else { 1.0 };
     }
 
-    /// The window's fly camera is on: clicks then do not lay the path or drop garibs, and drags do not orbit.
+    /// The window's fly camera is on: clicks then don't lay the path or drop garibs, and drags don't orbit.
     pub fn set_flying(&mut self, on: bool) {
         self.mouse.flying = on;
     }
@@ -365,7 +365,7 @@ impl Editor {
         }
     }
 
-    /// The entity a ray picks: the nearest that is not landscape, else the nearest landscape piece.
+    /// The entity a ray picks: the nearest that isn't landscape, else the nearest landscape piece.
     pub fn pick(&self, origin: V3, direction: V3) -> Option<EntId> {
         let objs: Vec<_> = self.pickable().into_iter().map(|i| self.nodes[i].obj).collect();
         let o = RayOptions { camera: Some(&self.camera), line_px: Some(5.0), ..RayOptions::default() };

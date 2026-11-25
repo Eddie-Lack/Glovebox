@@ -46,7 +46,7 @@ const fn tone(fill: u32, text: u32, edge: u32) -> Tone {
 pub enum Shape {
     /// A two-tone bevel, sunken while held or on.
     Bevel,
-    /// A molded key: a line around it and a thick lip under it. The lip goes while it is held or on.
+    /// A molded key: a line around it and a thick lip under it. The lip goes while it's held or on.
     Key,
     /// A hairline around a flat face.
     Outline,
@@ -183,7 +183,7 @@ pub struct Theme {
     /// The name in the Theme list.
     pub name: &'static str,
     pub dark: bool,
-    /// How much of a control that cannot be used is left: 1 is all of it.
+    /// How much of a control that can't be used is left: 1 is all of it.
     pub disabled: f32,
 
     // Surfaces

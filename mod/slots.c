@@ -5,7 +5,7 @@
  * modSlots: per Space slot 35 to 41, the cart address of its file, its name, song and bonus time. The ROM keeps the
  * retail Space levels in those slots. A flag, modSlotsActive, decides which ones load:
  *   - A loading zone in a hub (a platform with exit type 11, SPACE_EXIT, and the tag modSlots.entryTag) sets the flag.
- *     Every other hub portal clears it, and so does the parse of any level that is not an extra one or the way room (42).
+ *     Every other hub portal clears it, and so does the parse of any level that isn't an extra one or the way room (42).
  *   - With the flag set, LoadLandscapeFile reads the level from modSlots, levelInfo shows the extra level's name, song and
  *     bonus time, the extra banks are those of the extra level (banks.c, key level + 0x40), and the Space world's bits in
  *     the save are swapped for the extra levels'.
@@ -15,7 +15,7 @@
  * best times (bestTimes row 5) are swapped with modSlotsStash* when the flag changes. The game's own code (way room doors,
  * BonusOpen, CheckForLevelCompleted, the end-of-level screens) then works on the extra levels' values. The EEPROM writes
  * always get the retail values (Mod_osEepromLongWrite builds the images and their CRCs). The extra levels' values are
- * stored in EEPROM blocks SLOTS_BLOCK to SLOTS_BLOCK + 5, which the game does not use, in one record with its own CRC.
+ * stored in EEPROM blocks SLOTS_BLOCK to SLOTS_BLOCK + 5, which the game doesn't use, in one record with its own CRC.
  *
  * Its hooks are installed at run time by Mod_InitSlots, only with an Expansion Pak. The call sites come from
  * tools/build_mod.py (sites.h).
@@ -93,11 +93,11 @@ typedef struct RetailInfo {
     s16 bonusTime;
 } RetailInfo;
 
-s32 modSlotsActive; /* the flag; tests read it (mod.json lists its address). Declared before the arrays: GCC 2.7.2 does not align .bss */
+s32 modSlotsActive; /* the flag; tests read it (mod.json lists its address). Declared before the arrays: GCC 2.7.2 doesn't align .bss */
 static s32 bootPending;
 static s32 recordOnCartValid;
 static s32 recordIoFailed; /* a read or write of the record returned an error: the record is left alone for the rest of the session */
-u16 modSlotsStash[NUM_RAM_SLOTS]; /* levels bits 0-4, allGaribs bits 5-9: the other set's, whichever is not in saveSlot */
+u16 modSlotsStash[NUM_RAM_SLOTS]; /* levels bits 0-4, allGaribs bits 5-9: the other set's, whichever isn't in saveSlot */
 static u8 hubTargetAtStart;
 u8 modSlotsStashTimes[TIMES_SIZE];
 static s8 worldCompleteAtStart[7];
@@ -197,7 +197,7 @@ s32 Mod_SlotLevel(s32 num) {
 }
 
 /* The first 8 bytes of a level file, read by DMA. The PI writes whole 8 byte words and the data cache works in 16 byte lines, so the
-   buffer is alone in its line and 16 byte aligned. It is in aligned.c, which the linker script places on a 16 byte boundary. */
+   buffer is alone in its line and 16 byte aligned. It's in aligned.c, which the linker script places on a 16 byte boundary. */
 extern u32 levelHeader[4];
 
 void *Mod_LoadLandscapeFile(s32 num) {
@@ -214,7 +214,7 @@ void *Mod_LoadLandscapeFile(s32 num) {
     osRecvMesg(&dmaMessageQ, NULL, OS_MESG_BLOCK);
     size = levelHeader[0];
     if (size < 16 || size > MAX_LEVEL_FILE) {
-        /* as LoadLandscapeFile does for a file it cannot find: a message instead of a hang */
+        /* as LoadLandscapeFile does for a file it can't find: a message instead of a hang */
         StopDrawing("loadlandscape");
         gameInfo.mode = 13;
         sprintf(gameInfo.message, "LEVEL UNPLAYABLE - NO LEV FILE");
@@ -262,7 +262,7 @@ void Mod_StartNewGame(void) {
 
 /* A checkpoint ring is touched when the ball comes down through its height (CheckRestartGate). A ball that rolls on a flat floor
    never does, and a ring sits 26 over the floor, where the restart needs it. For a ring with the tag RING_TAG in an extra level the
-   ball counts as coming from above when it is under the ring's height and not more than RING_BELOW under it. The game's own check
+   ball counts as coming from above when it's under the ring's height and not more than RING_BELOW under it. The game's own check
    then runs with the ball's previous y put above the ring for the call. */
 void Mod_CheckRestartGate(Platform *platform) {
     f32 prevY = ball.prevPos.y;

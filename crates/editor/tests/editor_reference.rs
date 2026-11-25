@@ -14,7 +14,7 @@ use std::sync::Arc;
 fn setup() -> Option<(Arc<dyn Backend>, PathBuf)> {
     let get = |k: &str| std::env::var(k).ok();
     let (Some(rom), Some(reference), Some(home)) = (get("GLOVEBOX_ROM"), get("GLOVEBOX_REFERENCE"), get("GLOVEBOX_REFHOME")) else {
-        println!("skipped: GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME are not all set");
+        println!("skipped: GLOVEBOX_ROM, GLOVEBOX_REFERENCE and GLOVEBOX_REFHOME aren't all set");
         return None;
     };
     let backend = GameBackend::open(Path::new(&rom), home).expect("the ROM opens");
@@ -204,7 +204,7 @@ fn apply(ed: &mut Editor, op: &Value) {
             ed.set_attr(n, s(a(2)), s(a(3)));
         }
         "apply_look" => ed.apply_look(s(a(1))),
-        other => panic!("an operation the test does not know: {other}"),
+        other => panic!("an operation the test doesn't know: {other}"),
     }
 }
 
