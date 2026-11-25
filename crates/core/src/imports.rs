@@ -58,7 +58,8 @@ impl Customs {
 }
 
 /// Reads the imported models of `<home>/custom` (`custom::custom_catalog`), with the bank of each piece
-/// (`<id>.obj.bin`) and each set's `textures.tex.bin`. A piece whose bank can't be read is left out.
+/// (`<id>.obj.bin`) and each set's `textures.tex.bin`. A piece whose bank can't be read is left out. A rotation key
+/// of all zeros in a converted piece becomes the key of no turn (`custom::pack::identity_rotations`).
 pub fn load_customs(home: &Path) -> Customs {
     let mut out = Customs::default();
     for entry in crate::custom::custom_catalog(home) {
@@ -66,7 +67,13 @@ pub fn load_customs(home: &Path) -> Customs {
         if parse_id(&entry.id).is_none() || !crate::custom::is_set_id(&entry.custom) {
             continue;
         }
-        let Ok(bank) = std::fs::read(&entry.path) else { continue };
+        let Ok(mut bank) = std::fs::read(&entry.path) else { continue };
+        // Earlier versions of the converter wrote a first rotation key of all zeros, and a console stops when it
+        // draws such a model as a platform. The stored file stays as it is; the copy here gets the key of no turn.
+        // A reskin is a copy of a retail model and keeps its bytes.
+        if entry.reskin_from.is_none() {
+            let _ = crate::custom::pack::identity_rotations(&mut bank);
+        }
         if !out.tex_banks.contains_key(&entry.custom) {
             let dir = entry.path.parent().unwrap_or(home);
             if let Ok(tex) = std::fs::read(dir.join("textures.tex.bin")) {
@@ -460,5 +467,34 @@ mod tests {
     #[test]
     fn no_folder_means_no_imported_models() {
         assert_eq!(load_customs(Path::new("/nonexistent/home")), Customs::default());
+    }
+
+    /// A set stored by an earlier version holds a rotation key of all zeros. It loads with the key of no turn, and
+    /// the file stays as it was.
+    #[test]
+    fn an_earlier_set_loads_with_the_key_of_no_turn() {
+        use std::collections::HashSet;
+        let home = std::env::temp_dir().join(format!("glovebox-imports-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&home);
+        let cube = include_bytes!("../tests/data/cube.gltf");
+        let set = crate::custom::import_custom(&home, cube, "cube", 1.0, &HashSet::new(), &HashSet::new()).unwrap();
+        let fresh = load_customs(&home);
+        let (id, model) = &fresh.models[0];
+        let path = home.join("custom").join(&set).join(format!("{id}.obj.bin"));
+        let new = std::fs::read(&path).unwrap();
+        assert_eq!(model.bank, new);
+
+        let parsed = objbank::Bank::parse(&new).unwrap();
+        let mesh = &parsed.objects[0].meshes[0];
+        let f = objbank::layout::MESH_ROTATION_PTR as usize;
+        let at = u32::from_be_bytes(mesh.raw[f..f + 4].try_into().unwrap()) as usize;
+        let mut old = new.clone();
+        old[at..at + 16].fill(0);
+        std::fs::write(&path, &old).unwrap();
+
+        let loaded = load_customs(&home);
+        assert_eq!(loaded.models[0].1.bank, new);
+        assert_eq!(std::fs::read(&path).unwrap(), old);
+        let _ = std::fs::remove_dir_all(&home);
     }
 }

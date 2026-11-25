@@ -240,6 +240,25 @@ fn editor_on_the_fixture() {
     ed.add_preset(PRESETS[2].key);
     t.detail("clicking a preset's Add adds it", ed.doc.kids(ed.root(), "Platform").len() > n, ed.last_status.0.clone());
     ed.undo();
+    // An imported model as a platform: from the palette, and as the model of a preset
+    backend.make_kit("grave", &serde_json::json!({})).unwrap();
+    ed.set_catalog(backend.catalog().unwrap());
+    let custom = ed.catalog.iter().find(|c| c.1.custom.is_some()).map(|c| c.0.clone()).unwrap();
+    let mark = ed.undo_stack.len();
+    let n = ed.doc.kids(ed.root(), "Platform").len();
+    ed.add_model(&custom, "Platform");
+    let platforms = ed.doc.kids(ed.root(), "Platform");
+    let placed = platforms.len() == n + 1 && platforms.iter().any(|p| ed.doc.attr(*p, "object_id") == custom);
+    ed.checks();
+    let flagged = ed.violations.iter().filter(|v| v.key.ends_with(":custom")).count();
+    t.detail("an imported model is placed as a platform, and the checks allow it", placed && flagged == 0, format!("{placed} {flagged}"));
+    let made = ed.doc.kids(ed.root(), "Platform").into_iter().find(|p| ed.doc.attr(*p, "object_id") == custom).unwrap();
+    ed.select(ent(&ed, |e| e.node == made && !e.is_handle), false);
+    ed.add_preset("spinner");
+    let spinners: Vec<_> = ed.doc.kids(ed.root(), "Platform").into_iter().filter(|p| ed.doc.attr(*p, "object_id") == custom && ed.doc.first(*p, "PlatConstantSpin").is_some()).collect();
+    t.detail("a spinner preset takes the selected imported model", spinners.len() == 1, format!("{} {}", spinners.len(), ed.last_status.0));
+    undo_to(&mut ed, mark);
+
     ed.add_model(SIGN, "LandActor");
     t.check("a model from another bank is an import", ed.current_imports().contains(&SIGN.to_string()));
     t.check("the import plan runs", ed.plan.as_ref().is_some_and(|p| p.objects.contains(&SIGN.to_string())));

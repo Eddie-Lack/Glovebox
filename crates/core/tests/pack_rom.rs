@@ -145,8 +145,7 @@ fn a_pack_with_imports() {
     assert_eq!(worlds.len(), 5, "{worlds:?}");
     let e = be.level_pack("0a", &with(&lines), "Five").unwrap_err().0;
     assert!(e.contains("can name 4 at most"), "{e}");
-    // The cube as a platform. A console ROM must not draw a converted model as a platform, but g64coopdx can: the
-    // pack's object bank has the rotation key of no turn in place of the converter's key of zeros.
+    // The cube as a platform. The pack's object bank has the rotation key of no turn, as the converter writes it.
     let end = xml.find("  <EndLevelData").expect("the level ends with EndLevelData");
     let plat = format!("  <Platform object_id=\"{cube}\" name=\"cube\">\n    <PlatSetInitialPos x=\"0.0\" y=\"40.0\" z=\"0.0\"/>\n  </Platform>\n");
     let plat_xml = format!("{}{}{}", &xml[..end], plat, &xml[end..]);

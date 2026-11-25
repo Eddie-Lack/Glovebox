@@ -50,7 +50,6 @@ pub const WHY_ROT_WATER: &str = "SetActorRotation, applied by the game mod to th
 pub const WHY_SCALE_ENEMY: &str = "SetActorScale, a factor on the type's size. The game mod also scales the collision sphere by the mean of the three axes.";
 pub const WHY_SCALE_PICKUP: &str = "SetActorScale, a factor on the powerup's size (0.4 in the game's code).";
 pub const WHY_SCALE_WATER: &str = "SetActorScale on the water's model. Its swimming volume keeps its own size.";
-pub const WHY_CUSTOM_PLATFORM: &str = "In a ROM, a platform must use a model from the game. A converted model's first rotation key is all zeros, and a console stops when it draws one as a platform (an emulator doesn't). Place it as Scenery or Background.";
 pub const WHY_TRIGGER_ROT: &str = "Puzzle trigger volumes are axis-aligned: the game tests boxes with IsPointWithinBox, spheres and cylinders by distance.";
 pub const WHY_TRIGGER_EDIT: &str = "This trigger volume is one of several conditions of its puzzle. It can't be duplicated or deleted on its own.";
 pub const WHY_WIND_ROT: &str = "Wind volumes are axis-aligned boxes (left/top/front + width/height/depth).";

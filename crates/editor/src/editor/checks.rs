@@ -8,7 +8,7 @@ use super::{
 };
 use crate::commands::{self, platform_rules};
 use crate::exits;
-use crate::entities::{trigger_spec, uses_mod, EntId, MOD_PARENTS, WHY_CUSTOM_PLATFORM};
+use crate::entities::{trigger_spec, uses_mod, EntId, MOD_PARENTS};
 use crate::puzzles;
 use crate::scene::{self, LineMode, Lines, RayOptions};
 use crate::scripts;
@@ -197,10 +197,6 @@ impl Editor {
                     for r in platform_rules(doc, node) {
                         let level = if r.key == "2tag" { "warn" } else { "err" };
                         add(node, format!("{}:{}", pid, r.key), r.message, r.game_text, None, level);
-                    }
-                    let oid = hex_id(doc.get(node, "object_id")).unwrap_or_default();
-                    if self.catalog.get(&oid).is_some_and(|c| c.custom.is_some()) {
-                        add(node, format!("{}:custom", pid), WHY_CUSTOM_PLATFORM.to_string(), None, None, "err");
                     }
                 }
                 "Buzzer" => {

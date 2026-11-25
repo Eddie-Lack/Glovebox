@@ -21,7 +21,7 @@ Note: only share levels that use models you have the right to share
 
 - A pack is a folder. Give it a name (1 to 32 plain ASCII characters), then pick where the folder goes
 - Your imported models go in the pack's `models.bin`
-- In a pack, an imported model can be a platform. g64coopdx draws it. A ROM for the console can't have one. The Models tab doesn't offer it
+- In a pack, an imported model can be a platform, just like in a ROM
 - Models from other levels don't: the pack names their banks, and each player's game loads them from their own ROM
 - A bank is a group of models or textures that the game loads together
 - The pack also names the texture banks of those models' sprites (flat pictures, like garibs). g64coopdx needs them

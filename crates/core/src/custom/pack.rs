@@ -548,7 +548,9 @@ pub fn pack_object(node_name: &str, id: u32, render_mode: u16, prims: &[Prim]) -
     let mut linker = Linker::new();
     let props = linker.bytes(Kind::AnimProps, vec![0u8; layout::ANIMATION]);
     let translation = linker.bytes(Kind::Keyframes, key_frame([0.0; 4]));
-    let rotation = linker.bytes(Kind::Keyframes, key_frame([0.0; 4]));
+    // The key of no turn. The game divides by the key's squared length. A key of all zeros gives values that
+    // aren't numbers, and a console stops when it draws such a model as a platform.
+    let rotation = linker.bytes(Kind::Keyframes, key_frame(IDENTITY_ROTATION));
     let scale = linker.bytes(Kind::Keyframes, key_frame([1.0, 1.0, 1.0, 0.0]));
     let geo = linker.add_geometry(geometry(&flat));
     let mut blocks = vec![crate::objbank::Block::new(dl.cmds)];
@@ -588,7 +590,7 @@ pub fn pack_object(node_name: &str, id: u32, render_mode: u16, prims: &[Prim]) -
 // The banks of a level pack for g64coopdx
 
 /// The rotation key the game reads as no turn: x, y and z 0, w 1.
-const IDENTITY_ROTATION: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+pub const IDENTITY_ROTATION: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// One texture bank and one object bank that hold `pieces`, for a level pack of g64coopdx (its
 /// docs/discovery/model-banks.md). Returns the texture bank, then the object bank. Neither needs the ROM.
@@ -597,7 +599,8 @@ const IDENTITY_ROTATION: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 /// - The texture bank holds the records the pieces use, each padded to a multiple of 8 bytes with its size field
 ///   fixed, in rising order of id. No list of names follows them. The bank ends with zeros up to a multiple of 8.
 /// - Each rotation key of all zeros becomes the key of no turn (0, 0, 0, 1). The game turns a zero key into a
-///   matrix of values that aren't numbers. The converter still writes zero keys; only this copy changes.
+///   matrix of values that aren't numbers. The converter writes the key of no turn, but a piece may come from a set
+///   that an earlier version stored.
 ///
 /// `texture_banks` are the banks that hold the pieces' textures, such as `CustomSet::texture_bank`. A texture in two
 /// of them is taken from the first.
@@ -647,9 +650,11 @@ pub fn model_banks(pieces: &[&super::Piece], texture_banks: &[&[u8]]) -> Result<
     Ok((textures, objects))
 }
 
-/// Puts the key of no turn in place of each rotation key of all zeros. The keys are found through each mesh's
-/// pointer and count. A search for the bytes would also find the translation keys, which are zeros too.
-fn identity_rotations(bank: &mut [u8]) -> Result<(), ModelError> {
+/// Puts the key of no turn in place of each rotation key of all zeros in an object bank. Returns how many keys
+/// changed. The keys are found through each mesh's pointer and count. A search for the bytes would also find the
+/// translation keys, which are zeros too. Earlier versions of the converter wrote zero keys, and sets stored then
+/// still hold them (`imports::load_customs` mends them as it reads them).
+pub fn identity_rotations(bank: &mut [u8]) -> Result<usize, ModelError> {
     let mut keys: Vec<usize> = Vec::new();
     {
         let parsed = crate::objbank::Bank::parse(bank).map_err(|e| ModelError(e.to_string()))?;
@@ -662,16 +667,18 @@ fn identity_rotations(bank: &mut [u8]) -> Result<(), ModelError> {
     }
     keys.sort_unstable();
     keys.dedup();
+    let mut changed = 0;
     for at in keys {
-        let key = &mut bank[at..at + 16];
+        let Some(key) = bank.get_mut(at..at + 16) else { continue };
         let zero = key.chunks_exact(4).all(|c| f32::from_be_bytes([c[0], c[1], c[2], c[3]]) == 0.0);
         if zero {
             for (dst, v) in key.chunks_exact_mut(4).zip(IDENTITY_ROTATION) {
                 dst.copy_from_slice(&v.to_be_bytes());
             }
+            changed += 1;
         }
     }
-    Ok(())
+    Ok(changed)
 }
 
 #[cfg(test)]
@@ -739,12 +746,66 @@ mod tests {
         assert_eq!(used, vec![rec.id]);
     }
 
+    /// The rotation key of a piece's only mesh, and where it is in the bank.
+    fn rotation_key(bank: &[u8]) -> ([f32; 4], usize) {
+        let parsed = Bank::parse(bank).unwrap();
+        let mesh = &parsed.objects[0].meshes[0];
+        let key = crate::objbank::Mesh::keys(mesh.rotation).next().unwrap();
+        (key.v, u32_at(&mesh.raw, layout::MESH_ROTATION_PTR as usize) as usize)
+    }
+
+    /// The game's `QuaternionToMatrix` (maths.c), in f32 as on the console.
+    fn quaternion_to_matrix(q: [f32; 4]) -> [[f32; 4]; 4] {
+        let [x, y, z, w] = q;
+        let s = 2.0f32 / (x * x + y * y + z * z + w * w);
+        let (xs, ys, zs) = (x * s, y * s, z * s);
+        let (wx, wy, wz) = (w * xs, w * ys, w * zs);
+        let (xx, xy, xz) = (x * xs, x * ys, x * zs);
+        let (yy, yz, zz) = (y * ys, y * zs, z * zs);
+        [
+            [1.0 - (yy + zz), xy + wz, xz - wy, 0.0],
+            [xy - wz, 1.0 - (xx + zz), yz + wx, 0.0],
+            [xz + wy, yz - wx, 1.0 - (xx + yy), 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    }
+
     #[test]
-    fn the_converter_keeps_zero_keys() {
+    fn the_converter_writes_the_key_of_no_turn() {
         let (set, _, _) = cube();
+        let (key, _) = rotation_key(&set.pieces[0].bank);
+        assert_eq!(key, IDENTITY_ROTATION);
+        // The translation key stays zero, and the scale key one
         let bank = Bank::parse(&set.pieces[0].bank).unwrap();
-        let key = crate::objbank::Mesh::keys(bank.objects[0].meshes[0].rotation).next().unwrap();
-        assert_eq!(key.v, [0.0; 4]);
+        let mesh = &bank.objects[0].meshes[0];
+        assert_eq!(crate::objbank::Mesh::keys(mesh.translation).next().unwrap().v, [0.0; 4]);
+        assert_eq!(crate::objbank::Mesh::keys(mesh.scale).next().unwrap().v, [1.0, 1.0, 1.0, 0.0]);
+    }
+
+    #[test]
+    fn the_game_turns_a_zero_key_into_values_that_arent_numbers() {
+        let old = quaternion_to_matrix([0.0; 4]);
+        assert!(old.iter().flatten().any(|v| v.is_nan()));
+        let (key, _) = rotation_key(&cube().0.pieces[0].bank);
+        let m = quaternion_to_matrix(key);
+        let unit = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
+        assert_eq!(m, unit);
+    }
+
+    #[test]
+    fn a_bank_from_an_earlier_converter_is_mended() {
+        let (set, _, _) = cube();
+        let new = set.pieces[0].bank.clone();
+        let (_, at) = rotation_key(&new);
+        // The bytes an earlier version wrote: the same bank with a rotation key of all zeros
+        let mut old = new.clone();
+        old[at..at + 16].fill(0);
+        assert_eq!(rotation_key(&old).0, [0.0; 4]);
+        assert_eq!(identity_rotations(&mut old).unwrap(), 1);
+        assert_eq!(old, new);
+        // A second pass changes nothing
+        assert_eq!(identity_rotations(&mut old).unwrap(), 0);
+        assert_eq!(old, new);
     }
 
     #[test]

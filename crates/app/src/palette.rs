@@ -10,7 +10,7 @@ use crate::app::{Act, Window};
 use crate::style::{self, h4, muted};
 use egui::RichText;
 use glovebox_core::backend::{Backend, ModelRef};
-use glovebox_editor::entities::{CAM_PRESETS, WHY_CUSTOM_PLATFORM};
+use glovebox_editor::entities::CAM_PRESETS;
 use glovebox_editor::presets::PRESETS;
 use glovebox_editor::scene::{Prefab, Texture};
 use serde_json::Value;
@@ -799,8 +799,7 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
     }
     for (oid, c) in rows.iter().take(150) {
         let sub = model_sub(c, level_banks.contains(&c.bank));
-        let custom = c.custom.is_some();
-        let buttons: Vec<(&str, &str, bool)> = MODELS_AS.iter().map(|a| if a.tag == "Platform" && custom { (a.label, WHY_CUSTOM_PLATFORM, false) } else { (a.label, a.tip, true) }).collect();
+        let buttons: Vec<(&str, &str, bool)> = MODELS_AS.iter().map(|a| (a.label, a.tip, true)).collect();
         let small = RichText::new(oid.as_str()).size(11.0);
         let clicked = ui.push_id(oid, |ui| px.prow(ui, |px, ui| px.thumb(ui, Some(oid)), &c.name, Some(small), &sub, &buttons, |_, _| {})).inner;
         if let Some(i) = clicked {
@@ -814,7 +813,7 @@ fn models(px: &mut Px, ui: &mut egui::Ui) {
 }
 
 /// The Models tab as tiles: every model the search leaves, with no limit. A click places the model as the radio
-/// buttons say. One of the player's own models has a mark in its corner, and can't be a platform.
+/// buttons say. One of the player's own models has a mark in its corner.
 fn models_grid(px: &mut Px, ui: &mut egui::Ui, foot: f32) {
     import_button(px, ui);
     let catalog = px.w.ed.catalog.clone();
@@ -828,17 +827,12 @@ fn models_grid(px: &mut Px, ui: &mut egui::Ui, foot: f32) {
     let hit = tile_grid(px, ui, foot, rows.len(), |px, _, i| {
         let (oid, c) = rows[i];
         let custom = c.custom.is_some();
-        let refuse = (custom && place.tag == "Platform").then_some(WHY_CUSTOM_PLATFORM);
         let (texture, blank) = px.picture(Some(oid));
         let mut tip = format!("{}  {}\n{}", c.name, oid, model_sub(c, level_banks.contains(&c.bank)));
         if custom {
             tip.push_str("\nOne of your imported models");
         }
-        if let Some(why) = refuse {
-            tip.push('\n');
-            tip.push_str(why);
-        }
-        Tile { id: oid.clone(), name: c.name.clone(), tip, texture, blank, mark: custom.then_some(own), refuse, settings: false }
+        Tile { id: oid.clone(), name: c.name.clone(), tip, texture, blank, mark: custom.then_some(own), refuse: None, settings: false }
     });
     if let Some(Hit::Place(i)) = hit {
         let (oid, as_) = (rows[i].0.clone(), place.tag);

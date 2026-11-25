@@ -458,9 +458,8 @@ the level it was made for, and the game loads that level's banks with it. Each p
     the new model.
   - models over 4 MiB, more than 4 of the game's banks of a kind, the font or generic texture banks (10 and 2), and
     object banks 0 and 1
-- An imported model as a platform is allowed. `model_banks` writes the rotation key of no turn ("models.bin"
-  below), and g64coopdx's `make models` test plays such platforms. A ROM for the console still must not have one
-  ("Platforms from converted models").
+- An imported model as a platform is allowed. Its pieces have the rotation key of no turn ("models.bin" below), and
+  g64coopdx's `make models` test plays such platforms ("Platforms from converted models").
 - The refusals need no ROM. Their tests are in `pack.rs`. `a_pack_with_imports` (in `crates/core/tests/pack_rom.rs`)
   runs the export with the ROM. It also exports the cube as a platform of Atlantis 1. With `GLOVEBOX_PACK_OUT=DIR` it
   writes that pack to DIR, and g64coopdx's `g64pack check DIR --rom ROM` passes it.
@@ -471,8 +470,9 @@ the level it was made for, and the game loads that level's banks with it. Each p
   pieces alone, linked with no game bank under them. Two pieces with the same id are an error. The texture bank holds
   the records the pieces use, padded to a multiple of 8 bytes with their size fixed, and no names after them. It ends
   with 4 zero bytes, so its size is a multiple of 8 too.
-- The converter writes a rotation key of all zeros. The game turns it into a matrix of values that aren't numbers.
-  `model_banks` writes the key of no turn (0, 0, 0, 1) in its place. The converter itself doesn't change.
+- The converter writes the rotation key of no turn (0, 0, 0, 1). Earlier versions wrote a key of all zeros, and the
+  game turns that into a matrix of values that aren't numbers. `model_banks` puts the key of no turn in place of each
+  zero key it finds (`identity_rotations`).
 - `pack::models_bin` writes the file: the header, the numbers of the game's banks, zeros up to a multiple of 8, then
   the two banks.
 - `gbtool modelbanks GLTF OUT` converts a glTF file at scale 1 and writes `models.bin`. It needs no ROM, so it does
@@ -614,8 +614,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
     `background` or `platform`, and `add_kit_as`: `background` or `scenery`). Enemies have one way and no radio
     buttons. An unknown value of a setting is the list and the first choice.
   - A tile's tooltip has what its row shows: the name, the id, the bank, the notes. A corner mark flags a boss and
-    one of the player's own models. A tile that can't be placed (a converted model under `Platform`, an enemy
-    without a model) is dimmed, and a click writes the reason to the status line. A tile is a button for the
+    one of the player's own models. A tile that can't be placed (an enemy without a model) is dimmed, and a click writes the reason to the status line. A tile is a button for the
     keyboard and for screen readers, named by its entry.
   - A kit tile is made with the item's settings as they are. The corner with three dots, or a right-click, shows
     the item's settings in a box over the grid (`kit_settings`).
@@ -801,10 +800,29 @@ guide in the editor and isn't saved.
 
 ### Platforms from converted models
 
-A platform must use a model from the game. A converted model (imported or from the kit) has a first rotation
-key of all zeros. A console stops when it draws one as a platform. An emulator runs on. The Models tab doesn't
-offer **Platform** for them, and the checks flag a converted model that is used as a platform. This rule is for
-ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64coopdx").
+A converted model (imported or from the kit) can be a platform, in a ROM and in a level pack for g64coopdx. The
+Models tab offers **Platform** for it in the list and in the grid, and the presets that take the selected model take
+it too.
+
+- The game draws a platform's mesh from its first rotation key (`TransformAndDrawObject`, `QuaternionToMatrix`).
+  `QuaternionToMatrix` divides by the key's squared length. A key of all zeros gives values that aren't numbers, and
+  `guMtxF2L` turns them into integers. A console traps that. mupen64plus runs on and stores `0x80008000` in each
+  integer word of the matrix.
+- Scenery doesn't trap. In the emulator, a `LandActor` of the same slab with the zero key had a clean matrix: its
+  `staticMtx`, made from the actor's own rotation (`CalculateStaticMatrices`), and no object matrix of `0x80008000`
+  in 400 frames.
+- Earlier versions of the converter wrote a key of all zeros. It now writes the key of no turn (0, 0, 0, 1). The
+  retail banks hold no rotation key of all zeros: a scan of every object bank found none among 26,712 keys.
+- Sets stored by an earlier version keep their files. `imports::load_customs` gives each converted piece the key of no
+  turn as it reads the bank. Builds and packs read the banks through it. A reskin is a copy of a retail model and keeps its bytes.
+- The object id and the set's name don't depend on the bank's bytes. The id is a hash of the piece's node name, and
+  the set's name a hash of the file and the scale. A set stored before and after the change has the same id, the same
+  name and the same `meta.json`.
+- The emulator test: Atlantis 1 with an imported slab as a spinning platform and as a still one, built from a set
+  stored by the earlier converter. Built with the earlier code, both platforms' object matrices held `0x80008000` in
+  every integer word, every frame. Built with this code from the same stored set, the matrices held the platforms'
+  places and turn, and no frame had such a matrix. The ROM was byte for byte the one built from a fresh import.
+- This wasn't tested on a console yet.
 
 ## Commands, puzzles, enemy scripts, extra levels
 
@@ -1029,10 +1047,10 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   from the mod needs the Expansion Pak: the game shows `LEVEL UNPLAYABLE` there without it.
 
 **Platforms**
-- A platform (`Platform` in the level XML) must use a retail model. The converter's objects (custom models, imported models) have a first rotation key of all
-  zeros, and a platform is drawn from it: `QuaternionToMatrix` divides by zero, and a console traps the invalid operation that follows (mupen64plus
-  runs on). Use custom models as `BackgroundActor` or `LandActor` (solid). A platform that is never updated (a `PlatSpike`, `SetExit` with
-  alpha 0) also needs no `PlatConstantSpin`: its rotation stays zero.
+- A platform (`Platform` in the level XML) is drawn from its mesh's first rotation key. A key of all zeros makes `QuaternionToMatrix` divide by
+  zero, and a console traps the invalid conversion that follows (mupen64plus runs on). The converter writes the key of no turn, and
+  `imports::load_customs` mends the zero keys of sets stored by earlier versions ("Platforms from converted models"). A platform that is never
+  updated (a `PlatSpike`, `SetExit` with alpha 0) also needs no `PlatConstantSpin`: its rotation stays zero.
 
 **Testing**
 - mupen64plus doesn't show the hardware faults in this section. The matrix overflow is an exception: it stopped the game in
@@ -1057,6 +1075,8 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   `jpeg.rs` is the editor's own JPEG decoder. It gives libjpeg-turbo's pixels for baseline and progressive files, and
   refuses arithmetic-coded, lossless, CMYK and 12-bit files and fractional sampling.
 - A texture record is padded to a multiple of 8 bytes (Real hardware, above).
+- Each piece's mesh has one key of each kind: translation 0, rotation the key of no turn (0, 0, 0, 1), scale 1
+  ("Platforms from converted models").
 - 2,048 texels is the most one `G_LOADBLOCK` loads. Texture coordinates are s10.5 in texels, so the converter
   moves repeating coordinates by whole repeats, per piece, then per triangle, then clamps.
 - IDs avoid every object and texture ID in the game's banks and in other imports.
@@ -1182,6 +1202,12 @@ the split ROM and libgarib's exported files.
 | `crates/editor/tests/logic_reference.rs` | The vector math, the command tables and platform rules, puzzles and scripts, presets, the import checks (on the levels and on hostile files), the entities, the camera and drafts | All 48 levels |
 | `editor_reference.rs` | The editor's state after loading, and the XML after each recorded edit step | All 48 levels |
 | `crates/app/tests/render.rs` | The picture of a made-up scene and of a level | By mean color difference: two renderers don't give equal pixels |
+
+The converter now writes the rotation key of no turn, and the reference's banks hold the earlier key of all zeros.
+`custom_reference.rs` and `build_reference.rs` put the key of no turn in the reference's banks before they compare.
+`build_reference.rs` compares the builds of imported models with ROMs built from the sets as stored, which still hold
+zero keys (`stored_customs`). It then builds each again as the editor does, and checks the header CRCs and the hardware
+check.
 
 The Rust code gives the reference outputs for these reasons:
 
