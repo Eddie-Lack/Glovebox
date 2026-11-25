@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Which object and texture banks the game itself loads for each level, from the gloveworld decomp.
 
-Follows LoadLevel (src/game.c): texture bank 2 (GENERIC), then the world's texBank (WAYROOM uses world 0's,
-PRESENT uses 12, levels >= 46 use 11), CARNIVALBONUS adds 15, FLYTHRU (44) adds 13; object banks are the
-world's objBank, then 1 (GENERIC) or 69 for FLYTHRU, then levelInfo[level].objBank (loaded last).
-levelInfo/worldInfo are read from the decomp's built ELF. Without a build, they are read from the ROM: both
-are in the uncompressed main code segment, whose address comes from glover.yaml and the symbols from
+It follows LoadLevel (src/game.c). The texture banks are bank 2 (GENERIC), then the world's texBank (WAYROOM
+uses world 0's, PRESENT uses 12, levels >= 46 use 11). CARNIVALBONUS adds 15, and FLYTHRU (44) adds 13. The
+object banks are the world's objBank (levels below 46 only), then 1 (GENERIC) or 69 for FLYTHRU, then
+levelInfo[level].objBank (loaded last).
+levelInfo/worldInfo are read from the decomp's built ELF. Without a build, they are read from the ROM. Both are
+in the uncompressed main code segment. The segment's address comes from glover.yaml, and the symbols come from
 symbol_addrs.txt. Bank numbers are named from the LoadObjectBank/LoadTextureBank switch statements in
 src/banks.c.
 

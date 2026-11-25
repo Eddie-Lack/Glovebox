@@ -36,7 +36,7 @@ New here? Start with _[Getting started](Getting-started.md)_.
 - _[Import model](../Import-model.md)_
 - _[The Expansion Pak game mod](../Game-mod.md)_
 
-The pictures also show the info texts in the panels. By default, the info text will be hidden and only show when you hover over a name.
+The pictures show the _[info texts](Options.md#info-texts)_ in the panels. By default, the info text will be hidden and only show when you hover over a name.
 
 ---
 

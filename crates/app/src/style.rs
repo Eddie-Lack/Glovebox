@@ -43,7 +43,7 @@ pub fn hex(s: &str) -> Color32 {
     Color32::from_rgb((v >> 16) as u8, (v >> 8) as u8, v as u8)
 }
 
-/// A font file of the computer, when it is there and of a sane size.
+/// A font file of the computer, when it is there and smaller than 8 MiB.
 fn system_font(names: &[&str]) -> Option<Vec<u8>> {
     let mut dirs: Vec<std::path::PathBuf> = Vec::new();
     if let Some(win) = std::env::var_os("WINDIR") {
@@ -470,7 +470,6 @@ pub fn callout(painter: &egui::Painter, rect: Rect, tip: Option<egui::Pos2>) {
     painter.line_segment([point, base + side], edge);
 }
 
-/// The theme's fine grid behind a panel's content, when it has one.
 /// Shows a panel's contents in the room the panel has now. The contents cannot make the panel larger: what
 /// does not fit is clipped. A panel's size then comes from its default and from drags on its edge only.
 pub fn fixed<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
@@ -502,6 +501,7 @@ pub fn reset_overflow(ctx: &egui::Context) {
     ctx.data_mut(|d| d.insert_temp(egui::Id::unique("panel overflow"), (0.0f32, "")));
 }
 
+/// The theme's fine grid behind a panel's content, when it has one.
 pub fn ground(ui: &Ui) {
     if let Some((fine, coarse)) = theme(ui.ctx()).grid {
         let rect = ui.max_rect();
@@ -1178,11 +1178,11 @@ fn menu_of(ui: &mut Ui, b: egui::Button, label: &str, tip: &str, add: impl FnOnc
 /// A checkbox: a box in the theme's shape, filled with a check mark when it is on.
 pub fn checkbox(ui: &mut Ui, on: &mut bool, text: impl Into<egui::WidgetText>) -> Response {
     let lit = theme(ui.ctx()).check;
-    tick_box(ui, on, text.into(), lit)
+    colored_checkbox(ui, on, text.into(), lit)
 }
 
 /// A checkbox whose box takes a color when it is on: a layer of the level list.
-pub fn tick_box(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32) -> Response {
+pub fn colored_checkbox(ui: &mut Ui, on: &mut bool, text: egui::WidgetText, lit: Color32) -> Response {
     const SIDE: f32 = 14.0;
     let th = theme(ui.ctx());
     let name = text.text().to_string();

@@ -695,7 +695,7 @@ fn camera_and_drafts() {
         near(&c.pos, &r["dollied"][0], 1e-12, "dolly");
         near(&c.quat, &r["dollied"][1], 1e-12, "dolly");
     }
-    // The reference drafts open here, and the files written here are the same bytes
+    // The reference drafts open here, and the files written here have the same bytes as the reference's
     let dir = std::path::Path::new(&std::env::var("GLOVEBOX_REFERENCE").unwrap()).join("logic").join("drafts_py");
     let recorded = drafts::Drafts::new(&dir);
     let tmp = std::env::temp_dir().join(format!("glovebox-reference-drafts-{}", std::process::id()));

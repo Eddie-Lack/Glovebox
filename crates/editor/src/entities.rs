@@ -1093,9 +1093,9 @@ pub fn build(doc: &Doc, root: NodeId, cx: &Context) -> Level {
             _ => {}
         }
     }
-    // Where Glover starts: the first restart gate (PlatCheckpoint) unless the level has a GloverSpawnPoint.
-    // parse.c TOKEN_RESTART: the first gate is the start, its theta Glover's facing (hub levels override it by
-    // world).
+    // The start marker sits on the first restart gate (PlatCheckpoint). It is left out when the level has a
+    // GloverSpawnPoint. parse.c TOKEN_RESTART: the first gate is the start, its theta Glover's facing (hub levels
+    // override it by world).
     if let Some(g) = first_gate {
         if !ents.iter().any(|e| e.tag == "GloverSpawnPoint") {
             let mut ent = Ent::new("spawn", ents[g].node, "Platform", Look::Start);
@@ -1256,7 +1256,7 @@ pub fn zone_center(doc: &Doc, vol: NodeId) -> V3 {
     box_center(doc, vol, XYZ, ["l", "w", "h"])
 }
 
-/// Where the camera about stands for a Glover at the middle of the zone, as (glove, eye). `None` when the zone
+/// About where the camera stands for a Glover at the middle of the zone, as (glove, eye). `None` when the zone
 /// keeps the level's direction.
 pub fn zone_camera(doc: &Doc, z: &Zone) -> Option<(V3, V3)> {
     let c = zone_center(doc, z.vol?);

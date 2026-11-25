@@ -15,9 +15,10 @@
  * worlds can hold different pictures under the same id (the Atlantis whale's mouth and a Space texture).
  *
  * Extra banks stay loaded until the next level is parsed. If the game has not started the heap again since
- * then (heap.c counts this in modHeapGen), the mod frees them first. Animated textures in extra banks do not
- * animate: the mod gives LoadTextureBank an empty cyclingTextures list and puts the level's list back after.
- * CycleTextures never holds a pointer into a bank the mod frees, and the list's 20 entries never overflow.
+ * the mod loaded them (heap.c counts this in modHeapGen), the mod frees them first. Animated textures in extra
+ * banks do not animate: the mod gives LoadTextureBank an empty cyclingTextures list and puts the level's list
+ * back after. CycleTextures never holds a pointer into a bank the mod frees, and the list's 20 entries never
+ * overflow.
  */
 #include "common.h"
 #include "texture.h"
@@ -49,8 +50,8 @@ extern s32 modHeapGen;
 
 u8 modExtraBanks[256] = { END_OF_LIST };
 
-/* Custom models (generated glTF, packed by crates/core/src/modpatch.rs): per level key one texture bank and one object bank in the
-   mod's ROM store, in the game's own bank format and uncompressed. The key is the one of modExtraBanks. */
+/* Custom models (generated glTF, packed by crates/core/src/modpatch.rs). Each level key has one texture bank and one object bank in
+   the mod's ROM store. The banks are in the game's own bank format and uncompressed. The key is the same as in modExtraBanks. */
 typedef struct CustomEntry {
     u8 key;
     u8 pad[3];

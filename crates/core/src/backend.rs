@@ -1,5 +1,5 @@
-//! What the editor's window asks its back end for: the tables, the levels, the models and textures, plans and
-//! builds, and the author's imported models. `Backend` is the list of those
+//! What the editor's window asks its back end for: the tables, the levels, the models and textures, plans, builds
+//! and level packs, the author's imported models, the kit, and where the ROM is. `Backend` is the list of those
 //! methods. `GameBackend` answers from the player's ROM (`GameData`) and the user folder.
 //!
 //! A model is named by a `ModelRef`. `model` and `texture` give the model and the pixels.

@@ -65,8 +65,8 @@ impl FileDialogs for Scripted {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// The app's own dialogs: Import XML, Export patch, Build all, Import model, questions and messages. One is open at
-// a time, over the window.
+// The app's own dialogs: Import XML, Export patch, Build all, Import model, Export level pack, questions and
+// messages. One is open at a time, over the window.
 
 use crate::app::{Act, Window};
 use crate::style::{self, check_line, muted};

@@ -458,7 +458,7 @@ fn unit(v: [f64; 3]) -> [f64; 3] {
     [v[0] / len, v[1] / len, v[2] / len]
 }
 
-/// The area vector's length test of the converter uses this too.
+/// The converter's test of the area vector's length uses this too.
 pub fn cross_length(p: &[[f64; 3]; 3]) -> f64 {
     let c = cross(sub(p[1], p[0]), sub(p[2], p[0]));
     (c[0] * c[0] + c[1] * c[1] + c[2] * c[2]).sqrt()

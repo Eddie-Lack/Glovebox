@@ -1,9 +1,10 @@
 //! Tests of the 3D view's renderer, without a window.
 //!
-//! The first tests draw made-up scenes and check pixels. The others replay scenes of the reference dumps and compare
-//! the pictures. They need `GLOVEBOX_REFERENCE` (the folder of reference dumps); the level also needs
-//! `GLOVEBOX_REFHOME` (a folder with the split ROM). Without them they print that they were skipped. Each comparison
-//! saves its pictures next to the reference's, as `<name>_rs.png` and `<name>_diff.png`.
+//! Most tests draw made-up scenes and check pixels. Two tests replay scenes of the reference dumps and compare the
+//! pictures: `the_made_up_scene_matches_the_reference` and `a_level_matches_the_reference`. They need
+//! `GLOVEBOX_REFERENCE` (the folder of reference dumps); `a_level_matches_the_reference` also needs `GLOVEBOX_REFHOME`
+//! (a folder with the split ROM). Without them they print that they were skipped.
+//! Each comparison saves its pictures next to the reference's, as `<name>_rs.png` and `<name>_diff.png`.
 
 use eframe::egui_wgpu::wgpu;
 use glovebox::render::{icons::Icons, Fog, Frame, Renderer};

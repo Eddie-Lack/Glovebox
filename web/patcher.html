@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Everything happens in this page. connect-src 'none' means the browser blocks any network request. The
      ROM and patch you choose can't be sent anywhere. The script is pinned by hash (tools/build_patcher.py). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rBf/CZnN21VZuGU29bE3tUHBdUAUV+tswpkDXj5wShc='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fTDB9e3fsA33LZw+fxQjgEw8YLuooHXVXHee1RoHjS8='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Glover Level Patcher</title>
 <style>
@@ -167,7 +167,7 @@
 <script>
 "use strict";
 (() => {
-  // Glover (USA) — the ROM the editor's patches are made against (gloveworld README, NGVE.sha1)
+  // Glover (USA): the ROM the editor's patches are made against (gloveworld README, NGVE.sha1)
   const KNOWN_SHA1 = "270be17b3c8da9b88a7b99c2a545b0bce16837f4";
   const MAX_ROM = 64 << 20, MAX_PATCH = 32 << 20, MAX_TARGET = 64 << 20;
   const $ = (id) => document.getElementById(id);

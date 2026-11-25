@@ -1889,7 +1889,6 @@ fn review_fixes(t: &mut T) {
     t.check("the camera list of the path panel has tooltips", tip);
 }
 
-/// The window at 1280 by 720 and at a display scale of 1.5: nothing panics and the panels stay inside.
 /// The exit triggers: the toolbar's Exits switch, the layer's checkbox, the spheres and the inspector's block.
 #[test]
 fn exit_triggers() {
@@ -2126,6 +2125,8 @@ fn number_fields_drag() {
     t.finish();
 }
 
+/// The window at 1280 by 720, at 1920 by 1080, and at 1920 by 1080 with a display scale of 1.5: the view has room,
+/// it is drawn at the display's scale, and buttons work.
 #[test]
 fn small_and_scaled_windows() {
     for (name, size, scale) in [("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5), ("1920x1080", [1920.0, 1080.0], 1.0)] {
@@ -2315,8 +2316,8 @@ fn the_fonts_have_the_symbols() {
 }
 
 /// The Theme list of the Options menu: every theme through a click, at three window sizes. The toolbar keeps to
-/// two rows at each size. The choice is kept in the
-/// settings and read back by a new window and by the setup screen. An unknown name gives the default.
+/// two rows at each size. The choice is kept in the settings and read back by a new window and by the setup screen.
+/// An unknown name gives the default.
 ///
 /// With `GLOVEBOX_SHOTS` it saves, for every theme, pictures of a level with a selection, the Options menu, the Add
 /// palette, a dialog and the setup screen in `DIR/<theme>/`. With `GLOVEBOX_ROM` also a level of the game.
@@ -3666,7 +3667,7 @@ fn the_rom() {
     t.choose("  (0a)");
     t.until(300, |w| !w.busy && w.ed.scene_id() == "0a" && w.jobs.running == 0);
     // A plain build is the ROM without its unused end. With an edit that needs the game mod the ROM is a whole
-    // number of MiB, which is what hwcheck is for: tilt a platform, an enemy or a powerup.
+    // number of MiB, which is what hwcheck is for. The edit tilts a platform, an enemy or a powerup.
     let ed = t.ed();
     let tilt = ent(ed, |e| matches!(e.kind, "platform" | "enemy" | "pickup") && !e.is_handle && e.rot.is_some());
     ed.select(tilt, false);

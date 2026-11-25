@@ -55,7 +55,7 @@ impl Check {
 /// A rule of the game's level parser that the level breaks.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Violation {
-    /// The top-level element (or the root) and the element inside it the rule is about.
+    /// The top-level element (or the root) and the element inside it that the rule is about.
     pub top: NodeId,
     pub sub: Option<NodeId>,
     /// Names the finding: the same key in the shipped level means the shipped level does it too.
@@ -165,8 +165,8 @@ impl Editor {
                 "Platform" | "NullPlatform" => {
                     plat_index += 1;
                     let pid = format!("platform {}", plat_index);
-                    // CheckForExit: the distance must be below the platform's radius. A radius of 0 never is.
-                    // Exit type 3 tests no distance.
+                    // CheckForExit: the distance must be below the platform's radius. No distance is below a radius
+                    // of 0. Exit type 3 tests no distance.
                     if let Some(t) = exits::exit_type(doc, node).filter(|t| *t != 3) {
                         let verts = match tag {
                             "NullPlatform" => Some(Default::default()),
@@ -356,8 +356,8 @@ impl Editor {
                 add(bd, format!("backdrop:{}", i), msg, None, None, "warn");
             }
         }
-        // Trigger volumes PuzzleEvaluateCondition can never satisfy: IsPointWithinBox needs a positive size, and a
-        // range test (distance < radius) needs a positive radius. The cylinder also needs min_y <= max_y.
+        // Trigger volumes that PuzzleEvaluateCondition can never satisfy: IsPointWithinBox needs a positive size, and
+        // a range test (distance < radius) needs a positive radius. The cylinder also needs min_y <= max_y.
         for p in doc.kids(root, "Puzzle") {
             for c in doc.kids(p, "PuzzleCond") {
                 for &v in doc.children(c) {
@@ -431,8 +431,9 @@ impl Editor {
     }
 
     /// Imports are loaded from the player's ROM at run time by the game mod (mod/banks.c), unless the author
-    /// chooses to copy them into the level's banks, which works without the Expansion Pak but puts game data in
-    /// patches. Imported custom models are always copied: they are not in the player's ROM.
+    /// chooses to copy them into the level's banks. Copied imports put game data in patches. They work without the
+    /// Expansion Pak when they fit in the game's own heap (`needs_pak_heap`). Imported custom models are always
+    /// copied: they are not in the player's ROM.
     pub fn runtime_imports(&self) -> bool {
         self.current_imports().iter().any(|i| !self.is_custom(i)) && !self.copy_imports
     }
@@ -461,7 +462,7 @@ impl Editor {
         }
     }
 
-    /// (heap bytes, heap blocks) a top-level element takes when the level loads (scenery only).
+    /// (heap bytes, heap blocks) that a top-level element takes when the level loads (scenery only).
     pub fn actor_cost(&self, doc: &Doc, node: NodeId) -> (i64, i64) {
         match doc.tag(node) {
             "LandActor" | "BackgroundActor" => (240 + (120 * self.faces(doc, node) + 15) / 16 * 16 + 64, 3),
@@ -591,7 +592,7 @@ impl Editor {
             let first = self.issues_for(i).into_iter().next().map(|x| x.1).unwrap_or_default();
             out.push(Check::new("err", format!("{}: {}", self.entities[i].label, first)).click(Click::Select(Some(i))));
         }
-        // The findings the shipped level has too come last
+        // Last come the findings that the shipped level has too
         for shipped in [false, true] {
             for v in self.violations.iter().filter(|v| v.shipped == shipped) {
                 let ent = whole.iter().copied().find(|&i| {

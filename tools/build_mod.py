@@ -6,8 +6,9 @@
 Needs a built gloveworld checkout: its GCC 2.7.2 (`make toolchain`), its headers and build/NGVE.elf, plus
 mips-linux-gnu binutils. The outputs are committed. Building ROMs does not need any of this.
 
-mod/heap.c, mod/transforms.c, mod/banks.c and mod/guard.c are linked at MOD_RAM, near the top of the Expansion Pak's memory, against the
-game's symbols, and are stored in the ROM at MOD_ROM. The game's heap gets the memory below MOD_RAM (heap.c).
+mod/aligned.c, mod/heap.c, mod/transforms.c, mod/banks.c, mod/guard.c and mod/slots.c (SOURCES) are linked at
+MOD_RAM, near the top of the Expansion Pak's memory, against the game's symbols, and are stored in the ROM at MOD_ROM.
+The game's heap gets the memory below MOD_RAM (heap.c).
 mod/loader.c is linked over ScreenShot, a debug function the game never calls. The JSON lists every word to patch
 in the game's code: the loader, and the `jal`s that now call the mod.
 """
@@ -82,8 +83,8 @@ def main():
             if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name) and 0x80000000 <= addr < 0x80400000:
                 f.write("%s = 0x%08X;\n" % (name, addr))
 
-    # The call sites that guard.c patches at run time (Mod_InitGuard), with an Expansion Pak only
-    # and that slots.c patches (Mod_InitSlots), only when the ROM stores extra levels
+    # The call sites that guard.c patches at run time (Mod_InitGuard), with an Expansion Pak only,
+    # and the ones that slots.c patches (Mod_InitSlots), only when the ROM stores extra levels
     guard_sites = [("TransformAndDrawObject", "TransformAndDrawObject", "DrawActor"), ("CastShadow", "CastShadow", "ProcessShadows"),
                    ("DrawFootprint", "DrawFootprint", "DrawFootprints"),
                    ("LoadLandscapeFile", "LoadLandscapeFile", "ParseLandscapeFile"), ("CheckForExit", "CheckForExit", None),
@@ -154,7 +155,7 @@ def main():
     restart = [s for s in call_sites(rom, game, "RestartEnemy")
                if not (game["LoadEnemy"][0] <= s < game["LoadEnemy"][0] + game["LoadEnemy"][1])]
     hook(restart, mod["Mod_RestartEnemy"][0], "RestartEnemy (respawn)")
-    # MainProc's JallocInit runs before the loader; Mod_Init starts the heap again. These run on level changes.
+    # MainProc's JallocInit runs before the loader; Mod_Init starts the heap again. The other calls run on level changes.
     heap = [s for s in call_sites(rom, game, "JallocInit")
             if not (game["MainProc"][0] <= s < game["MainProc"][0] + game["MainProc"][1])]
     hook(heap, mod["Mod_JallocInit"][0], "JallocInit (heap end at MOD_RAM)")

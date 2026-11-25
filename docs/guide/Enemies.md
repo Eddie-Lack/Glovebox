@@ -48,6 +48,8 @@ Follow, flee and face have a `Target`: the glove, the ball, or the closer one.
 
 ### A list that runs off its end is an error!
 
+When the last instruction of a list ends, the game reads past the list.
+
 End a list with `Go to instruction`. The `Checks` tell you when one is missing.
 
 More than 30 normal, 10 conditional or 30 attack instructions crash the game. The `Checks` count them.

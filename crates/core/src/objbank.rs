@@ -720,8 +720,9 @@ fn movable_command(hi: u32, lo: u32) -> bool {
         }
 }
 
-/// A display list with the vertex data its commands load copied behind it, and each vertex pointer as (its offset
-/// in the result, the offset of the data it points to). A range of vertices that two commands load is copied twice.
+/// A display list with the vertex data that its commands load copied behind it, and each vertex pointer as (its
+/// offset in the result, the offset of the data it points to). A range of vertices that two commands load is
+/// copied twice.
 fn relocatable_display_list(data: &[u8], dl: &[u8]) -> Result<(Vec<u8>, Vec<(u32, u32)>), ObjError> {
     let mut out = dl.to_vec();
     let mut pointers = Vec::new();
@@ -1046,7 +1047,7 @@ fn geometry_prims(
 }
 
 /// The model of one parsed object, as libgarib's glTF export with a scale of 1 gives it. `data` is the bank the
-/// object was parsed from. `textures` gives the size of a texture the level's texture banks hold, or none.
+/// object was parsed from. `textures` gives the size of a texture that the level's texture banks hold, or none.
 ///
 /// An error means libgarib does not export the object, and the editor has no model for it: a mesh without
 /// a display list uses a texture that `textures` does not know, or the object lacks a part the export needs.
@@ -1206,7 +1207,7 @@ pub fn model(
     }
 }
 
-/// The ids of the textures an object's meshes and sprites use. `textures` gives the
+/// The ids of the textures that an object's meshes and sprites use. `textures` gives the
 /// size of a texture that some texture bank of the game holds, or none.
 ///
 /// The set is empty when libgarib does not export the object with those textures (see `object_model`): the

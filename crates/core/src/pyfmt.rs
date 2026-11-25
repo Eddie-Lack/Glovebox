@@ -1,7 +1,8 @@
 //! Numbers as text, the way libgarib's level XML writes and reads them.
 //!
 //! libgarib, a Python library, defined the level XML. Its floats are Python's `repr` of a double ("1.0",
-//! "0.05000000074505806", "1e-05"), and its integers above 10000 are hex. These functions write and read the same text.
+//! "0.05000000074505806", "1e-05"), and its integers above 10000 are hex. These functions write and read its floats,
+//! and read its integers. `disassemble` in level.rs writes the hex (`hex_cutoff`).
 
 /// Python's `repr(float)`: the shortest digits that read back to the same double, with ".0" on whole numbers and an
 /// exponent below 1e-4 and from 1e16.
@@ -18,7 +19,8 @@ pub fn repr(v: f64) -> String {
     // Rust's exponent form gives the shortest round-trip digits: d.ddddde-N
     let e = format!("{:e}", v.abs());
     // When two digit strings of that length read back to the same double, Python takes the one nearer to the exact
-    // value, and the even one on a tie. Rust's shortest form does not always. Rounding to that length does.
+    // value, and the even one on a tie. Rust's shortest form does not always give that one. Rounding to that length
+    // gives it.
     let e = {
         let n = e.split_once('e').map_or(1, |(m, _)| m.bytes().filter(|b| b.is_ascii_digit()).count());
         let rounded = format!("{:.*e}", n - 1, v.abs());

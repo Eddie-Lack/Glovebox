@@ -9,7 +9,7 @@
 //! `Add to level` and `Path` show while their tool is on. In a tabbed column of a wide window they get a column of
 //! their own beside the others, as long as the view keeps `MIN_VIEW` points.
 //!
-//! The layout is the setting `panels`, the sizes the player dragged are `panel_sizes`.
+//! The layout is the setting `panels`. The sizes the player dragged are `panel_sizes`.
 
 use crate::app::Window;
 use crate::tour::Target;

@@ -22,7 +22,7 @@ pub struct CustomModel {
     pub set_name: String,
     /// The set's id: 10 hex digits
     pub set: String,
-    /// The piece's name in the game (7 characters at most)
+    /// The piece's name in the game (8 characters at most)
     pub piece: String,
     pub offset: [f64; 3],
     /// The ids of the textures the piece uses
@@ -294,10 +294,10 @@ pub fn plan_imports(gd: &GameData, customs: &Customs, sid: &str, imports: &[Stri
     })
 }
 
-/// The plan with the game mod. Imports are not copied into the ROM: the mod loads the banks they come from, from
-/// the player's own ROM, when the level starts (mod/banks.c). This picks those banks: each model's object bank, and
-/// texture banks for the textures the level's own banks lack, the model's own world first. Imported models are not
-/// in the ROM: `copy` is the part of the plan that copies them into the level's banks.
+/// The plan with the game mod. Imports from the game are not copied into the ROM: the mod loads the banks they come
+/// from, from the player's own ROM, when the level starts (mod/banks.c). This picks those banks: each model's object
+/// bank, and texture banks for the textures the level's own banks lack, the model's own world first. Imported custom
+/// models are not in the ROM: `copy` is the part of the plan that copies them into the level's banks.
 pub fn plan_runtime(gd: &GameData, customs: &Customs, sid: &str, imports: &[String]) -> Result<Plan, String> {
     let mut plan = plan_imports(gd, customs, sid, imports)?;
     let s = scene(sid).map_err(|e| e.0)?;

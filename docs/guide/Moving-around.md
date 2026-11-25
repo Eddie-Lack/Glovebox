@@ -30,7 +30,7 @@ The camera goes to the object and looks at it. Dragging now turns around that ob
 - The scroll wheel sets the speed
 - `C` or `Esc` goes back to orbiting
 
-Note: while you fly, those keys move the camera. Use the toolbar for `Move` and `+ Add`.
+Note: while you fly, those keys move the camera. Use the toolbar for `Move` (`W`) and `+ Add` (`A`).
 
 ## Fog
 

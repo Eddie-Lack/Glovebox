@@ -11,7 +11,8 @@ pub struct IniSettings {
     values: BTreeMap<String, String>,
 }
 
-/// Reads a value `escape` wrote: a backslash is written as two, and a value with spaces or commas is in quotes.
+/// Reads a value `escape` wrote. `escape` writes a backslash as two, a quote as `\"` and a newline as `\n`. It puts a
+/// value in quotes when it holds a space, a comma, a semicolon or an equals sign.
 fn unescape(v: &str) -> String {
     let v = v.trim();
     let v = v.strip_prefix('"').and_then(|x| x.strip_suffix('"')).unwrap_or(v);

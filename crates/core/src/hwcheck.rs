@@ -11,9 +11,9 @@
 //! - A texture bank's records are each a multiple of 8 bytes long. The pixels of every texture then start on a
 //!   64 bit boundary, where the RDP loads them from.
 //! - The pointers inside an object bank are aligned for what they point at.
-//! - Every call site the mod hooks is a `jal` to a word inside the mod.
-//! - Every extra level stored behind the mod starts on a 16 byte boundary, has a sane size word and zero padding
-//!   to 16.
+//! - Every call site that the mod hooks is a `jal` to a word inside the mod.
+//! - Every extra level stored behind the mod starts on a 16 byte boundary, has a size word that is a multiple of 4
+//!   from 16 to `MAX_LEVEL_FILE`, and has zero padding to 16.
 
 use crate::n64::{self, read_u32};
 use crate::tables;
@@ -308,7 +308,7 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
     problems
 }
 
-/// Breaks a good ROM in the ways the rules name and says, for each break, whether `check_rom` finds it. The ROM
+/// Breaks a good ROM in the ways that the rules name and says, for each break, whether `check_rom` finds it. The ROM
 /// must have the mod's custom banks. An error when it is too short to break.
 pub fn self_test(rom: &[u8]) -> Result<Vec<(&'static str, bool)>, n64::OutOfBounds> {
     self_test_with(rom, tables::mod_info())
@@ -319,7 +319,7 @@ pub fn self_test_with(rom: &[u8], info: &Value) -> Result<Vec<(&'static str, boo
     Ok(cases.into_iter().map(|(name, data)| (name, !check_rom_with(&data, info).is_empty())).collect())
 }
 
-/// The broken copies the self-test makes, each with the name of its break.
+/// The broken copies that the self-test makes, each with the name of its break.
 pub fn self_test_cases(rom: &[u8], info: &Value) -> Result<Vec<(&'static str, Vec<u8>)>, n64::OutOfBounds> {
     let base = hex(&info["mod_rom"]).unwrap_or(0) as usize;
     let c = base.saturating_add(info["custom"]["offset"].as_u64().unwrap_or(0) as usize);

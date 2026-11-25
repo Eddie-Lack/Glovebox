@@ -1,5 +1,5 @@
 //! Loading a level, importing XML, and building. The slow parts are values with a `run` method that need
-//! nothing from the editor, for the window to run on a thread.
+//! nothing from the editor. The window can run them on a thread.
 
 use super::{format_of, sanitize, Editor, Event, ModelIndex, ENTRY_TAG, EXTRA_SLOTS};
 use crate::entities::{self, Context, MOD_PARENTS};

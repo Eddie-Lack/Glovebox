@@ -14,6 +14,8 @@ With nothing selected (`Esc`), the Inspector shows the level's settings.
 | `music` | The level's music. |
 | `clock` | A countdown, like a bonus level's. |
 
+On a Space level there's also `Extra level (Expansion Pak)` _(see [The Expansion Pak game mod](../Game-mod.md#extra-levels))_.
+
 Note: at 0, the clock says TIME UP, then sends you back to the way room.
 
 Note: if you set it to boot straight into the level (`boot here`, `Test level`), it'll play its vanilla music, not yours.
@@ -41,6 +43,8 @@ To see less fog while you edit, use `Fog` in the toolbar. That one only changes 
 ### Keep the file name 7 letters long!
 
 A name with an even number of letters crashes a console. Lol yea
+
+The shipped levels' file names are 7 letters long.
 
 ---
 

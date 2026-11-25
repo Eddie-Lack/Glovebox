@@ -4,7 +4,7 @@
 //!     gbtool build ROM SID XML OUT [--quickboot] [--expansion] [--copy] [--bps] [--import 0xID]...
 //!     gbtool hwcheck ROM                          check a built ROM against the console's rules
 //!     gbtool pack ROM SID XML OUTDIR NAME [--home DIR]
-//!                                                 write a level pack for g64coopdx (docs/technical.md, "Level packs")
+//!                                                 write a level pack (docs/technical.md, "Level packs for g64coopdx")
 //!     gbtool import ROM GLTF [--scale S] [--home DIR] import a glTF model into the user folder
 //!     gbtool modelbanks GLTF OUT                  write a glTF model as a pack's models.bin for g64coopdx
 //!

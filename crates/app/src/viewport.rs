@@ -61,7 +61,7 @@ pub struct View {
     pub rect: egui::Rect,
     /// The background of a level without fog: the theme's.
     pub background: [f64; 3],
-    /// The button a press in the view holds until it comes up.
+    /// The button that went down in the view, until it comes up.
     held: Option<Button>,
     /// Why the 3D view could not start.
     pub error: Option<String>,

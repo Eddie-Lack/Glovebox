@@ -15,6 +15,8 @@ _Back to the [guide](README.md)_
 
 ## Place garibs
 
+`place` starts on `garibs`.
+
 3. Click `Place`.
 
 ![Garibs placed along the path, with the Path panel on the right](img/path-garibs.png)

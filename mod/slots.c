@@ -262,7 +262,7 @@ void Mod_StartNewGame(void) {
 
 /* A checkpoint ring is touched when the ball comes down through its height (CheckRestartGate). A ball that rolls on a flat floor
    never does, and a ring sits 26 over the floor, where the restart needs it. For a ring with the tag RING_TAG in an extra level the
-   ball counts as coming from above when it is under the ring's height and not more than RING_BELOW under it: the game's own check
+   ball counts as coming from above when it is under the ring's height and not more than RING_BELOW under it. The game's own check
    then runs with the ball's previous y put above the ring for the call. */
 void Mod_CheckRestartGate(Platform *platform) {
     f32 prevY = ball.prevPos.y;
@@ -280,8 +280,8 @@ void Mod_CheckRestartGate(Platform *platform) {
     }
 }
 
-/* EEPROM. The game writes saveSlot, bestTimes and their CRCs from RAM; with the flag set RAM holds the extra levels' bits,
-   the writes then get copies with the retail bits. */
+/* EEPROM. The game writes saveSlot, bestTimes and their CRCs from RAM. With the flag set, RAM holds the extra levels' bits,
+   and the writes then get copies with the retail bits. */
 
 static void BuildRetailImages(void) {
     s32 i;

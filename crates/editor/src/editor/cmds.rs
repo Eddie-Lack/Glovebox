@@ -182,8 +182,11 @@ impl Editor {
         }
     }
 
-    /// Moves an element one place earlier (-1) or later (+1) among its siblings. The top level keeps EndLevelData
-    /// last, an enemy keeps EnemyFinalize last, and a platform refuses an order the game reads wrong.
+    /// Moves an element one place earlier (-1) or later (+1) among its siblings. At the top level, an element does
+    /// not move past EndLevelData. An enemy keeps EnemyFinalize last. In a puzzle, a child only trades places with
+    /// one of its own rank (`puzzles::rank`: PuzzleNumtimes, the logic, the conditions, the actions). Inside a
+    /// platform, a move is refused when it breaks one of the order and combination rules
+    /// (`commands::platform_rules`) that the platform kept before the move.
     pub fn move_node(&mut self, node: NodeId, delta: i32) {
         let Some(parent) = self.doc.parent(node) else { return };
         let sib = self.doc.children(parent).to_vec();

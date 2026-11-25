@@ -1,6 +1,6 @@
 //! Number fields that change by dragging, as in a paint program.
 //!
-//! A press on a number field that moves left or right changes the value: one step for each point the pointer
+//! When a press on a number field moves left or right, the value changes: one step for each point the pointer
 //! moves. Shift makes the step ten times finer and Ctrl ten times coarser. A press without movement puts the
 //! caret in the field for typing. Esc during a drag puts the old value back.
 //!
@@ -110,7 +110,7 @@ pub const TIP: &str = "Drag left or right to change the number. Shift: ten times
 
 /// A one-line text box. With a `spec` and without the keyboard focus, a drag changes its number.
 ///
-/// Gives the box's own response (for `lost_focus` and `changed`), the response to name and to give a tooltip,
+/// Gives the box's own response (for `lost_focus` and `changed`), the response that takes a name and a tooltip,
 /// and the text a drag made in this frame. The caller writes that text to where the number lives. On Esc the
 /// text is the one from before the drag.
 pub fn field(ui: &mut Ui, id: Id, buf: &mut String, spec: Option<Spec>, edit: impl FnOnce(egui::TextEdit) -> egui::TextEdit) -> (Response, Response, Option<String>) {
@@ -141,7 +141,7 @@ pub fn field(ui: &mut Ui, id: Id, buf: &mut String, spec: Option<Spec>, edit: im
             signal(ui, Signal::Cancel);
             out = (d.before != *buf).then(|| d.before.clone());
         } else {
-            // The frame the drag begins counts the way from the press: the value follows the pointer exactly
+            // In the drag's first frame the movement counts from the press: the value follows the pointer exactly
             let started = over.drag_started();
             let (dx, mods) = ui.input(|i| {
                 let whole = i.pointer.press_origin().zip(i.pointer.latest_pos()).map(|(a, b)| b.x - a.x);

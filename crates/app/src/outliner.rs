@@ -56,7 +56,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 continue;
             }
             let mut on = !ed.hidden.contains(k);
-            if style::tick_box(ui, &mut on, RichText::new(format!("{name} {n}")).color(style::theme(ui.ctx()).text).into(), style::hex(color)).changed() {
+            if style::colored_checkbox(ui, &mut on, RichText::new(format!("{name} {n}")).color(style::theme(ui.ctx()).text).into(), style::hex(color)).changed() {
                 acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(k, on)));
             }
             col += 1;
@@ -64,11 +64,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 ui.end_row();
             }
         }
-        // The exit triggers are no entities of their own: the layer shows the spheres of the platforms with an exit
+        // The exit triggers are not entities of their own: the layer shows the spheres of the platforms with an exit
         let n = ed.exits().len();
         if n > 0 {
             let mut on = !ed.hidden.contains(exits::LAYER);
-            if style::tick_box(ui, &mut on, RichText::new(format!("Exit triggers {n}")).color(style::theme(ui.ctx()).text).into(), style::hex(exits::COLOR)).changed() {
+            if style::colored_checkbox(ui, &mut on, RichText::new(format!("Exit triggers {n}")).color(style::theme(ui.ctx()).text).into(), style::hex(exits::COLOR)).changed() {
                 acts.push(Box::new(move |w: &mut Window| w.ed.set_layer(exits::LAYER, on)));
             }
         }

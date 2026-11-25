@@ -64,6 +64,8 @@ _[Enemies](Enemies.md)_ shows how to change what it does.
 
 <img src="img/add-models.png" alt="The Models tab: a search box, a bank list and three buttons for each model" width="380">
 
+A bank is a group of models that the game loads together.
+
 Search by name, or pick a bank. `This level’s banks` shows what the level has already.
 
 | Button | What it do |
@@ -88,11 +90,11 @@ Props made for the halloween rom hack: gravestones, signposts with your words, p
 
 Platforms that are already built and work: a start ring, a checkpoint ring, a level exit, a lift, a slam button, a spinner and more. Looks weird on some levels in the panel.
 
-_[Platforms](Platforms.md)_ builds a lift with one. _[The reference](../Using-the-editor.md#presets)_ lists them all.
+_[Platforms](Platforms.md)_ shows how to build a lift with one. _[The reference](../Using-the-editor.md#presets)_ lists them all.
 
 ### Camera
 
-<img src="img/add-camera.png" alt="The Camera tab: Behind, High, Side, Other side, Front and Low zones" width="380">
+<img src="img/add-camera.png" alt="The Camera tab: Behind, High, Side, Other side, Front, Low, Far and Fixed zones" width="380">
 
 Boxes that move the camera while Glover is inside. _[Puzzles and camera zones](Puzzles-and-camera-zones.md)_ has more.
 

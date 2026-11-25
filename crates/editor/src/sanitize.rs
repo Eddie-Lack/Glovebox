@@ -1,9 +1,12 @@
 //! Strict validation of level XML from outside the editor (Import XML, drag and drop, autosaved drafts).
 //!
-//! The file is checked as text, parsed by the hardened parser (no DTD, no entities), validated against the level
-//! format (the decomp table: every element is a known command or type, every attribute a field of it, every value
-//! within its field's type), and copied element by element into a fresh tree. Only that copy reaches the editor.
-//! Comments, processing instructions, foreign namespaces and anything the checks do not know are dropped.
+//! The file is checked as text and parsed by the hardened parser (no DTD, no entities). It is validated against the
+//! level format (the decomp table): every element is a known command or type, every attribute a field of it, every
+//! value within its field's type. It is copied element by element into a fresh tree. Only that copy reaches the
+//! editor. Comments and processing instructions are dropped, with a warning for those inside `<Level>`. Unknown
+//! attributes on `<Level>` are dropped with a warning too. These are errors: a namespaced element, an unknown
+//! element, an attribute of any other element that is not one of its fields, and text that is not blank. A file
+//! with errors gives no tree.
 
 use crate::commands::{as_list, truthy};
 use glovebox_core::pyfmt;

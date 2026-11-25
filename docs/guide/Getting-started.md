@@ -45,6 +45,8 @@ The first time you open it, the editor starts on Atlantis Level 1. Later, it'll 
 
 Pick another level in the list at the top.
 
+![The level list, open, with Atlantis 1 chosen](img/level-list.png)
+
 ## Take the tour
 
 The first time, the editor asks if you want a quick tour.
@@ -56,10 +58,10 @@ The first time, the editor asks if you want a quick tour.
 - Click `Skip` or press `Esc` to end it.
 - Said `No thanks`? `Options` > `Take the tour` starts it any time.
 
-![The level list, open, with Atlantis 1 chosen](img/level-list.png)
-
 ## File names are dumb!!!
 The game will crash if the file name is an even number of characters in length. Seriously lol [check out the Level Settings page](Level-settings.md#file-name).
+
+It's the `File name` in the level settings, not the name of a file on your computer.
 
 ## Edits are saved
 
@@ -67,7 +69,7 @@ The game will crash if the file name is an even number of characters in length. 
 - If you close the editor, your edits are saved for when you come back.
 - The box in the corner of the view says `Original level` or `Edited`.
 - The level list marks edited levels with ●.
-- `Reset level` gives you the vanilla level back. `Undo` still brings your edits back.
+- `Reset level` in the toolbar gives you the vanilla level back. `Undo` still brings your edits back.
 
 ---
 

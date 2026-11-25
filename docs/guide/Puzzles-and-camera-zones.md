@@ -24,7 +24,7 @@ A condition that tests where something is has a shape in the view.
 
 ## Open a puzzle
 
-Select a trigger volume and click `Edit its puzzle`.
+Select a trigger volume and click `Edit its puzzle` in the Inspector.
 
 <img src="img/puzzle-inspector.png" alt="The puzzle of the lift: it fires once, when Glover is inside a box, and starts a platform" width="380">
 

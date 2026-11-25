@@ -59,7 +59,8 @@ pub fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Args, String
     Ok(out)
 }
 
-/// `%LOCALAPPDATA%\Glovebox` on Windows, `$XDG_DATA_HOME/glovebox` or `~/.local/share/glovebox` elsewhere.
+/// `%LOCALAPPDATA%\Glovebox` on Windows, `~/Library/Application Support/Glovebox` on macOS, and
+/// `$XDG_DATA_HOME/glovebox` or `~/.local/share/glovebox` elsewhere.
 pub fn default_home() -> PathBuf {
     let var = |name: &str| std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from);
     if cfg!(windows) {
@@ -197,7 +198,7 @@ fn backends() -> wgpu::Backends {
     }
 }
 
-/// Lower is better: a real graphics card before a software one, Direct3D 12 before Vulkan before the rest.
+/// Lower is better: a real graphics card before a software one, Direct3D 12 or Metal before Vulkan before the rest.
 fn rank(info: &wgpu::AdapterInfo) -> (u8, u8) {
     let kind = match info.device_type {
         wgpu::DeviceType::DiscreteGpu | wgpu::DeviceType::IntegratedGpu => 0,

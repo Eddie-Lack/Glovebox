@@ -319,7 +319,8 @@ impl Editor {
 
     /// Camera zones over a stretch of the path (`start` and `end` are fractions of its length): boxes around the
     /// path, each split off at most `split` long. The box is level with the axes, so a diagonal stretch gets a
-    /// bigger box: split it. The usual values are 0, 1, 140, 300, 400 and 600.
+    /// bigger box: split it. The usual values are 0 and 1 for `start` and `end`, 140 for `margin`, 300 for `below`,
+    /// 400 for `above` and 600 for `split`.
     #[allow(clippy::too_many_arguments)]
     pub fn path_zones(&mut self, key: &str, start: f64, end: f64, margin: f64, below: f64, above: f64, split: f64) {
         let samples = self.path_samples(20.0);
