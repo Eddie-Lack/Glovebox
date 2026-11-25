@@ -88,7 +88,7 @@ fn differences(got: &Value, want: &Value) -> Vec<String> {
 }
 
 /// Every level: the entities, the checks, the draw load and the ground checks are the reference's, and no check fires
-/// on a shipped level.
+/// on a vanilla level.
 #[test]
 fn all_levels_match_the_reference() {
     let Some((backend, dir)) = setup() else { return };
@@ -105,7 +105,7 @@ fn all_levels_match_the_reference() {
         }
         let texts: Vec<&str> = got["checks"].as_array().unwrap().iter().map(|c| c[1].as_str().unwrap()).collect();
         if !texts.iter().any(|t| t.starts_with("No new problems")) {
-            bad.push(format!("{sid}: a check fires on the shipped level: {texts:?}"));
+            bad.push(format!("{sid}: a check fires on the vanilla level: {texts:?}"));
         }
     }
     let _ = std::fs::remove_dir_all(&home);

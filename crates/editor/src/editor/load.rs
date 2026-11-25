@@ -286,7 +286,7 @@ impl Editor {
                     self.doc = root;
                     self.draft_saved_at = Some(draft.saved_at);
                     let msg = format!(
-                        "Restored your edits from {} (autosave). Undo or Reset level to go back to the shipped level.",
+                        "Restored your edits from {} (autosave). Undo or Reset level to go back to the vanilla level.",
                         (self.format_time)(draft.saved_at)
                     );
                     restored = Some((msg, "ok"));
@@ -416,7 +416,7 @@ impl Editor {
     // Every edited level in one ROM or patch
 
     /// The levels with edits: a draft, a title, music or clock, or the open level's unsaved edits, as (id, name,
-    /// XML). The XML is None for a level whose file is the shipped one.
+    /// XML). The XML is None for a level whose file is the vanilla one.
     pub fn project_levels(&mut self) -> Vec<(String, String, Option<String>)> {
         self.flush_draft();
         let mut sids: BTreeSet<String> = self.drafts.list().into_keys().collect();
@@ -445,10 +445,10 @@ impl Editor {
     /// What `build_all` needs for one level: its XML, the models it imports, its table row. And whether it needs
     /// the game mod (rotations, imports from the ROM, an extra level, or more scenery than the game's heap holds).
     pub fn level_entry(&self, sid: &str, xml: Option<&str>) -> Result<(BuildAllEntry, bool), String> {
-        let shipped = |ed: &Editor| ed.backend.level_xml(sid).map_err(|e| e.0).and_then(|x| Doc::parse(&x).map_err(|e| e.0));
+        let vanilla = |ed: &Editor| ed.backend.level_xml(sid).map_err(|e| e.0).and_then(|x| Doc::parse(&x).map_err(|e| e.0));
         let root = match xml {
             Some(x) => Doc::parse(x).map_err(|e| e.0)?,
-            None => shipped(self)?,
+            None => vanilla(self)?,
         };
         let is_open = self.scene.is_some() && sid == self.scene_id();
         let loaded = if is_open { self.loaded.clone() } else { self.backend.loaded_ids(sid).map_err(|e| e.0)? };
@@ -466,7 +466,7 @@ impl Editor {
         let mut heap = is_open && self.use_mod();
         if let (false, Some(free), true) = (heap, self.heap_free(sid), xml.is_some()) {
             // Added scenery (scenery_budget) and copied imports against the level's measured free heap
-            let delta = self.scenery_cost(&root).0 - self.scenery_cost(&shipped(self)?).0;
+            let delta = self.scenery_cost(&root).0 - self.scenery_cost(&vanilla(self)?).0;
             let copied: i64 = if runtime { 0 } else { imports.iter().map(|i| self.catalog.get(i).map_or(0, |c| c.bytes as i64)).sum() };
             heap = free - 16 * 1024 - delta.max(0) - copied < 0;
         }

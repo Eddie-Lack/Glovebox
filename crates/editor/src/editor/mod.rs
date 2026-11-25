@@ -52,10 +52,10 @@ pub const GITHUB: &str = "https://github.com/Eddie-Lack/gloveworld/blob/";
 // they overwrite the camera's matrices and the frame never finishes. Long before that the game slows down. The far
 // plane is FogConfiguration's near_clip (parse.c TOKEN_FOG; 1000 without one, game.c).
 pub const MATRICES: i64 = 256;
-// Measured in the emulator: the shipped hub 1 asks for 228 at its fountain, and a hub
+// Measured in the emulator: the vanilla hub 1 asks for 228 at its fountain, and a hub
 // built with the editor lagged on a console at 206 to 228. The estimate was within 35 of the game's count in four
-// levels, and up to 63 over in hub 1. Shipped levels pass both limits (hub 1's estimate is 261). A level gets the
-// warning or the error only when it's busier than the shipped one.
+// levels, and up to 63 over in hub 1. Vanilla levels pass both limits (hub 1's estimate is 261). A level gets the
+// warning or the error only when it's busier than the vanilla one.
 pub const LOAD_SLOW: i64 = 190;
 pub const LOAD_STOP: i64 = 240;
 /// Glover, the ball, their shadows and footprints.
@@ -80,7 +80,7 @@ pub const LOOK: [(&str, &str); 6] = [
     ("AmbientSound", "Ambient sound"),
 ];
 pub const LOOK_ONE: [&str; 3] = ["FogConfiguration", "SetGravity", "AmbientLight"];
-/// Settings every level keeps one of: the game keeps the last screen's fog without one, and every shipped level
+/// Settings every level keeps one of: the game keeps the last screen's fog without one, and every vanilla level
 /// has both.
 pub const LOOK_KEEP: [&str; 2] = ["FogConfiguration", "AmbientLight"];
 /// AddBackgroundLight ignores the 8th and later (light.c).
@@ -343,7 +343,7 @@ pub struct Editor {
     pub(crate) plan_serial: u64,
     pub(crate) now: f64,
     pub(crate) orig_cost: Option<(String, (i64, i64))>,
-    /// The draw load of the shipped level at its busiest spot, for the XML it was worked out from.
+    /// The draw load of the vanilla level at its busiest spot, for the XML it was worked out from.
     pub(crate) orig_load: Option<(String, i64)>,
     pub(crate) mouse: select::Mouse,
     pub(crate) preview_t0: f64,

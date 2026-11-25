@@ -58,13 +58,13 @@ pub struct Violation {
     /// The top-level element (or the root) and the element inside it that the rule is about.
     pub top: NodeId,
     pub sub: Option<NodeId>,
-    /// Names the finding: the same key in the shipped level means the shipped level does it too.
+    /// Names the finding: the same key in the vanilla level means the vanilla level does it too.
     pub key: String,
     pub msg: String,
     pub level: &'static str,
     /// Where the game prints its own warning: (file, line).
     pub diag: Option<(String, String)>,
-    pub shipped: bool,
+    pub vanilla: bool,
 }
 
 /// How added scenery changes the heap. `free` is what is left after the 16 KB the game needs during play.
@@ -148,7 +148,7 @@ impl Editor {
         let flags = self.flag_enum();
         let mut out: Vec<Violation> = Vec::new();
         let mut add = |top: NodeId, key: String, msg: String, diag: Option<&str>, sub: Option<NodeId>, level: &'static str| {
-            out.push(Violation { top, sub, key, msg, level, diag: diag.and_then(|d| self.diag_for(d)), shipped: false });
+            out.push(Violation { top, sub, key, msg, level, diag: diag.and_then(|d| self.diag_for(d)), vanilla: false });
         };
         let mut tags_so_far: Vec<f64> = Vec::new();
         let mut plat_index = 0;
@@ -297,7 +297,7 @@ impl Editor {
         let name = doc.get(root, "name").unwrap_or("");
         if !name.is_empty() && (name.chars().count() % 2 == 0 || !name.is_ascii()) {
             let msg = format!(
-                "The level's file name \u{201c}{}\u{201d} must be ASCII with an odd length (shipped levels use 7). Otherwise every command sits at an odd address and a console crashes.",
+                "The level's file name \u{201c}{}\u{201d} must be ASCII with an odd length (vanilla levels use 7). Otherwise every command sits at an odd address and a console crashes.",
                 name
             );
             add(root, "level:name".into(), msg, None, None, "err");
@@ -312,7 +312,7 @@ impl Editor {
         }
         let lights = doc.kids(root, "DiffuseLight").len();
         if lights == 0 {
-            let msg = "The level has no directional light. Every shipped level has at least one.";
+            let msg = "The level has no directional light. Every vanilla level has at least one.";
             add(root, "level:nolight".into(), msg.to_string(), None, None, "warn");
         }
         if doc.first(root, "AmbientLight").is_none() {
@@ -341,7 +341,7 @@ impl Editor {
         if let Some(g) = doc.first(root, "SetGravity") {
             let v = num0(doc, g, "strength");
             if (v - 1.2).abs() > 1e-6 {
-                let msg = format!("Gravity is {} (the game's own is 1.2): jumps and falls differ from the shipped levels.", fmt_g(v));
+                let msg = format!("Gravity is {} (the game's own is 1.2): jumps and falls differ from the vanilla levels.", fmt_g(v));
                 add(g, "level:gravity".into(), msg, None, None, "warn");
             }
         }
@@ -489,7 +489,7 @@ impl Editor {
         h.get("free").and_then(|f| f.as_i64().or_else(|| f.as_f64().map(|v| v as i64)))
     }
 
-    /// The scenery cost of the shipped level, worked out once for each level.
+    /// The scenery cost of the vanilla level, worked out once for each level.
     pub(crate) fn prime_orig_cost(&mut self) {
         let Some(orig) = self.orig_xml.clone() else { return };
         if self.orig_cost.as_ref().is_some_and(|(x, _)| *x == orig) {
@@ -501,8 +501,8 @@ impl Editor {
         }
     }
 
-    /// The draw load of the shipped level, worked out once for each level. A restored draft is set aside while it
-    /// is measured: the entities are built for the shipped level, then for the draft again.
+    /// The draw load of the vanilla level, worked out once for each level. A restored draft is set aside while it
+    /// is measured: the entities are built for the vanilla level, then for the draft again.
     pub(crate) fn prime_orig_load(&mut self) {
         let Some(orig) = self.orig_xml.clone().filter(|_| self.has_level) else { return };
         if self.orig_load.as_ref().is_some_and(|(x, _)| *x == orig) {
@@ -522,7 +522,7 @@ impl Editor {
         self.orig_load = Some((orig, n));
     }
 
-    /// How the scenery added or removed since the shipped level changes the heap. None for an unchanged level or
+    /// How the scenery added or removed since the vanilla level changes the heap. None for an unchanged level or
     /// one with no measured heap.
     pub fn scenery_budget(&self) -> Option<SceneryBudget> {
         let free = self.heap_free(self.scene_id())?;
@@ -578,8 +578,8 @@ impl Editor {
         }
         for v in &self.violations {
             if v.top == ent.node && (v.sub.is_none() || v.sub == ent.sub) {
-                let tail = if v.shipped { " (the shipped level does this too)" } else { "" };
-                out.push((if v.shipped { "note" } else { v.level }, format!("{}{}", v.msg, tail)));
+                let tail = if v.vanilla { " (the vanilla level does this too)" } else { "" };
+                out.push((if v.vanilla { "note" } else { v.level }, format!("{}{}", v.msg, tail)));
             }
         }
         out
@@ -597,7 +597,7 @@ impl Editor {
         self.prime_orig_cost();
         let mut violations = self.run_rules(&self.doc);
         for v in violations.iter_mut() {
-            v.shipped = self.orig_violations.iter().any(|o| o.key == v.key);
+            v.vanilla = self.orig_violations.iter().any(|o| o.key == v.key);
         }
         self.violations = violations;
         let whole: Vec<EntId> = (0..self.entities.len()).filter(|&i| self.whole(i)).collect();
@@ -613,16 +613,16 @@ impl Editor {
             let first = self.issues_for(i).into_iter().next().map(|x| x.1).unwrap_or_default();
             out.push(Check::new("err", format!("{}: {}", self.entities[i].label, first)).click(Click::Select(Some(i))));
         }
-        // Last come the findings that the shipped level has too
-        for shipped in [false, true] {
-            for v in self.violations.iter().filter(|v| v.shipped == shipped) {
+        // Last come the findings that the vanilla level has too
+        for vanilla in [false, true] {
+            for v in self.violations.iter().filter(|v| v.vanilla == vanilla) {
                 let ent = whole.iter().copied().find(|&i| {
                     let e = &self.entities[i];
                     e.node == v.top && (v.sub.is_none() || e.sub == v.sub)
                 });
                 let label = ent.map(|i| format!("{}: ", self.entities[i].label)).unwrap_or_default();
-                let tail = if v.shipped { " Also in the shipped level." } else { "" };
-                let mut c = Check::new(if v.shipped { "note" } else { v.level }, format!("{}{}{}", label, v.msg, tail));
+                let tail = if v.vanilla { " Also in the vanilla level." } else { "" };
+                let mut c = Check::new(if v.vanilla { "note" } else { v.level }, format!("{}{}{}", label, v.msg, tail));
                 c.click = ent.map(|i| Click::Select(Some(i)));
                 c.link = v.diag.as_ref().map(|(file, line)| (self.source_link(file, line), format!("{}:{}", file, line)));
                 out.push(c);
@@ -640,7 +640,7 @@ impl Editor {
                 ),
             ));
         }
-        let fresh = self.violations.iter().filter(|v| !v.shipped).count();
+        let fresh = self.violations.iter().filter(|v| !v.vanilla).count();
         if missing.is_empty() && fresh == 0 {
             out.push(Check::new(
                 "ok",
@@ -668,7 +668,7 @@ impl Editor {
         if let Some(sb) = self.scenery_budget() {
             let kb = |v: i64| py_round(v as f64 / 1024.0) as i64;
             let text = format!(
-                "Added scenery takes about {} KB more heap than the shipped level and {} more of the game's 1,280 heap blocks. ",
+                "Added scenery takes about {} KB more heap than the vanilla level and {} more of the game's 1,280 heap blocks. ",
                 kb(sb.delta),
                 sb.blocks
             );
@@ -820,8 +820,8 @@ impl Editor {
         }
         let dl = self.draw_load();
         let (n, Some(at)) = dl.worst else { return out };
-        // Shipped levels reach these numbers too: the estimate says 261 for hub 1. A level warns or fails only when
-        // it's busier than the shipped level.
+        // Vanilla levels reach these numbers too: the estimate says 261 for hub 1. A level warns or fails only when
+        // it's busier than the vanilla level.
         let orig = self.orig_xml.as_ref().and_then(|x| self.orig_load.as_ref().filter(|(o, _)| o == x)).map(|(_, n)| *n);
         let busier = orig.is_none_or(|o| n > o);
         let level = if n >= LOAD_STOP && busier {
@@ -836,7 +836,7 @@ impl Editor {
         let what = match level {
             "err" => format!("That's at or near the limit: past {} the game stops, and before that it crawls.", MATRICES),
             "warn" => "The game slows down here. Fewer pieces in reach or a shorter far plane fix it.".to_string(),
-            "note" => format!("The shipped level reaches about {}, and the game runs it.", orig.unwrap_or(n)),
+            "note" => format!("The vanilla level reaches about {}, and the game runs it.", orig.unwrap_or(n)),
             _ => "Fine.".to_string(),
         };
         let far = fmt_g(dl.far);

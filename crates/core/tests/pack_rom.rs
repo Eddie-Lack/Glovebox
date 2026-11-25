@@ -1,4 +1,4 @@
-//! Level packs on the real game: every shipped level's own XML must make a pack.
+//! Level packs on the real game: every vanilla level's own XML must make a pack.
 //!
 //! `GLOVEBOX_ROM` is the ROM's path. Without it the test prints that it was skipped and passes.
 
@@ -8,9 +8,9 @@ use std::collections::HashSet;
 use std::path::Path;
 
 #[test]
-fn every_shipped_level_makes_a_pack() {
+fn every_vanilla_level_makes_a_pack() {
     let Ok(rom) = std::env::var("GLOVEBOX_ROM") else {
-        println!("every_shipped_level_makes_a_pack: skipped (GLOVEBOX_ROM is not set)");
+        println!("every_vanilla_level_makes_a_pack: skipped (GLOVEBOX_ROM is not set)");
         return;
     };
     let home = std::env::temp_dir().join(format!("glovebox-pack-rom-{}", std::process::id()));
@@ -23,8 +23,8 @@ fn every_shipped_level_makes_a_pack() {
         // A pack of an unchanged level holds the level file as the game has it: it starts with its own size.
         pack::check_level(&p.level).unwrap();
         assert_eq!(p.id, pack::pack_id(&p.manifest, &p.level, None, None));
-        // The export with the level's imports finds none in a shipped level: it uses only its own banks.
-        let e = be.level_pack(&scene.id, &xml, "Shipped").unwrap_or_else(|e| panic!("level {} does not export: {}", scene.id, e));
+        // The export with the level's imports finds none in a vanilla level: it uses only its own banks.
+        let e = be.level_pack(&scene.id, &xml, "Vanilla").unwrap_or_else(|e| panic!("level {} does not export: {}", scene.id, e));
         assert_eq!((e.models.as_deref(), e.level.as_slice()), (None, p.level.as_slice()), "level {}", scene.id);
         made += 1;
     }

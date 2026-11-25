@@ -15,7 +15,7 @@ use crate::xmlutil::{fmt, hex_id, num0, r1};
 use glovebox_core::xml::{Doc, NodeId};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// The script a new enemy gets when no shipped one exists for its type: rest forever. An enemy with no normal
+/// The script a new enemy gets when no vanilla one exists for its type: rest forever. An enemy with no normal
 /// instruction crashes the parser (NMEGetNewInstruction reads normalList[0]).
 const REST: [(&str, &str); 6] = [
     ("instr_type", "4"),
@@ -217,7 +217,7 @@ impl Editor {
 
     // -----------------------------------------------------------------------------------------------------------
     // Autosave: the current level's XML is kept as a draft in the user folder after every edit, and restored when
-    // the level is opened again. A level that matches the shipped one has no draft.
+    // the level is opened again. A level that matches the vanilla one has no draft.
 
     pub(crate) fn schedule_draft_save(&mut self) {
         self.draft_pending = Some((self.scene_id().to_string(), self.serialize()));
@@ -247,7 +247,7 @@ impl Editor {
         self.events.push(Event::Edited);
     }
 
-    /// Back to the shipped level (undoable). The window asks first.
+    /// Back to the vanilla level (undoable). The window asks first.
     pub fn reset_level(&mut self) {
         let Some(orig) = self.orig_xml.clone() else { return };
         self.push_undo(self.serialize());
@@ -256,7 +256,7 @@ impl Editor {
         self.after_edit(Some(&[]), false);
         self.flush_draft();
         let msg = format!(
-            "Reset {} to the shipped level and deleted its autosave. Undo (Ctrl+Z) brings your edits back.",
+            "Reset {} to the vanilla level and deleted its autosave. Undo (Ctrl+Z) brings your edits back.",
             self.scene_str("name")
         );
         self.set_status(&msg, "ok");
@@ -373,7 +373,7 @@ impl Editor {
         );
     }
 
-    /// New enemies copy a shipped script for their type, shifted so its absolute coordinates follow the enemy.
+    /// New enemies copy a vanilla script for their type, shifted so its absolute coordinates follow the enemy.
     pub fn add_enemy(&mut self, type_: &str) {
         let be = self.backend.clone();
         let t = be.templates().get(type_).filter(|t| t.is_object());
@@ -762,7 +762,7 @@ impl Editor {
             let have = self.backend.backdrops(self.scene_id()).unwrap_or_default();
             match have.into_iter().next() {
                 Some(t) => texture = Some(t),
-                None => return self.set_status("None of the shipped backdrop textures is in this level's texture banks.", "err"),
+                None => return self.set_status("None of the vanilla backdrop textures is in this level's texture banks.", "err"),
             }
         }
         let be = self.backend.clone();

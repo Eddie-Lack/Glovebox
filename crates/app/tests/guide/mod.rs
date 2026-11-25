@@ -452,7 +452,7 @@ fn welcome(g: &mut G) {
     g.t.settle();
 }
 
-/// Atlantis Level 1 as shipped, with nothing selected and every tool off.
+/// The vanilla Atlantis Level 1, with nothing selected and every tool off.
 fn atlantis(g: &mut G) {
     g.tall(false);
     if g.t.ed().scene_id() != "0a" {

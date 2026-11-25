@@ -896,7 +896,7 @@ fn editor_on_the_fixture() {
     t.click("Yes");
     let ed = t.ed();
     let ok = !ed.is_edited() && ed.drafts.load("10").is_none();
-    t.check("Reset level goes back to the shipped level and drops the draft", ok);
+    t.check("Reset level goes back to the vanilla level and drops the draft", ok);
     t.click("Undo");
     let same = t.ed().serialize() == xml;
     t.check("undo brings the edits back after a reset", same);
@@ -1155,7 +1155,7 @@ fn editor_on_the_fixture() {
     ed.add_enemy("unknown-type");
     let new = *ed.doc.kids(ed.root(), "Enemy").last().unwrap();
     let ok = tags(ed, new) == ["NormalInstructions", "EnemyFinalize"];
-    t.check("an enemy with no shipped script gets a rest instruction", ok);
+    t.check("an enemy with no vanilla script gets a rest instruction", ok);
     let ed = t.ed();
     let ins = ed.doc.first(ed.doc.first(new, "NormalInstructions").unwrap(), "EnemyInstruction").unwrap();
     let ok = ed.removal_refused(ins).is_some();
@@ -1452,7 +1452,7 @@ fn more_clicks(t: &mut T) {
     t.undo_to(n);
     t.pick("clock", "No clock");
     let bt = t.ed().level_info().bonus_time;
-    t.pick("clock", "Keep the shipped clock");
+    t.pick("clock", "Keep the vanilla clock");
     let kept = t.ed().level_info().bonus_time.is_none();
     t.check("click: the bonus clock", bt == Some(-1) && kept);
     // A camera zone
@@ -3621,7 +3621,7 @@ fn the_rom() {
         if matches!(sid.as_str(), "0a" | "1b" | "3c") {
             t.shot(&format!("41-rom-{sid}"));
         }
-        // The exits of the level as the game sizes them. The check on them must stay silent on a shipped level.
+        // The exits of the level as the game sizes them. The check on them must stay silent on a vanilla level.
         let ed = t.ed();
         let list = ed.exits();
         for &i in &list {
@@ -3658,8 +3658,8 @@ fn the_rom() {
             t.ed().select(None, false);
         }
     }
-    t.detail("the exit check is silent on all 48 shipped levels", fired.is_empty(), format!("{fired:?}"));
-    t.detail("the editor can measure every shipped exit", unknown.is_empty(), format!("{unknown:?}"));
+    t.detail("the exit check is silent on all 48 vanilla levels", fired.is_empty(), format!("{fired:?}"));
+    t.detail("the editor can measure every vanilla exit", unknown.is_empty(), format!("{unknown:?}"));
     t.detail("all 48 levels open through the level list and say No new problems", bad.is_empty(), format!("{bad:?}"));
 
     // Build ROM for one level, through the button

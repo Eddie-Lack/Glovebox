@@ -461,11 +461,11 @@ impl Window {
     pub fn reset_level(&mut self) {
         let name = self.ed.scene.as_ref().map(|x| s(x, "name").to_string()).unwrap_or_default();
         if !self.ed.is_edited() {
-            return self.set_status(&format!("{name} is already the shipped level."), "");
+            return self.set_status(&format!("{name} is already the vanilla level."), "");
         }
         self.dialog = Some(Dialog::Confirm {
             title: "Reset level".to_string(),
-            text: format!("Reset {name} to the shipped level? This discards your edits and their autosave. You can still undo it in this session."),
+            text: format!("Reset {name} to the vanilla level? This discards your edits and their autosave. You can still undo it in this session."),
             yes: Some(Box::new(|w: &mut Window| w.ed.reset_level())),
         });
     }

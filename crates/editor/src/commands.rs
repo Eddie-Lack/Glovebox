@@ -30,7 +30,7 @@ pub const OWN_TOOLS: &[&str] = &[
 pub const FIRST: &[&str] = &["SetActorRotation", "SetActorScale"];
 pub const LAST: &[&str] = &["EnemyFinalize"];
 pub const PLATFORMS: &[&str] = &["Platform", "NullPlatform"];
-/// Commands the menus leave out: unused in the shipped levels, or they crash on a wrong value (Actor0xbf).
+/// Commands the menus leave out: unused in the vanilla levels, or they crash on a wrong value (Actor0xbf).
 pub const HIDDEN: &[&str] = &["PlatStrobe", "Rope", "PlatSine", "PlatOrbit", "Actor0xbf"];
 
 pub const MOTION: &[&str] = &[
@@ -212,7 +212,7 @@ pub fn needs(tag: &str) -> Option<Need> {
     }
 }
 
-/// Values for a new command, where the type-neutral 0 would be wrong (the shipped levels' usual values, or tested
+/// Values for a new command, where the type-neutral 0 would be wrong (the vanilla levels' usual values, or tested
 /// ones).
 pub fn special_defaults(tag: &str) -> &'static [(&'static str, &'static str)] {
     match tag {
@@ -539,7 +539,7 @@ pub fn keeps_collision(doc: &Doc, node: NodeId) -> bool {
 }
 
 /// The first child in the wrong place and the index it should go before. Only what the game needs is checked: the
-/// shipped levels put most children in any order.
+/// vanilla levels put most children in any order.
 pub fn misplaced(doc: &Doc, node: NodeId) -> Option<(NodeId, usize)> {
     let ch = doc.children(node);
     let tags = tags_of(doc, node);

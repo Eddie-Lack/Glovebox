@@ -312,7 +312,7 @@ fn editor_on_the_fixture() {
     ed.load_scene("10").unwrap();
     t.detail("the draft comes back", ed.serialize() == xml && ed.last_status.0.contains("Restored your edits"), ed.last_status.0.clone());
     ed.reset_level();
-    t.check("Reset level goes back to the shipped level and drops the draft", !ed.is_edited() && ed.drafts.load("10").is_none());
+    t.check("Reset level goes back to the vanilla level and drops the draft", !ed.is_edited() && ed.drafts.load("10").is_none());
     ed.undo();
     t.check("undo brings the edits back after a reset", ed.serialize() == xml);
 
@@ -345,10 +345,10 @@ fn editor_on_the_fixture() {
     t.check("the draw load check is there", dl.len() == 1);
     ed.click_check(dl[0].click.as_ref().unwrap());
     t.check("clicking it shows the far plane", ed.far_sphere.is_some());
-    // The shipped level's own load gives no warning. Copies of its landscape past 190 do.
-    let shipped = ed.draw_load().worst.0;
+    // The vanilla level's own load gives no warning. Copies of its landscape past 190 do.
+    let vanilla = ed.draw_load().worst.0;
     let level_of = |ed: &Editor| ed.load_checks().into_iter().find(|c| c.text.starts_with("Draw load")).map(|c| c.level).unwrap_or_default();
-    t.check("the fixture's own draw load is fine", shipped < glovebox_editor::editor::LOAD_SLOW && level_of(&ed) == "ok");
+    t.check("the fixture's own draw load is fine", vanilla < glovebox_editor::editor::LOAD_SLOW && level_of(&ed) == "ok");
     let mut copies = 0;
     while ed.draw_load().worst.0 < glovebox_editor::editor::LOAD_SLOW && copies < 6 {
         let land: Vec<EntId> = (0..ed.entities.len()).filter(|&i| ed.entities[i].kind == "land" && !ed.entities[i].derived).collect();
@@ -357,11 +357,11 @@ fn editor_on_the_fixture() {
         copies += 1;
     }
     let busy = ed.draw_load().worst.0;
-    t.detail("a busier level than the shipped one warns", busy >= glovebox_editor::editor::LOAD_SLOW && ["warn", "err"].contains(&level_of(&ed)), format!("{shipped} {busy} {copies}"));
+    t.detail("a busier level than the vanilla one warns", busy >= glovebox_editor::editor::LOAD_SLOW && ["warn", "err"].contains(&level_of(&ed)), format!("{vanilla} {busy} {copies}"));
     for _ in 0..copies {
         ed.undo();
     }
-    t.check("undo brings the shipped load back", ed.draw_load().worst.0 == shipped);
+    t.check("undo brings the vanilla load back", ed.draw_load().worst.0 == vanilla);
 
     // Rules from the decomp: a bad trigger volume
     let vol = ed.doc.iter_tags(ed.root(), &["PuzzleCondBallWithinRangeOfPoint"])[0];
@@ -468,7 +468,7 @@ fn editor_on_the_fixture() {
     t.check("fog and ambient light can't be removed", kept);
     ed.add_enemy("unknown-type");
     let new = *ed.doc.kids(ed.root(), "Enemy").last().unwrap();
-    t.check("an enemy with no shipped script gets a rest instruction", tags(&ed, new) == ["NormalInstructions", "EnemyFinalize"]);
+    t.check("an enemy with no vanilla script gets a rest instruction", tags(&ed, new) == ["NormalInstructions", "EnemyFinalize"]);
     let ins = ed.doc.first(ed.doc.first(new, "NormalInstructions").unwrap(), "EnemyInstruction").unwrap();
     t.check("its only normal instruction can't be removed", ed.removal_refused(ins).is_some());
     let grp = ed.doc.make("AttackInstructions", &[]);

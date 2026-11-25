@@ -11,7 +11,7 @@ The editor adds the mod by itself when your level needs it _(see [When the edito
 - Rotation and scale for enemies, platforms, powerups and water (the retail game only applies `SetActorRotation` and `SetActorScale` to landscape and background actors, which you place as `Scenery` and `Background`)
 - More memory: 3,968 KB more for the level
 - Models and textures from other worlds, loaded from the player's own ROM when the level starts
-- Extra levels: new levels in the Space slots, with the shipped Space levels kept _(see [Extra levels](#extra-levels))_
+- Extra levels: new levels in the Space slots, with the vanilla Space levels kept _(see [Extra levels](#extra-levels))_
 
 Note: animated textures on models from other worlds don't animate
 
@@ -34,9 +34,9 @@ Other levels are built like normal
 
 ## Extra levels
 
-An edited level normally takes the place of the shipped one
+An edited level normally takes the place of the vanilla one
 
-A Space level (1, 2, 3, the boss or the bonus) can be an extra level instead, and the shipped one stays
+A Space level (1, 2, 3, the boss or the bonus) can be an extra level instead, and the vanilla one stays
 
 1. Open the Space level and edit it
 2. With nothing selected, check `Extra level (Expansion Pak)` in the Inspector, under `Title, music and clock`
@@ -45,8 +45,8 @@ A Space level (1, 2, 3, the boss or the bonus) can be an extra level instead, an
 
 Walk Glover into the entry zone and you go to the Space way room, with your extra levels behind its doors
 
-- Progress in the extra levels is saved apart from the shipped Space levels
-- Every other portal takes you back to the shipped game
+- Progress in the extra levels is saved apart from the vanilla Space levels
+- Every other portal takes you back to the vanilla game
 - A checkpoint ring that you add after you check `Extra level` counts when the ball rolls through it
 - A ring that you added before you checked `Extra level` doesn't count when the ball rolls through it. Add those rings again
 

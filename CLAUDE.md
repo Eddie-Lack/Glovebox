@@ -12,7 +12,7 @@ built ROM has to keep on a console.
   else from the ROM goes in: no ROM, levels, models, textures, patches or emulator screenshots.
 - **Never use leaked original source code.** Facts about the game come from the
   [gloveworld](https://github.com/Eddie-Lack/gloveworld) decompilation, the ROM's own code, or tests in an emulator.
-- **A rule that fires on a shipped level is wrong.** Every check the editor makes must pass on all 48 shipped levels.
+- **A rule that fires on a vanilla level is wrong.** Every check the editor makes must pass on all 48 vanilla levels.
 - **A ROM that plays in an emulator can still freeze a console.** Keep to "Real hardware" in docs/technical.md, and
   keep the hardware check (`crates/core/src/hwcheck.rs`) in the build: the mod patcher (`modpatch.rs`) runs it on
   every ROM it builds.

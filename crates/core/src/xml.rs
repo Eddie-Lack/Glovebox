@@ -8,7 +8,7 @@
 //! processing instructions are dropped. Whitespace-only text is dropped.
 //!
 //! `serialize` and `pretty` write the bytes that lxml writes for the same tree (`ET.tostring`, and `ET.indent` with
-//! two spaces). Undo snapshots, drafts and the comparison with the shipped level depend on that.
+//! two spaces). Undo snapshots, drafts and the comparison with the vanilla level depend on that.
 
 use std::fmt::Write;
 

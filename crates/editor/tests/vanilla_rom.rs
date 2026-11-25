@@ -1,4 +1,4 @@
-//! The editor's checks on the shipped levels, with the real game. The test needs `GLOVEBOX_ROM`. Without it, it says
+//! The editor's checks on the vanilla levels, with the real game. The test needs `GLOVEBOX_ROM`. Without it, it says
 //! that it was skipped, and passes.
 
 use glovebox_core::backend::{Backend, GameBackend};
@@ -11,15 +11,15 @@ fn draw_load_level(ed: &mut Editor) -> String {
     ed.load_checks().iter().find(|c| c.text.starts_with("Draw load")).map(|c| c.level.to_string()).unwrap_or_default()
 }
 
-/// No shipped level gets a warning or an error for its draw load, also the ones whose estimate is over the limits.
-/// A level that is busier than the shipped one does, also after its draft is restored.
+/// No vanilla level gets a warning or an error for its draw load, also the ones whose estimate is over the limits.
+/// A level that is busier than the vanilla one does, also after its draft is restored.
 #[test]
-fn the_draw_load_of_shipped_levels() {
+fn the_draw_load_of_vanilla_levels() {
     let Ok(rom) = std::env::var("GLOVEBOX_ROM") else {
         println!("skipped: GLOVEBOX_ROM is not set");
         return;
     };
-    let home = std::env::temp_dir().join(format!("glovebox-shipped-rom-{}", std::process::id()));
+    let home = std::env::temp_dir().join(format!("glovebox-vanilla-rom-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&home);
     let backend: Arc<dyn Backend> = Arc::new(GameBackend::open(Path::new(&rom), home.clone()).expect("the ROM opens"));
     let mut ed = Editor::new(backend.clone(), Drafts::new(home.join("drafts")), None);
@@ -53,10 +53,10 @@ fn the_draw_load_of_shipped_levels() {
     }
     assert!(bad.is_empty(), "{}", bad.join("\n"));
     // Hub 1's estimate is 261, over the error's 240
-    assert!(over > 0, "no shipped level is over the warning's limit");
+    assert!(over > 0, "no vanilla level is over the warning's limit");
     ed.load_scene("00").unwrap();
     assert!(ed.draw_load().worst.0 >= 240, "hub 1 is not over the error's limit");
-    // One more copy of every landscape piece makes hub 1 busier than the shipped level
+    // One more copy of every landscape piece makes hub 1 busier than the vanilla level
     let land: Vec<usize> = (0..ed.entities.len()).filter(|&i| ed.entities[i].kind == "land" && !ed.entities[i].derived).collect();
     ed.set_selection(land);
     ed.duplicate();

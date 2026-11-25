@@ -343,12 +343,12 @@ impl GameData {
         level::disassemble(self.level_file(sid)?).map_err(|e| GameError(format!("level {sid}: {}", e.0)))
     }
 
-    /// A shipped level as XML text.
+    /// A vanilla level as XML text.
     pub fn level_xml(&self, sid: &str) -> Result<String, GameError> {
         Ok(self.level_doc(sid)?.pretty_no_newline())
     }
 
-    /// The size of a shipped level's file.
+    /// The size of a vanilla level's file.
     pub fn orig_lev_size(&self, sid: &str) -> Option<usize> {
         self.level_file(sid).ok().map(|l| l.len())
     }
@@ -602,9 +602,9 @@ impl GameData {
         Some(ids)
     }
 
-    // -- What the shipped levels use
+    // -- What the vanilla levels use
 
-    /// The backdrop textures a level can show: the ids the shipped levels use as backdrops and that the level's
+    /// The backdrop textures a level can show: the ids the vanilla levels use as backdrops and that the level's
     /// texture banks hold, most used first.
     pub fn backdrops(&self, sid: &str) -> Result<Vec<u32>, GameError> {
         let s = scene(sid)?;
@@ -629,7 +629,7 @@ impl GameData {
         Ok(used.iter().copied().filter(have).collect())
     }
 
-    /// For each enemy type, the shortest script a shipped level gives it. The types are in the order the levels first use them.
+    /// For each enemy type, the shortest script a vanilla level gives it. The types are in the order the levels first use them.
     pub fn enemy_templates(&self) -> &[EnemyTemplate] {
         const CUTSCENES: [&str; 5] = ["2b", "2c", "2d", "2e", "2f"];
         const BOSSES: [&str; 8] = ["0d", "12", "17", "1c", "21", "26", "27", "28"];

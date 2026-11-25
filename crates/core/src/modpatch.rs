@@ -140,7 +140,7 @@ const EASY_CONTROLS_OLD: [u8; 4] = [0x14, 0x60, 0x00, 0x15];
 pub const LEVEL_INFO: usize = 0xE7910;
 pub const LEVEL_ROW: usize = 0x38;
 
-/// New values for one row of the level table. None keeps the shipped value.
+/// New values for one row of the level table. None keeps the vanilla value.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LevelInfo {
     pub name: Option<String>,

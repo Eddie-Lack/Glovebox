@@ -110,7 +110,7 @@ nothing else. The program never runs them.
 
 - A model is named by a `ModelRef` (a game object's id, or a piece of an imported set). `Backend::model` and
   `Backend::texture` give the model and the pixels.
-- The level XML is a `Doc` tree. Undo snapshots and "is this the shipped level?" compare its serialized text.
+- The level XML is a `Doc` tree. Undo snapshots and "is this the vanilla level?" compare its serialized text.
 - Every edit rebuilds the entities from the XML. Models are parsed once per level.
 - Drawing: opaque meshes are merged into one world-space buffer per material after each rebuild (`make_batches`).
   What moves without a rebuild (a gizmo drag, the motion preview) is drawn on its own. The renderer draws into its
@@ -444,7 +444,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
   the Wayroom, gives a pack that passes `g64pack check`.
 - The flag of `models.bin` (the game's texture banks win over the level's own) is always 0. The game mod's builds never
   set it either.
-- All 48 shipped levels export with no `models.bin` (`every_shipped_level_makes_a_pack`).
+- All 48 vanilla levels export with no `models.bin` (`every_vanilla_level_makes_a_pack`).
 - `pack::pack_models` refuses, with a message:
   - a reskin: a set whose `meta.json` names the model it was made from
   - a model whose id is one that the game finds an enemy, a bullet or a pick-up by (`pack::GAME_NAME_IDS`, copied from
@@ -492,7 +492,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
 - **Autosave**: after every edit the level's XML is saved in the user folder (`drafts/<level id>.json`,
   `crates/editor/src/drafts.rs`). Reopening the level, restarting the editor or switching levels and back restores it. The HUD
   chip shows "Edited · autosaved HH:MM", and the level list marks edited levels with ●. Undo after a restore
-  goes back to the shipped level.
+  goes back to the vanilla level.
 - **Reset level** discards a level's edits and its autosave, after a confirmation. It's undoable in the
   current session.
 - **Import XML** (or drop an .xml on the window) checks the file before any of it reaches the level
@@ -541,7 +541,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
 
   The transform math comes from the decomp: rotation is `GetQuaternionFromXYZRot` with `rotOrder` {1,2,0}
   (R = Ry·Rz·Rx, Euler order `YZX`), and scale is `guScaleF(x, y, z)` with no axis swap. noclip uses `ZYX`
-  and swaps X/Z. Shipped levels only use Y rotation and uniform scale. The two agree on shipped data.
+  and swaps X/Z. Vanilla levels only use Y rotation and uniform scale. The two agree on vanilla data.
   An edited level rendered from the emulator's exact camera (`guLookAt(actualCamPos, actualCamTargetPos)`, read
   from memory) under both conventions showed it: the decomp's matches the game and noclip's doesn't.
 - **Expansion Pak game mod.** A small game mod (`mod/`) uses the N64 Expansion Pak for five things:
@@ -578,8 +578,8 @@ the level it was made for, and the game loads that level's banks with it. Each p
     keeps the larger size. Jalloc itself has no 4 MB limits: static blocks grow down from the end, dynamic ones
     up from the start, and sizes are 32-bit. Nothing else in the game masks addresses to 4 MB.
   - **The commands the mod applies.** The level parser sends `SetActorRotation`/`SetActorScale` to the most recent object of any
-    kind, not only the last landscape actor. In all 48 shipped levels, every one of these commands follows a
-    landscape-type actor. Shipped levels behave as in the retail game.
+    kind, not only the last landscape actor. In all 48 vanilla levels, every one of these commands follows a
+    landscape-type actor. Vanilla levels behave as in the retail game.
     - Water takes the rotation and scale on its model. Its swimming volume stays an axis-aligned box.
     - A platform takes the rotation before its collision is built. It collides as drawn. A spinning platform
       gets the rotation added to its spin angles.
@@ -628,7 +628,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
   - The search box has an id of its own. Its clear button comes and goes before it in the row, and an id made by
     counting would move the keyboard focus to that button after the first letter.
   - **Collectables**: garib types, every powerup (`Pickup` enum), Mr. Tip.
-  - **Enemies**: all 52 types. A new enemy copies the shortest script that type has in a shipped level, with
+  - **Enemies**: all 52 types. A new enemy copies the shortest script that type has in a vanilla level, with
     its absolute points (`home_*`, `destination_*`, `lookat_*`, attention box) moved to the new spot.
   - **Models**: all 1,522 models in the game, from every object bank, placed as Scenery (`LandActor`, solid),
     Background (no collision) or Platform. **Import model…** adds a model of your own (see [Import model](Import-model.md)).
@@ -670,7 +670,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
   Pink is Glover, orange the ball, purple the camera. Move them with the gizmo and resize them with scale or
   the inspector's size fields; the inspector shows the whole puzzle. Duplicate and Delete copy or remove the
   whole puzzle when the volume is its only one (a camera zone, for one). A volume of a puzzle with several
-  can't be duplicated or deleted on its own. The shipped levels hold 209 boxes and no spheres or cylinders.
+  can't be duplicated or deleted on its own. The vanilla levels hold 209 boxes and no spheres or cylinders.
   Clicks pass through the translucent fill to objects inside.
 - **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It's the same switch as the
   "Puzzle triggers" layer. The setting is remembered between sessions. Hidden volumes can't be picked, and the
@@ -700,7 +700,7 @@ the level it was made for, and the game loads that level's banks with it. Each p
 ### Camera zones
 
 **+ Add → Camera** adds a camera zone: a box where the camera moves a set way while Glover is inside it. When he
-leaves, the camera goes back to the level's own. The shipped levels have about 170 of these. Each is a puzzle
+leaves, the camera goes back to the level's own. The vanilla levels have about 170 of these. Each is a puzzle
 with one condition (Glover inside a box, `cond_type` 35) and camera actions only, so it needs no game mod.
 
 | Preset | While Glover is in the box, the camera |
@@ -721,7 +721,7 @@ with one condition (Glover inside a box, `cond_type` 35) and camera actions only
   - **fly to**: `FlyTowardsPoint`
 - A dashed line runs from the middle of the zone to about where its camera stands. **Look from the zone's
   camera** shows about what the player sees.
-- The shipped zones of this shape show the panel too.
+- The vanilla zones of this shape show the panel too.
 - How the actions work (`camera.c`, `puzzle.c`): the look angle is `atan2(dx, dz)` of Glover minus the camera,
   and the camera puts the level's own settings back on every frame Glover is in no zone.
 
@@ -736,15 +736,15 @@ The checks estimate how hard the busiest spot of the level is to draw.
 - The far plane is `FogConfiguration`'s `near_clip` (1000 without one).
 - The editor counts the object nodes of every model within reach of a camera 130 behind and 50 over Glover,
   facing four ways, at every garib, powerup, checkpoint, enemy and camera zone.
-- From 190 it's a warning, from 240 an error. Both need an estimate over the shipped level's own. Shipped levels
+- From 190 it's a warning, from 240 an error. Both need an estimate over the vanilla level's own. Vanilla levels
   reach these numbers too: hub 1 261, hubs 2 to 6 and hub 8 209 to 239, Pirates 2 198, and the two flythrus 225 and
-  213. A level over 190 that isn't busier than the shipped one gets a note. The shipped level's estimate is worked out when the
+  213. A level over 190 that isn't busier than the vanilla one gets a note. The vanilla level's estimate is worked out when the
   level opens (`prime_orig_load`), also under a restored draft. Click the row to see the spot and the far plane.
-- `the_draw_load_of_shipped_levels` (`crates/editor/tests/shipped_rom.rs`, with `GLOVEBOX_ROM`) checks that no
-  shipped level gets the warning or the error, and that hub 1 with more landscape gets the error, also from its draft.
+- `the_draw_load_of_vanilla_levels` (`crates/editor/tests/vanilla_rom.rs`, with `GLOVEBOX_ROM`) checks that no
+  vanilla level gets the warning or the error, and that hub 1 with more landscape gets the error, also from its draft.
 - Checked against the game's own count (the mod's `modPeakMatrices`) at 8 spots from quiet to busy in each of five
   levels. In Atlantis 1, Carnival 1, Carnival Bonus and Pirates 2 the estimate was within
-  35 of the game at every spot. In hub 1 it said up to 63 more than the game. The shipped hub 1 asks for 228 at
+  35 of the game at every spot. In hub 1 it said up to 63 more than the game. The vanilla hub 1 asks for 228 at
   its fountain (the estimate says 261), and Pirates 2 for 199 (198).
   A hub built with the editor slowed down on a console at 206 to 228.
 - The checks also report a `fog_distance` of 1000 or more.
@@ -754,7 +754,7 @@ The checks estimate how hard the busiest spot of the level is to draw.
 Glover starts at the first checkpoint and restarts at the last one he touched. A checkpoint, or a
 `GloverSpawnPoint` in a level with no checkpoint, with no solid ground within 400 under it is a warning. The view
 marks the first checkpoint as Glover's start, also in a level with a `GloverSpawnPoint`. The spawn point is then
-labeled as not used. No shipped level has both. Solid means a landscape piece
+labeled as not used. No vanilla level has both. Solid means a landscape piece
 (`LandActor`) or a platform. Background actors have no collision.
 
 ### The kit
@@ -816,8 +816,8 @@ ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64
 | `crates/editor/src/presets.rs` | Platform presets (rings, exits, lifts, spikes, teleport, the extra-levels entry zone). |
 | `mod/slots.c` | Extra level slots: the loader, the levelInfo swap, the save swap and its EEPROM record, the world exit, tag 77 rings. |
 
-- The 48 shipped levels give no error from these checks, and `tidy()` changes none of them. A rule that fires on a
-  shipped level is wrong. Shipped levels put PlatScale after PlatSetInitialPos on moving or face-freed platforms,
+- The 48 vanilla levels give no error from these checks, and `tidy()` changes none of them. A rule that fires on a
+  vanilla level is wrong. Vanilla levels put PlatScale after PlatSetInitialPos on moving or face-freed platforms,
   PlatSetCollisionYOffset after placement, a path sound anywhere after its point, and PlatVentAdvanceFrames before
   points; all of these are fine.
 - `xmlutil::num` reads the XML's hex ints (`0x4000`).
@@ -895,7 +895,7 @@ ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64
   (`UpdatePickups` spins `rot.y` and eases `scale`) are rewritten every frame. Spinning platforms rebuild
   `rotQuat` from `motion->rot`. Landscape matrices are baked once (`CalculateStaticMatrices`).
 - `SetActorRotation`/`SetActorScale` (`TOKEN_LANDROT`/`TOKEN_LANDSCALE`) go to `lastLandscape`, set only for
-  landscape, background and animated background actors. In the 48 shipped levels all 725 of them follow such
+  landscape, background and animated background actors. In the 48 vanilla levels all 725 of them follow such
   an actor.
 - `QuaternionMultiply(dst, a, b)` is the Hamilton product a·b; `GetQuaternionFromXYZRot` chains qY·qZ·qX with it.
 - Puzzle trigger volumes (parse.c `TOKEN_CONDITION`, puzzle.c `PuzzleEvaluateCondition`): condition ids 35-41
@@ -933,7 +933,7 @@ ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64
     point), or the game mod's `SetActorScale` (mod/transforms.c). A scale that comes after the position is
     drawn and doesn't change the radius.
   - So a loading-zone `SetExit` before the position leaves the radius at 0, and the exit can never fire. The
-    check "The exit can never fire" reports it. The 48 shipped
+    check "The exit can never fire" reports it. The 48 vanilla
     levels have 126 platforms with an exit, and none has a radius of 0. The exit posts of the levels have 20,
     their start value. The hub's entrances are `ballbit` models of 18.0 to 57.4,
     the Wayroom's doors 87.6, the Castle Cave's 131.4. The end of Carnival 1 is a `ballbit` at scale 10
@@ -947,7 +947,7 @@ ROMs. A level pack for g64coopdx may use one as a platform ("Level packs for g64
 - Camera zones ("Level tools", above): a puzzle with one `PuzzleCondGloverWithinVolume` and only actions 70
   (`TweenYAdjust`), 71 (`TweenDistance`), 73 (`FlyTowardsPoint`) and 74 (`LookAtGlover`: `angle` is `atan2(dx, dz)` of
   Glover minus the camera, `distance` is the turn speed). `camera.c` puts the level's camera back every frame Glover is
-  in no zone (unless he is falling). The shipped levels hold about 170 of this shape. `camera_zone()` in
+  in no zone (unless he is falling). The vanilla levels hold about 170 of this shape. `camera_zone()` in
   `crates/editor/src/entities.rs` reads one, `set_camera_zone()` writes its actions.
 - Drawing: the game counts one object matrix per object node it draws (all nodes of the object tree, `CountNodes` in
   `mod/guard.c`), plus shadows and footprints. In the editor's models (`crates/core/src/model.rs`) these are the nodes with a mesh; a node
@@ -1144,7 +1144,7 @@ GLOVEBOX_ROM=path/to/glover.z64 GLOVEBOX_GUIDE=docs/guide/img cargo test -p glov
 - Without both variables the test does nothing and passes. `GLOVEBOX_GUIDE_ONLY=add,exit` makes the pictures of
   some steps only (the names are in `run`).
 - The test opens the real window at 1280 by 800 in the Sage theme with the fog off, takes the ROM on the setup
-  screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the shipped level.
+  screen, and drives Atlantis Level 1 into each state the guide shows. Each step starts from the vanilla level.
 - Its settings name the default layout of the panels and the list view of Add to level, and the test checks the
   layout before the first picture. The step `panels` moves the panels for `window-panels.png` and puts the default
   layout back. The step `add` switches to the grid for two pictures and back to the list.

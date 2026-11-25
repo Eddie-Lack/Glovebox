@@ -9,7 +9,7 @@ use crate::n64;
 use crate::rom::Qol;
 use std::collections::BTreeMap;
 
-/// A level's row of the level table. None keeps the shipped value.
+/// A level's row of the level table. None keeps the vanilla value.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Info {
     pub name: Option<String>,

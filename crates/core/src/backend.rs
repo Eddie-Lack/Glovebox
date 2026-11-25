@@ -122,7 +122,7 @@ pub trait Backend: Send + Sync {
 
     // -- Levels and models
 
-    /// A shipped level as XML text.
+    /// A vanilla level as XML text.
     fn level_xml(&self, sid: &str) -> Result<String>;
     /// The backdrop textures a level can show, most used first.
     fn backdrops(&self, sid: &str) -> Result<Vec<String>>;
@@ -132,7 +132,7 @@ pub trait Backend: Send + Sync {
     /// platform's radius on them. None when the back end can't tell.
     fn root_vertices(&self, oid: &str) -> Option<Vec<[f32; 3]>>;
     fn models(&self, sid: &str) -> Result<SceneModels>;
-    /// The size of a shipped level's file.
+    /// The size of a vanilla level's file.
     fn orig_lev_size(&self, sid: &str) -> Option<usize>;
     /// Every model of the game's banks and the author's imported models, by id.
     fn catalog(&self) -> Result<BTreeMap<String, CatalogEntry>>;

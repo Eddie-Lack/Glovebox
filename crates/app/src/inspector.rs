@@ -294,7 +294,7 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
                     }
                 }
             });
-            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, colored moods, or the shipped levels' daylight)", |ui| {
+            mini_menu(ui, "Look", "", "Set the lights and fog to a preset (dark, colored moods, or the vanilla levels' daylight)", |ui| {
                 for l in &LOOKS {
                     if ui.button(l.name).clicked() {
                         let name = l.name;
@@ -315,7 +315,7 @@ fn level_settings(cx: &mut Cx, ui: &mut egui::Ui) {
             cx.ed_act(move |ed| ed.set_attr(root, "name", &v));
         }
     });
-    note(ui, "The name inside the level file, 7 letters like the shipped ones (an even length crashes a console). It isn't the title the game shows.");
+    note(ui, "The name inside the level file, 7 letters like the vanilla ones (an even length crashes a console). It isn't the title the game shows.");
     slot_card(cx, ui);
     for node in ed.doc.children(root).to_vec() {
         if look_name(ed.doc.tag(node)).is_some() {
@@ -332,7 +332,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
     card(ui, "Title, music and clock", None, |_| {}, |ui| {
         let shown = info.name.clone().unwrap_or_default();
         row(ui, "title", |ui| {
-            let (text, r) = commit_text(ui, egui::Id::unique("level title"), &shown, |t| t.char_limit(39).hint_text("the shipped title").desired_width(f32::INFINITY));
+            let (text, r) = commit_text(ui, egui::Id::unique("level title"), &shown, |t| t.char_limit(39).hint_text("the vanilla title").desired_width(f32::INFINITY));
             style::name(&r, "title");
             if let Some(v) = text {
                 let v = v.to_uppercase().trim().to_string();
@@ -349,7 +349,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
             }
         });
         row(ui, "music", |ui| {
-            let mut items: Vec<(Option<i64>, String)> = vec![(None, "Keep the shipped music".to_string())];
+            let mut items: Vec<(Option<i64>, String)> = vec![(None, "Keep the vanilla music".to_string())];
             items.extend(songs().into_iter().map(|(k, text)| (Some(k), format!("{k}  {text}"))));
             if let Some(v) = combo(ui, "song", "music", &info.song, &items) {
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.song = v));
@@ -365,7 +365,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
             cx.st.secs = t;
         }
         row(ui, "clock", |ui| {
-            let items = [(0, "Keep the shipped clock".to_string()), (1, "No clock".to_string()), (2, "Seconds:".to_string())];
+            let items = [(0, "Keep the vanilla clock".to_string()), (1, "No clock".to_string()), (2, "Seconds:".to_string())];
             if let Some(k) = combo(ui, "clock", "clock", &mode, &items) {
                 let secs = cx.st.secs;
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.bonus_time = [None, Some(-1), Some(secs)][k]));
@@ -385,7 +385,7 @@ fn slot_card(cx: &mut Cx, ui: &mut egui::Ui) {
             if style::checkbox(ui, &mut on, "Extra level (Expansion Pak)").changed() {
                 cx.ed_act(move |ed| ed.set_level_info(|i| i.extra = on));
             }
-            note(ui, "An extra level is stored behind the game mod. The shipped level stays in its slot. Players reach the extra levels through an Extra levels entry zone in a hub (Add, Presets), then the Space way room. Progress in them is kept apart from the shipped Space levels.");
+            note(ui, "An extra level is stored behind the game mod. The vanilla level stays in its slot. Players reach the extra levels through an Extra levels entry zone in a hub (Add, Presets), then the Space way room. Progress in them is kept apart from the vanilla Space levels.");
         }
     });
 }
@@ -434,7 +434,7 @@ fn new_look(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, oid: &str) {
             if ui.button("Try another").clicked() {
                 go(cx, true);
             }
-            if from.is_some() && ui.button("Original").on_hover_text("Back to the shipped model").clicked() {
+            if from.is_some() && ui.button("Original").on_hover_text("Back to the vanilla model").clicked() {
                 let name: String = ed.catalog.get(&src).map(|c| c.name.clone()).unwrap_or_default().chars().take(7).collect();
                 let src = src.clone();
                 cx.ed_act(move |ed| {
@@ -603,7 +603,7 @@ fn puzzle_view(cx: &mut Cx, ui: &mut egui::Ui, p: NodeId) {
     muted(ui, &puzzles::summary(&ed.doc, p));
     for v in &ed.violations {
         if v.top == p {
-            check_line(ui, if v.shipped { "note" } else { v.level }, &v.msg, false, None, None, None);
+            check_line(ui, if v.vanilla { "note" } else { v.level }, &v.msg, false, None, None, None);
         }
     }
     let n = puzzles::fires(&ed.doc, p);
@@ -917,7 +917,7 @@ fn camera_zone_panel(cx: &mut Cx, ui: &mut egui::Ui, i: EntId) {
             }
         });
         style::widen(ui, line.response.rect);
-        note(ui, "LookAtGlover: the heading from the camera to Glover, and how fast it turns there (the shipped levels use 1 to 4).");
+        note(ui, "LookAtGlover: the heading from the camera to Glover, and how fast it turns there (the vanilla levels use 1 to 4).");
         // distance and height
         for (name, value, start, why, which) in [
             ("distance", z.distance, 250.0, "TweenDistance: how far behind Glover the camera stands.", 0),

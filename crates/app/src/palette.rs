@@ -52,7 +52,7 @@ const KIT_AS: [As; 2] = [
     As { key: "scenery", label: "Scenery", tag: "LandActor", tip: "Solid, built from the model's triangles (LandActor)" },
 ];
 
-const ENEMIES_NOTE: &str = "A new enemy copies the shortest script that type has in a shipped level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.";
+const ENEMIES_NOTE: &str = "A new enemy copies the shortest script that type has in a vanilla level, with its patrol/target points moved to the new spot. Bosses are tied to their arenas and may not behave elsewhere.";
 const KIT_NOTE: &str = "Props made by the editor, free to share. Background has no collision; Scenery is solid. They're copied into the level's banks at ROM build, like imported models.";
 const NO_MODELS: &str = "No model matches.";
 const NO_ENEMY_MODEL: &str = "This enemy has no model.";
@@ -352,7 +352,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                 }
             }
             _ => {
-                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It's a puzzle like the shipped levels' camera zones, so it needs no game mod. It's made for a player who walks the way the view looks. Change that in the Inspector.");
+                px.intro(ui, "A camera zone is a box: while Glover is inside it, the camera moves as chosen, and it goes back when he leaves. It's a puzzle like the vanilla levels' camera zones, so it needs no game mod. It's made for a player who walks the way the view looks. Change that in the Inspector.");
                 for (key, lab, about) in CAM_PRESETS {
                     ui.push_id(key, |ui| {
                         if px.prow(ui, |_, _| {}, lab, None, about, &[("Add", "", true)], |_, _| {}).is_some() {
@@ -628,7 +628,7 @@ fn enemy_rows(px: &Px) -> Vec<EnemyRow> {
         };
         let script = match t {
             Some(t) => format!(" · script from {}", t.get("level").and_then(|l| l.as_str()).unwrap_or("")),
-            None => " · no shipped script".to_string(),
+            None => " · no vanilla script".to_string(),
         };
         let boss = t.and_then(|t| t.get("boss")).is_some_and(|b| b.as_bool().unwrap_or(false));
         let token = v.parse::<i64>().ok().and_then(|n| ed.decomp_enum_name("ActorType", Some(n))).unwrap_or_default();
