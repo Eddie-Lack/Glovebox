@@ -25,6 +25,7 @@ The line at the bottom of the view shows the main ones.
 | `E` | Rotate |
 | `R` | Scale |
 | `F` | Focus on the selection, or on the whole level with nothing selected |
+| `Home` | View all: the whole level |
 | `B` | Box select |
 | `A` | `+ Add` |
 | `P` | Path |
@@ -32,6 +33,8 @@ The line at the bottom of the view shows the main ones.
 | `T` | Test level |
 | `Ctrl+A` | Select everything visible, except landscape |
 | `Ctrl+D` | Duplicate |
+| `Ctrl+C` | Copy the selection |
+| `Ctrl+V` | Paste, also in another level |
 | `Del` or `Backspace` | Delete |
 | `Ctrl+Z` | Undo |
 | `Ctrl+Shift+Z` or `Ctrl+Y` | Redo |

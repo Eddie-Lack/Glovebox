@@ -4,7 +4,7 @@ _Back to the [guide](README.md)_
 
 `Options` is at the end of the toolbar.
 
-![The Options menu: fifteen themes in two columns, Shown, On hover, Off for the info texts, Panels and Take the tour](img/options-menu.png)
+![The Options menu: fifteen themes in two columns, Shown, On hover, Off for the info texts, Panels, Take the tour, Choose your emulator, Open the user folder, Open the guide and the version](img/options-menu.png)
 
 ## Theme
 
@@ -44,6 +44,13 @@ Small texts explain how the game or the editor works. They start `On hover`.
 ## Take the tour
 
 `Take the tour` walks you through the first start tour again. See _[Getting started](Getting-started.md#take-the-tour)_.
+
+## The rest
+
+- `Choose your emulator…` picks the program `Test level` opens
+- `Open the user folder` opens the folder with your edits, settings and `editor.log`
+- `Open the guide ↗` opens this guide
+- The last line is the app's version
 
 ---
 

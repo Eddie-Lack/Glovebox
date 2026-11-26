@@ -15,6 +15,7 @@ The bottom row of the toolbar has it all.
 - The first time, click `OK` then navigate to where your emulator is saved on your computer and select it.
 - After that, it's just one click.
 - The ROM goes in the user folder (`test/`).
+- Another emulator? `Options` > `Choose your emulator…`
 
 ## Build ROM
 
@@ -49,6 +50,8 @@ _[Sharing levels](../Sharing-levels.md)_ shows how players use it.
 <img src="img/build-all.png" alt="The Build all dialog: the edited levels, the level to boot into, Export .bps and Build ROM" width="560">
 
 Pick the level it boots into, or a normal start.
+
+The file gets named after the levels in it, like `glover-atlantis-level-1-and-atlantis-level-2.bps`.
 
 ## Level files
 

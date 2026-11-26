@@ -19,6 +19,10 @@ In the `Level` panel, the name of an object with an error changes color.
 
 _[The reference](../Using-the-editor.md#checks)_ lists what gets checked.
 
+## Far outside the level
+
+An object far away from the rest of the level gets a warning. Click it to go there.
+
 ## Draw load
 
 The game draws everything within its far plane, even what's behind the camera.

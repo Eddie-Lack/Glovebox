@@ -20,6 +20,8 @@ The first time a level opens, the editor asks if you want a quick tour
 - Pick a level in the list at the top. All 48 open
 - Drag to turn the camera, right-drag to pan, wheel (or middle-drag) to zoom
 - `F` frames the selection. With nothing selected it frames the whole level
+- `Home` frames the whole level
+- A level opens with the camera where you left it
 - Zooming in stops close to what you look at, then the wheel moves you forward. Zooming out stops a few level sizes away
 
 `Fly` (or `C`) switches to a free camera:
@@ -46,6 +48,7 @@ Note: while you fly, those keys move the camera. Use the toolbar for Move (`W`) 
 - Undo, redo, duplicate and delete work on the whole selection
 - A duplicated platform loses its puzzle tag (`PlatSetTag`), so the original's puzzles don't move the copy
 - Deleting a platform also deletes a puzzle whose actions only moved it, like a `Lift`'s
+- `Ctrl+C` copies the selection, `Ctrl+V` pastes it where the view looks at the ground, in any level. The clipboard holds level XML, and a paste gets the checks of `Import XML`
 
 An enemy's script points (where it goes and looks) and a platform's path move with it
 
@@ -343,7 +346,7 @@ Note: the path is only a guide, the level doesn't keep it
 
 ## Options
 
-`Options` in the toolbar has the theme, the info texts, the panels and `Take the tour`
+`Options` in the toolbar has the theme, the info texts, the panels and `Take the tour`. Under them: `Choose your emulator…`, `Open the user folder`, `Open the guide ↗` and the version
 
 ### Theme
 
@@ -418,7 +421,7 @@ Small gray texts explain how the game or the editor works. They belong to titles
 
 - The first time, pick your emulator's program (ares, simple64, Project64…)
 - The ROM goes in the user folder (`test/`)
-- To change the emulator, close the editor, then delete the `emulator` line in `settings.ini` in the user folder
+- To change the emulator, use `Options` > `Choose your emulator…`
 
 Note: a level that uses the game mod needs the emulator's Expansion Pak on _(most have it on)_
 
