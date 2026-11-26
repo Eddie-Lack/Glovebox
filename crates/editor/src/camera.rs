@@ -201,6 +201,24 @@ impl Orbit {
         c.pos = vec::add(self.target, vec::scale(vec::div(off, if n != 0.0 { n } else { 1.0 }), r));
         self.update(c);
     }
+
+    /// `dolly` for the view of a level `size` across. The camera stays between 1% and 3 times the size away from
+    /// the target. At the near end, moving in carries the target forward with the camera, by 1% of the size a step.
+    pub fn dolly_within(&mut self, c: &mut Camera, steps: f64, size: f64) {
+        let size = size.max(100.0);
+        let near = size * 0.01;
+        let off = vec::sub(c.pos, self.target);
+        let n = vec::norm(off);
+        if steps > 0.0 && n <= near * 1.001 {
+            let mv = vec::scale(c.forward(), near * steps.min(10.0));
+            c.pos = vec::add(c.pos, mv);
+            self.target = vec::add(self.target, mv);
+            return self.update(c);
+        }
+        let r = (n * 0.95f64.powf(steps)).clamp(near.min(n), size * 3.0);
+        c.pos = vec::add(self.target, vec::scale(vec::div(off, if n != 0.0 { n } else { 1.0 }), r));
+        self.update(c);
+    }
 }
 
 #[cfg(test)]
@@ -241,5 +259,13 @@ mod tests {
         assert!((vec::norm(vec::sub(c.pos, o.target)) - r * 0.9025).abs() < 1e-9);
         o.dolly(&mut c, 1e9);
         assert!((vec::norm(vec::sub(c.pos, o.target)) - 1.0).abs() < 1e-9);
+        // In a level 1000 across: no farther than 3000 and no nearer than 10. Then the target moves with the camera.
+        o.dolly_within(&mut c, -1e9, 1000.0);
+        assert!((vec::norm(vec::sub(c.pos, o.target)) - 3000.0).abs() < 1e-6);
+        o.dolly_within(&mut c, 1e9, 1000.0);
+        assert!((vec::norm(vec::sub(c.pos, o.target)) - 10.0).abs() < 1e-6);
+        let (pos, target) = (c.pos, o.target);
+        o.dolly_within(&mut c, 2.0, 1000.0);
+        assert!((vec::norm(vec::sub(c.pos, pos)) - 20.0).abs() < 1e-6 && (vec::norm(vec::sub(o.target, target)) - 20.0).abs() < 1e-6);
     }
 }

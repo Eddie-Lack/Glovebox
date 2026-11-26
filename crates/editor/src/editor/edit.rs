@@ -9,6 +9,7 @@ use crate::entities::{
     WHY_TRIGGER_EDIT,
 };
 use crate::presets;
+use crate::puzzles;
 use crate::scene::{self, RayOptions};
 use crate::vec::{self, V3};
 use crate::xmlutil::{fmt, hex_id, num0, r1};
@@ -134,6 +135,8 @@ impl Editor {
 
     /// `after_edit` with the selection's keys taken before the document was replaced.
     pub(crate) fn finish_edit(&mut self, keys: Vec<SelKey>, select: Option<&[NodeId]>, by_path: bool) {
+        // The status line said what came before this edit. An edit that has something to say sets it after.
+        self.set_status("", "");
         self.build_entities();
         let sel: Vec<EntId> = match select {
             Some(nodes) => nodes
@@ -147,6 +150,20 @@ impl Editor {
         self.schedule_import_plan();
         self.emit(Event::Edited);
         self.schedule_draft_save();
+    }
+
+    /// Builds the entities again with the same selection, after a change outside the level (the catalog). The
+    /// checks and the import plan follow.
+    pub fn refresh_entities(&mut self) {
+        if !self.has_level {
+            return;
+        }
+        let keys = self.selection_keys();
+        self.build_entities();
+        let sel: Vec<EntId> = keys.iter().filter_map(|k| self.find_by_key(k, false)).collect();
+        self.emit(Event::Rebuilt);
+        self.set_selection(sel);
+        self.schedule_import_plan();
     }
 
     /// A number field's drag began: every edit until `end_scrub` belongs to one undo step.
@@ -636,10 +653,15 @@ impl Editor {
         let kept = self.selection.iter().filter(|&&i| stays(self, i)).count();
         let n = self.selection.len() - kept;
         self.mutate(|ed| {
+            // The puzzle tags of the platforms that go
+            let mut gone: Vec<f64> = Vec::new();
             for &i in &ed.selection.clone() {
                 let ent = ed.entities[i].clone();
                 if ent.derived || stays(ed, i) {
                     continue;
+                }
+                if !ent.is_handle && matches!(ent.tag.as_str(), "Platform" | "NullPlatform") {
+                    gone.extend(ed.doc.kids(ent.node, "PlatSetTag").iter().map(|t| num0(&ed.doc, *t, "tag")));
                 }
                 if ent.tag == "GaribGroup" {
                     let grp = ent.node;
@@ -657,6 +679,7 @@ impl Editor {
                     ed.doc.detach(ent.node);
                 }
             }
+            ed.remove_lone_puzzles(&gone);
             Some(Vec::new())
         });
         let mut parts = Vec::new();
@@ -667,6 +690,20 @@ impl Editor {
             parts.push(WHY_TRIGGER_EDIT.to_string());
         }
         self.set_status(&parts.join(" "), "");
+    }
+
+    /// Deletes the puzzles whose every action moves a platform with one of the tags `gone`, when no platform has
+    /// that tag any more. A lift preset comes with such a puzzle, and deleting the lift takes it too, in the same
+    /// undo step. A puzzle with no actions, or with one that does something else, stays.
+    fn remove_lone_puzzles(&mut self, gone: &[f64]) {
+        let root = self.doc.root();
+        let have: Vec<f64> = self.doc.iter_tags(root, &["PlatSetTag"]).iter().map(|t| num0(&self.doc, *t, "tag")).collect();
+        for p in self.doc.kids(root, "Puzzle") {
+            let Some(tags) = puzzles::only_platform_tags(&self.doc, p) else { continue };
+            if tags.iter().all(|t| *t > 0.0 && gone.contains(t) && !have.contains(t)) {
+                self.doc.detach(p);
+            }
+        }
     }
 
     pub fn set_attr(&mut self, node: NodeId, name: &str, value: &str) {

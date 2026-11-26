@@ -281,6 +281,11 @@ pub struct Editor {
     pub selection: Vec<EntId>,
     pub undo_stack: Vec<String>,
     pub redo_stack: Vec<String>,
+    /// The undo and redo steps of the levels left in this session, newest last: (level id, undo, redo, the level's
+    /// XML when it was left). Opening the level again brings them back while its XML is still the same.
+    pub histories: Vec<(String, Vec<String>, Vec<String>, String)>,
+    /// The size across of the open level's landscape and platforms (`frame_level`). The wheel zooms within it.
+    pub level_size: f64,
     /// The kinds of entity the view hides.
     pub hidden: BTreeSet<String>,
     pub orig_lev_size: Option<usize>,
@@ -372,6 +377,8 @@ impl Editor {
             selection: Vec::new(),
             undo_stack: Vec::new(),
             redo_stack: Vec::new(),
+            histories: Vec::new(),
+            level_size: 0.0,
             hidden: BTreeSet::new(),
             orig_lev_size: None,
             filter: String::new(),
@@ -444,6 +451,15 @@ impl Editor {
     pub fn set_status(&mut self, msg: &str, cls: &str) {
         self.last_status = (msg.to_string(), cls.to_string());
         self.events.push(Event::Status { message: msg.to_string(), class: cls.to_string() });
+    }
+
+    /// The clock time of the next waiting autosave or import plan, if one waits. The window must draw a frame then,
+    /// and call `tick`.
+    pub fn next_due(&self) -> Option<f64> {
+        match (self.draft_due, self.plan_due) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        }
     }
 
     /// Call every frame with a clock in seconds. Saves the draft when its wait is over. Returns the import plan

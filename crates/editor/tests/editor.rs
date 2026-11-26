@@ -334,6 +334,13 @@ fn editor_on_the_fixture() {
     t.check("Reset level goes back to the vanilla level and drops the draft", !ed.is_edited() && ed.drafts.load("10").is_none());
     ed.undo();
     t.check("undo brings the edits back after a reset", ed.serialize() == xml);
+    // A level switch keeps the undo steps of the level left: a reset can still be undone after one
+    ed.reset_level();
+    ed.load_scene("11").unwrap();
+    ed.load_scene("10").unwrap();
+    t.check("the undo steps come back with the level", !ed.undo_stack.is_empty() && !ed.is_edited());
+    ed.undo();
+    t.check("undo brings back edits reset before a level switch", ed.serialize() == xml);
 
     // Building: the fixture assembles .lev files
     let out = ed.build("lev", false);
@@ -543,16 +550,26 @@ fn editor_on_the_fixture() {
     t.detail("a ready-made script replaces the normal list", codes(&ed) == [4, 9, 18], format!("{:?}", codes(&ed)));
     let flags = ed.flag_enum();
     t.check("the ready-made script passes the script checks", scripts::rules(&ed.doc, en, flags.as_ref()).is_empty());
+    // A new instruction goes before the closing Go to: the game never gets past it
     ed.add_instruction(en, "NormalInstructions", 2);
-    ed.move_instruction(scripts::list_of(&ed.doc, en, "NormalInstructions")[3], -1);
+    t.detail("a new instruction goes before the closing Go to", codes(&ed) == [4, 9, 2, 18], format!("{:?}", codes(&ed)));
+    ed.move_instruction(scripts::list_of(&ed.doc, en, "NormalInstructions")[2], -1);
     let rows = scripts::list_of(&ed.doc, en, "NormalInstructions");
     t.check(
         "moving an instruction keeps Goto pointing at the same one",
-        codes(&ed) == [4, 9, 2, 18] && ed.doc.attr(body(&ed.doc, rows[3]).unwrap(), "instr_idx") == "1",
+        codes(&ed) == [4, 2, 9, 18] && ed.doc.attr(body(&ed.doc, rows[3]).unwrap(), "instr_idx") == "2",
     );
     ed.remove_instruction(rows[0]);
     let rows = scripts::list_of(&ed.doc, en, "NormalInstructions");
-    t.check("removing an instruction shifts later Goto targets", ed.doc.attr(body(&ed.doc, *rows.last().unwrap()).unwrap(), "instr_idx") == "0");
+    t.check("removing an instruction shifts later Goto targets", ed.doc.attr(body(&ed.doc, *rows.last().unwrap()).unwrap(), "instr_idx") == "1");
+    // A point to walk to starts 100 units from the enemy, not at the level's origin
+    ed.add_instruction(en, "NormalInstructions", 1);
+    let rows = scripts::list_of(&ed.doc, en, "NormalInstructions");
+    let b = body(&ed.doc, rows[rows.len() - 2]).unwrap();
+    let dx = num0(&ed.doc, b, "destination_x") - num0(&ed.doc, en, "x");
+    let dz = num0(&ed.doc, b, "destination_z") - num0(&ed.doc, en, "z");
+    t.detail("a new Walk to a point starts near the enemy", (dx - 100.0).abs() < 1e-6 && dz.abs() < 1e-6, format!("{dx} {dz}"));
+    ed.undo();
     ed.add_instruction(en, "ConditionalInstructions", 8);
     let tg = tags(&ed, en);
     t.check("a new kind gets its group before EnemyFinalize", tg[tg.len() - 2..] == ["ConditionalInstructions", "EnemyFinalize"]);
@@ -599,6 +616,24 @@ fn editor_on_the_fixture() {
     let names = ["hoop.nd", "heart", "ballbit", "lift", "glovebu", "stepy.n", "ootelep"];
     let n = ed.doc.iter_tags(ed.root(), &["Platform"]).iter().filter(|n| names.contains(&ed.doc.attr(**n, "name"))).count();
     t.detail("the presets add their platforms", n >= 16, n.to_string());
+    undo_to(&mut ed, mark);
+
+    // Deleting a lift takes its puzzle and trigger box, in the same undo step
+    let mark = ed.undo_stack.len();
+    let puzzles = |ed: &Editor| ed.doc.kids(ed.root(), "Puzzle").len();
+    let p0 = puzzles(&ed);
+    ed.set_selection(Vec::new());
+    ed.add_preset("lift");
+    let p1 = puzzles(&ed);
+    let platforms = ed.doc.kids(ed.root(), "Platform").len();
+    let plat = *ed.doc.kids(ed.root(), "Platform").last().unwrap();
+    let lift = ent(&ed, |e| e.node == plat && !e.is_handle);
+    ed.set_selection(lift.into_iter().collect());
+    ed.remove();
+    let p2 = puzzles(&ed);
+    t.detail("deleting a lift takes its puzzle", p1 == p0 + 1 && p2 == p0, format!("{p0} {p1} {p2}"));
+    ed.undo();
+    t.check("one undo brings the lift and its puzzle back", puzzles(&ed) == p1 && ed.doc.kids(ed.root(), "Platform").len() == platforms);
     undo_to(&mut ed, mark);
 
     let _ = std::fs::remove_dir_all(&home);

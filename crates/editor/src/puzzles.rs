@@ -384,6 +384,29 @@ fn int_of(v: f64) -> i64 {
     v.trunc() as i64
 }
 
+/// The platform tags that a puzzle's actions name, when every action names one. None for a puzzle with no actions,
+/// or with an action that does something else. A negative tag of action 45 names the first platform with that tag.
+pub fn only_platform_tags(doc: &Doc, puzzle: NodeId) -> Option<Vec<f64>> {
+    let acts = doc.kids(puzzle, "PuzzleAction");
+    if acts.is_empty() {
+        return None;
+    }
+    let mut tags = Vec::new();
+    for a in acts {
+        let t = code(doc, a, "action_type");
+        let b = body(doc, a)?;
+        let v = if doc.has(b, "platform_tag") {
+            num0(doc, b, "platform_tag")
+        } else if PLAT_TAG_ACTIONS.contains(&t) && doc.has(b, "puzzle_tag") {
+            num0(doc, b, "puzzle_tag")
+        } else {
+            return None;
+        };
+        tags.push(if t == 45 { v.abs() } else { v });
+    }
+    Some(tags)
+}
+
 /// The puzzle checks of a level.
 pub fn rules(doc: &Doc, root: NodeId, fmt_: &Format) -> Vec<Rule> {
     let mut out: Vec<Rule> = Vec::new();
