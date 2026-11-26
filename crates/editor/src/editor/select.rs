@@ -233,10 +233,12 @@ impl Editor {
             return;
         }
         let (c, r) = (b.center(), vec::norm(b.size()));
+        self.level_size = r;
         self.orbit.target = c;
         let d = [0.55, 0.6, 0.75];
         self.camera.pos = vec::add(c, vec::scale(vec::scale(vec::div(d, vec::norm(d)), r), 0.7));
         self.camera.look_at(c);
+        self.emit(Event::ViewChanged);
     }
 
     // -----------------------------------------------------------------------------------------------------------
@@ -291,7 +293,7 @@ impl Editor {
             match self.mouse.button {
                 Some(Button::Left) => self.orbit.rotate(&mut self.camera, dx, dy),
                 Some(Button::Right) => self.orbit.pan(&mut self.camera, dx, dy),
-                Some(Button::Middle) => self.orbit.dolly(&mut self.camera, -dy / 10.0),
+                Some(Button::Middle) => self.orbit.dolly_within(&mut self.camera, -dy / 10.0, self.level_size),
                 None => {}
             }
             self.mouse.last = Some((x, y));
@@ -365,13 +367,27 @@ impl Editor {
         }
     }
 
-    /// The entity a ray picks: the nearest that isn't landscape, else the nearest landscape piece.
+    /// The entity a ray picks: the nearest object, else the nearest puzzle trigger box hit on its wire, else the
+    /// nearest landscape piece, else the nearest trigger box hit on a face. A trigger box can hold a large part
+    /// of the floor, and a click on the floor inside it shouldn't pick it.
     pub fn pick(&self, origin: V3, direction: V3) -> Option<EntId> {
         let objs: Vec<_> = self.pickable().into_iter().map(|i| self.nodes[i].obj).collect();
         let o = RayOptions { camera: Some(&self.camera), line_px: Some(5.0), ..RayOptions::default() };
         let hits = self.graph.raycast(&objs, origin, direction, &o);
-        let picks: Vec<EntId> = hits.iter().filter_map(|h| self.entity_of(h.node)).collect();
-        picks.iter().copied().find(|&p| self.entities[p].kind != "land").or(picks.first().copied())
+        let rank = |h: &crate::scene::Hit, e: EntId| match self.entities[e].kind {
+            "land" => 2,
+            "trigger" => {
+                let wire = self.graph.get(h.node).and_then(|n| n.items.get(h.item)).is_some_and(|i| matches!(i, crate::scene::Item::Lines(_)));
+                if wire {
+                    1
+                } else {
+                    3
+                }
+            }
+            _ => 0,
+        };
+        // The hits come nearest first, and min_by_key keeps the first of equal ranks
+        hits.iter().filter_map(|h| self.entity_of(h.node).map(|e| (rank(h, e), e))).min_by_key(|(r, _)| *r).map(|(_, e)| e)
     }
 
     /// The entity under a pixel of the view.

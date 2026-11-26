@@ -207,6 +207,11 @@ pub fn check_rom_with(rom: &[u8], info: &Value) -> Vec<String> {
             return problems;
         }
     };
+    // A ROM that ends before the mod's place has no game mod: the retail ROM, or a build without the mod. Only the
+    // size and the CRCs are its rules.
+    if mod_rom >= len {
+        return problems;
+    }
     if mod_rom % 16 != 0 || mod_size % 16 != 0 || mod_rom.saturating_add(mod_size) > len {
         problems.push(format!("the mod (ROM 0x{:X}, {} bytes) isn't 16 byte aligned or isn't inside the ROM", mod_rom, mod_size));
     }
@@ -485,6 +490,18 @@ mod tests {
     }
 
     #[test]
+    fn a_rom_without_the_mod_has_only_the_size_and_crc_rules() {
+        // 8 MiB ends before the mod's place, as the retail ROM does
+        let mut rom = vec![0u8; 0x800000];
+        n64::fix_header_crc(&mut rom).unwrap();
+        assert!(check_rom(&rom).is_empty());
+        let mut short = vec![0u8; 0x7FF000];
+        n64::fix_header_crc(&mut short).unwrap();
+        let p = check_rom(&short);
+        assert!(p.len() == 1 && p[0].contains("whole number of MiB"), "{p:?}");
+    }
+
+    #[test]
     fn an_empty_rom_of_the_right_size() {
         // 16 MiB of zeros with the right CRCs: the mod isn't there, so only its tables are skipped
         let mut rom = vec![0u8; 0x1000000];
@@ -494,11 +511,10 @@ mod tests {
         let p = check_rom(&rom);
         assert_eq!(p.len(), 1);
         assert!(p[0].starts_with("header CRC is "));
-        // Past the mod's place in an 8 MiB ROM
-        let mut rom = vec![0u8; 0x800000];
+        // A ROM that ends inside the mod
+        let mut rom = vec![0u8; 0xC00010];
         n64::fix_header_crc(&mut rom).unwrap();
         let p = check_rom(&rom);
-        assert_eq!(p.len(), 1);
-        assert!(p[0].starts_with("the mod (ROM 0xC00000, "));
+        assert!(p.iter().any(|x| x.starts_with("the mod (ROM 0xC00000, ")), "{p:?}");
     }
 }

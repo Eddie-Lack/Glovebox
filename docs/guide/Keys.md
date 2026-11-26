@@ -24,7 +24,7 @@ The line at the bottom of the view shows the main ones.
 | `W` | Move |
 | `E` | Rotate |
 | `R` | Scale |
-| `F` | Focus on the selection |
+| `F` | Focus on the selection, or on the whole level with nothing selected |
 | `B` | Box select |
 | `A` | `+ Add` |
 | `P` | Path |
@@ -38,6 +38,14 @@ The line at the bottom of the view shows the main ones.
 | `Esc` | Leaves the tool you're in. With no tool on, de-selects everything |
 
 On a Mac, `Cmd` works for `Ctrl`.
+
+## Text size
+
+| Key | What happens |
+| --- | --- |
+| `Ctrl` and `+` | Bigger text, everywhere in the window |
+| `Ctrl` and `-` | Smaller text |
+| `Ctrl` and `0` | Normal size again |
 
 ## While you fly
 

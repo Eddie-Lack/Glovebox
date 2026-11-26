@@ -656,6 +656,11 @@ fn editor_on_the_fixture() {
     ed.set_selection(garibs);
     let c0 = center(ed);
     t.settle();
+    let n = t.ed().undo_stack.len();
+    t.click("Apply rotation");
+    let idle = t.ed().undo_stack.len() == n;
+    t.check("rotate by starts at 0: Apply changes nothing", idle);
+    t.fill("rotate by", "90");
     t.click("Apply rotation");
     let ed = t.ed();
     let c1 = center(ed);
@@ -919,12 +924,21 @@ fn editor_on_the_fixture() {
     let closed = t.w().dialog.is_none();
     t.click("Export patch");
     t.click("Export level pack");
+    // A name that breaks the rule is kept as typed, and Export pack waits for a good one
+    if let Some(glovebox::dialogs::Dialog::Pack { name }) = &mut t.w().dialog {
+        *name = "Glover beach level for my friends 2026".to_string();
+    }
+    t.settle();
+    t.click("Export pack");
+    t.until(60, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let kept = matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::Pack { name }) if name.len() == 38);
     if let Some(glovebox::dialogs::Dialog::Pack { name }) = &mut t.w().dialog {
         name.clear();
     }
+    t.settle();
     t.click("Export pack");
-    t.until(60, |w| w.jobs.running == 0 && w.loading.is_empty());
-    let refused = t.status();
+    let refused = matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::Pack { .. })) && kept;
+    t.click("Cancel");
     let dir = t.home.join("packs");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
@@ -947,9 +961,9 @@ fn editor_on_the_fixture() {
     let written = manifest == b"format=1\nname=Fixture 1\nlevel=16\n" && glovebox_core::pack::check_level(&lev).is_ok() && models_ok;
     t.detail(
         "click: Export patch, Export level pack, Cancel and Export pack",
-        open && named && closed && refused.contains("No level pack") && written && status.contains("Exported the level pack") && status.contains(&hex)
+        open && named && closed && refused && written && status.contains("Exported the level pack") && status.contains(&hex)
             && status.contains(glovebox_core::pack::GAME_BANKS_TEXT),
-        format!("{refused} / {status} / sign {sign}, models {models:?}"),
+        format!("refused {refused} / {status} / sign {sign}, models {models:?}"),
     );
     let path = t.save_to("out.xml");
     t.click("Export XML");
@@ -1245,16 +1259,24 @@ fn editor_on_the_fixture() {
     let flags = ed.flag_enum();
     let ok = scripts::rules(&ed.doc, en, flags.as_ref()).is_empty();
     t.check("the ready-made script passes the script checks", ok);
+    // A new instruction goes before the closing Go to, which the game never gets past. A point to turn to starts
+    // 100 units from the enemy.
     let ed = t.ed();
     ed.add_instruction(en, "NormalInstructions", 2);
-    ed.move_instruction(scripts::list_of(&ed.doc, en, "NormalInstructions")[3], -1);
     let rows = scripts::list_of(&ed.doc, en, "NormalInstructions");
-    let ok = codes(ed) == [4, 9, 2, 18] && ed.doc.attr(body(&ed.doc, rows[3]).unwrap(), "instr_idx") == "1";
+    let b = body(&ed.doc, rows[2]).unwrap();
+    let near = !ed.doc.has(b, "destination_x") || (num0(&ed.doc, b, "destination_x") - num0(&ed.doc, en, "x") - 100.0).abs() < 1e-6;
+    let c = codes(ed);
+    t.detail("a new instruction goes before the closing Go to, its point near the enemy", c == [4, 9, 2, 18] && near, format!("{c:?}"));
+    let ed = t.ed();
+    ed.move_instruction(rows[2], -1);
+    let rows = scripts::list_of(&ed.doc, en, "NormalInstructions");
+    let ok = codes(ed) == [4, 2, 9, 18] && ed.doc.attr(body(&ed.doc, rows[3]).unwrap(), "instr_idx") == "2";
     t.check("moving an instruction keeps Goto pointing at the same one", ok);
     let ed = t.ed();
     ed.remove_instruction(rows[0]);
     let rows = scripts::list_of(&ed.doc, en, "NormalInstructions");
-    let ok = ed.doc.attr(body(&ed.doc, *rows.last().unwrap()).unwrap(), "instr_idx") == "0";
+    let ok = ed.doc.attr(body(&ed.doc, *rows.last().unwrap()).unwrap(), "instr_idx") == "1";
     t.check("removing an instruction shifts later Goto targets", ok);
     let ed = t.ed();
     ed.add_instruction(en, "ConditionalInstructions", 8);
@@ -1352,11 +1374,13 @@ fn more_clicks(t: &mut T) {
     t.click("Motion");
     let off = !t.ed().preview;
     t.check("click: Motion", on && off);
+    // Fog starts off
+    let first = !t.ed().show_fog;
     t.click("Fog");
-    let (off, saved) = (!t.ed().show_fog, t.w().settings.get("fog"));
+    let (on, saved) = (t.ed().show_fog, t.w().settings.get("fog"));
     t.click("Fog");
-    let on = t.ed().show_fog;
-    t.check("click: Fog", on && off && saved.as_deref() == Some("off"));
+    let off = !t.ed().show_fog && t.w().settings.get("fog").as_deref() == Some("off");
+    t.check("click: Fog", first && on && off && saved.as_deref() == Some("on"));
     let ed = t.ed();
     let enemy = ent(ed, |e| e.kind == "enemy");
     ed.select(enemy, false);
@@ -1391,6 +1415,7 @@ fn more_clicks(t: &mut T) {
     let garibs = kinds(t.ed(), "garib").len();
     t.detail("click: × takes one out of the selection", n + 1 == garibs, format!("{n} {garibs}"));
     t.click("Apply move");
+    t.fill("scale by", "1.5");
     t.click("Apply scale");
     let n = t.ed().undo_stack.len();
     t.fill("move by y", "25");
@@ -1804,14 +1829,32 @@ fn review_fixes(t: &mut T) {
     t.detail("Esc answers No and Enter answers Yes in a question", asked && kept && reset, format!("{asked} {kept} {reset}"));
     t.click("Undo");
     t.w().settings.remove("emulator");
+    // The note before the emulator's file dialog: Esc and Cancel close it and ask for no file. Enter goes on.
     t.click("Test level");
     let asked = t.w().dialog.is_some();
+    let before = t.files.0.borrow().asked.len();
     t.key(Key::Escape);
-    let (closed, status) = (t.w().dialog.is_none(), t.status());
+    let closed = t.w().dialog.is_none() && t.files.0.borrow().asked.len() == before;
+    t.click("Test level");
+    t.click("Cancel");
+    let canceled = t.w().dialog.is_none() && t.files.0.borrow().asked.len() == before;
     t.click("Test level");
     t.key(Key::Enter);
-    let closed2 = t.w().dialog.is_none();
-    t.detail("Esc and Enter close a note", asked && closed && closed2 && status.contains("Test level needs an emulator."), status);
+    let (closed2, status) = (t.w().dialog.is_none() && t.files.0.borrow().asked.len() == before + 1, t.status());
+    t.detail("Esc and Cancel close a note with a next step, Enter goes on", asked && closed && closed2 && status.contains("Test level needs an emulator."), status.clone());
+    t.check("click: Cancel (a note with a next step)", canceled);
+    // A file dialog that can't open says why, where a cancel says nothing
+    let reason = "Failed to pick file with zenity: No such file or directory (os error 2)";
+    t.files.0.borrow_mut().fail = Some(reason.to_string());
+    t.click("Test level");
+    t.key(Key::Enter);
+    let status = t.status();
+    let said = t.w().status.1 == "err" && status == reason;
+    t.files.0.borrow_mut().fail = Some(reason.to_string());
+    t.click(".lev");
+    t.until(60, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let status2 = t.status();
+    t.detail("a file dialog that can't open puts its reason in the status line", said && status2 == reason, format!("{status} / {status2}"));
 
     // Fly mode: Shift typed into a text box, or held at a dialog, doesn't move the camera
     t.ed().set_selection(Vec::new());
@@ -1887,6 +1930,86 @@ fn review_fixes(t: &mut T) {
     t.choose("High");
     t.click("Path");
     t.check("the camera list of the path panel has tooltips", tip);
+    usability_fixes(t);
+}
+
+/// What a usability test of the window found.
+fn usability_fixes(t: &mut T) {
+    // A number box refuses text that isn't a finite number, keeps the value and says why
+    let ed = t.ed();
+    let garib = ent(ed, |e| e.kind == "garib" && !e.is_handle);
+    ed.select(garib, false);
+    t.settle();
+    let before = t.ed().serialize();
+    t.fill("position x", "inf");
+    let (kept, status) = (t.ed().serialize() == before, t.status());
+    let said = status == "position x expects a number" && t.w().status.1 == "err";
+    t.fill("position x", "abc");
+    let kept2 = t.ed().serialize() == before && t.status() == "position x expects a number";
+    t.detail("a number box refuses inf and text, and says so", kept && said && kept2, status);
+
+    // Esc that closes a list leaves the selection
+    t.click("Level");
+    t.key(Key::Escape);
+    let still = t.ed().selection.len() == 1;
+    t.check("Esc closes the level list and keeps the selection", still);
+
+    // A click on the "Keys ?" chip shows the keys and doesn't reach the view
+    let info = t.info();
+    t.w().set_info(glovebox::style::Info::Hover);
+    t.settle();
+    let sel = t.ed().selection.clone();
+    t.click("Keys ?");
+    let shown = t.w().view.keys_open && t.ed().selection == sel;
+    t.click_containing("Click: select");
+    let hidden = !t.w().view.keys_open && t.ed().selection == sel;
+    t.detail("click: Keys ? shows the keys and selects nothing", shown && hidden, format!("{shown} {hidden}"));
+    t.w().set_info(info);
+
+    // F with nothing selected frames the whole level
+    t.ed().set_selection(Vec::new());
+    t.settle();
+    t.ed().orbit.target = [9000.0, 0.0, 0.0];
+    t.key(Key::F);
+    let framed = t.ed().orbit.target[0] < 9000.0;
+    t.check("F with nothing selected frames the level", framed);
+
+    // A on an Add panel behind another tab brings it to the front instead of closing it
+    t.key(Key::A);
+    t.settle();
+    let open = t.w().palette_open;
+    t.w().bring_front(glovebox::layout::PanelId::Inspector);
+    t.settle();
+    t.key(Key::A);
+    t.settle();
+    let front = t.w().palette_open && t.w().panels.slot(glovebox::layout::PanelId::Add).is_positive();
+    t.key(Key::A);
+    t.settle();
+    let closed = !t.w().palette_open;
+    t.detail("A brings a hidden Add panel to the front, then closes it", open && front && closed, format!("{open} {front} {closed}"));
+
+    // Build all, twice: its Boot into list opens over the dialog each time, takes a click, and keeps the choice
+    t.ed().set_level_info(|i| i.song = Some(3));
+    t.click("Build all…");
+    t.click("Boot into");
+    t.click("Fixture 1");
+    let first = matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::BuildAll { boot: Some(_), .. }));
+    t.click("Cancel");
+    t.click("Build all…");
+    let kept = matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::BuildAll { boot: Some(_), .. }));
+    t.click("Boot into");
+    // The list is over the dialog: the layer under an entry isn't the dialog's
+    let layer_at = |t: &T, label: &str| t.find(label, true).first().and_then(|n| t.h.ctx.layer_id_at(n.rect().center()));
+    let (entry, dialog) = (layer_at(t, "the title screen (normal start)"), layer_at(t, "Boot into"));
+    let over = entry.is_some() && entry != dialog;
+    t.click("the title screen (normal start)");
+    let second = over && matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::BuildAll { boot: None, .. }));
+    t.click("Boot into");
+    t.click("Fixture 1");
+    let third = matches!(&t.w().dialog, Some(glovebox::dialogs::Dialog::BuildAll { boot: Some(_), .. }));
+    t.click("Cancel");
+    t.ed().set_level_info(|i| i.song = None);
+    t.detail("Build all's Boot into works the second time and keeps the choice", first && kept && second && third, format!("{first} {kept} {second} {third}"));
 }
 
 /// The exit triggers: the toolbar's Exits switch, the layer's checkbox, the spheres and the inspector's block.
@@ -3470,7 +3593,9 @@ fn panel_layout() {
     t.view_click(at, Modifiers::default());
     let picked = t.ed().selection.len() == 1 && t.status().starts_with("Selected ");
     t.shot("layout/fixture-view-only");
-    t.detail("layout: with every panel hidden the view fills the window and a click selects", hidden && full && picked, format!("{hidden} {full} {picked} {v:?}"));
+    let sel = t.ed().selection.clone();
+    let said = format!("{sel:?} {}", t.status());
+    t.detail("layout: with every panel hidden the view fills the window and a click selects", hidden && full && picked, format!("{hidden} {full} {picked} {v:?} {at:?} {said}"));
     // A and P still open their panels
     t.ed().set_selection(Vec::new());
     t.key(Key::A);
@@ -3715,6 +3840,55 @@ fn the_rom() {
     let built = t.home.join("test").join("glover-0a-test.z64");
     let status = t.status();
     t.detail("Test level builds into test/ and starts the emulator", built.is_file() && status.contains("Testing"), status);
+    // Build all with a powerup from another world. The beach ball (powerup type 10) is in the Fortress of Fear's
+    // shared bank, and the level names it by its type only. Build all must import it, as Build ROM does: without the
+    // import the level stops on LEVEL UNPLAYABLE.
+    t.ed().add_powerup(10, "beachball");
+    t.settle();
+    let ball = "0x87C43A84".to_string();
+    let ed = t.ed();
+    let xml = ed.serialize();
+    let entry = ed.level_entry("0a", Some(&xml)).map(|(e, m)| (e.imports, m));
+    let imported = matches!(&entry, Ok((i, true)) if i.contains(&ball)) && ed.current_imports().contains(&ball);
+    let path = t.save_to("all.z64");
+    // It boots into the level
+    t.w().boot_into = Some("0a".to_string());
+    t.click("Build all…");
+    t.click_nth("Build ROM", 1);
+    t.until(600, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let data = std::fs::read(&path).unwrap_or_default();
+    let problems = if data.is_empty() { vec!["no file".to_string()] } else { glovebox_core::hwcheck::check_rom(&data) };
+    let status = t.status();
+    // GLOVEBOX_KEEP=DIR keeps the ROM, to play it in the emulator
+    if let Some(dir) = std::env::var_os("GLOVEBOX_KEEP").map(PathBuf::from) {
+        let _ = std::fs::copy(&path, dir.join("build-all-beachball.z64"));
+    }
+    t.detail(
+        "Build all imports a powerup's model from another world, and its ROM passes hwcheck",
+        imported && problems.is_empty() && status.contains("Built"),
+        format!("{entry:?} {problems:?} {status}"),
+    );
+    // The level pack of the same level names the beach ball's bank in models.bin
+    let dir = t.home.join("packs");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let ed = t.ed();
+    let tilted = ed.mod_users();
+    for n in tilted {
+        for c in ed.doc.kids(n, "SetActorRotation").into_iter().chain(ed.doc.kids(n, "SetActorScale")) {
+            ed.doc.detach(c);
+        }
+    }
+    ed.after_edit(None, false);
+    t.settle();
+    t.files.0.borrow_mut().save.push_back(dir.clone());
+    t.click("Export patch");
+    t.click("Export level pack");
+    t.click("Export pack");
+    t.until(600, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let models = std::fs::read_dir(&dir).ok().and_then(|mut d| d.next()).and_then(|e| e.ok()).map(|e| e.path().join("models.bin"));
+    let status = t.status();
+    t.detail("a level pack with the beach ball has a models.bin", models.is_some_and(|m| m.is_file()), status);
     t.shot("42-rom-end");
     t.finish();
 }

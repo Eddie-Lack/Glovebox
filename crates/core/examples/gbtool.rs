@@ -8,6 +8,9 @@
 //!     gbtool import ROM GLTF [--scale S] [--home DIR] import a glTF model into the user folder
 //!     gbtool modelbanks GLTF OUT                  write a glTF model as a pack's models.bin for g64coopdx
 //!
+//!     gbtool --help                               print the usage line
+//!
+//! SID is a level's id: two hex digits, as the editor's level list shows them (`0a` is Atlantis Level 1).
 //! OUT gets the built ROM (or the BPS patch with --bps).
 //! `build` reads imported models from the user folder that the environment variable `GLOVEBOX_HOME` names. `pack`
 //! and `import` use the folder that `--home` names, or else that variable.
@@ -35,6 +38,8 @@ fn options(opts: &[String], allowed: &[&str]) -> Result<(std::path::PathBuf, Vec
     }
     Ok((home, rest))
 }
+
+const USAGE: &str = "usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack ROM SID XML OUTDIR NAME [--home DIR] | import ROM GLTF [--scale S] [--home DIR] | modelbanks GLTF OUT";
 
 fn run(args: &[String]) -> Result<(), String> {
     let cmd = args.first().map(String::as_str).unwrap_or("");
@@ -160,7 +165,11 @@ fn run(args: &[String]) -> Result<(), String> {
                 Err(found.join("\n"))
             }
         }
-        _ => Err("usage: gbtool xml ROM SID | build ROM SID XML OUT [options] | hwcheck ROM | pack ROM SID XML OUTDIR NAME [--home DIR] | import ROM GLTF [--scale S] [--home DIR] | modelbanks GLTF OUT".into()),
+        "--help" | "-h" => {
+            println!("{USAGE}");
+            Ok(())
+        }
+        _ => Err(USAGE.into()),
     }
 }
 

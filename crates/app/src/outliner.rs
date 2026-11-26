@@ -16,6 +16,8 @@ pub struct State {
     /// For each entity, whether a check reports an error on it.
     bad: Vec<bool>,
     last_selection: Vec<EntId>,
+    /// The list's scroll offset and height in the last frame.
+    shown: (f32, f32),
 }
 
 enum Row {
@@ -110,7 +112,18 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let mut act: Option<Act> = None;
     let row_height = 20.0;
     ui.spacing_mut().item_spacing.y = 0.0;
-    let out = egui::ScrollArea::vertical().id_salt("outliner").auto_shrink([false, false]).show_rows(ui, row_height, rows.len(), |ui, range| {
+    let mut area = egui::ScrollArea::vertical().id_salt("outliner").auto_shrink([false, false]);
+    // A pick in the view scrolls the list to the picked row when it's out of sight
+    if let (true, Some(last)) = (sel_changed, ed.selection.last()) {
+        if let Some(at) = rows.iter().position(|r| matches!(r, Row::Ent(i, _) if i == last)) {
+            let y = at as f32 * row_height;
+            let (off, h) = st.shown;
+            if y < off || y + row_height > off + h {
+                area = area.vertical_scroll_offset((y - h / 2.0).max(0.0));
+            }
+        }
+    }
+    let out = area.show_rows(ui, row_height, rows.len(), |ui, range| {
         let mut list_of_head = 0;
         // The index of the list a header stands for: count the headers before the first shown row
         for r in &rows[..range.start] {
@@ -162,7 +175,11 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                         // The chosen rows take the theme's band. It is put in under the text once the text's place is
                         // known.
                         let band = ui.painter().add(egui::Shape::Noop);
-                        let text = RichText::new(format!("{}   {}", e.label, tag)).color(color);
+                        // An imported model's piece keeps 7 letters of its name in the level. The list shows the
+                        // whole name the model was imported with.
+                        let full = e.object_id.as_ref().and_then(|o| ed.catalog.get(o)).filter(|c| c.custom.is_some() && c.name.len() > e.label.len() && c.name.starts_with(e.label.as_str()));
+                        let label = full.map_or(e.label.as_str(), |c| c.name.as_str());
+                        let text = RichText::new(format!("{}   {}", label, tag)).color(color);
                         let mut r = ui.add(egui::Label::new(text).truncate().sense(egui::Sense::click()));
                         let fill = if on {
                             Some(th.sel.fill)
@@ -195,6 +212,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
             }
         }
     });
+    st.shown = (out.state.clamped_offset().y, out.inner_rect.height());
     style::fits(ui, "level", &out);
     acts.extend(act);
 }

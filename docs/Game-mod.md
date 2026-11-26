@@ -32,6 +32,16 @@ Note: turning an enemy and scaling a platform don't add the mod. The retail game
 
 Other levels are built like normal
 
+## Without the Expansion Pak!
+
+What a player without one sees:
+
+- Rotations and scales on enemies, platforms, powerups and water are skipped
+- A level with models from other worlds stops on `LEVEL UNPLAYABLE - OBJECT MISSING`. It's too wide for the screen and shows as `UNPLAYABLE - OBJECT MI`
+- A level with more scenery than the game's own memory holds runs out of memory
+
+`Copy the models into the ROM instead` can make a level with models from other worlds work without the Pak _(see [Sharing levels](Sharing-levels.md#export-patch))_
+
 ## Extra levels
 
 An edited level normally takes the place of the vanilla one

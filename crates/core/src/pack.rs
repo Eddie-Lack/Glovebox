@@ -212,6 +212,43 @@ pub fn object_refs(lev: &[u8]) -> Result<Vec<(u32, u32)>, String> {
     Ok(out)
 }
 
+/// The models of the level file's enemies and powerups, in file order. These commands name no object: the game
+/// picks the model by type, from `enemyObjects` and `powerupObjects` in `tables::noclip_tables`. The hub's chicken
+/// has a model for each part of the hub. The editor finds the same models (`entities::type_model_ids`).
+pub fn type_refs(lev: &[u8], sid: &str) -> Result<Vec<u32>, String> {
+    let f = level::format();
+    let (enemy, powerup) = (f.opcode("Enemy"), f.opcode("Powerup"));
+    let tables = crate::tables::noclip_tables();
+    let names = f.enum_by_name("enemy::enemy_type");
+    let mut out = Vec::new();
+    for (code, at) in level::commands(lev).map_err(|e| e.to_string())? {
+        let table = if Some(code) == enemy {
+            "enemyObjects"
+        } else if Some(code) == powerup {
+            "powerupObjects"
+        } else {
+            continue;
+        };
+        let b = lev.get(at..at + 2).ok_or("A command of the level file ends before its type")?;
+        let t = u16::from_be_bytes([b[0], b[1]]) as i64;
+        let chicken = table == "enemyObjects" && names.and_then(|e| e.name_of(t)).is_some_and(|n| n.starts_with("hubchicken"));
+        let id = if chicken {
+            match sid {
+                "00" | "01" | "02" => 0x11CD1E6C,
+                "03" | "04" => 0x58C079E1,
+                _ => 0x83D7D176,
+            }
+        } else {
+            let v = tables.get(table).and_then(|a| a.get(t as usize)).and_then(|e| e.get("value"));
+            v.and_then(|v| v.as_i64().or_else(|| v.as_f64().map(|f| f as i64))).unwrap_or(0) as u32
+        };
+        if id != 0 && !out.contains(&id) {
+            out.push(id);
+        }
+    }
+    Ok(out)
+}
+
 /// Ids that the game finds enemies, bullets and pick-ups by, which the retail ROM lacks. A pack's object may not
 /// have one: it would be that enemy or pick-up. Copied from `g64_models_game_ids` in g64coopdx's
 /// src/client/bankcheck.c.
@@ -237,6 +274,14 @@ pub fn export(gd: &GameData, customs: &Customs, sid: &str, name: &str, xml: &[u8
     for (_, id) in &refs {
         let h = hex(*id);
         if !loaded.contains(id) && !ids.contains(&h) {
+            ids.push(h);
+        }
+    }
+    // An enemy's or a powerup's model from another level's bank. A model that no bank has is a ball-change
+    // powerup's, which the game never draws.
+    for id in type_refs(&pack.level, sid)? {
+        let h = hex(id);
+        if !loaded.contains(&id) && !ids.contains(&h) && gd.catalog().contains_key(&id) {
             ids.push(h);
         }
     }

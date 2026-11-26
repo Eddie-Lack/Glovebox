@@ -627,7 +627,12 @@ fn enemy_rows(px: &Px) -> Vec<EnemyRow> {
             Some(o) => ed.catalog.get(o).map_or("model missing".to_string(), |c| format!("imports from {}", c.bank)),
         };
         let script = match t {
-            Some(t) => format!(" · script from {}", t.get("level").and_then(|l| l.as_str()).unwrap_or("")),
+            // The level by its name, as the status line names it after Add
+            Some(t) => {
+                let sid = t.get("level").and_then(|l| l.as_str()).unwrap_or("");
+                let name = ed.scenes.iter().find(|x| x.get("id").and_then(|i| i.as_str()) == Some(sid)).and_then(|x| x.get("name")).and_then(|n| n.as_str());
+                format!(" · script from {}", name.unwrap_or(sid))
+            }
             None => " · no vanilla script".to_string(),
         };
         let boss = t.and_then(|t| t.get("boss")).is_some_and(|b| b.as_bool().unwrap_or(false));

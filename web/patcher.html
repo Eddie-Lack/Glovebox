@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Everything happens in this page. connect-src 'none' means the browser blocks any network request. The
      ROM and patch you choose can't be sent anywhere. The script is pinned by hash (tools/build_patcher.py). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fTDB9e3fsA33LZw+fxQjgEw8YLuooHXVXHee1RoHjS8='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gWhvO9poOhy4rXZPDF8kQUuRJzTEk8ihnwMk6EjZymY='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Glover Level Patcher</title>
 <style>
@@ -279,7 +279,11 @@
       const meta = {};
       // Only known fields, as short plain strings
       for (const k of ["tool", "game", "level", "levelId", "created", "sourceSha1", "targetSha1"]) if (typeof raw[k] === "string") meta[k] = raw[k].slice(0, 80);
+      // A Build all patch has a list of levels, and boots into a level id (a string, or ["x", id] for an extra
+      // level) or into the title screen (null)
+      for (const k of ["levels", "levelIds"]) if (Array.isArray(raw[k])) meta[k] = raw[k].filter((x) => typeof x === "string").slice(0, 64).map((x) => x.slice(0, 80));
       if (typeof raw.quickboot === "boolean") meta.quickboot = raw.quickboot;
+      else if (raw.quickboot === null || typeof raw.quickboot === "string" || Array.isArray(raw.quickboot)) meta.quickboot = raw.quickboot !== null;
       if (typeof raw.needsExpansionPak === "boolean") meta.needsExpansionPak = raw.needsExpansionPak;
       if (Array.isArray(raw.importedModels)) meta.importedModels = raw.importedModels.filter((x) => typeof x === "string" && /^0x[0-9A-F]{8}$/.test(x)).slice(0, 64);
       return { header: h, meta };
@@ -308,7 +312,8 @@
         digest ? "This isn't the Glover (USA) ROM the editor uses. The patch's own checksum will decide whether it fits." : "Loaded (this browser can't compute SHA-1 here; the patch's CRC32 check still applies).",
         digest === KNOWN_SHA1 ? "ok" : "muted");
       defs(info, [["File", file.name], ["Title", title || "?"], ["Game code", code || "?"], ["Byte order", conv.order], ["Size", rom.length.toLocaleString() + " bytes"], ["SHA-1", digest || "n/a"]]);
-      $("step-rom").classList.add("done");
+      // The check mark is for the ROM the patches are made for only
+      if (digest === KNOWN_SHA1 || !digest) $("step-rom").classList.add("done");
     } catch (e) { line(info, e.message, "err"); }
     update();
   }
@@ -328,6 +333,7 @@
       line(info, "✓ Valid BPS patch.", "ok");
       const rows = [["File", name], ["Size", p.length.toLocaleString() + " bytes"]];
       if (meta?.level) rows.push(["Level", meta.level + (meta.levelId ? ` (${meta.levelId})` : "")]);
+      else if (meta?.levels?.length) rows.push(["Level", meta.levels.map((n, i) => n + (meta.levelIds?.[i] ? ` (${meta.levelIds[i]})` : "")).join(", ")]);
       if (meta?.tool) rows.push(["Made with", meta.tool]);
       if (meta?.created) rows.push(["Created", meta.created]);
       if (meta && "quickboot" in meta) rows.push(["Boots into level", meta.quickboot ? "yes (skips the title screens)" : "no (normal start)"]);
@@ -345,7 +351,7 @@
     if (!state.patch) $("step-patch").classList.remove("done");
   }
   function outName() {
-    const lvl = (state.patchMeta?.level || "edited").replace(/[^A-Za-z0-9 '()-]+/g, "").trim().slice(0, 60) || "edited";
+    const lvl = (state.patchMeta?.level || state.patchMeta?.levels?.join(", ") || "edited").replace(/[^A-Za-z0-9 '()-]+/g, "").trim().slice(0, 60) || "edited";
     return `Glover - ${lvl}.z64`;
   }
   async function go() {

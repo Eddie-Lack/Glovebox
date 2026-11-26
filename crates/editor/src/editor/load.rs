@@ -251,12 +251,28 @@ impl Editor {
         self.apply_level(data)
     }
 
+    /// Keeps the open level's undo and redo steps for this session, for the next time it opens. The 8 levels left
+    /// last keep theirs.
+    fn keep_history(&mut self) {
+        let Some(sid) = self.scene.as_ref().filter(|_| self.has_level).map(|_| self.scene_id().to_string()) else { return };
+        let (undo, redo) = (std::mem::take(&mut self.undo_stack), std::mem::take(&mut self.redo_stack));
+        self.histories.retain(|h| h.0 != sid);
+        if !undo.is_empty() || !redo.is_empty() {
+            let at = self.serialize();
+            self.histories.push((sid, undo, redo, at));
+        }
+        if self.histories.len() > 8 {
+            self.histories.remove(0);
+        }
+    }
+
     /// Opens a level that a `LevelJob` read.
     pub fn apply_level(&mut self, data: LevelData) -> Result<(), String> {
         self.flush_draft(); // finish saving the level we're leaving
         let sid = data.sid.as_str();
         let row = self.scene_row(sid).cloned().ok_or_else(|| format!("There's no level {}", sid))?;
         let doc = Doc::parse(&data.xml).map_err(|e| e.0)?;
+        self.keep_history();
         self.scene = Some(row);
         self.puzzle_index = None;
         self.show_far_plane(None, 0.0);
@@ -295,6 +311,13 @@ impl Editor {
                     let why = res.errors.first().cloned().unwrap_or_default();
                     restored = Some((format!("An autosave for this level failed validation and wasn't loaded ({}).", why), "err"));
                 }
+            }
+        }
+        // The undo steps of an earlier visit, when the level is as it was left
+        if let Some(i) = self.histories.iter().position(|h| h.0 == sid) {
+            let (_, undo, redo, at) = self.histories.remove(i);
+            if self.serialize() == at {
+                (self.undo_stack, self.redo_stack) = (undo, redo);
             }
         }
         self.model_cache = data.prefabs;
@@ -452,7 +475,11 @@ impl Editor {
         };
         let is_open = self.scene.is_some() && sid == self.scene_id();
         let loaded = if is_open { self.loaded.clone() } else { self.backend.loaded_ids(sid).map_err(|e| e.0)? };
-        let ids: BTreeSet<String> = root.iter(root.root()).into_iter().filter_map(|n| hex_id(root.get(n, "object_id"))).collect();
+        // The models that commands name, and the models of enemies and powerups, which come from their type. The
+        // open level's `current_imports` finds the same ones from its entities.
+        let mut ids: BTreeSet<String> = root.iter(root.root()).into_iter().filter_map(|n| hex_id(root.get(n, "object_id"))).collect();
+        let fmt_ = format_of(self.backend.decomp());
+        ids.extend(entities::type_model_ids(&root, &fmt_, self.backend.tables(), sid));
         let imports: Vec<String> = ids.into_iter().filter(|i| !loaded.contains(i) && self.catalog.contains_key(i)).collect();
         let info = self.drafts.info(sid);
         let index = self.scene_row(sid).and_then(|r| r.get("index")).and_then(|i| i.as_i64()).unwrap_or(-1);

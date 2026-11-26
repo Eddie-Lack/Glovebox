@@ -83,31 +83,36 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
             w.ed.set_mode(m);
         }
     }
-    ui.label(RichText::new(" Pivot").color(style::theme(ui.ctx()).muted));
-    let pivots = [("group", "group center"), ("individual", "each origin")];
-    let shown = pivots.iter().find(|p| p.0 == w.ed.pivot_mode).map_or("each origin", |p| p.1);
-    let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).show_ui(ui, |ui| {
-        for (v, text) in pivots {
-            if ui.selectable_label(w.ed.pivot_mode == v, text).clicked() {
-                w.ed.pivot_mode = v.to_string();
+    // Each label stays on the row of its list when the toolbar wraps
+    ui.horizontal(|ui| {
+        ui.label(RichText::new(" Pivot").color(style::theme(ui.ctx()).muted));
+        let pivots = [("group", "group center"), ("individual", "each origin")];
+        let shown = pivots.iter().find(|p| p.0 == w.ed.pivot_mode).map_or("each origin", |p| p.1);
+        let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).show_ui(ui, |ui| {
+            for (v, text) in pivots {
+                if ui.selectable_label(w.ed.pivot_mode == v, text).clicked() {
+                    w.ed.pivot_mode = v.to_string();
+                }
             }
-        }
+        });
+        r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
+        r.response.on_hover_text("Pick the center for rotating or scaling several objects");
     });
-    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
-    r.response.on_hover_text("Pick the center for rotating or scaling several objects");
-    ui.label(RichText::new(" Snap").color(style::theme(ui.ctx()).muted));
-    let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
-    let shown = snaps.iter().find(|x| x.1 == w.ed.snap).map_or("off", |x| x.0);
-    let r = egui::ComboBox::from_id_salt("snap").icon(style::combo_icon).selected_text(shown).width(48.0).show_ui(ui, |ui| {
-        for (text, v) in snaps {
-            if ui.selectable_label(w.ed.snap == v, text).clicked() {
-                w.ed.snap = v;
-                w.ed.update_pivot();
+    ui.horizontal(|ui| {
+        ui.label(RichText::new(" Snap").color(style::theme(ui.ctx()).muted));
+        let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
+        let shown = snaps.iter().find(|x| x.1 == w.ed.snap).map_or("off", |x| x.0);
+        let r = egui::ComboBox::from_id_salt("snap").icon(style::combo_icon).selected_text(shown).width(48.0).show_ui(ui, |ui| {
+            for (text, v) in snaps {
+                if ui.selectable_label(w.ed.snap == v, text).clicked() {
+                    w.ed.snap = v;
+                    w.ed.update_pivot();
+                }
             }
-        }
+        });
+        r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Snap"));
+        r.response.on_hover_text("Snap: moves snap to the grid, rotation to 15°, scale to 0.05");
     });
-    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Snap"));
-    r.response.on_hover_text("Snap: moves snap to the grid, rotation to 15°, scale to 0.05");
     if ui.button("Duplicate").on_hover_text("Duplicate selection (Ctrl+D)").clicked() {
         w.ed.duplicate();
     }
@@ -182,7 +187,7 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         w.set_fly(!w.view.fly.on);
     }
     if style::toggle(ui, w.ed.path.on, "Path", "Lay a path (P). Click the ground to add points, then place garibs or copies of the selection along it").clicked() {
-        w.set_path_mode(!w.ed.path.on);
+        w.toggle_path();
     }
     if style::toggle(ui, w.ed.preview, "Motion", "Animate spinning platforms").clicked() {
         let now = w.now();

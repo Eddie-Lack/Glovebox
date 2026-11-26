@@ -37,6 +37,31 @@ The app checks it's the right game and keeps a copy in its user folder. The scre
 
 Then the editor opens.
 
+Another way in: copy the ROM into the user folder as `rom/glover.z64` (a `.z64`, not a `.v64` or `.n64`) and start the app
+
+### Change the ROM later
+
+Start the app with `--reset` _(for example `Glovebox.exe --reset` from a command prompt)_. It forgets the ROM and asks again
+
+## On Linux
+
+You build the app yourself _(see the [README](../../README.md))_
+
+It needs:
+
+- a Vulkan driver (`mesa-vulkan-drivers` is enough)
+- `libxkbcommon-x11` and `libwayland-client` (on Debian and Ubuntu: `libxkbcommon-x11-0` and `libwayland-client0`)
+- for the file dialogs, the desktop's file chooser portal (`xdg-desktop-portal`) or `zenity`
+
+Most desktops have all of that already
+
+### A button that should open a file dialog does nothing?
+
+Then the system has neither the portal nor `zenity`. The status bar (or the setup screen) shows the error, and `editor.log` has it too
+
+- Install `zenity`, or your desktop's `xdg-desktop-portal`
+- Until then, drop files on the window: the ROM on the setup screen, an `.xml` or a `.glb` on the editor
+
 ## Open a level
 
 The first time you open it, the editor starts on Atlantis Level 1. Later, it'll start on the level you had open last.
@@ -70,6 +95,7 @@ It's the `File name` in the level settings, not the name of a file on your compu
 - The box in the corner of the view says `Original level` or `Edited`.
 - The level list marks edited levels with ●.
 - `Reset level` in the toolbar gives you the vanilla level back. `Undo` still brings your edits back.
+- Undo keeps working when you switch levels and come back, until you close the editor
 
 ---
 

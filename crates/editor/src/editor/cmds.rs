@@ -250,9 +250,24 @@ impl Editor {
         self.edit(|ed| {
             let fmt_ = format_of(be.decomp());
             let ins = scripts::make_instruction(&fmt_, &mut ed.doc, t, &[], &[]);
+            // A point to go to or face starts 100 units from the enemy, not at the level's origin
+            if let Some(b) = ins.and_then(|i| body(&ed.doc, i)).filter(|b| ed.doc.has(*b, "destination_x")) {
+                for (a, d) in [("x", 100.0), ("y", 0.0), ("z", 0.0)] {
+                    let v = fmt(num0(&ed.doc, enemy, a) + d);
+                    ed.doc.set(b, &format!("destination_{a}"), &v);
+                }
+            }
+            // The game never gets past a "Go to instruction" that always runs, or past "End the attack". A new
+            // instruction goes before such a last one.
+            let last = scripts::list_of(&ed.doc, enemy, kind).last().copied().filter(|l| {
+                let always = matches!(ed.doc.get(*l, "execution_condition"), Some("always") | Some("0") | None);
+                (scripts::code(&ed.doc, *l) == 18 && always) || scripts::code(&ed.doc, *l) == 16
+            });
             let grp = scripts::group_for(&mut ed.doc, enemy, kind, true);
-            if let (Some(i), Some(g)) = (ins, grp) {
-                ed.doc.append(g, i);
+            match (ins, last, grp) {
+                (Some(i), Some(l), _) => ed.doc.add_prev(l, i),
+                (Some(i), None, Some(g)) => ed.doc.append(g, i),
+                _ => {}
             }
         });
     }

@@ -23,6 +23,10 @@ use serde_json::Value;
 pub enum Click {
     /// Selects an entity and looks at it. None clears the selection.
     Select(Option<EntId>),
+    /// Selects these entities and looks at them.
+    SelectAll(Vec<EntId>),
+    /// Shows a puzzle that has no trigger box in the inspector.
+    Puzzle(NodeId),
     /// Shows the far plane around the busiest spot.
     ShowFarPlane { at: V3, far: f64 },
 }
@@ -616,35 +620,43 @@ impl Editor {
                     let e = &self.entities[i];
                     e.node == v.top && (v.sub.is_none() || e.sub == v.sub)
                 });
-                let label = ent.map(|i| format!("{}: ", self.entities[i].label)).unwrap_or_default();
+                // A puzzle with no trigger box has no entity: the line names it by its number and opens it
+                let puzzle = (ent.is_none() && self.doc.tag(v.top) == "Puzzle").then_some(v.top);
+                let number = puzzle.and_then(|p| self.doc.kids(self.doc.root(), "Puzzle").iter().position(|n| *n == p));
+                let label = match (ent, number) {
+                    (Some(i), _) => format!("{}: ", self.entities[i].label),
+                    (None, Some(n)) => format!("puzzle {}: ", n + 1),
+                    _ => String::new(),
+                };
                 let tail = if v.vanilla { " Also in the vanilla level." } else { "" };
                 let mut c = Check::new(if v.vanilla { "note" } else { v.level }, format!("{}{}{}", label, v.msg, tail));
-                c.click = ent.map(|i| Click::Select(Some(i)));
+                c.click = ent.map(|i| Click::Select(Some(i))).or(puzzle.map(Click::Puzzle));
                 c.link = v.diag.as_ref().map(|(file, line)| (self.source_link(file, line), format!("{}:{}", file, line)));
                 out.push(c);
             }
         }
-        let mods = self.mod_users().len();
+        let users = self.mod_users();
+        let mods = users.len();
         if mods > 0 {
-            out.push(Check::new(
+            // The line names the objects, as the other lines do, and a click selects them all
+            let ents: Vec<EntId> = users.iter().filter_map(|n| whole.iter().copied().find(|&i| self.entities[i].node == *n)).collect();
+            let mut names: Vec<&str> = ents.iter().take(3).map(|&i| self.entities[i].label.as_str()).collect();
+            if ents.len() > 3 {
+                names.push("…");
+            }
+            let label = if names.is_empty() { String::new() } else { format!("{}: ", names.join(", ")) };
+            let mut c = Check::new(
                 "note",
                 format!(
-                    "{} object{} a rotation or scale that only the Expansion Pak game mod applies (enemies, platforms, powerups or water). {}",
+                    "{}{} object{} a rotation or scale that only the Expansion Pak game mod applies (enemies, platforms, powerups or water). {}",
+                    label,
                     mods,
                     if mods == 1 { " has" } else { "s have" },
                     MOD_NOTE
                 ),
-            ));
-        }
-        let fresh = self.violations.iter().filter(|v| !v.vanilla).count();
-        if missing.is_empty() && fresh == 0 {
-            out.push(Check::new(
-                "ok",
-                format!(
-                    "No new problems. {} entities checked against the level-parser rules from the decomp; every model is in a bank.",
-                    whole.len()
-                ),
-            ));
+            );
+            c.click = (!ents.is_empty()).then_some(Click::SelectAll(ents));
+            out.push(c);
         }
         // libgarib's schema (structure), then the import checks (every value against its type and enum: the schema
         // takes any text for an enum)
@@ -660,6 +672,16 @@ impl Editor {
             let mut c = Check::new("err", format!("The level doesn't match libgarib's format, so it won't build: {}", first));
             c.sub = Some(bad[1..].join("\n")).filter(|x| !x.is_empty());
             out.insert(0, c);
+        }
+        let fresh = self.violations.iter().filter(|v| !v.vanilla).count();
+        if missing.is_empty() && fresh == 0 && bad.is_empty() {
+            out.push(Check::new(
+                "ok",
+                format!(
+                    "No new problems. {} entities checked against the level-parser rules from the decomp; every model is in a bank.",
+                    whole.len()
+                ),
+            ));
         }
         if let Some(sb) = self.scenery_budget() {
             let kb = |v: i64| py_round(v as f64 / 1024.0) as i64;
@@ -695,6 +717,13 @@ impl Editor {
     pub fn click_check(&mut self, click: &Click) {
         match click {
             Click::Select(e) => self.select(*e, true),
+            Click::Puzzle(p) => self.open_puzzle(Some(*p)),
+            Click::SelectAll(ents) => {
+                self.set_selection(ents.clone());
+                if let Some(e) = self.selected() {
+                    self.focus_on(e);
+                }
+            }
             Click::ShowFarPlane { at, far } => self.show_far_plane(Some(*at), *far),
         }
     }

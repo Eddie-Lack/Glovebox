@@ -71,7 +71,7 @@ nothing else. The program never runs them.
 | `imports` | Which banks an edited level needs for the models it imports, and the enlarged banks a build writes. `plan_imports` plans a build that copies the models into the level's banks. `plan_runtime` plans a build whose game mod loads their banks from the player's ROM when the level starts. |
 | `build` | ROM, patch and level file builds (`assemble`, `build_rom`, `build_levels`). |
 | `modpatch` | Adds the mod to a built ROM, with the extra banks each level loads and the extra levels. Also writes the level table and the ball controls (Easy's controls on every difficulty, "Notes and limits"). Checks each word before it replaces it. |
-| `hwcheck` | Checks a built ROM against the rules of real hardware ("Real hardware"). `modpatch::apply_mod` runs it on every ROM that gets the mod. `self_test` breaks a copy of a ROM in each way that the rules name, and checks that each break is found. |
+| `hwcheck` | Checks a built ROM against the rules of real hardware ("Real hardware"). `modpatch::apply_mod` runs it on every ROM that gets the mod. `self_test` breaks a copy of a ROM in each way that the rules name, and checks that each break is found. A ROM that ends before the mod's place (the retail ROM, a build without the mod) is checked for its size and its CRCs only. |
 | `bps` | The BPS encoder and decoder. |
 | `custom` | Import model: `gltf` (the reader), `image` and `jpeg` (PNG and JPEG to pixels, the resize), `pack` (triangles to an object bank), and the stored sets. A set is one imported file's pieces and textures in the user folder ("Imported models"). |
 | `kit` | The kit: models made by code, their textures and previews. |
@@ -132,7 +132,9 @@ nothing else. The program never runs them.
     Level on the left, and on the right the inspector over the checks. Add to level and Path are tabs beside the
     inspector. Both sides are `Tabbed`.
   - Add to level and Path show while their tool is on. The layout keeps their side only. Hiding one turns its
-    tool off, and `+ Add`, `A`, `Path` and `P` show it again.
+    tool off, and `+ Add`, `A`, `Path` and `P` show it again. When the tool is on but its panel is behind another
+    tab, `+ Add`, `A`, `Path` and `P` bring the panel to the front and leave the tool on (`Window::toggle_palette`,
+    `toggle_path`). They read `Window::panels`: a panel behind a tab has an empty `slot`.
   - Each side is one column (`Window::columns`), an egui side panel. `Tabbed` draws a row of tabs and the panel
     in front. A column with one panel has a title bar and no tabs. `Stacked` draws the panels one under the other,
     each with its title bar, as egui top panels with a divider to drag. The checks are never a tab: they're the
@@ -181,6 +183,19 @@ nothing else. The program never runs them.
     `resize_grab_radius_side`), nor in the strip along its bottom when the checks are under it. The view is added after the panels, and it would otherwise take the half of each resize handle that
     lies over it.
 - A color is picked in the inspector. There's no color dialog.
+- The toolbar rows wrap (`horizontal_wrapped`). A toggle (`style::toggle`) that is on takes the theme's "on" look but
+  keeps the regular font: a bold label is wider, and the buttons after it moved, or a button wrapped to a new row,
+  when a tool turned on. `Pivot` and `Snap` each sit in a `horizontal` with their list, so a label never wraps away
+  from its list.
+- The outliner scrolls to the selected row when a selection changes and the row is out of sight
+  (`outliner::State::shown` keeps the list's offset and height from the last frame).
+- The chips over the view (the level's name, the autosave chip, `Keys ?`) take the clicks on them. Their rectangles
+  from the last frame (`View::chips`) keep presses there out of the view's picking. A click on `Keys ?` shows the key
+  line until the next click on it (`View::keys_open`).
+- The status line clears at every edit, undo and redo (`Editor::finish_edit`), and an edit that has something to say
+  sets it after. The size of the level file on its right (`Window::level_changed`) is the assembled size of the
+  edited level (`level::assemble_xml`), or the original size with "(original)" for an unedited level. The level's
+  name at the top of the view follows a change of its `File name`.
 
 ## Themes
 
@@ -192,6 +207,8 @@ nothing else. The program never runs them.
     also names the fonts, the chips over the 3D view, the colors of the selection and of the box select, and the 3D
     view's background for a level without fog. The chips are small labels over the view, such as the level's name
     and the autosave chip. The box select is the box that `B` drags to select.
+  - `Mark::Block` (1998) and `Mark::Lamp` have one shape for every level of a check. A sign on them
+    (`style::mark_glyph`: a check mark, a cross, an exclamation mark) shows the level without its color.
   - `THEMES` lists them. The first is the default, 1998. The three plain themes come next, then the seven palette
     themes, then the four styled ones (Cartridge, Blueprint, Paper and CRT). `PALETTES` lists the palette themes
     again: the Theme list shows them in a column of their own.
@@ -350,6 +367,12 @@ nothing else. The program never runs them.
   - The fields leave signals for the window. It calls `Editor::begin_scrub` before the frame's edits and
     `end_scrub` after the last: the drag is one undo step. Esc calls `cancel_scrub`, which restores the XML from
     before the drag. While a drag is open, the editor's keyboard shortcuts are off.
+- The Transform boxes (`style::num_input`) take a typed number only when it's finite. `inf`, `nan` and text keep
+  the old value, and the status line says `<box> expects a number` (`style::take_refused`, read once a frame by
+  `Window::ui`). The boxes show three decimals and grow with the inspector up to 110 points. The pointer over one
+  shows the whole number.
+- A raw `f4` field shows the shortest text of its 32-bit float (`3.7`, not `3.700000047683716`). Committing that
+  text unchanged writes nothing.
 
 ## Sharing levels: patches and the patcher
 
@@ -377,6 +400,20 @@ nothing else. The program never runs them.
   - Every read and copy in the decoder is bounds-checked.
   - A wrong ROM, damaged patch or malformed patch is refused with a plain explanation; nothing is saved.
   - Patch metadata is shown as text only.
+  - A Build all patch has `levels`, `levelIds` and a `quickboot` that is null, a level id or `["x", id]` (an extra
+    level). The page shows its levels in the Level row and names the result after them.
+  - The ROM step gets its check mark only for the ROM the patches are made for (or a browser that can't compute
+    SHA-1). Another ROM gets the gray note, and the patch's CRC32 still decides.
+- **Build all** (`Dialog::BuildAll`) lists the edited levels. `Boot into` offers the checked ones and the title
+  screen, and the window keeps the last choice (`Window::boot_into`). Its note on copied models is always shown.
+  - Each kind of dialog is its own egui modal (`dialogs::dialog_id`). A modal keeps its size from its last showing,
+    and the level pack's dialog had the height of the larger patch dialog.
+  - A list in a dialog is a popup on the same layer order as the dialog (`Order::Foreground`). From the second
+    opening of a dialog, egui could put the dialog over the popup: the list was hidden, and a click on it closed the
+    dialog. `dialogs::over_dialog` makes the popup a sublayer of the dialog in every frame.
+- In the Export patch dialog, `Export level pack` is grayed out for a level that rotates or scales an object only
+  the game mod can (`Editor::mod_users`): a pack refuses it. The pack's name isn't cut at 32 characters. A name
+  that breaks the rule turns the rule's line red, and `Export pack` waits.
 - Patches also work in other BPS tools: RomPatcher.js applies them to the same bytes.
 - Verified in the emulator: a shared patch (normal start) applied to the clean ROM boots through the
   copyright screen, studio intro, title fly-through, main menu, file select and name entry. It never reaches
@@ -444,6 +481,14 @@ the level it was made for, and the game loads that level's banks with it. Each p
   the Wayroom, gives a pack that passes `g64pack check`.
 - The flag of `models.bin` (the game's texture banks win over the level's own) is always 0. The game mod's builds never
   set it either.
+- Enemies and powerups name no object in the level file: the game picks their model by type, from
+  `enemyObjects` and `powerupObjects` in `noclip_tables.json`. `pack::type_refs` finds those models in the level
+  file, and `export` imports the ones the level's banks lack, like the object ids. Only ids in a bank of the game
+  count: a ball-change powerup's model is in none, and the game never draws it. The editor's Build all does the same
+  (`entities::type_model_ids` in `Editor::level_entry`), as Build ROM did from the entities (`current_imports`).
+  Before, both left these models out, and the level stopped on `LEVEL UNPLAYABLE - OBJECT MISSING`.
+  `a_pack_with_imports` checks it with the beach ball (powerup type 10, FORTRESS_SHARED) in Atlantis 1. g64coopdx's
+  `g64pack check` doesn't test the models of enemies and powerups.
 - All 48 vanilla levels export with no `models.bin` (`every_vanilla_level_makes_a_pack`).
 - `pack::pack_models` refuses, with a message:
   - a reskin: a set whose `meta.json` names the model it was made from
@@ -493,8 +538,14 @@ the level it was made for, and the game loads that level's banks with it. Each p
   `crates/editor/src/drafts.rs`). Reopening the level, restarting the editor or switching levels and back restores it. The HUD
   chip shows "Edited · autosaved HH:MM", and the level list marks edited levels with ●. Undo after a restore
   goes back to the vanilla level.
+  - The draft is saved a moment after the last edit (`Delays::draft`), in `Editor::tick`. The window asks for a
+    frame at that time (`Editor::next_due`): an idle window draws no frame on its own, and an undo with the mouse
+    still stayed unsaved until the mouse moved. The import plan waits the same way.
 - **Reset level** discards a level's edits and its autosave, after a confirmation. It's undoable in the
   current session.
+- **Undo across levels**: opening another level keeps the undo and redo steps of the level left
+  (`Editor::histories`, the 8 levels left last). They come back when the level opens again with the same XML it
+  was left with (`apply_level`, after the draft is restored). A reset level that was left still undoes.
 - **Import XML** (or drop an .xml on the window) checks the file before any of it reaches the level
   (`crates/editor/src/sanitize.rs`):
   - It refuses DOCTYPEs, entity declarations, stylesheet instructions, XInclude and CDATA before parsing.
@@ -510,7 +561,11 @@ the level it was made for, and the game loads that level's banks with it. Each p
   - The validated content is copied into a fresh document, which is what reaches the editor. Comments,
     namespaces and anything unknown aren't copied.
   - The dialog reports problems by element path, matches the file to its level by name, and imports as an
-    undoable edit.
+    undoable edit. Its line about the level-parser findings takes the color of the worst one and gives it as the
+    example. A refused file has no `Import into` list.
+  - A file dropped on the window while Import level XML or Import model is open goes into that dialog
+    (`dialogs::file_dropped`). A dropped ROM (an N64 header in any byte order, `shell::is_rom_file`) is left alone and
+    logged: it isn't level XML.
   - Autosaved drafts go through the same validation when they're restored.
 - The back end repeats the safety checks for builds (`level::parse_level_xml`): no DTD or entities in its XML
   parser, a size limit, and strict validation of level IDs and import IDs. No part of the program opens a network
@@ -523,7 +578,14 @@ the level it was made for, and the game loads that level's banks with it. Each p
   Move, rotate, scale, duplicate and delete apply to the whole selection. **Pivot** chooses the group center or
   each object's own origin.
 - **W / E / R** switch the gizmo between move, rotate and scale. The inspector also has numeric fields
-  (one object) or "move / rotate / scale by" (several objects).
+  (one object) or "move / rotate / scale by" (several objects). "rotate by" starts at 0 and "scale by" at 1: Apply
+  changes nothing until a number is typed.
+- **F** frames the selection. With nothing selected it frames the level (`Editor::frame_level`), which also gives
+  `Editor::level_size`, the size across of the landscape and platforms. The wheel zooms within it
+  (`Orbit::dolly_within`): the camera stays between 1% and 3 times that size from the target. At the near end the
+  wheel moves the target forward with the camera. `Orbit::dolly` is the old zoom, kept for the reference test.
+- **Esc** leaves the tool that's on, or clears the selection. An Esc that closes a list or a menu does only that
+  (`egui::Popup::is_any_open` in `Window::keys`).
 - What each kind of object can store (the editor only writes what the game reads):
 
   | Object | Rotation | Scale |
@@ -670,7 +732,9 @@ the level it was made for, and the game loads that level's banks with it. Each p
   the inspector's size fields; the inspector shows the whole puzzle. Duplicate and Delete copy or remove the
   whole puzzle when the volume is its only one (a camera zone, for one). A volume of a puzzle with several
   can't be duplicated or deleted on its own. The vanilla levels hold 209 boxes and no spheres or cylinders.
-  Clicks pass through the translucent fill to objects inside.
+  Clicks pass through the translucent fill to objects inside. A click picks an object first, then a volume hit on
+  its wire, then the landscape, then a volume hit on its fill (`Editor::pick`): a click on the floor inside a big
+  box picks the floor.
 - **triggers** (toolbar checkbox) shows or hides the puzzle trigger volumes. It's the same switch as the
   "Puzzle triggers" layer. The setting is remembered between sessions. Hidden volumes can't be picked, and the
   level keeps them.
@@ -691,7 +755,8 @@ the level it was made for, and the game loads that level's banks with it. Each p
   layer, which counts the platforms with an exit. The layer's key in `Editor::hidden` is `exit`; no entity has
   that kind. The setting is remembered between sessions as `exits`. Hiding the platforms hides their spheres.
 - **fog** (toolbar checkbox) shows or hides the level's fog in the editor view. The setting is remembered
-  between sessions. It doesn't change the level: in-game fog is the `FogConfiguration` command's
+  between sessions. It's off until the player turns it on (`fog=on`). With the game's fog, a level seen from afar is
+  only fog: Atlantis 2's ends at 900 units, and the view opened on a solid cyan with only the wires. It doesn't change the level: in-game fog is the `FogConfiguration` command's
   `fog_enabled` field, which you can edit in the inspector.
 
 ## Level tools
@@ -852,11 +917,41 @@ it too.
   its own file and title; a mod ROM without extra levels played as before; Atlantis 1 with every preset, a
   chasing enemy and a new puzzle played (31 platforms against 14, matrix peak 117).
 - `tools/emu/emu.py` (gloveworld) keeps data for a ROM by file name: give each new ROM a new name, or it runs the old one.
+- Deleting a platform also deletes each puzzle whose every action moves a platform by a tag the deleted platforms
+  had and no platform has any more (`Editor::remove_lone_puzzles`, `puzzles::only_platform_tags`). A `Lift` preset
+  comes with such a puzzle. A puzzle with no action, or with one that does something else, stays.
+- Duplicate drops a copied platform's `PlatSetTag`: the copy doesn't answer the original's puzzles.
+- `+ Add` in an enemy script puts the new instruction before a last "Go to instruction" that always runs, or a last
+  "End the attack": the game never gets past those. A new instruction with a point to go to or face
+  (`destination_x/y/z`) gets the enemy's position plus 100 on x, not the level's origin.
+- A check line of a puzzle that has no trigger box names the puzzle by its number and opens it
+  (`Click::Puzzle`). The line about the game mod's rotations and scales names up to 3 of the objects and selects them
+  all (`Click::SelectAll`). The green "No new problems" line also waits for the libgarib format check.
+- After `Remove` of an imported model, the entities and the checks are built again at once
+  (`Editor::refresh_entities`).
 
 ## Test level
 
 **Test level** builds the ROM as Build ROM does, with quickboot, into the user folder's
 `test/` and opens it in the emulator the player chose the first time (kept in `settings.ini`).
+
+- The first time, a note comes first. A note with a next step (`Dialog::Message` with `then`) has `Cancel`, and Esc
+  cancels it. Enter and OK go on.
+- The emulator picker has no filter on Linux: "All files" alone adds none (`dialogs::Native`). rfd's zenity backend
+  turns the filter `*` into `*.*`, which hides programs without an extension.
+- `settings.ini` is read once at the start and written whole at every change (`settings.rs`). An `emulator` line
+  deleted by hand while the app runs comes back. The docs say to close the editor first.
+
+## File dialogs
+
+- The file dialogs are `rfd`'s, behind the `FileDialogs` trait (`dialogs.rs`). On Linux rfd asks the desktop's
+  portal (xdg-desktop-portal), then `zenity`. With neither, it logs an error through the `log` crate and gives
+  None, the same as a cancel.
+- `shell::DialogLog` is the app's logger for rfd's errors: it writes them to editor.log and keeps the last one
+  (`dialogs::DIALOG_ERROR`). After a dialog gave no file, `FileDialogs::failed` gives that error when it's about
+  zenity, rfd's last try. `Window::dialog_failed` shows it in the status line, the setup screen under its button,
+  Import level XML and Import model in the dialog. A cancel still says what it said before.
+- The test dialogs (`Scripted`) fail the next call with `fail`. The click test checks the status line for it.
 
 ## Facts from the decomp
 
@@ -1117,7 +1212,9 @@ ones a tool can check, for every ROM `crates/core/src/modpatch.rs` builds; `tool
   converts `.v64` and `.n64` to `.z64`, checks the SHA-1 (`270be17b…`, as in gloveworld's `NGVE.sha1`) and keeps the
   copy. The editor then opens in the same window.
 - The release build is a windowed program: no console. `--help`, `--version` and `--self-test` typed in a command
-  prompt print nothing. Redirect them: `Glovebox.exe --self-test > report.txt`.
+  prompt print nothing. Redirect them: `Glovebox.exe --self-test > report.txt`. An unknown option shows its error
+  and the help in a message box on Windows (`main.rs`). Elsewhere they go to stderr.
+- A ROM copied into the user folder as `rom/glover.z64` skips the setup screen. The app checks it when it opens.
 - An error in the program (a panic) goes to `editor.log` and into a message box, and the app stops. Edits are
   autosaved before that. Slow work runs on worker threads (`jobs.rs`); the window stays live.
 - `--self-test` checks the compiled-in tables and the icon, opens a graphics device without a window and draws a

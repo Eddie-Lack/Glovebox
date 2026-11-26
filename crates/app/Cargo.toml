@@ -17,6 +17,8 @@ png = "0.18"
 pollster = "0.4"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
+# rfd reports a file dialog that could not open only through the log
+log = "0.4"
 
 [dev-dependencies]
 egui_kittest = { version = "0.37", features = ["wgpu", "snapshot", "eframe"] }

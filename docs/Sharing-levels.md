@@ -11,6 +11,7 @@ _Back to the [README](../README.md)_
 - It starts the game normally. `Patched ROM boots straight into this level` is a separate option
 - An edit with models from other levels needs the Expansion Pak. The game mod loads those models from the player's own ROM
 - `Copy the models into the ROM instead` puts the models in the patch. It gets big (one 4.9 KB model made a 165 KB patch) and holds game data. The export dialog warns you
+- With the models copied, the level needs no Expansion Pak, as long as nothing else in it needs the game mod _(see [When the editor adds it](Game-mod.md#when-the-editor-adds-it))_
 - Your own imported models are always in the patch
 
 Note: only share levels that use models you have the right to share
@@ -19,7 +20,7 @@ Note: only share levels that use models you have the right to share
 
 `Export level pack` in the `Export patch` dialog saves the level as a level pack for _[g64coopdx](https://github.com/Eddie-Lack/g64coopdx)_, the online co-op game on PC
 
-- A pack is a folder. Give it a name (1 to 32 plain ASCII characters), then pick where the folder goes
+- A pack is a folder. Give it a name (1 to 32 plain ASCII characters), then pick where the folder goes. The save dialog's file name is the folder's name
 - Your imported models go in the pack's `models.bin`
 - In a pack, an imported model can be a platform, just like in a ROM
 - Models from other levels don't: the pack names their banks, and each player's game loads them from their own ROM
@@ -27,14 +28,23 @@ Note: only share levels that use models you have the right to share
 - The pack also names the texture banks of those models' sprites (flat pictures, like garibs). g64coopdx needs them
 - The status bar tells you when your pack uses models from other levels
 - The pack holds no game data
+- Enemies and powerups from other levels count as models from other levels too
 
 It refuses:
 
-- a level with rotations or scales that only the Expansion Pak game mod applies (on enemies, platforms, powerups or water)
+- a level with rotations or scales that only the Expansion Pak game mod applies (on enemies, platforms, powerups or water). `Export level pack` is grayed out for it
 - a model made with `New look` (other textures on one of the game's models)
 - an imported model as a cameo (a background the game animates). Use it as `Scenery`, `Background` or `Platform`
 - an imported model with the name of the ball or the hand (`gball`, `cball`, `GShinL`, `GShinR`, `gbl_bt`). That name comes from the file's name when you imported it. `Remove` the model in the Models tab, give its file another name, import it again and place the new model
 - more than 4 MB of imported models, or models from more than 4 banks of each kind (object banks and texture banks). The texture banks of the sprites count too
+
+### Playing a pack
+
+- The host starts g64coopdx with `--pack FOLDER`, the pack's folder
+- Players who join without the pack get asked if they want to download it from the host
+- The level shows up when you enter the level it takes the place of
+
+_See g64coopdx's [playing online](https://github.com/Eddie-Lack/g64coopdx/blob/main/docs/playing-online.md#a-custom-level) page_
 
 ## The patcher
 
