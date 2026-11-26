@@ -628,7 +628,7 @@ impl Editor {
                 let number = puzzle.and_then(|p| self.doc.kids(self.doc.root(), "Puzzle").iter().position(|n| *n == p));
                 let label = match (ent, number) {
                     (Some(i), _) => format!("{}: ", self.entities[i].label),
-                    (None, Some(n)) => format!("puzzle {}: ", n + 1),
+                    (None, Some(n)) => format!("Puzzle {}: ", n + 1),
                     _ => String::new(),
                 };
                 let tail = if v.vanilla { " Also in the vanilla level." } else { "" };
