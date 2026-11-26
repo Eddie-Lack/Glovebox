@@ -8,38 +8,66 @@ use std::path::{Path, PathBuf};
 pub type Filter<'a> = (&'a str, &'a [&'a str]);
 
 pub trait FileDialogs {
-    /// Asks for a file to open. None when the player cancels.
+    /// Asks for a file to open. None when the player cancels, or when the dialog couldn't open (see `failed`).
     fn open_file(&mut self, title: &str, folder: Option<&Path>, filters: &[Filter]) -> Option<PathBuf>;
-    /// Asks where to save a file. None when the player cancels.
+    /// Asks where to save a file. None when the player cancels, or when the dialog couldn't open (see `failed`).
     fn save_file(&mut self, title: &str, folder: &Path, name: &str) -> Option<PathBuf>;
+    /// After a call that gave None: why the dialog couldn't open, once. None when the player canceled.
+    fn failed(&mut self) -> Option<String> {
+        None
+    }
 }
 
 /// The system's dialogs.
 pub struct Native;
 
+/// The error that `rfd` logged during the last dialog (`shell::DialogLog`).
+pub static DIALOG_ERROR: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+/// On Linux `rfd` asks the desktop portal, then zenity. When neither answers it logs the error and gives None, the
+/// same as a cancel. Its last word is about zenity.
+fn take_dialog_error() -> Option<String> {
+    let e = DIALOG_ERROR.lock().unwrap_or_else(|e| e.into_inner()).take();
+    e.filter(|e| e.contains("zenity"))
+}
+
+fn clear_dialog_error() {
+    *DIALOG_ERROR.lock().unwrap_or_else(|e| e.into_inner()) = None;
+}
+
 impl FileDialogs for Native {
     fn open_file(&mut self, title: &str, folder: Option<&Path>, filters: &[Filter]) -> Option<PathBuf> {
+        clear_dialog_error();
         let mut d = rfd::FileDialog::new().set_title(title);
         if let Some(f) = folder.filter(|f| f.is_dir()) {
             d = d.set_directory(f);
         }
-        for (name, exts) in filters {
-            d = if exts.is_empty() { d.add_filter(*name, &["*"]) } else { d.add_filter(*name, exts) };
+        // "All files" alone needs no filter. zenity would turn its "*" into "*.*", which hides programs without
+        // an extension, as most emulators are on Linux.
+        if !(filters.len() == 1 && filters[0].1.is_empty()) {
+            for (name, exts) in filters {
+                d = if exts.is_empty() { d.add_filter(*name, &["*"]) } else { d.add_filter(*name, exts) };
+            }
         }
         d.pick_file()
     }
 
     fn save_file(&mut self, title: &str, folder: &Path, name: &str) -> Option<PathBuf> {
+        clear_dialog_error();
         let mut d = rfd::FileDialog::new().set_title(title).set_file_name(name);
         if folder.is_dir() {
             d = d.set_directory(folder);
         }
         d.save_file()
     }
+
+    fn failed(&mut self) -> Option<String> {
+        take_dialog_error()
+    }
 }
 
 /// Dialogs for tests: each call takes the next path of its queue, and an empty queue cancels. `asked` records
-/// the titles.
+/// the titles. With `fail`, the next call fails with that reason, as a dialog that couldn't open.
 #[derive(Default, Clone)]
 pub struct Scripted(pub std::rc::Rc<std::cell::RefCell<ScriptedState>>);
 
@@ -48,19 +76,34 @@ pub struct ScriptedState {
     pub open: VecDeque<PathBuf>,
     pub save: VecDeque<PathBuf>,
     pub asked: Vec<String>,
+    pub fail: Option<String>,
+    /// The reason of the last call that failed, until `failed` takes it.
+    pub failure: Option<String>,
 }
 
 impl FileDialogs for Scripted {
     fn open_file(&mut self, title: &str, _folder: Option<&Path>, _filters: &[Filter]) -> Option<PathBuf> {
         let mut s = self.0.borrow_mut();
         s.asked.push(title.to_string());
+        if let Some(f) = s.fail.take() {
+            s.failure = Some(f);
+            return None;
+        }
         s.open.pop_front()
     }
 
     fn save_file(&mut self, title: &str, _folder: &Path, name: &str) -> Option<PathBuf> {
         let mut s = self.0.borrow_mut();
         s.asked.push(format!("{title}: {name}"));
+        if let Some(f) = s.fail.take() {
+            s.failure = Some(f);
+            return None;
+        }
         s.save.pop_front().map(|p| if p.is_dir() { p.join(name) } else { p })
+    }
+
+    fn failed(&mut self) -> Option<String> {
+        self.0.borrow_mut().failure.take()
     }
 }
 
@@ -78,7 +121,8 @@ pub enum Dialog {
     /// A question with Yes and No. `yes` runs after Yes.
     Confirm { title: String, text: String, yes: Option<Act> },
     ImportXml(Box<ImportXml>),
-    Patch { lines: Vec<(&'static str, String)>, quickboot: bool },
+    /// `pack`: the level can be a level pack. A pack can't hold the rotations and scales of the game mod.
+    Patch { lines: Vec<(&'static str, String)>, quickboot: bool, pack: bool },
     BuildAll { levels: Vec<(String, String, String, bool)>, boot: Option<usize> },
     ImportModel(Box<ImportModel>),
     /// Export level pack: the pack's name
@@ -104,6 +148,8 @@ pub struct ImportModel {
     pub stats: Option<Result<(usize, [f64; 3]), String>>,
     /// The size of the level's landscape.
     pub level: Option<[f64; 3]>,
+    /// Why the file dialog couldn't open.
+    pub failed: Option<String>,
 }
 
 fn s<'a>(v: &'a serde_json::Value, key: &str) -> &'a str {
@@ -169,8 +215,11 @@ fn read_xml(w: &Window, d: &mut ImportXml, path: &Path) {
     d.lines.extend(res.warnings.iter().map(|x| ("note", x.clone())));
     if let Some(root) = &res.root {
         let rules = ed.run_rules(root);
-        if let Some(first) = rules.first() {
-            d.lines.push(("note", format!("{} level-parser warning{} (shown in Checks after import), e.g. {}", rules.len(), plural(rules.len()), first.msg)));
+        // The line takes the color of the worst finding, and gives that one as its example
+        let worst = ["err", "warn"].into_iter().find_map(|l| rules.iter().find(|r| r.level == l)).or(rules.first());
+        if let Some(first) = worst {
+            let level = if matches!(first.level, "err" | "warn") { first.level } else { "note" };
+            d.lines.push((level, format!("{} level-parser warning{} (shown in Checks after import), e.g. {}", rules.len(), plural(rules.len()), first.msg)));
         }
     }
     let here = ed.scene_id().to_string();
@@ -226,13 +275,14 @@ pub fn open_patch_dialog(w: &mut Window) {
     if ed.needs_pak_heap() {
         lines.push(("note", "The imported models need more memory than the game's own heap. The patch adds the Expansion Pak game mod, which makes the heap about 4 MB larger. Players need the Expansion Pak; without one the game runs out of memory in this level.".to_string()));
     }
-    w.dialog = Some(Dialog::Patch { lines, quickboot: false });
+    let pack = ed.mod_users().is_empty();
+    w.dialog = Some(Dialog::Patch { lines, quickboot: false, pack });
 }
 
 /// Build all: every level with edits (its draft, or a title, music or clock) in one ROM or BPS patch.
 pub fn open_all_dialog(w: &mut Window) {
     let levels = w.ed.project_levels();
-    let rows = levels
+    let rows: Vec<(String, String, String, bool)> = levels
         .into_iter()
         .map(|(sid, name, xml)| {
             let info = w.ed.drafts.info(&sid);
@@ -247,7 +297,8 @@ pub fn open_all_dialog(w: &mut Window) {
             (sid, name, label, true)
         })
         .collect();
-    w.dialog = Some(Dialog::BuildAll { levels: rows, boot: None });
+    let boot = w.boot_into.as_ref().and_then(|b| rows.iter().position(|r| r.0 == *b));
+    w.dialog = Some(Dialog::BuildAll { levels: rows, boot });
 }
 
 /// Import model: one .glb, converted into Glover models by the back end.
@@ -258,7 +309,7 @@ pub fn open_model_dialog(w: &mut Window, path: Option<PathBuf>) {
             land.add_box(&w.ed.obj_box(i));
         }
     }
-    let mut d = ImportModel { path: None, name: String::new(), scale: "1".to_string(), stats: None, level: (!land.empty()).then(|| land.size()) };
+    let mut d = ImportModel { path: None, name: String::new(), scale: "1".to_string(), stats: None, level: (!land.empty()).then(|| land.size()), failed: None };
     if let Some(p) = path {
         read_model(&mut d, p);
     }
@@ -284,6 +335,7 @@ fn read_model(d: &mut ImportModel, path: PathBuf) {
     };
     d.stats = Some(stats());
     d.path = Some(path);
+    d.failed = None;
 }
 
 /// 1234 as "1,234".
@@ -297,6 +349,20 @@ fn thousands(n: usize) -> String {
         out.push(c);
     }
     out
+}
+
+/// A dialog's id: one egui modal for each kind of dialog. A modal keeps its size from the last time it was shown.
+fn dialog_id(d: &Dialog) -> egui::Id {
+    egui::Id::unique(("dialog", std::mem::discriminant(d)))
+}
+
+/// Keeps a list's popup over the dialog it opens from. egui puts both on the same layer order, and from the second
+/// time a dialog opens, the dialog came out on top: the list was hidden behind it, and a click on it closed the
+/// dialog.
+fn over_dialog(ctx: &egui::Context, id: egui::Id, combo: &egui::Response) {
+    let popup = egui::LayerId::new(egui::Order::Foreground, egui::Popup::default_response_id(combo));
+    let dialog = egui::LayerId::new(egui::Order::Foreground, id);
+    ctx.memory_mut(|m| m.areas_mut().set_sublayer(dialog, popup));
 }
 
 /// A dialog's title: the title bar and the theme's divider.
@@ -318,11 +384,12 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
     let Some(mut dialog) = w.dialog.take() else { return };
     let mut keep = true;
     let mut then: Option<Act> = None;
-    // A question takes Enter for Yes and Esc for No. A note takes either for OK.
+    // A question takes Enter for Yes and Esc for No. A note takes either for OK, but Esc cancels its next step.
     let (enter, esc) = ctx.input(|i| (i.key_pressed(egui::Key::Enter), i.key_pressed(egui::Key::Escape)));
     // The dialog is a box in the theme's frame, with a title bar and the divider under it
     let backdrop = style::theme(ctx).scrim;
-    let modal = egui::Modal::new(egui::Id::unique("dialog")).frame(egui::Frame::NONE).backdrop_color(backdrop).show(ctx, |ui| {
+    let id = dialog_id(&dialog);
+    let modal = egui::Modal::new(id).frame(egui::Frame::NONE).backdrop_color(backdrop).show(ctx, |ui| {
         style::framed(ui, |ui| {
         egui::Frame::new().inner_margin(egui::Margin::same(12)).show(ui, |ui| {
         ui.set_width(520.0f32.min(ctx.content_rect().width() - 60.0));
@@ -331,10 +398,16 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
             Dialog::Message { title, text, then: after } => {
                 title_bar(ui, title);
                 ui.label(text.as_str());
+                // A note that leads on to a next step can be canceled: Esc and Cancel close it without the step
+                let next = after.is_some();
                 buttons(ui, |ui| {
-                    if ui.add(style::primary("OK")).clicked() || enter || esc {
+                    if ui.add(style::primary("OK")).clicked() || enter || (esc && !next) {
                         keep = false;
                         then = after.take();
+                    }
+                    if next && (ui.button("Cancel").clicked() || esc) {
+                        keep = false;
+                        then = None;
                     }
                 });
             }
@@ -359,6 +432,9 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 ui.horizontal(|ui| {
                     if ui.button("Choose file…").clicked() {
                         chosen = w.dialogs.open_file("Import level XML", None, &[("Level XML", &["xml"]), ("All files", &[])]);
+                        if let Some(e) = chosen.is_none().then(|| w.dialogs.failed()).flatten() {
+                            d.lines = vec![("err", e)];
+                        }
                     }
                     muted(ui, &d.name);
                 });
@@ -372,18 +448,22 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 for t in &d.small {
                     style::src(ui, t);
                 }
-                ui.horizontal(|ui| {
-                    ui.label("Import into");
-                    let shown = d.targets.get(d.target).map(|t| t.1.clone()).unwrap_or_default();
-                    let r = egui::ComboBox::from_id_salt("import target").icon(style::combo_icon).selected_text(shown).width(360.0).truncate().show_ui(ui, |ui| {
-                        for (i, t) in d.targets.iter().enumerate() {
-                            if ui.selectable_label(d.target == i, &t.1).clicked() {
-                                d.target = i;
+                // A file that was refused has no level to go into
+                if !d.targets.is_empty() {
+                    ui.horizontal(|ui| {
+                        ui.label("Import into");
+                        let shown = d.targets.get(d.target).map(|t| t.1.clone()).unwrap_or_default();
+                        let r = egui::ComboBox::from_id_salt("import target").icon(style::combo_icon).selected_text(shown).width(360.0).truncate().show_ui(ui, |ui| {
+                            for (i, t) in d.targets.iter().enumerate() {
+                                if ui.selectable_label(d.target == i, &t.1).clicked() {
+                                    d.target = i;
+                                }
                             }
-                        }
+                        });
+                        over_dialog(ctx, id, &r.response);
+                        r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Import into"));
                     });
-                    r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Import into"));
-                });
+                }
                 let ok = d.res.as_ref().is_some_and(|r| r.ok) && !d.targets.is_empty();
                 buttons(ui, |ui| {
                     if ui.add_enabled(ok, style::primary("Import")).clicked() {
@@ -404,7 +484,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                     }
                 });
             }
-            Dialog::Patch { lines, quickboot } => {
+            Dialog::Patch { lines, quickboot, pack } => {
                 title_bar(ui, "Export patch");
                 style::para(ui, "A BPS patch for other players. They apply it to their own Glover (USA) ROM with patcher.html. Share the .bps and patcher.html (one file, works offline). Export level pack saves the level for g64coopdx, the online co-op game on PC, instead.");
                 for (level, text) in lines.iter() {
@@ -417,7 +497,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                         let qb = *quickboot;
                         then = Some(Box::new(move |w: &mut Window| w.export("bps", Some(qb))));
                     }
-                    let r = ui.button("Export level pack").on_hover_text("Save the level as a level pack for g64coopdx, the online co-op game on PC, with the models it imports");
+                    let r = ui.add_enabled(*pack, egui::Button::new("Export level pack")).on_hover_text("Save the level as a level pack for g64coopdx, the online co-op game on PC, with the models it imports");
                     if r.clicked() {
                         keep = false;
                         then = Some(Box::new(open_pack_dialog));
@@ -432,11 +512,18 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 style::para(ui, "A level pack for g64coopdx, the online co-op game on PC. It's a folder with the level and the models it imports. Models from other levels are named by their bank, not copied. Each player's game loads those banks from the player's own ROM. The pack holds no game data.");
                 ui.horizontal(|ui| {
                     ui.label("Pack name");
-                    ui.add(egui::TextEdit::singleline(name).char_limit(glovebox_core::pack::NAME_MAX).hint_text("Name").desired_width(260.0));
+                    ui.add(egui::TextEdit::singleline(name).hint_text("Name").desired_width(260.0));
                 });
-                muted(ui, "1 to 32 characters of plain ASCII. Every player sees it.");
+                // A name that breaks the rule isn't cut: the rule turns red and Export pack waits
+                let fits = (1..=glovebox_core::pack::NAME_MAX).contains(&name.chars().count()) && name.chars().all(|c| (' '..='~').contains(&c));
+                let rule = "1 to 32 characters of plain ASCII. Every player sees it.";
+                if fits {
+                    muted(ui, rule);
+                } else {
+                    ui.label(egui::RichText::new(rule).color(style::theme(ui.ctx()).err));
+                }
                 buttons(ui, |ui| {
-                    if ui.add(style::primary("Export pack")).clicked() {
+                    if ui.add_enabled(fits, style::primary("Export pack")).clicked() {
                         keep = false;
                         let n = name.clone();
                         then = Some(Box::new(move |w: &mut Window| w.export_pack(n)));
@@ -455,12 +542,17 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                     }
                     return;
                 }
-                style::para(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
+                // The note on copied models is always shown: it says when the ROM needs the game mod
+                muted(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
                 egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
                     for (_, _, label, on) in levels.iter_mut() {
                         style::checkbox(ui, on, label.as_str());
                     }
                 });
+                // The ROM can boot into a checked level only
+                if boot.is_some_and(|i| !levels.get(i).is_some_and(|l| l.3)) {
+                    *boot = None;
+                }
                 ui.horizontal(|ui| {
                     ui.label("Boot into");
                     let shown = boot.and_then(|i| levels.get(i)).map_or("the title screen (normal start)".to_string(), |l| l.1.clone());
@@ -468,14 +560,17 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                         if ui.selectable_label(boot.is_none(), "the title screen (normal start)").clicked() {
                             *boot = None;
                         }
-                        for (i, l) in levels.iter().enumerate() {
+                        for (i, l) in levels.iter().enumerate().filter(|(_, l)| l.3) {
                             if ui.selectable_label(*boot == Some(i), &l.1).clicked() {
                                 *boot = Some(i);
                             }
                         }
                     });
+                    over_dialog(ctx, id, &r.response);
                     r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Boot into"));
                 });
+                // Build all opens again with this choice
+                w.boot_into = boot.and_then(|i| levels.get(i)).map(|l| l.0.clone());
                 let mut choice = None;
                 buttons(ui, |ui| {
                     if ui.add(style::primary("Build ROM")).clicked() {
@@ -502,6 +597,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 ui.horizontal(|ui| {
                     if ui.button("Choose .glb…").clicked() {
                         chosen = w.dialogs.open_file("Import model", None, &[("glTF models", &["glb", "gltf"]), ("All files", &[])]);
+                        d.failed = chosen.is_none().then(|| w.dialogs.failed()).flatten();
                     }
                     let name = d.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string());
                     muted(ui, name.as_deref().unwrap_or("No file chosen"));
@@ -521,7 +617,9 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                 });
                 let sc = glovebox_core::pyfmt::parse_float(d.scale.trim()).filter(|v| v.is_finite()).unwrap_or(0.0);
                 let level = d.level.map(|lv| format!(" This level is about {} × {} units across.", lv[0].round(), lv[2].round())).unwrap_or_default();
+                let bad = d.failed.is_some() || matches!((&d.path, &d.stats), (Some(_), Some(Err(_))));
                 let text = match (&d.path, &d.stats) {
+                    _ if d.failed.is_some() => d.failed.clone().unwrap_or_default(),
                     (None, _) => format!("Choose a .glb file.{level}"),
                     (_, None) => "Reading the model…".to_string(),
                     (_, Some(Err(e))) => format!("This file can't be read as a glTF model: {e}"),
@@ -537,7 +635,11 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                         )
                     }
                 };
-                muted(ui, &text);
+                if bad {
+                    ui.label(egui::RichText::new(&text).color(style::theme(ui.ctx()).err));
+                } else {
+                    muted(ui, &text);
+                }
                 let ok = d.path.is_some() && sc > 0.0 && matches!(d.stats, Some(Ok(_)));
                 buttons(ui, |ui| {
                     if ui.add_enabled(ok, style::primary("Import and place")).clicked() {
@@ -566,6 +668,22 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
     }
     if let Some(act) = then {
         act(w);
+    }
+}
+
+/// A file dropped on the window while a dialog is open. Import level XML and Import model read it, as their
+/// Choose button would. Other dialogs leave it.
+pub fn file_dropped(w: &mut Window, path: PathBuf) {
+    match w.dialog.take() {
+        Some(Dialog::ImportXml(mut d)) => {
+            read_xml(w, &mut d, &path);
+            w.dialog = Some(Dialog::ImportXml(d));
+        }
+        Some(Dialog::ImportModel(mut d)) => {
+            read_model(&mut d, path);
+            w.dialog = Some(Dialog::ImportModel(d));
+        }
+        other => w.dialog = other,
     }
 }
 

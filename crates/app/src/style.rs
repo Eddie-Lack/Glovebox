@@ -1039,7 +1039,15 @@ fn explain(ui: &mut Ui, text: &str, size: Option<f32>, place: Option<(Rect, Opti
             };
             // The area senses the pointer only. Clicks and drags go to the widgets under it.
             let id = ui.scope_id().with(("note", text, hover.min.y as i32));
-            ui.interact(hover, id, egui::Sense::hover()).on_hover_text(text);
+            let r = ui.interact(hover, id, egui::Sense::hover());
+            // In a dialog, the note of its title goes above the title: under it, it covered the dialog's first rows
+            if ui.layer_id().order != egui::Order::Background && place.is_none() {
+                let mut tip = egui::Tooltip::for_enabled(&r);
+                tip.popup = tip.popup.align(egui::RectAlign::TOP);
+                tip.show(|ui| ui.label(text));
+            } else {
+                r.on_hover_text(text);
+            }
             if let Some((letters, color)) = cue {
                 if ui.is_rect_visible(letters) {
                     let y = (letters.max.y + 0.5).round_to_pixels(ui.pixels_per_point());
@@ -1128,7 +1136,9 @@ pub fn accent(text: &str) -> egui::Button<'static> {
 
 /// A toolbar button that stays down while its tool is on.
 pub fn toggle(ui: &mut Ui, on: bool, text: &str, tip: &str) -> Response {
-    let b = if on { egui::Button::new(text).with_class(CLASS_ON).with_class(CLASS_BOLD).selected(true) } else { egui::Button::new(text) };
+    // An on toggle takes the theme's "on" look but keeps the regular font: a bold label is wider, and the buttons
+    // after it moved when it turned on
+    let b = if on { egui::Button::new(text).with_class(CLASS_ON).selected(true) } else { egui::Button::new(text) };
     ui.add(b).on_hover_text(tip)
 }
 
@@ -1243,6 +1253,29 @@ pub fn level_color(th: &Theme, level: &str) -> Color32 {
     th.marks[["ok", "err", "warn", "imp"].iter().position(|l| *l == level).unwrap_or(4)]
 }
 
+/// A sign on a mark of one shape for every level: a check mark for "ok", a cross for "err", an exclamation mark for
+/// "warn". The level then shows without its color too.
+fn mark_glyph(painter: &egui::Painter, level: &str, at: Rect, fill: Color32) {
+    let ink = if fill.r() as u32 + fill.g() as u32 + fill.b() as u32 > 380 { Color32::BLACK } else { Color32::WHITE };
+    let pen = Stroke::new(1.5, ink);
+    let (c, h) = (at.center(), at.width() / 2.0 - 2.0);
+    match level {
+        "ok" => {
+            let pts = vec![c + egui::vec2(-h, 0.0), c + egui::vec2(-h * 0.3, h * 0.7), c + egui::vec2(h, -h * 0.7)];
+            painter.add(egui::Shape::line(pts, pen));
+        }
+        "err" => {
+            painter.line_segment([c + egui::vec2(-h, -h), c + egui::vec2(h, h)], pen);
+            painter.line_segment([c + egui::vec2(h, -h), c + egui::vec2(-h, h)], pen);
+        }
+        "warn" => {
+            painter.line_segment([c + egui::vec2(0.0, -h), c + egui::vec2(0.0, h * 0.3)], pen);
+            painter.circle_filled(c + egui::vec2(0.0, h * 0.85), 0.9, ink);
+        }
+        _ => {}
+    }
+}
+
 /// The theme's mark for a check of `level`, in the square `at`.
 fn mark(painter: &egui::Painter, th: &Theme, level: &str, at: Rect) {
     let color = level_color(th, level);
@@ -1255,11 +1288,13 @@ fn mark(painter: &egui::Painter, th: &Theme, level: &str, at: Rect) {
         Mark::Block => {
             painter.rect_filled(at, 0.0, color);
             edges(painter, at, Color32::from_white_alpha(170), Color32::from_black_alpha(150));
+            mark_glyph(painter, level, at, color);
         }
         Mark::Lamp => {
             painter.circle_filled(c, h + 0.5, color);
             painter.circle_stroke(c, h + 0.5, Stroke::new(1.0, th.border_colors[3]));
             painter.circle_filled(c - egui::vec2(1.5, 1.5), 1.2, Color32::from_white_alpha(150));
+            mark_glyph(painter, level, at, color);
         }
         Mark::Drawn => match level {
             "ok" => {
@@ -1503,8 +1538,24 @@ pub fn num_input(ui: &mut Ui, id: egui::Id, value: f64, width: f32, label: &str,
     let shown = num_text(value);
     let (text, r) = commit_number(ui, id, &shown, Some(spec), |t| t.desired_width(width));
     name(&r, label);
-    let v: f64 = text?.trim().parse().ok()?;
+    // The box shows three decimals. The pointer over it shows the whole number.
+    let full = glovebox_core::pyfmt::fmt(value);
+    if full != shown && value.is_finite() {
+        r.on_hover_text(full);
+    }
+    // Text that isn't a finite number keeps the old value, and `take_refused` names the box
+    let Some(v) = parse_f64(&text?).filter(|v| v.is_finite()) else {
+        ui.ctx().data_mut(|d| d.insert_temp(egui::Id::unique(REFUSED), label.to_string()));
+        return None;
+    };
     ((v - value).abs() > 1e-9).then_some(v)
+}
+
+const REFUSED: &str = "num_input refused";
+
+/// The name of the number box that refused its text in this frame, once.
+pub fn take_refused(ctx: &egui::Context) -> Option<String> {
+    ctx.data_mut(|d| d.remove_temp::<String>(egui::Id::unique(REFUSED)))
 }
 
 /// Gives a widget a name for screen readers and tests.

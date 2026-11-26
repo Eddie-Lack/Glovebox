@@ -125,6 +125,8 @@ pub struct Window {
     pub home: PathBuf,
     pub settings: Shared,
     pub dialogs: Box<dyn FileDialogs>,
+    /// The level Build all boots into, as last chosen in its dialog.
+    pub boot_into: Option<String>,
     pub jobs: Jobs<Window>,
     /// The kit's previews and the model pictures get their own worker: a tab of them must not hold up builds.
     pub side_jobs: Jobs<Window>,
@@ -198,7 +200,8 @@ impl Window {
         let mut ed = Editor::new(backend, Drafts::new(home.join("drafts")), Some(Box::new(settings.clone())));
         ed.delays = Some(Delays::default());
         ed.format_time = shell::local_date_time;
-        ed.show_fog = settings.get("fog").as_deref() != Some("off");
+        // Fog is off unless the player turned it on: the game's fog hides most of a level seen from afar
+        ed.show_fog = settings.get("fog").as_deref() == Some("on");
         if settings.get("triggers").as_deref() == Some("off") {
             ed.hidden.insert("trigger".to_string());
         }
@@ -211,6 +214,7 @@ impl Window {
             home: home.to_path_buf(),
             settings,
             dialogs,
+            boot_into: None,
             jobs: Jobs::new(2, ctx.clone()),
             side_jobs: Jobs::new(1, ctx.clone()),
             busy: false,
@@ -339,6 +343,9 @@ impl Window {
         let name = ed.scene.as_ref().map(|x| s(x, "name").to_string()).unwrap_or_default();
         self.hud_level = format!("{} · {}", name, ed.doc.attr(ed.doc.root(), "name"));
         self.status_size = ed.orig_lev_size.map(|n| format!("{n} B .lev (original)")).unwrap_or_default();
+        if ed.is_edited() {
+            self.level_changed();
+        }
         self.view.forget_level();
         self.inspector = inspector::State::default();
         self.palette.thumbs_wanted.clear();
@@ -370,7 +377,7 @@ impl Window {
         if events.is_empty() {
             return;
         }
-        let mut rebuilt = false;
+        let (mut rebuilt, mut edited) = (false, false);
         let (mut said, mut selected) = (false, false);
         for e in events {
             match e {
@@ -385,7 +392,10 @@ impl Window {
                     self.view.rebuilt();
                 }
                 Event::ImportsChanged => rebuilt = true,
-                Event::Edited => self.edited_levels = self.ed.drafts.list().into_keys().collect(),
+                Event::Edited => {
+                    self.edited_levels = self.ed.drafts.list().into_keys().collect();
+                    edited = true;
+                }
                 Event::Loading(t) => self.loading = t,
                 Event::ViewChanged | Event::ModeChanged => {}
             }
@@ -404,19 +414,52 @@ impl Window {
             self.checks = self.ed.checks();
             self.outliner.dirty = true;
         }
+        if edited && self.ed.has_level && !self.ed.scrubbing() {
+            self.level_changed();
+        }
         self.view.dirty = true;
         self.ctx.request_repaint();
+    }
+
+    /// The level's name and the size of its level file, as they are after an edit.
+    fn level_changed(&mut self) {
+        let ed = &self.ed;
+        let name = ed.scene.as_ref().map(|x| s(x, "name").to_string()).unwrap_or_default();
+        self.hud_level = format!("{} · {}", name, ed.doc.attr(ed.doc.root(), "name"));
+        let original = ed.orig_lev_size.map(|n| format!("{n} B .lev (original)")).unwrap_or_default();
+        self.status_size = if ed.is_edited() {
+            match glovebox_core::level::assemble_xml(ed.serialize().as_bytes()) {
+                Ok((lev, _)) => format!("{} B .lev", lev.len()),
+                Err(_) => String::new(),
+            }
+        } else {
+            original
+        };
     }
 
     // -----------------------------------------------------------------------------------------------------------
     // Tools
 
+    /// Opens or closes `Add to level`. With None it toggles, but an open panel behind another tab comes to the
+    /// front.
     pub fn toggle_palette(&mut self, on: Option<bool>) {
+        if on.is_none() && self.palette_open && !self.panels.slot(PanelId::Add).is_positive() {
+            return self.bring_front(PanelId::Add);
+        }
         self.palette_open = on.unwrap_or(!self.palette_open);
         self.palette.shown_tab = None;
         if self.palette_open {
             self.bring_front(PanelId::Add);
         }
+    }
+
+    /// Turns the Path tool on or off. When it's on but its panel is behind another tab, the panel comes to the
+    /// front.
+    pub fn toggle_path(&mut self) {
+        if self.ed.path.on && !self.panels.slot(PanelId::Path).is_positive() {
+            return self.bring_front(PanelId::Path);
+        }
+        self.set_path_mode(!self.ed.path.on);
     }
 
     pub fn set_path_mode(&mut self, on: bool) {
@@ -452,10 +495,14 @@ impl Window {
         self.view.set_fly(&mut self.ed, on);
     }
 
+    /// Frames the selection, or with nothing selected the whole level.
     pub fn focus_selected(&mut self) {
-        if let Some(e) = self.ed.selected() {
-            self.ed.focus_on(e);
+        match self.ed.selected() {
+            Some(e) => self.ed.focus_on(e),
+            None if self.ed.has_level => self.ed.frame_level(),
+            None => {}
         }
+        self.view.dirty = true;
     }
 
     pub fn reset_level(&mut self) {
@@ -492,6 +539,8 @@ impl Window {
     pub fn reload_catalog(&mut self) {
         if let Ok(c) = self.ed.backend.catalog() {
             self.ed.set_catalog(c);
+            // A removed model's pieces in the level are now in no bank: the entities and the checks say so at once
+            self.ed.refresh_entities();
         }
     }
 
@@ -611,7 +660,10 @@ impl Window {
                 // The pack is a folder of its own: the name chosen here is the folder's.
                 let default: String = name.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
                 let Some(dir) = w.dialogs.save_file("Save the level pack's folder", &folder, &format!("{default}.pack")) else {
-                    return w.set_status("Not saved.", "");
+                    if !w.dialog_failed() {
+                        w.set_status("Not saved.", "");
+                    }
+                    return;
                 };
                 if dir.is_file() {
                     return w.set_status(&format!("{} is a file. A level pack is a folder.", dir.display()), "err");
@@ -637,12 +689,26 @@ impl Window {
         );
     }
 
+    /// After a file dialog gave no file. True when the dialog couldn't open: the reason it gave goes to the
+    /// status line (and the log has it). False for a cancel.
+    pub fn dialog_failed(&mut self) -> bool {
+        match self.dialogs.failed() {
+            Some(e) => {
+                self.set_status(&e, "err");
+                true
+            }
+            None => false,
+        }
+    }
+
     /// Asks where to save a built file and writes it. True when it was saved.
     pub fn save(&mut self, out: BuildOutput) -> bool {
         let BuildOutput { data, name, message } = out;
         let folder = self.settings.get("saveDir").map(PathBuf::from).filter(|p| p.is_dir()).or_else(home_dir).unwrap_or_else(|| PathBuf::from("."));
         let Some(path) = self.dialogs.save_file(&format!("Save {name}"), &folder, &name) else {
-            self.set_status("Not saved.", "");
+            if !self.dialog_failed() {
+                self.set_status("Not saved.", "");
+            }
             return false;
         };
         if let Err(e) = std::fs::write(&path, &data) {
@@ -708,7 +774,8 @@ impl Window {
                                 w.settings.set("emulator", &p.to_string_lossy());
                                 w.test_level_with(p);
                             }
-                            None => w.set_status("Test level needs an emulator.", "err"),
+                            None if w.dialog_failed() => {}
+                            None => w.set_status("Test level needs an emulator.", ""),
                         }
                     })),
                 });
@@ -782,9 +849,14 @@ impl Window {
             // A number field is being dragged: Esc belongs to it, and no shortcut edits the level meanwhile
             return;
         }
+        // Esc that closes a list or a menu closes only that
+        let popup = egui::Popup::is_any_open(ctx);
         let events = ctx.input(|i| i.events.clone());
         for e in events {
             let egui::Event::Key { key, pressed, repeat, modifiers, .. } = e else { continue };
+            if key == egui::Key::Escape && popup {
+                continue;
+            }
             let m = modifiers.ctrl || modifiers.command;
             if self.view.fly.on && !m {
                 if let Some(k) = viewport::fly_key(key) {
@@ -831,7 +903,7 @@ impl Window {
             Key::C => self.set_fly(!self.view.fly.on),
             Key::T => self.test_level(),
             Key::A => self.toggle_palette(None),
-            Key::P => self.set_path_mode(!self.ed.path.on),
+            Key::P => self.toggle_path(),
             Key::Escape => {
                 if self.view.fly.on {
                     self.set_fly(false);
@@ -857,6 +929,9 @@ impl Window {
         let ext = path.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
         if ext == "glb" || ext == "gltf" {
             crate::dialogs::open_model_dialog(self, Some(path));
+        } else if shell::is_rom_file(&path) {
+            // The editor already has its ROM. A ROM is no level XML: the import dialog would only say it's too big.
+            shell::log(&format!("A ROM was dropped on the editor and left alone: {}", path.display()));
         } else {
             crate::dialogs::open_import_dialog(self, Some(path));
         }
@@ -883,6 +958,8 @@ impl Window {
         if let Some(p) = dropped.into_iter().next() {
             if !self.modal() {
                 self.file_dropped(p);
+            } else {
+                crate::dialogs::file_dropped(self, p);
             }
         }
 
@@ -912,6 +989,9 @@ impl Window {
         });
         crate::dialogs::ui(self, &ctx);
         tour::ui(self, &ctx);
+        if let Some(label) = style::take_refused(&ctx) {
+            self.ed.set_status(&format!("{label} expects a number"), "err");
+        }
 
         // A drag on a number field is one undo step: it opens before the frame's edits and closes after them
         let signals = crate::numfield::take_signals(&ctx);
@@ -936,9 +1016,10 @@ impl Window {
         if self.busy || self.jobs.running > 0 || self.side_jobs.running > 0 {
             ctx.request_repaint_after(std::time::Duration::from_millis(50));
         }
-        if self.ed.draft_saved_at.is_none() && self.ed.is_edited() {
-            // The draft is saved a moment after the last edit
-            ctx.request_repaint_after(std::time::Duration::from_millis(200));
+        if let Some(due) = self.ed.next_due() {
+            // The draft is saved, and the import plan worked out, a moment after the last edit. An idle window
+            // draws no frame on its own.
+            ctx.request_repaint_after(std::time::Duration::from_secs_f64((due - self.now()).max(0.0) + 0.01));
         }
     }
 }

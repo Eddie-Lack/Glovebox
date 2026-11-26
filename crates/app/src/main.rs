@@ -9,7 +9,13 @@ fn main() {
     let args = match glovebox::shell::parse_args(std::env::args().skip(1)) {
         Ok(a) => a,
         Err(e) => {
-            eprintln!("{e}\n\n{}", glovebox::shell::HELP);
+            let text = format!("{e}\n\n{}", glovebox::shell::HELP);
+            // The Windows app has no console to print to: the message goes into a window
+            if cfg!(windows) {
+                glovebox::shell::message(&text);
+            } else {
+                eprintln!("{text}");
+            }
             std::process::exit(2);
         }
     };

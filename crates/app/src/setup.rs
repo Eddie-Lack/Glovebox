@@ -65,8 +65,14 @@ impl Setup {
                     if ui.add(style::primary("Choose the ROM…")).clicked() {
                         let filters: &[crate::dialogs::Filter] = &[("Nintendo 64 ROM", &["z64", "v64", "n64"]), ("All files", &[])];
                         let path = self.dialogs.as_mut().and_then(|d| d.open_file("Choose your Glover (USA) ROM", None, filters));
-                        if let Some(p) = path {
-                            ready = self.take(&p);
+                        match path {
+                            Some(p) => ready = self.take(&p),
+                            None => {
+                                // A dialog that couldn't open says why. Dropping the file on the window still works.
+                                if let Some(e) = self.dialogs.as_mut().and_then(|d| d.failed()) {
+                                    self.error = e;
+                                }
+                            }
                         }
                     }
                     if !self.error.is_empty() {

@@ -59,6 +59,7 @@ pub fn run(args: shell::Args) -> i32 {
     };
     shell::log_to(&home.join("editor.log"));
     shell::install_panic_hook();
+    shell::install_dialog_log();
     shell::log(&format!("Glovebox {}", shell::VERSION));
     shell::log(&format!("User folder: {}", home.display()));
     if args.reset {

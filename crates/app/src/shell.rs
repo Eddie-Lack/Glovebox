@@ -117,6 +117,34 @@ pub fn log_to(path: &Path) {
     }
 }
 
+/// The `log` crate's messages of `rfd`, the file dialogs: errors go to the log and to `dialogs::DIALOG_ERROR`.
+struct DialogLog;
+
+impl log::Log for DialogLog {
+    fn enabled(&self, m: &log::Metadata) -> bool {
+        m.level() <= log::Level::Error && m.target().starts_with("rfd")
+    }
+
+    fn log(&self, r: &log::Record) {
+        if self.enabled(r.metadata()) {
+            let text = r.args().to_string();
+            log(&text);
+            *crate::dialogs::DIALOG_ERROR.lock().unwrap_or_else(|e| e.into_inner()) = Some(text);
+        }
+    }
+
+    fn flush(&self) {}
+}
+
+static DIALOG_LOG: DialogLog = DialogLog;
+
+/// Catches the errors of the file dialogs (`DialogLog`).
+pub fn install_dialog_log() {
+    if log::set_logger(&DIALOG_LOG).is_ok() {
+        log::set_max_level(log::LevelFilter::Error);
+    }
+}
+
 /// Writes a line to the log and to the console, when there is one.
 pub fn log(line: &str) {
     if let Some(f) = LOG.get() {
@@ -158,6 +186,14 @@ pub fn read_rom_file(path: &Path) -> Result<Vec<u8>, String> {
     let mut data = Vec::new();
     f.take(ROM_MAX as u64 + 1).read_to_end(&mut data).map_err(fail)?;
     Ok(data)
+}
+
+/// True when the file starts like a Nintendo 64 ROM, in any of the three byte orders.
+pub fn is_rom_file(path: &Path) -> bool {
+    use std::io::Read;
+    let mut head = [0u8; 4];
+    let read = std::fs::File::open(path).and_then(|mut f| f.read_exact(&mut head));
+    read.is_ok() && [[0x80, 0x37, 0x12, 0x40], [0x37, 0x80, 0x40, 0x12], [0x40, 0x12, 0x37, 0x80]].contains(&head)
 }
 
 /// Checks a ROM and keeps a copy in .z64 byte order. The error is a message for the player.

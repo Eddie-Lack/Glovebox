@@ -67,6 +67,10 @@ pub struct View {
     pub error: Option<String>,
     /// The number of frames drawn.
     pub frames: u64,
+    /// Where the chips over the view were in the last frame. A click on one doesn't reach the view.
+    pub chips: Vec<egui::Rect>,
+    /// The `Keys ?` chip was clicked: it shows the keys until the next click.
+    pub keys_open: bool,
 }
 
 impl View {
@@ -91,7 +95,7 @@ impl View {
             background: crate::theme::VIEW_BG,
             held: None,
             error,
-            frames: 0,
+            frames: 0, chips: Vec::new(), keys_open: false,
         }
     }
 
@@ -202,7 +206,7 @@ fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
                 let Some(b) = button(b) else { continue };
                 let (x, y) = (f64::from(pos.x - rect.min.x), f64::from(pos.y - rect.min.y));
                 if pressed {
-                    if !over || blocked || !rect.contains(pos) || view.held.is_some() {
+                    if !over || blocked || !rect.contains(pos) || view.held.is_some() || view.chips.iter().any(|c| c.contains(pos)) {
                         continue;
                     }
                     view.held = Some(b);
@@ -244,7 +248,7 @@ fn input(w: &mut Window, ui: &egui::Ui, rect: egui::Rect, over: bool) {
                     view.fly.speed = (view.fly.speed * if steps > 0.0 { 1.25 } else { 0.8 }).clamp(50.0, 20000.0);
                     ed.set_status(&format!("Fly speed {} units per second", view.fly.speed.round()), "");
                 } else {
-                    ed.orbit.dolly(&mut ed.camera, steps);
+                    ed.orbit.dolly_within(&mut ed.camera, steps, ed.level_size);
                     view.dirty = true;
                 }
             }
@@ -344,6 +348,7 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 
 /// The level's name, the autosave chip, the hint line and the loading note.
 fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
+    w.view.chips.clear();
     let inner = rect.shrink2(egui::vec2(10.0, 8.0));
     // The chips are boxes of the theme, a little see-through
     let th = style::theme(ui.ctx());
@@ -351,13 +356,16 @@ fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
     top.spacing_mut().item_spacing.y = 3.0;
     if !w.hud_level.is_empty() {
         let frame = style::chip(th, false).inner_margin(egui::Margin::symmetric(6, 1));
-        frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).font(egui::FontId::new(13.0, style::bold())).color(th.chip_title)));
+        let r = frame.show(&mut top, |ui| ui.label(egui::RichText::new(&w.hud_level).font(egui::FontId::new(13.0, style::bold())).color(th.chip_title)));
+        w.view.chips.push(r.response.rect);
     }
     if w.ed.has_level {
         let (text, tip, edited) = w.chip();
         let fg = if edited { th.chip_edited } else { th.chip.text };
         let frame = style::chip(th, edited).inner_margin(egui::Margin::symmetric(6, 1));
-        frame.show(&mut top, |ui| ui.label(egui::RichText::new(text).size(12.0).color(fg))).response.on_hover_text(tip);
+        let r = frame.show(&mut top, |ui| ui.label(egui::RichText::new(text).size(12.0).color(fg))).response;
+        w.view.chips.push(r.rect);
+        r.on_hover_text(tip);
     }
     let hint = if w.view.fly.on { HINT_FLY } else { HINT_ORBIT };
     let mut bottom = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::bottom_up(egui::Align::Min)));
@@ -368,7 +376,17 @@ fn hud(w: &mut Window, ui: &mut egui::Ui, rect: egui::Rect) {
             hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(hint).size(12.0).color(th.chip.text)));
         }
         style::Info::Hover => {
-            hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new("Keys ?").size(12.0).color(th.chip.text))).response.on_hover_text(hint);
+            // A click on the chip shows the keys until the next click on them
+            let text = if w.view.keys_open { hint } else { "Keys ?" };
+            let r = hint_frame.show(&mut bottom, |ui| ui.label(egui::RichText::new(text).size(12.0).color(th.chip.text))).response;
+            let r = r.interact(egui::Sense::click());
+            w.view.chips.push(r.rect);
+            if r.clicked() {
+                w.view.keys_open = !w.view.keys_open;
+            }
+            if !w.view.keys_open {
+                r.on_hover_text(hint);
+            }
         }
         style::Info::Off => {}
     }

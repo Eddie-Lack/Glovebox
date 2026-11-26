@@ -66,8 +66,9 @@ impl Default for State {
             facing: None,
             mv: ["0".to_string(), "0".to_string(), "0".to_string()],
             axis: 0,
-            deg: "90".to_string(),
-            sc: "1.5".to_string(),
+            // Rotate by 0 and scale by 1: Apply changes nothing until a number is typed
+            deg: "0".to_string(),
+            sc: "1".to_string(),
             worlds: None,
             reskin_seed: 0,
             secs: 60,
@@ -270,7 +271,8 @@ fn stats(cx: &mut Cx, ui: &mut egui::Ui) {
         ("Platforms", count("Platform") + count("NullPlatform")),
         ("Puzzles", count("Puzzle")),
         ("Mr. Tip messages", count("MrTip")),
-        ("Landscape pieces", count("LandActor")),
+        // The pieces the Level panel lists as Landscape: backgrounds too
+        ("Landscape pieces", ed.entities.iter().filter(|e| e.kind == "land" && !e.is_handle && !e.derived).count()),
         ("Commands", all.len().saturating_sub(1)),
     ];
     ui.add_space(4.0);
@@ -736,7 +738,7 @@ fn trio(ui: &mut egui::Ui, id: egui::Id, values: &[f64], names: &[&str], enabled
     let mut out = None;
     ui.add_enabled_ui(enabled, |ui| {
         ui.spacing_mut().item_spacing.x = 4.0;
-        let width = ((ui.available_width() - 4.0 * (values.len() as f32 - 1.0)) / values.len().max(1) as f32 - 10.0).clamp(36.0, 70.0);
+        let width = ((ui.available_width() - 4.0 * (values.len() as f32 - 1.0)) / values.len().max(1) as f32 - 10.0).clamp(36.0, 110.0);
         for (i, v) in values.iter().enumerate() {
             let spec = specs.get(i).or(specs.last()).copied().unwrap_or(UNIT);
             if let Some(n) = num_input(ui, id.with(i), *v, width, names.get(i).copied().unwrap_or(""), spec) {
@@ -1212,6 +1214,21 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                         } else {
                             // A drag changes whole numbers and floats, inside the limits of the field's type. Names,
                             // free text and ids written in hex are typed only.
+                            // An f4 holds a 32-bit float. The XML writes it with the digits of a 64-bit one
+                            // (3.700000047683716), and the box shows the shortest text for the same float (3.7).
+                            let short = (ty.as_deref() == Some("f4"))
+                                .then(|| pyfmt::parse_float(value))
+                                .flatten()
+                                .filter(|x| x.is_finite() && f64::from(*x as f32) == *x)
+                                .map(|x| {
+                                    let t = (x as f32).to_string();
+                                    if t.contains(['.', 'e', 'E']) {
+                                        t
+                                    } else {
+                                        format!("{t}.0")
+                                    }
+                                });
+                            let value: &String = short.as_ref().unwrap_or(value);
                             let plain = looks_like_number(value) && !value.to_ascii_lowercase().contains("0x");
                             let spec = ty.as_deref().filter(|_| plain).and_then(|t| Spec::for_type(t, name, value));
                             let (text, r) = style::commit_number(ui, id, value, spec, |t| t.desired_width(f32::INFINITY));
