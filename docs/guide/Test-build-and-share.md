@@ -4,7 +4,11 @@ _Back to the [guide](README.md)_
 
 The bottom row of the toolbar has it all.
 
-![The bottom row of the toolbar: the tools, then Import XML, Export XML, .lev, boot here, Export patch, Test level, Build ROM, Build all and Patcher](img/toolbar-build-row.png)
+![The bottom row of the toolbar: Triggers and Exits, then boot here, Export patch, Test level, Build ROM, More and Options](img/toolbar-build-row.png)
+
+`More` holds the buttons you need less often: `Import XML`, `Export XML`, `.lev`, `Build all…` and `Patcher ↗`
+
+![The More menu, open](img/toolbar-more.png)
 
 ## Test level
 
@@ -35,7 +39,7 @@ Check `boot here` and the ROM starts in your level. Without it the game starts a
 - It starts the game normally. Check `Patched ROM boots straight into this level` for a patch that doesn't.
 - The dialog tells you when the patch needs the Expansion Pak.
 
-`Patcher ↗` opens the patcher page. It's one file and it works offline. Share it with your patch.
+`More` > `Patcher ↗` opens the patcher page. It's one file and it works offline. Share it with your patch.
 
 The page is `patcher.html` in the user folder. The status bar says where that is.
 
@@ -45,7 +49,7 @@ _[Sharing levels](../Sharing-levels.md)_ shows how players use it.
 
 ## Build all
 
-`Build all…` puts every level you've edited into one ROM or one patch.
+`More` > `Build all…` puts every level you've edited into one ROM or one patch.
 
 <img src="img/build-all.png" alt="The Build all dialog: the edited levels, the level to boot into, Export .bps and Build ROM" width="560">
 
@@ -54,6 +58,8 @@ Pick the level it boots into, or a normal start.
 The file gets named after the levels in it, like `glover-atlantis-level-1-and-atlantis-level-2.bps`.
 
 ## Level files
+
+These are in `More` too.
 
 - `Export XML` saves the level as a file.
 - `.lev` saves it the way the game stores it.

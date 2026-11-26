@@ -213,8 +213,10 @@ fn fill(cx: &mut Cx, ui: &mut egui::Ui) {
     let i = sel[0];
     let ent = &ed.entities[i];
     h2(ui, &ent.label);
-    let mut sub = format!("{} · <{}>", kind_name(ent.kind), ent.tag);
-    if let Some(oid) = &ent.object_id {
+    // The element's tag and the model's id are advanced details
+    let adv = style::advanced(ui.ctx());
+    let mut sub = if adv { format!("{} · <{}>", kind_name(ent.kind), ent.tag) } else { kind_name(ent.kind).to_string() };
+    if let Some(oid) = ent.object_id.as_ref().filter(|_| adv) {
         sub.push_str(&format!(" · model {oid}"));
         if let (true, Some(c)) = (ent.imported, ed.catalog.get(oid)) {
             sub.push_str(&format!(" · imported from {}", c.bank));
@@ -1071,6 +1073,9 @@ fn color_button(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId) {
 
 /// What the decompilation says about a command: its token, where the game reads it, and its enum names.
 fn decomp_block(cx: &mut Cx, ui: &mut egui::Ui, tag: &str, node: NodeId) {
+    if !style::advanced(ui.ctx()) {
+        return;
+    }
     let ed = cx.ed;
     let decomp = ed.backend.decomp();
     let cname = ed.command_for(node);
@@ -1159,7 +1164,7 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
     let ed = cx.ed;
     let tag = ed.doc.tag(node).to_string();
     let c = ed.type_for(&tag);
-    let op = c.as_ref().and_then(|c| c.get("opcode")).and_then(|o| o.as_i64()).map(|o| format!("0x{o:02x}"));
+    let op = c.as_ref().and_then(|c| c.get("opcode")).and_then(|o| o.as_i64()).filter(|_| style::advanced(ui.ctx())).map(|o| format!("0x{o:02x}"));
     let path = ed.doc.path_of(node);
     let bits = ed.doc.parent(node).is_some_and(|p| ed.doc.tag(p) == "PuzzleAction");
     let mut head_acts: Vec<Act> = Vec::new();
@@ -1189,7 +1194,8 @@ fn cmd_card(cx: &mut Cx, ui: &mut egui::Ui, node: NodeId, with_children: bool, e
                     if is_bits {
                         ty = Some("f4·bits".to_string());
                     }
-                    let label = match &ty {
+                    // The field's type is an advanced detail
+                    let label = match ty.as_ref().filter(|_| style::advanced(ui.ctx())) {
                         Some(t) => format!("{name}  {t}"),
                         None => name.clone(),
                     };

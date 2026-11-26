@@ -200,9 +200,23 @@ pub fn build_levels(
     }
     // Every built ROM, and so every patch, walks the ball with Easy's controls (not inverted). This also recomputes
     // the header checksum.
-    let out = modpatch::apply_easy_controls(&out).map_err(|err| format!("Couldn't set Easy's controls: {}", err.0))?;
+    let mut out = modpatch::apply_easy_controls(&out).map_err(|err| format!("Couldn't set Easy's controls: {}", err.0))?;
+    // A ROM without the mod is padded with zeros to a whole number of MiB, at least the retail ROM's 8 MiB. The
+    // retail ROM ends with zeros too. The header CRCs cover none of the padding.
+    if !with_mod {
+        let size = ((out.len() + 0xFFFFF) & !0xFFFFF).max(RETAIL_SIZE);
+        out.resize(size, 0);
+    }
+    // Every build gets the whole hardware check, after its last change
+    let problems = crate::hwcheck::check_rom(&out);
+    if !problems.is_empty() {
+        return Err(format!("The ROM breaks a rule of real N64 hardware (hwcheck): {}", problems.join("; ")));
+    }
     Ok((out, plans))
 }
+
+/// The size of the retail ROM, 8 MiB.
+const RETAIL_SIZE: usize = 0x80_0000;
 
 fn bonus(time: Option<i64>) -> Result<Option<i16>, String> {
     match time {

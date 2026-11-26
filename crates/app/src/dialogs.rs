@@ -622,7 +622,8 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                     _ if d.failed.is_some() => d.failed.clone().unwrap_or_default(),
                     (None, _) => format!("Choose a .glb file.{level}"),
                     (_, None) => "Reading the model…".to_string(),
-                    (_, Some(Err(e))) => format!("This file can't be read as a glTF model: {e}"),
+                    // The reader's errors start with the same words
+                    (_, Some(Err(e))) => format!("This file can't be read as a glTF model: {}", e.strip_prefix("Not a glTF model: ").unwrap_or(e)),
                     (_, Some(Ok((tris, size)))) => {
                         let pieces = if *tris <= 1500 { 1 } else { 1usize << (*tris as f64 / 1500.0).log2().ceil() as u32 };
                         format!(

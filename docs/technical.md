@@ -71,7 +71,7 @@ nothing else. The program never runs them.
 | `imports` | Which banks an edited level needs for the models it imports, and the enlarged banks a build writes. `plan_imports` plans a build that copies the models into the level's banks. `plan_runtime` plans a build whose game mod loads their banks from the player's ROM when the level starts. |
 | `build` | ROM, patch and level file builds (`assemble`, `build_rom`, `build_levels`). |
 | `modpatch` | Adds the mod to a built ROM, with the extra banks each level loads and the extra levels. Also writes the level table and the ball controls (Easy's controls on every difficulty, "Notes and limits"). Checks each word before it replaces it. |
-| `hwcheck` | Checks a built ROM against the rules of real hardware ("Real hardware"). `modpatch::apply_mod` runs it on every ROM that gets the mod. `self_test` breaks a copy of a ROM in each way that the rules name, and checks that each break is found. A ROM that ends before the mod's place (the retail ROM, a build without the mod) is checked for its size and its CRCs only. |
+| `hwcheck` | Checks a built ROM against the rules of real hardware ("Real hardware"). `build::build_levels` runs it on every ROM it builds, and `modpatch::apply_mod` on every ROM that gets the mod. `self_test` breaks a copy of a ROM in each way that the rules name, and checks that each break is found. A ROM that ends before the mod's place (the retail ROM, a build without the mod) is checked for its size and its CRCs only. |
 | `bps` | The BPS encoder and decoder. |
 | `custom` | Import model: `gltf` (the reader), `image` and `jpeg` (PNG and JPEG to pixels, the resize), `pack` (triangles to an object bank), and the stored sets. A set is one imported file's pieces and textures in the user folder ("Imported models"). |
 | `kit` | The kit: models made by code, their textures and previews. |
@@ -183,10 +183,21 @@ nothing else. The program never runs them.
     `resize_grab_radius_side`), nor in the strip along its bottom when the checks are under it. The view is added after the panels, and it would otherwise take the half of each resize handle that
     lies over it.
 - A color is picked in the inspector. There's no color dialog.
-- The toolbar rows wrap (`horizontal_wrapped`). A toggle (`style::toggle`) that is on takes the theme's "on" look but
-  keeps the regular font: a bold label is wider, and the buttons after it moved, or a button wrapped to a new row,
-  when a tool turned on. `Pivot` and `Snap` each sit in a `horizontal` with their list, so a label never wraps away
-  from its list.
+- The toolbar is one flow of buttons that wraps (`horizontal_wrapped`). It takes two rows at most, down to the
+  smallest window (960 points): its spacing and button padding are tighter than elsewhere, the level list is 140
+  points wide, a window under 1100 points leaves the logo out, and `More` holds Import XML, Export XML, .lev, Build
+  all… and Patcher ↗ (`toolbar::more_menu`). `small_and_scaled_windows` and `themes` check the two rows.
+  - A toggle (`style::toggle`) that is on takes the theme's "on" look but keeps the regular font: a bold label is
+    wider, and the buttons after it moved, or a button wrapped to a new row, when a tool turned on.
+  - `Pivot` and `Snap` each sit in a `horizontal` with their list. A nested row has no size before it's drawn, so
+    `toolbar::keep_together` starts a new row when its width as set doesn't fit. The buttons after the tools are
+    disabled one by one (`add_enabled`): a scope around them wrapped as a block of its own.
+- **Advanced details** (`Options`, the setting `advanced`, `style::advanced`; off unless `on`). Off hides each
+  field's type, the command's opcode, the decomp block (token and links into gloveworld), the element's tag and the
+  model's id in the Inspector, the links of the Checks and the level ids of the level list. The raw command fields
+  stay, Mr. Tip's too. With it off, the Level panel shows the preset's name of a few common models
+  (`presets::friendly_name`: the checkpoint ring, the heart exit, the slam button). The level keeps the model's own
+  name, and the filter finds both.
 - The outliner scrolls to the selected row when a selection changes and the row is out of sight
   (`outliner::State::shown` keeps the list's offset and height from the last frame).
 - The chips over the view (the level's name, the autosave chip, `Keys ?`) take the clicks on them. Their rectangles
@@ -942,7 +953,7 @@ it too.
   vanilla levels' farthest objects are about 5.6 sizes out (a Ball start of the Wayroom).
   `no_vanilla_object_is_far_outside_its_level` (`crates/editor/tests/vanilla_rom.rs`) prints each level's farthest
   object.
-- A check line of a puzzle that has no trigger box names the puzzle by its number and opens it
+- A check line of a puzzle that has no trigger box starts with "Puzzle N:" (its number) and opens it
   (`Click::Puzzle`). The line about the game mod's rotations and scales names up to 3 of the objects and selects them
   all (`Click::SelectAll`). The green "No new problems" line also waits for the libgarib format check.
 - After `Remove` of an imported model, the entities and the checks are built again at once
@@ -1355,8 +1366,12 @@ The Rust code gives the reference outputs for these reasons:
 - Every built ROM and patch walks the ball with Easy's controls on every difficulty: on Medium and Hard the game
   otherwise pushes the ball the opposite way to the stick. Only the controls change; lives, garibs per life and the
   bosses still follow the chosen difficulty (`crates/core/src/modpatch.rs`, `EASY_CONTROLS_ROM`).
-- A ROM without the game mod isn't padded to a whole number of MiB and doesn't go through the hardware check: it is
-  the retail ROM with its data repacked. A ROM with the mod is padded and checked (`modpatch::apply_mod`).
+- A ROM without the game mod is the retail ROM with its data repacked. It is padded with zeros to a whole number of
+  MiB, at least 8 MiB like the retail ROM (`build::build_levels`). The retail ROM ends with zeros too. Before 1.1.1
+  it was left shorter (7.49 MiB for Atlantis 1), so plain builds and their patches differ from those of earlier
+  versions. A ROM with the mod is padded by `modpatch::apply_mod`.
+- Every build, with or without the mod, goes through the whole hardware check after its last change
+  (`build::build_levels`), and a ROM that breaks a rule is an error. The mod patcher also checks its own result.
 - Every built ROM comes from your ROM. Keep it local.
 - libgarib's behavior that the Rust code reproduces on purpose:
   - The level format follows two sets of nesting rules, because libgarib's tools use two.

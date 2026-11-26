@@ -37,6 +37,18 @@ Small texts explain how the game or the editor works. They start `On hover`.
 - Checks, warnings, values and names always stay.
 - The editor remembers your choice.
 
+## Advanced details
+
+Off at first. Turn it on to see the level format's and the game code's details:
+
+- each field's type (`f4`, `u2`…) and each command's number (`0x98`)
+- the command's place in the game's code, with links into _[gloveworld](https://github.com/Eddie-Lack/gloveworld)_
+- model ids, and the level ids in the level list (`Atlantis Level 1  (0a)`)
+
+With it off, the `Level` panel calls a few common models by their preset's name: `Checkpoint ring`, `Level exit (heart)`, `Slam button`
+
+The editor remembers your choice
+
 ## Panels
 
 `Panels` moves and hides the panels. See _[The editor](The-editor.md#arranging-the-panels)_.

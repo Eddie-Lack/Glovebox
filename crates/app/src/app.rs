@@ -51,6 +51,8 @@ impl App {
         // How the notes show. An unknown or missing value shows them on hover.
         let info = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::INFO_SETTING).unwrap_or_default();
         style::set_info(&cc.egui_ctx, style::Info::from_id(&info));
+        let advanced = Shared::new(IniSettings::open(home.join("settings.ini"))).get(style::ADVANCED_SETTING);
+        style::set_advanced(&cc.egui_ctx, advanced.as_deref() == Some("on"));
         let screen = match backend {
             Some(b) => Screen::Editor(Box::new(Window::new(cc, b, &home, dialogs))),
             None => match open_rom(&home) {
@@ -355,7 +357,8 @@ impl Window {
     /// The label of a level in the level list.
     pub fn scene_label(&self, scene: &serde_json::Value) -> String {
         let sid = s(scene, "id");
-        format!("   {}  ({}){}", s(scene, "name"), sid, if self.edited_levels.contains(sid) { "  ● edited" } else { "" })
+        let id = if style::advanced(&self.ctx) { format!("  ({sid})") } else { String::new() };
+        format!("   {}{id}{}", s(scene, "name"), if self.edited_levels.contains(sid) { "  ● edited" } else { "" })
     }
 
     /// The autosave chip's text, tooltip and whether the level has edits.
@@ -480,6 +483,13 @@ impl Window {
     }
 
     /// Changes how the notes show (the Info texts of the Options menu) and remembers it.
+    /// Turns `Advanced details` on or off and remembers it.
+    pub fn set_advanced(&mut self, on: bool) {
+        self.settings.set(style::ADVANCED_SETTING, if on { "on" } else { "off" });
+        style::set_advanced(&self.ctx, on);
+        self.ctx.request_repaint();
+    }
+
     pub fn set_info(&mut self, info: style::Info) {
         self.settings.set(style::INFO_SETTING, info.id());
         style::set_info(&self.ctx, info);

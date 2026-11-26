@@ -26,7 +26,9 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         style::h4(ui, "CHECKS");
         let mut click: Option<Click> = None;
         for c in &w.checks {
-            if style::check_line(ui, c.level, &c.text, c.click.is_some(), c.link.as_ref(), c.sub.as_deref(), c.title.as_deref()) {
+            // The links into gloveworld are advanced details
+            let link = c.link.as_ref().filter(|_| style::advanced(ui.ctx()));
+            if style::check_line(ui, c.level, &c.text, c.click.is_some(), link, c.sub.as_deref(), c.title.as_deref()) {
                 click = c.click.clone();
             }
         }

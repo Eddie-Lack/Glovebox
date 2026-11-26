@@ -51,7 +51,7 @@ A Space level (1, 2, 3, the boss or the bonus) can be an extra level instead, an
 1. Open the Space level and edit it
 2. With nothing selected, check `Extra level (Expansion Pak)` in the Inspector, under `Title, music and clock`
 3. Open a hub, `+ Add`, `Presets`, `Extra levels entry`, and put it where you want the way in
-4. `Build all…` puts the Space level and the hub into one ROM or patch
+4. `More` > `Build all…` puts the Space level and the hub into one ROM or patch
 
 Walk Glover into the entry zone and you go to the Space way room, with your extra levels behind its doors
 

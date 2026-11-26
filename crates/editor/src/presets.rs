@@ -30,6 +30,18 @@ pub const RING_MID: f64 = 26.0;
 /// The lift scaled into a 192 x 192 deck.
 pub const DECK: [f64; 3] = [4.0, 1.0, 4.0];
 
+/// A name for players of a common model of the game, from its preset: "Checkpoint ring" for `hoop.nd`. The Level
+/// panel shows it in place of the model's name when advanced details are off. The level keeps the model's name.
+pub fn friendly_name(oid: &str) -> Option<&'static str> {
+    let key = match oid {
+        o if o == HOOP.0 => "ring",
+        o if o == HEART.0 => "exit",
+        o if o == GLOVEBU.0 => "button",
+        _ => return None,
+    };
+    PRESETS.iter().find(|p| p.key == key).map(|p| p.name)
+}
+
 /// An attribute value: a float is written as the level XML writes floats, the rest as it is.
 enum Val<'a> {
     F(f64),
@@ -391,6 +403,13 @@ mod tests {
         assert_eq!(round4(2.71828), 2.7183);
         assert_eq!(round4(-0.00004), -0.0);
         assert_eq!(fmt(round4(-0.00004)), "0.0");
+    }
+
+    #[test]
+    fn friendly_names() {
+        assert_eq!(friendly_name(HOOP.0), Some("Checkpoint ring"));
+        assert_eq!(friendly_name(GLOVEBU.0), Some("Slam button"));
+        assert_eq!(friendly_name("0x12345678"), None);
     }
 
     #[test]

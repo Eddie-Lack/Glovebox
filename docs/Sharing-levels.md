@@ -50,7 +50,7 @@ _See g64coopdx's [playing online](https://github.com/Eddie-Lack/g64coopdx/blob/m
 
 The patcher is a page for players, `patcher.html` (`web/patcher.html` in the source). It's one file and it works offline
 
-`Patcher ↗` in the toolbar saves it in the user folder and opens it. Share it with your patch
+`More` > `Patcher ↗` in the toolbar saves it in the user folder and opens it. Share it with your patch
 
 1. Open it in a browser
 2. Choose your Glover (USA) ROM (`.z64`, `.v64` or `.n64`)
@@ -63,6 +63,7 @@ The patcher is a page for players, `patcher.html` (`web/patcher.html` in the sou
 
 ## Level files
 
+- These are in the toolbar's `More` menu
 - `Export XML` saves the level as an XML file, in _[libgarib](https://github.com/naclomi/libgarib)_'s format
 - `Import XML` reads one back. It checks the file first and tells you what's wrong, by element
 - `.lev` saves the level the way the game stores it
