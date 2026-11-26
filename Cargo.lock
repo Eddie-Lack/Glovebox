@@ -1459,7 +1459,7 @@ dependencies = [
 
 [[package]]
 name = "glovebox"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "chrono",
  "eframe",
@@ -1468,6 +1468,7 @@ dependencies = [
  "egui_kittest",
  "glovebox-core",
  "glovebox-editor",
+ "log",
  "png",
  "pollster 0.4.0",
  "rfd",
@@ -1477,7 +1478,7 @@ dependencies = [
 
 [[package]]
 name = "glovebox-core"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "blake2",
  "crc32fast",
@@ -1490,7 +1491,7 @@ dependencies = [
 
 [[package]]
 name = "glovebox-editor"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "glovebox-core",
  "serde",
