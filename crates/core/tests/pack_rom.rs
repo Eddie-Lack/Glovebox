@@ -107,6 +107,16 @@ fn a_pack_with_imports() {
     let m = p.models.as_ref().expect("the pack names the bell's banks");
     assert_eq!(&m[..8], &[0; 8], "no banks of the pack's own");
     assert!(m[10] == 1, "one object bank of the game's: {m:?}");
+    // A powerup gets its model from its type, with no object id: type 10 is the beach ball of the Fortress of
+    // Fear's shared bank. The pack names that bank too.
+    let ball = r#"  <Powerup type="10" u16_0x02="0" u16_0x04="0" x="0.0" y="40.0" z="0.0"/>
+"#;
+    // The level's own enemies are in the list too
+    let refs = pack::type_refs(&pack::make_pack("Ball", 10, with(ball).as_bytes()).unwrap().level, "0a").unwrap();
+    assert!(refs.contains(&0x87C43A84), "{refs:x?}");
+    let p = be.level_pack("0a", &with(ball), "Ball").expect("the beach ball's pack");
+    let m = p.models.as_ref().expect("the pack names the beach ball's bank");
+    assert!(m[10] == 1, "one object bank of the game's: {m:?}");
     let p = be.level_pack("0a", &with(&format!("{land}{bell}")), "Both").expect("the pack of both");
     assert!(p.models.as_ref().is_some_and(|m| m[10] == 1 && m[0..4] != [0; 4]));
     // 0x23313E06 is a body of Carnival's shared bank, object bank 19. Its own faces need no texture bank of

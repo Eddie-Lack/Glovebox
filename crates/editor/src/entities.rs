@@ -773,6 +773,25 @@ pub fn powerup_model_id(tables: &Value, t: i64) -> Option<String> {
     table_id(tables, "powerupObjects", Some(t))
 }
 
+/// The models that a level's enemies and powerups get from their type, as `build` finds them. These commands have
+/// no object_id: the game picks the model by type. A ball-change powerup's id may be in no bank. The caller keeps
+/// only the ids it knows.
+pub fn type_model_ids(doc: &Doc, fmt_: &Format, tables: &Value, scene_id: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for n in doc.iter_tags(doc.root(), &["Enemy", "Powerup"]) {
+        let id = if doc.tag(n) == "Enemy" {
+            enemy_model_id(fmt_, tables, scene_id, doc.get(n, "type"))
+        } else {
+            let v = num0(doc, n, "type");
+            powerup_model_id(tables, if v.is_finite() { v.trunc() as i64 } else { 0 })
+        };
+        if let Some(i) = id.filter(|i| !out.contains(i)) {
+            out.push(i);
+        }
+    }
+    out
+}
+
 /// What `build` reads besides the XML.
 pub struct Context<'a> {
     pub format: &'a Format<'a>,
