@@ -355,17 +355,32 @@ fn check_builds(b: &dyn Backend, e: &Env, cases: &[Value], prefix: &str, stored:
         if took > slowest.0 {
             slowest = (took, name.to_string());
         }
-        if built.data != theirs {
+        // The reference was recorded before plain builds (no game mod) were padded with zeros to 8 MiB. A plain ROM
+        // must be the reference's ROM and zeros after it. A plain patch must make that ROM.
+        let plain = !built.needs_mod;
+        let padded = |ours: &[u8], ref_rom: &[u8]| ours.len() >= ref_rom.len() && ours[..ref_rom.len()] == *ref_rom && ours[ref_rom.len()..].iter().all(|b| *b == 0);
+        let same = match (plain, format) {
+            (true, "rom") => padded(&built.data, &theirs),
+            (true, "bps") => {
+                let ours = bps::apply(e.game.rom_bytes(), &built.data).unwrap();
+                padded(&ours, &bps::apply(e.game.rom_bytes(), &theirs).unwrap())
+            }
+            _ => built.data == theirs,
+        };
+        if !same {
             let at = built.data.iter().zip(&theirs).position(|(a, b)| a != b);
             panic!("{name}: {} bytes, the reference {} bytes, first difference at {:x?}", built.data.len(), theirs.len(), at);
         }
-        assert_eq!(headers(&built, c["call"] == "build_all"), c["headers"], "{name}");
+        let mut h = headers(&built, c["call"] == "build_all");
+        if plain && format == "bps" {
+            // The padding changes the patch's size
+            h["X-Patch-Size"] = c["headers"]["X-Patch-Size"].clone();
+        }
+        assert_eq!(h, c["headers"], "{name}");
         match format {
             "rom" => {
                 assert_eq!(n64::header_crc(&built.data).unwrap(), n64::stored_crc(&built.data).unwrap(), "{name}");
-                if built.needs_mod {
-                    assert_eq!(glovebox_core::hwcheck::check_rom(&built.data), Vec::<String>::new(), "{name}");
-                }
+                assert_eq!(glovebox_core::hwcheck::check_rom(&built.data), Vec::<String>::new(), "{name}");
                 if stored.is_some() {
                     let mended = run(b, e, c, created.clone(), None).unwrap_or_else(|err| panic!("{name}: {err}"));
                     assert_eq!(n64::header_crc(&mended.data).unwrap(), n64::stored_crc(&mended.data).unwrap(), "{name}");
