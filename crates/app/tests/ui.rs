@@ -2010,6 +2010,56 @@ fn usability_fixes(t: &mut T) {
     t.click("Cancel");
     t.ed().set_level_info(|i| i.song = None);
     t.detail("Build all's Boot into works the second time and keeps the choice", first && kept && second && third, format!("{first} {kept} {second} {third}"));
+    ideas(t);
+}
+
+/// The ideas of the usability test: copy and paste, View all, Mr. Tip's text and the Options entries.
+fn ideas(t: &mut T) {
+    // Ctrl+C and Ctrl+V: egui hands them to the window as Copy and Paste
+    let ed = t.ed();
+    let enemy = ent(ed, |e| e.kind == "enemy" && !e.is_handle);
+    ed.select(enemy, false);
+    t.settle();
+    let n = kinds(t.ed(), "enemy").len();
+    t.h.event(egui::Event::Copy);
+    t.settle();
+    let copied = t.status() == "Copied 1 object.";
+    let text = t.ed().copy_selection().map(|c| c.0).unwrap_or_default();
+    t.h.event(egui::Event::Paste(text));
+    t.settle();
+    let pasted = t.status() == "Pasted 1 object." && kinds(t.ed(), "enemy").len() == n + 1;
+    let status = t.status();
+    t.detail("Ctrl+C and Ctrl+V copy and paste the selection", copied && pasted, status);
+    t.ed().undo();
+
+    // Home frames the whole level, with or without a selection
+    t.ed().orbit.target = [9000.0, 0.0, 0.0];
+    t.key(Key::Home);
+    let framed = t.ed().orbit.target[0] < 9000.0;
+    t.check("Home frames the whole level", framed);
+
+    // Mr. Tip's message shows in the inspector
+    let ed = t.ed();
+    let tip = ent(ed, |e| e.kind == "tip");
+    ed.select(tip, false);
+    t.settle();
+    let says = t.has_containing("MADE-UP MESSAGE");
+    t.check("the inspector shows what Mr. Tip says", says);
+    t.ed().set_selection(Vec::new());
+
+    // Options: the emulator, the user folder, the guide and the version
+    let emulator = t.home.join("emulator-2.sh");
+    std::fs::write(&emulator, "").unwrap();
+    t.files.0.borrow_mut().open.push_back(emulator.clone());
+    let chose = t.option("Choose your emulator…") && t.w().settings.get("emulator").as_deref() == Some(emulator.to_string_lossy().as_ref());
+    t.check("click: Choose your emulator…", chose);
+    let folder = t.option("Open the user folder") && t.w().dialog.is_none();
+    t.check("click: Open the user folder", folder);
+    let guide = t.option("Open the guide ↗");
+    t.check("click: Open the guide ↗", guide);
+    let version = t.click("Options") && t.has_containing(&format!("Glovebox {}", glovebox::shell::VERSION));
+    t.key(Key::Escape);
+    t.check("Options shows the version", version);
 }
 
 /// The exit triggers: the toolbar's Exits switch, the layer's checkbox, the spheres and the inspector's block.
@@ -3722,6 +3772,7 @@ fn the_rom() {
         return;
     };
     let mut t = T::new("rom", None, [1500.0, 950.0]);
+    let rom_path = rom.clone();
     // The setup screen's own path
     t.files.0.borrow_mut().open.push_back(rom);
     t.settle();
@@ -3889,6 +3940,15 @@ fn the_rom() {
     let models = std::fs::read_dir(&dir).ok().and_then(|mut d| d.next()).and_then(|e| e.ok()).map(|e| e.path().join("models.bin"));
     let status = t.status();
     t.detail("a level pack with the beach ball has a models.bin", models.is_some_and(|m| m.is_file()), status);
+    // Mr. Tip's text comes from the ROM
+    let ed = t.ed();
+    let tip = ent(ed, |e| e.kind == "tip");
+    let id = tip.map(|i| num0(&ed.doc, ed.entities[i].node, "message_id") as usize);
+    ed.select(tip, false);
+    t.settle();
+    let want = id.and_then(|i| glovebox_core::gamedata::tip_text(&std::fs::read(&rom_path).unwrap(), i)).unwrap_or_default();
+    let says = !want.is_empty() && t.has_containing(&want[..want.len().min(12)]);
+    t.detail("the inspector shows Mr. Tip's text from the ROM", says, want);
     t.shot("42-rom-end");
     t.finish();
 }

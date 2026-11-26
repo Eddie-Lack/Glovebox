@@ -20,6 +20,12 @@ Select something, then press `F` (or `Focus`).
 
 The camera goes to the object and looks at it. Dragging now turns around that object.
 
+With nothing selected, `F` shows the whole level. `Home` always does.
+
+## Where the camera was
+
+Each level opens with the camera where you left it, also after you close the editor.
+
 ## Fly
 
 `Fly` (or `C`) gives you a free camera.

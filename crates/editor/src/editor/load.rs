@@ -4,6 +4,7 @@
 use super::{format_of, sanitize, Editor, Event, ModelIndex, ENTRY_TAG, EXTRA_SLOTS};
 use crate::entities::{self, Context, MOD_PARENTS};
 use crate::sanitize::SanitizeResult;
+use crate::vec::V3;
 use crate::scene::{Prefab, Texture};
 use crate::xmlutil::hex_id;
 use glovebox_core::backend::{Backend, CatalogEntry, ModelRef, SceneModels};
@@ -251,9 +252,32 @@ impl Editor {
         self.apply_level(data)
     }
 
+    /// Keeps where the camera is in the open level, in the settings (`camera_<level id>`: the camera's position
+    /// and the point it turns about, six numbers). The level opens there again, also after a restart.
+    pub fn keep_camera(&mut self) {
+        if !self.has_level || self.scene.is_none() {
+            return;
+        }
+        let key = format!("camera_{}", self.scene_id());
+        let (p, t) = (self.camera.pos, self.orbit.target);
+        let text = [p[0], p[1], p[2], t[0], t[1], t[2]].map(|v| format!("{v:.1}")).join(" ");
+        if let Some(st) = self.settings.as_mut() {
+            st.set_value(&key, &text);
+        }
+    }
+
+    /// The camera a level was left with (`keep_camera`), when the settings have one that makes sense.
+    fn kept_camera(&self, sid: &str) -> Option<(V3, V3)> {
+        let text = self.settings.as_ref()?.value(&format!("camera_{sid}"))?;
+        let v: Vec<f64> = text.split(' ').filter_map(|x| x.parse().ok()).filter(|x: &f64| x.is_finite() && x.abs() < 1e7).collect();
+        let (p, t) = ([*v.first()?, *v.get(1)?, *v.get(2)?], [*v.get(3)?, *v.get(4)?, *v.get(5)?]);
+        (v.len() == 6 && p != t).then_some((p, t))
+    }
+
     /// Keeps the open level's undo and redo steps for this session, for the next time it opens. The 8 levels left
     /// last keep theirs.
     fn keep_history(&mut self) {
+        self.keep_camera();
         let Some(sid) = self.scene.as_ref().filter(|_| self.has_level).map(|_| self.scene_id().to_string()) else { return };
         let (undo, redo) = (std::mem::take(&mut self.undo_stack), std::mem::take(&mut self.redo_stack));
         self.histories.retain(|h| h.0 != sid);
@@ -325,6 +349,11 @@ impl Editor {
         self.build_entities();
         self.prime_orig_load();
         self.frame_level();
+        if let Some((p, t)) = self.kept_camera(sid) {
+            self.camera.pos = p;
+            self.orbit.target = t;
+            self.camera.look_at(t);
+        }
         if let Some(st) = self.settings.as_mut() {
             st.set_value("scene", sid);
         }

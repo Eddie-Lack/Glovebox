@@ -31,6 +31,9 @@ pub enum Click {
     ShowFarPlane { at: V3, far: f64 },
 }
 
+/// The least distance from the landscape's box that `far_checks` reports.
+const FAR: f64 = 10_000.0;
+
 /// A line in the Checks panel.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Check {
@@ -658,6 +661,9 @@ impl Editor {
             c.click = (!ents.is_empty()).then_some(Click::SelectAll(ents));
             out.push(c);
         }
+        let far = self.far_checks(&whole);
+        let near = far.is_empty();
+        out.extend(far);
         // libgarib's schema (structure), then the import checks (every value against its type and enum: the schema
         // takes any text for an enum)
         let xml = self.serialize();
@@ -674,7 +680,7 @@ impl Editor {
             out.insert(0, c);
         }
         let fresh = self.violations.iter().filter(|v| !v.vanilla).count();
-        if missing.is_empty() && fresh == 0 && bad.is_empty() {
+        if missing.is_empty() && fresh == 0 && bad.is_empty() && near {
             out.push(Check::new(
                 "ok",
                 format!(
@@ -710,6 +716,54 @@ impl Editor {
         }
         out.extend(self.ground_checks());
         out.extend(self.load_checks());
+        out
+    }
+
+    /// How far the object farthest out of the landscape's box is, in sizes of the level (0 inside it), and its
+    /// label. For the tests that keep `far_checks` silent on the vanilla levels.
+    pub fn farthest(&self) -> (f64, String) {
+        let whole: Vec<EntId> = (0..self.entities.len()).filter(|&i| self.whole(i)).collect();
+        let mut land = vec::Box3::new();
+        for &i in whole.iter().filter(|&&i| self.entities[i].kind == "land") {
+            land.add_box(&self.obj_box(i));
+        }
+        if land.empty() {
+            return (0.0, String::new());
+        }
+        let size = land.size().iter().fold(1.0f64, |a, b| a.max(*b));
+        let mut best = (0.0, String::new());
+        for &i in whole.iter().filter(|&&i| self.entities[i].kind != "land") {
+            let p = self.obj_pos(i);
+            let out = (0..3).map(|k| (land.min[k] - p[k]).max(p[k] - land.max[k]).max(0.0)).fold(0.0, f64::max) / size;
+            if out > best.0 {
+                best = (out, format!("{} ({})", self.entities[i].label, self.entities[i].kind));
+            }
+        }
+        best
+    }
+
+    /// Objects far outside the level: farther from its landscape's box than 10 times the box's largest side, and at
+    /// least `FAR` units. The vanilla levels have objects up to about 6 sizes out (a Ball start in the Wayroom), and
+    /// none this far.
+    fn far_checks(&self, whole: &[EntId]) -> Vec<Check> {
+        let mut land = vec::Box3::new();
+        for &i in whole.iter().filter(|&&i| self.entities[i].kind == "land") {
+            land.add_box(&self.obj_box(i));
+        }
+        if land.empty() {
+            return Vec::new();
+        }
+        let s = land.size();
+        let margin = s.iter().fold(FAR, |a, b| a.max(10.0 * b));
+        let mut out = Vec::new();
+        for &i in whole.iter().filter(|&&i| !matches!(self.entities[i].kind, "land")) {
+            let p = self.obj_pos(i);
+            let outside = (0..3).any(|k| !p[k].is_finite() || p[k] < land.min[k] - margin || p[k] > land.max[k] + margin);
+            if outside {
+                let text = format!("{}: far outside the level.", self.entities[i].label);
+                out.push(Check::new("warn", text).click(Click::Select(Some(i))));
+            }
+        }
         out
     }
 

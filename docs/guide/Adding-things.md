@@ -21,6 +21,8 @@ The new thing is selected, ready to move.
 | Tab | What's in it |
 | --- | --- |
 | `Collectables` | Garibs, every powerup, Mr. Tip |
+
+Select a Mr. Tip and the Inspector shows what he says. Change his `message_id` for another message
 | `Enemies` | All 52 types |
 | `Models` | All 1,522 models in the game, and your own |
 | `Kit` | Custom pre-made props |

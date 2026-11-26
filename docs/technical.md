@@ -404,6 +404,8 @@ nothing else. The program never runs them.
     level). The page shows its levels in the Level row and names the result after them.
   - The ROM step gets its check mark only for the ROM the patches are made for (or a browser that can't compute
     SHA-1). Another ROM gets the gray note, and the patch's CRC32 still decides.
+- A Build all ROM or patch is named after its levels (`build::all_name`): up to three by name, joined by "and",
+  then the first and how many more. The reference test still compares the older name, after the count.
 - **Build all** (`Dialog::BuildAll`) lists the edited levels. `Boot into` offers the checked ones and the title
   screen, and the window keeps the last choice (`Window::boot_into`). Its note on copied models is always shown.
   - Each kind of dialog is its own egui modal (`dialogs::dialog_id`). A modal keeps its size from its last showing,
@@ -584,6 +586,17 @@ the level it was made for, and the game loads that level's banks with it. Each p
   `Editor::level_size`, the size across of the landscape and platforms. The wheel zooms within it
   (`Orbit::dolly_within`): the camera stays between 1% and 3 times that size from the target. At the near end the
   wheel moves the target forward with the camera. `Orbit::dolly` is the old zoom, kept for the reference test.
+- **Home** frames the level whatever is selected ("View all").
+- **The camera per level**: leaving a level, and closing the app, keeps the camera's position and its target in the
+  settings (`camera_<level id>`, six numbers, `Editor::keep_camera`). The level opens there again, after
+  `frame_level`. A value that can't be read leaves the framed view.
+- **Copy and paste** (`Editor::copy_selection`, `Editor::paste`). egui hands Ctrl+C and Ctrl+V to the window as
+  `Event::Copy` and `Event::Paste`. The clipboard holds level XML: a `<Level>` with the open level's attributes and
+  the selected commands, picked as Duplicate picks them. A garib takes its group with only the selected garibs. A
+  paste goes through `sanitize_level_xml` like Import XML, then its commands go in before `EndLevelData`, and the
+  pasted objects move so their middle is where the view meets the ground and their lowest is on it. The insert and
+  the move are one undo step. A pasted platform whose `PlatSetTag` the level already uses loses it. Text that
+  doesn't start with `<` is left alone. Models from another level become imports, as any other.
 - **Esc** leaves the tool that's on, or clears the selection. An Esc that closes a list or a menu does only that
   (`egui::Popup::is_any_open` in `Window::keys`).
 - What each kind of object can store (the editor only writes what the game reads):
@@ -924,6 +937,11 @@ it too.
 - `+ Add` in an enemy script puts the new instruction before a last "Go to instruction" that always runs, or a last
   "End the attack": the game never gets past those. A new instruction with a point to go to or face
   (`destination_x/y/z`) gets the enemy's position plus 100 on x, not the level's origin.
+- An object farther from the landscape's box than 10 times the box's largest side, and at least 10,000 units, gets
+  the warning "far outside the level" (`Editor::far_checks`). It keeps the green "No new problems" line away. The
+  vanilla levels' farthest objects are about 5.6 sizes out (a Ball start of the Wayroom).
+  `no_vanilla_object_is_far_outside_its_level` (`crates/editor/tests/vanilla_rom.rs`) prints each level's farthest
+  object.
 - A check line of a puzzle that has no trigger box names the puzzle by its number and opens it
   (`Click::Puzzle`). The line about the game mod's rotations and scales names up to 3 of the objects and selects them
   all (`Click::SelectAll`). The green "No new problems" line also waits for the libgarib format check.
@@ -940,7 +958,23 @@ it too.
 - The emulator picker has no filter on Linux: "All files" alone adds none (`dialogs::Native`). rfd's zenity backend
   turns the filter `*` into `*.*`, which hides programs without an extension.
 - `settings.ini` is read once at the start and written whole at every change (`settings.rs`). An `emulator` line
-  deleted by hand while the app runs comes back. The docs say to close the editor first.
+  deleted by hand while the app runs comes back. The docs point to `Options` > `Choose your emulator…` instead.
+
+## Mr. Tip's text
+
+- The Inspector shows what a Mr. Tip says, in English, from the player's ROM (`gamedata::tip_text`,
+  `Backend::tip_text`). The game's table is `tipTextEnglish` in gloveworld, at ROM 0xEC538: pairs of a pointer to
+  a line and a type (0 a line, 1 the last line of a page, 2 the last line of a message). The pointers are RAM
+  addresses of the segment that starts at ROM 0x1000 and RAM 0x80100000. Message `message_id` is the one after
+  that many type-2 lines. A byte that isn't plain ASCII is a sign of the game's font, a button, and shows as "•".
+- The retail ROM has 67 messages. Every `message_id` of a vanilla level has one (`crates/core/tests/tips_rom.rs`).
+  The fixture gives a made-up line.
+
+## The Options menu's other entries
+
+- `Choose your emulator…` asks for the program and keeps it (`Window::choose_emulator`). `Open the user folder` and
+  `Open the guide ↗` open a `file://` and a web address through egui. The last line is the version
+  (`shell::VERSION`).
 
 ## File dialogs
 

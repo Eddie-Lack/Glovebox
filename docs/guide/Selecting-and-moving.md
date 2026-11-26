@@ -65,7 +65,19 @@ With several objects selected the Inspector has `move by`, `rotate by` and `scal
 | Undo | `Ctrl+Z` |
 | Redo | `Ctrl+Shift+Z` or `Ctrl+Y` |
 | Duplicate | `Ctrl+D` |
+| Copy | `Ctrl+C` |
+| Paste | `Ctrl+V` |
 | Delete | `Del` |
+
+## Copy and paste
+
+Copy works across levels: copy in one level, open another, paste.
+
+- The copy lands where the middle of the view meets the ground
+- A paste is one undo step
+- A garib takes its group along, with only the garibs you picked
+- A pasted platform loses its puzzle tag when the level already has that tag
+- The clipboard holds level XML. Text from somewhere else gets the same checks as `Import XML`
 
 ---
 

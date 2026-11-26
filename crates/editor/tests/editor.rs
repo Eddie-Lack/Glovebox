@@ -618,6 +618,46 @@ fn editor_on_the_fixture() {
     t.detail("the presets add their platforms", n >= 16, n.to_string());
     undo_to(&mut ed, mark);
 
+    // Copy and paste between levels: an enemy and two garibs of level 10 go into level 11, by the view, in one undo
+    // step
+    let enemy = ent(&ed, |e| e.kind == "enemy" && !e.is_handle).unwrap();
+    let garibs: Vec<EntId> = kinds(&ed, "garib").into_iter().take(2).collect();
+    ed.set_selection(std::iter::once(enemy).chain(garibs.iter().copied()).collect());
+    let (text, n) = ed.copy_selection().expect("the selection copies");
+    t.detail("copy takes the enemy and two garibs", n == 3 && text.contains("<Enemy") && text.matches("<Garib ").count() == 2, n.to_string());
+    ed.load_scene("11").unwrap();
+    let (enemies, all_garibs, undo) = (kinds(&ed, "enemy").len(), kinds(&ed, "garib").len(), ed.undo_stack.len());
+    let to = ed.placement_point();
+    let pasted = ed.paste(&text);
+    let near = ed.selection.iter().all(|&i| vec::norm(vec::sub(ed.obj_pos(i), to)) < 2000.0);
+    t.detail(
+        "paste puts them into the other level, by the view, as one undo step",
+        pasted && kinds(&ed, "enemy").len() == enemies + 1 && kinds(&ed, "garib").len() == all_garibs + 2 && ed.undo_stack.len() == undo + 1 && near,
+        ed.last_status.0.clone(),
+    );
+    ed.undo();
+    t.check("one undo takes the paste back", kinds(&ed, "enemy").len() == enemies && kinds(&ed, "garib").len() == all_garibs);
+    let refused = !ed.paste("<Level><Nonsense/></Level>") && ed.last_status.1 == "err";
+    let plain = !ed.paste("just some text") && ed.undo_stack.len() == undo;
+    t.check("paste refuses bad XML with a reason and leaves plain text alone", refused && plain);
+
+    // The camera of a level comes back with the level
+    ed.camera.pos = [123.0, 456.0, 789.0];
+    ed.orbit.target = [1.0, 2.0, 3.0];
+    ed.load_scene("10").unwrap();
+    ed.load_scene("11").unwrap();
+    t.detail("a level opens with the camera it was left with", ed.camera.pos == [123.0, 456.0, 789.0] && ed.orbit.target == [1.0, 2.0, 3.0], format!("{:?}", ed.camera.pos));
+    ed.load_scene("10").unwrap();
+
+    // An object far outside the level is reported
+    let enemy = ent(&ed, |e| e.kind == "enemy" && !e.is_handle).unwrap();
+    let node = ed.entities[enemy].node;
+    let mark = ed.undo_stack.len();
+    ed.set_attr(node, "x", "1000000000.0");
+    t.check("an object far outside the level is a warning, and not No new problems", has_check(&mut ed, Some("warn"), "far outside the level") && !has_check(&mut ed, None, "No new problems"));
+    undo_to(&mut ed, mark);
+    t.check("an object in the level isn't", !has_check(&mut ed, None, "far outside the level"));
+
     // Deleting a lift takes its puzzle and trigger box, in the same undo step
     let mark = ed.undo_stack.len();
     let puzzles = |ed: &Editor| ed.doc.kids(ed.root(), "Puzzle").len();

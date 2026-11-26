@@ -2,7 +2,7 @@
 //! removing things.
 
 use super::nodes::fog_of;
-use super::{format_of, look_name, Editor, Event, ModelIndex, ENTRY_TAG, EXTRA_SLOTS, LIGHTS_MAX, LOOKS, LOOK_ONE};
+use super::{format_of, look_name, sanitize, Editor, Event, ModelIndex, ENTRY_TAG, EXTRA_SLOTS, LIGHTS_MAX, LOOKS, LOOK_ONE};
 use crate::drafts::LevelInfo;
 use crate::entities::{
     self, attached_points, lone_trigger, preset_zone, set_camera_zone, trigger_volumes, Context, EntId, CAM_PRESETS,
@@ -642,6 +642,112 @@ impl Editor {
             }
             Some(clones)
         });
+    }
+
+    // Copy and paste, also between levels: the clipboard holds level XML
+
+    /// The selection as level XML, for the clipboard, and how many objects it holds. A garib takes its group along
+    /// with only the selected garibs. Puzzles go along when their trigger box is their only one. Handles and parts
+    /// that belong to another object stay out, as for Duplicate.
+    pub fn copy_selection(&self) -> Option<(String, usize)> {
+        let mut out = Doc::new("Level");
+        let root = out.root();
+        for (k, v) in self.doc.attrs(self.doc.root()) {
+            out.set(root, k, v);
+        }
+        let mut done: Vec<NodeId> = Vec::new();
+        let mut n = 0;
+        for &i in &self.selection {
+            let ent = &self.entities[i];
+            if ent.derived || ent.is_handle || (ent.kind == "trigger" && !lone_trigger(&self.doc, ent)) || done.contains(&ent.node) {
+                continue;
+            }
+            done.push(ent.node);
+            if ent.tag == "GaribGroup" {
+                // The group with the selected garibs of it
+                let picked: Vec<NodeId> = self.selection.iter().filter_map(|&j| self.entities[j].sub.filter(|_| self.entities[j].node == ent.node)).collect();
+                let group = out.import(&self.doc, ent.node);
+                let kids = self.doc.kids(ent.node, "Garib");
+                for (g, copy) in kids.iter().zip(out.kids(group, "Garib")) {
+                    if !picked.contains(g) {
+                        out.detach(copy);
+                    }
+                }
+                n += picked.len();
+                out.append(root, group);
+            } else {
+                let c = out.import(&self.doc, ent.node);
+                out.append(root, c);
+                n += 1;
+            }
+        }
+        (n > 0).then(|| (out.pretty(), n))
+    }
+
+    /// Pastes level XML from the clipboard into the open level, where the middle of the view meets the ground, as one
+    /// undo step. The text goes through the checks of Import XML first. A pasted platform whose puzzle tag the level
+    /// already uses loses the tag, as a duplicate does. False when nothing was pasted: text that isn't level XML is
+    /// left alone, and XML that fails the checks says why in the status line.
+    pub fn paste(&mut self, text: &str) -> bool {
+        if !self.has_level || !text.trim_start().starts_with('<') {
+            return false;
+        }
+        let res = sanitize(self.backend.decomp(), text, "clipboard");
+        let Some(src) = res.root.as_ref().filter(|_| res.ok) else {
+            let why = res.errors.first().cloned().unwrap_or_default();
+            self.set_status(&why, "err");
+            return false;
+        };
+        let parts: Vec<NodeId> = src.children(src.root()).iter().copied().filter(|c| src.tag(*c) != "EndLevelData").collect();
+        if parts.is_empty() {
+            return false;
+        }
+        let root = self.doc.root();
+        let tags: Vec<f64> = self.doc.iter_tags(root, &["PlatSetTag"]).iter().map(|t| num0(&self.doc, *t, "tag")).collect();
+        let before = self.undo_stack.len();
+        let pasted = self.mutate(|ed| {
+            let mut made = Vec::new();
+            for p in &parts {
+                let c = ed.doc.import(src, *p);
+                for t in ed.doc.iter_tags(c, &["PlatSetTag"]) {
+                    if tags.contains(&num0(&ed.doc, t, "tag")) {
+                        ed.doc.detach(t);
+                    }
+                }
+                made.push(ed.insert_top(c));
+            }
+            // A garib group selects its garibs
+            let mut select = Vec::new();
+            for m in made {
+                let garibs = ed.doc.kids(m, "Garib");
+                if ed.doc.tag(m) == "GaribGroup" && !garibs.is_empty() {
+                    select.extend(garibs);
+                } else {
+                    select.push(m);
+                }
+            }
+            Some(select)
+        });
+        if !pasted {
+            return false;
+        }
+        // Moved to the view, in the same undo step
+        let mut b = vec::Box3::new();
+        for &i in &self.selection {
+            b.add_point(self.obj_pos(i));
+        }
+        let to = self.placement_point();
+        if !b.empty() {
+            let c = b.center();
+            let d = [to[0] - c[0], to[1] - b.min[1], to[2] - c[2]];
+            if d.iter().all(|v| v.is_finite()) && vec::norm(d) > 0.5 {
+                self.apply_transform(Some(d), None, 0, None);
+                self.undo_stack.truncate(before + 1);
+            }
+        }
+        let n = self.selection.len();
+        self.set_status(&format!("Pasted {} object{}.", n, if n == 1 { "" } else { "s" }), "ok");
+        true
     }
 
     /// Deletes the selection.

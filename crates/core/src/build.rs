@@ -415,6 +415,18 @@ pub fn build(gd: &GameData, customs: &Customs, req: &BuildRequest) -> Result<Bui
     Ok(out)
 }
 
+/// The file name of a build of several levels, after their names: up to three levels by name, then the first and
+/// how many more ("glover-atlantis-level-1-and-3-more.bps").
+fn all_name(ids: &[String], ext: &str) -> String {
+    let names: Vec<String> = ids.iter().map(|sid| scene(sid).map_or(sid.clone(), |s| slug(&s.name))).collect();
+    let body = match names.len() {
+        0 => "levels".to_string(),
+        1..=3 => names.join("-and-"),
+        n => format!("{}-and-{}-more", names[0], n - 1),
+    };
+    format!("glover-{body}.{ext}")
+}
+
 /// A level's name in a file name: runs of other characters than letters and digits become one hyphen.
 fn slug(name: &str) -> String {
     let mut out = String::new();
@@ -457,7 +469,7 @@ pub fn build_all(gd: &GameData, customs: &Customs, req: &BuildAllRequest) -> Res
         ..Built::default()
     };
     if req.format == "rom" {
-        out.filename = format!("glover-{}-levels.z64", levels.len());
+        out.filename = all_name(&ids, "z64");
         out.data = rom;
         return Ok(out);
     }
@@ -469,7 +481,7 @@ pub fn build_all(gd: &GameData, customs: &Customs, req: &BuildAllRequest) -> Res
     };
     let meta = format!("\"levels\":{},\"levelIds\":{},\"quickboot\":{}", py_list(&names), py_list(&ids), boot);
     out.data = patch(gd, &rom, &meta, with_mod, &created(&req.created));
-    out.filename = format!("glover-{}-levels.bps", levels.len());
+    out.filename = all_name(&ids, "bps");
     out.patch_size = Some(out.data.len());
     Ok(out)
 }
@@ -492,6 +504,15 @@ mod tests {
         assert_eq!(py_json("a\"b\\c\n\u{1}"), "\"a\\\"b\\\\c\\n\\u0001\"");
         assert_eq!(py_json("é\u{1F600}"), "\"\\u00e9\\ud83d\\ude00\"");
         assert_eq!(py_list(&["a".into(), "b".into()]), "[\"a\",\"b\"]");
+    }
+
+    #[test]
+    fn names_of_several_levels() {
+        let ids = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let a1 = slug(&scene("0a").unwrap().name);
+        assert_eq!(all_name(&ids(&["0a"]), "bps"), format!("glover-{a1}.bps"));
+        assert!(all_name(&ids(&["0a", "0b"]), "z64").starts_with(&format!("glover-{a1}-and-")));
+        assert_eq!(all_name(&ids(&["0a", "0b", "0c", "0d", "0e"]), "bps"), format!("glover-{a1}-and-4-more.bps"));
     }
 
     #[test]
