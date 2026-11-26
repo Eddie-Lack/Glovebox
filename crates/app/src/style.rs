@@ -963,6 +963,23 @@ pub fn info(ctx: &egui::Context) -> Info {
     ctx.data(|d| d.get_temp::<Info>(egui::Id::NULL)).unwrap_or(Info::DEFAULT)
 }
 
+/// The setting of `Advanced details`: on, the window shows the format's and the decompilation's details (type tags,
+/// opcodes, model ids, level ids and the links into gloveworld). Off by default.
+pub const ADVANCED_SETTING: &str = "advanced";
+
+fn advanced_id() -> egui::Id {
+    egui::Id::unique(ADVANCED_SETTING)
+}
+
+/// Whether `Advanced details` is on.
+pub fn advanced(ctx: &egui::Context) -> bool {
+    ctx.data(|d| d.get_temp::<bool>(advanced_id())).unwrap_or(false)
+}
+
+pub fn set_advanced(ctx: &egui::Context, on: bool) {
+    ctx.data_mut(|d| d.insert_temp(advanced_id(), on));
+}
+
 /// Sets how the notes of a window show. The next frame follows it.
 pub fn set_info(ctx: &egui::Context, info: Info) {
     ctx.data_mut(|d| d.insert_temp(egui::Id::NULL, info));

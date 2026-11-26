@@ -839,6 +839,14 @@ fn checks_and_builds(g: &mut G) {
     let v = g.view();
     let p = g.pic().crop(egui::Rect::from_min_max(egui::pos2(0.0, v.min.y / 2.0 - 1.0), egui::pos2(g.size().x, v.min.y)));
     g.save("toolbar-build-row", &p);
+    // The More menu, open
+    g.click("More");
+    if let Some(r) = g.rect_of("More") {
+        let p = g.pic().crop(egui::Rect::from_min_max(egui::pos2(r.min.x - 20.0, r.min.y - 4.0), egui::pos2(r.min.x + 200.0, r.max.y + 150.0)));
+        g.save("toolbar-more", &p);
+    }
+    g.t.key(Key::Escape);
+    g.t.settle();
     // An edit, then the dialogs of the builds
     sand(g);
     g.t.ed().add_enemy("lionfish");

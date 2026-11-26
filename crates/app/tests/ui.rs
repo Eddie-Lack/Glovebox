@@ -32,6 +32,9 @@ use std::time::{Duration, Instant};
 
 mod guide;
 
+/// The entries of the toolbar's `More` menu.
+const MORE: [&str; 5] = ["Import XML", "Export XML", ".lev", "Build all…", "Patcher ↗"];
+
 struct T {
     h: Harness<'static, App>,
     results: Vec<(String, bool, String)>,
@@ -291,7 +294,11 @@ impl T {
         self.press(label, true, n, false)
     }
 
+    /// Clicks the widget `label`. An entry of the toolbar's `More` menu is clicked through the menu.
     fn click(&mut self, label: &str) -> bool {
+        if MORE.contains(&label) && self.find(label, true).is_empty() {
+            return self.press("More", true, 0, false) && self.press(label, true, 0, false);
+        }
         self.press(label, true, 0, false)
     }
 
@@ -2060,6 +2067,37 @@ fn ideas(t: &mut T) {
     let version = t.click("Options") && t.has_containing(&format!("Glovebox {}", glovebox::shell::VERSION));
     t.key(Key::Escape);
     t.check("Options shows the version", version);
+    advanced(t);
+}
+
+/// `Advanced details` in Options, and the toolbar's `More` menu.
+fn advanced(t: &mut T) {
+    // Off by default: no field types, no opcodes, no level ids in the level list
+    let ed = t.ed();
+    let enemy = ent(ed, |e| e.kind == "enemy" && !e.is_handle);
+    ed.select(enemy, false);
+    t.settle();
+    let off = !t.has_containing("  f4") && !t.has_containing("decomp:") && {
+        let sc = t.ed().scene.clone().unwrap();
+        !t.w().scene_label(&sc).contains("(10)")
+    };
+    let clicked = t.option("Advanced details");
+    let ed = t.ed();
+    ed.select(enemy, false);
+    t.settle();
+    let sc = t.ed().scene.clone().unwrap();
+    let label = t.w().scene_label(&sc);
+    let on = clicked && t.has_containing("  f4") && t.has_containing("decomp:") && label.contains("(10)") && t.w().settings.get("advanced").as_deref() == Some("on");
+    t.option("Advanced details");
+    t.settle();
+    let back = !t.has_containing("  f4") && t.w().settings.get("advanced").as_deref() == Some("off");
+    t.detail("click: Advanced details shows and hides the format's details, and is kept", off && on && back, format!("{off} {on} {back} {label}"));
+
+    // The More menu holds the buttons used less often
+    let hidden = MORE.iter().all(|m| t.find(m, true).is_empty());
+    let listed = t.click("More") && MORE.iter().all(|m| !t.find(m, true).is_empty());
+    t.key(Key::Escape);
+    t.detail("click: More lists Import XML, Export XML, .lev, Build all… and Patcher ↗", hidden && listed, format!("{hidden} {listed}"));
 }
 
 /// The exit triggers: the toolbar's Exits switch, the layer's checkbox, the spheres and the inspector's block.
@@ -2082,7 +2120,9 @@ fn exit_triggers() {
     let ed = t.ed();
     let across = vec::cross(ed.camera.forward(), [0.0, 1.0, 0.0]);
     let side = vec::scale(across, (r - 4.0) / vec::norm(across));
-    let inside = vec::sub(trigger.center, side);
+    // Inside the sphere, on the camera's side of the platform's model
+    let toward = vec::scale(ed.camera.forward(), -0.5 * r);
+    let inside = vec::add(vec::sub(trigger.center, vec::scale(side, 0.7)), toward);
     ed.add_garib(inside, "garib");
     ed.select(None, false);
     let goal = ent(ed, |e| e.label == "goal").unwrap();
@@ -2245,6 +2285,8 @@ fn number_fields_drag() {
     }
 
     // A whole-number command field keeps the limits of its type
+    // The field types show with advanced details on
+    t.w().set_advanced(true);
     t.ed().select(None, false);
     t.settle();
     let found = [("  u1", "255", "0", none), ("  u2", "65535", "0", Modifiers::CTRL), ("  s2", "32767", "-32768", Modifiers::CTRL)].into_iter().find_map(|(ty, max, min, mods)| {
@@ -2302,7 +2344,7 @@ fn number_fields_drag() {
 /// it's drawn at the display's scale, and buttons work.
 #[test]
 fn small_and_scaled_windows() {
-    for (name, size, scale) in [("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5), ("1920x1080", [1920.0, 1080.0], 1.0)] {
+    for (name, size, scale) in [("960x600", [960.0, 600.0], 1.0), ("1280x720", [1280.0, 720.0], 1.0), ("scale-150", [1920.0, 1080.0], 1.5), ("1920x1080", [1920.0, 1080.0], 1.0)] {
         let backend: Arc<dyn Backend> = Arc::new(FixtureBackend::new());
         let mut t = T::new(name, Some(backend), size);
         t.h.set_pixels_per_point(scale);
@@ -2312,6 +2354,12 @@ fn small_and_scaled_windows() {
         ed.select(enemy, false);
         t.settle();
         t.shot(&format!("20-{name}"));
+        // The toolbar takes two rows at most, also at the smallest window: Options, its last button, is at most one
+        // row under Undo
+        let (undo, options) = (t.find("Undo", true).first().map(|n| n.rect()), t.find("Options", true).first().map(|n| n.rect()));
+        let window = t.h.ctx.content_rect();
+        let two = matches!((undo, options), (Some(u), Some(o)) if o.center().y - u.center().y < 35.0 && window.contains_rect(o));
+        t.detail(&format!("{name}: the toolbar has two rows at most"), two, format!("{undo:?} {options:?}"));
         t.click("+ Add");
         t.click("Models");
         t.until(30, |w| w.palette.thumbs_done() >= 3);
@@ -2523,11 +2571,11 @@ fn themes() {
             let saved = std::fs::read_to_string(t.home.join("settings.ini")).unwrap_or_default().contains(&format!("theme={}", th.id));
             t.detail(&format!("{at}: the Theme list sets {}", th.name), chosen && looks && saved, format!("{chosen} {looks} {saved} {}", t.theme()));
             // Everything of the toolbar is in the window, and the view keeps its room
-            let places: Vec<_> = ["Options", "Build ROM", "Patcher ↗", "Focus", "Undo", "Box select"].iter().map(|l| t.find(l, true).first().map(|n| n.rect())).collect();
+            let places: Vec<_> = ["Options", "Build ROM", "More", "Focus", "Undo", "Box select"].iter().map(|l| t.find(l, true).first().map(|n| n.rect())).collect();
             let inside = places.iter().all(|r| r.is_some_and(|r| window.contains_rect(r)));
-            // Two rows: the last button of each row is on the row of its first
-            let row = |a: usize, b: usize| matches!((places[a], places[b]), (Some(a), Some(b)) if (a.center().y - b.center().y).abs() < 6.0);
-            t.detail(&format!("{at}, {}: the toolbar has two rows", th.name), row(3, 4) && row(0, 5), format!("{places:?}"));
+            // Two rows at most: Options, the last button, is at most one row under Undo
+            let two = matches!((places[0], places[4]), (Some(o), Some(u)) if o.center().y - u.center().y < 35.0);
+            t.detail(&format!("{at}, {}: the toolbar has two rows at most", th.name), two, format!("{places:?}"));
             let view = t.w().view.rect;
             t.detail(&format!("{at}, {}: the toolbar fits and the view has room", th.name), inside && view.width() >= 200.0 && view.height() >= 200.0, format!("{view:?} in {window:?}: {places:?}"));
             if scale == 1.0 && size[0] == 1500.0 {
@@ -2597,7 +2645,7 @@ fn themes() {
         game.settle();
         game.idle();
         game.click("Level");
-        game.choose("  (0a)");
+        game.choose("   Atlantis Level 1");
         game.until(300, |w| !w.busy && w.ed.scene_id() == "0a" && w.jobs.running == 0);
         let ed = game.ed();
         let some = ent(ed, |e| e.kind == "enemy" && !e.is_handle);
@@ -3791,7 +3839,7 @@ fn the_rom() {
     for (sid, name) in &scenes {
         let t0 = Instant::now();
         t.click("Level");
-        t.choose(&format!("{name}  ({sid})"));
+        t.choose(&format!("   {name}"));
         let want = sid.clone();
         let loaded = t.until(300, move |w| !w.busy && w.ed.scene_id() == want && w.jobs.running == 0);
         t.settle();
@@ -3850,10 +3898,19 @@ fn the_rom() {
 
     // Build ROM for one level, through the button
     t.click("Level");
-    t.choose("  (0a)");
+    t.choose("   Atlantis Level 1");
     t.until(300, |w| !w.busy && w.ed.scene_id() == "0a" && w.jobs.running == 0);
-    // A plain build is the ROM without its unused end. With an edit that needs the game mod the ROM is a whole
-    // number of MiB, which is what hwcheck is for. The edit tilts a platform, an enemy or a powerup.
+    // A plain build, then one with an edit that needs the game mod. Both pass hwcheck. The edit tilts a platform, an
+    // enemy or a powerup.
+    let path = t.save_to("plain.z64");
+    t.click("Build ROM");
+    t.until(600, |w| w.jobs.running == 0 && w.loading.is_empty());
+    let data = std::fs::read(&path).unwrap_or_default();
+    let problems = glovebox_core::hwcheck::check_rom(&data);
+    t.detail("a plain build is 8 MiB and passes hwcheck", data.len() == 0x800000 && problems.is_empty(), format!("{} {problems:?}", data.len()));
+    if let Some(dir) = std::env::var_os("GLOVEBOX_KEEP").map(PathBuf::from) {
+        let _ = std::fs::copy(&path, dir.join("plain-0a.z64"));
+    }
     let ed = t.ed();
     let tilt = ent(ed, |e| matches!(e.kind, "platform" | "enemy" | "pickup") && !e.is_handle && e.rot.is_some());
     ed.select(tilt, false);

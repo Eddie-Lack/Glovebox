@@ -79,6 +79,8 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
 
     // The groups and their rows
     let f = ed.filter.to_lowercase();
+    // Without advanced details, common models go by their preset's name
+    let adv = style::advanced(ui.ctx());
     let selected: std::collections::HashSet<EntId> = ed.selection.iter().copied().collect();
     let owners: std::collections::HashSet<EntId> = ed.selection.iter().filter_map(|&i| ed.entities[i].owner).collect();
     let sel_changed = st.last_selection != ed.selection;
@@ -91,7 +93,8 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
         let lst: Vec<EntId> = (0..ed.entities.len())
             .filter(|&i| {
                 let e = &ed.entities[i];
-                e.kind == k && whole(i) && (f.is_empty() || format!("{} {}", e.label, e.tag).to_lowercase().contains(&f))
+                let friendly = e.object_id.as_deref().and_then(glovebox_editor::presets::friendly_name).unwrap_or("");
+                e.kind == k && whole(i) && (f.is_empty() || format!("{} {} {}", e.label, e.tag, friendly).to_lowercase().contains(&f))
             })
             .collect();
         if lst.is_empty() {
@@ -178,7 +181,8 @@ pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
                         // An imported model's piece keeps 7 letters of its name in the level. The list shows the
                         // whole name the model was imported with.
                         let full = e.object_id.as_ref().and_then(|o| ed.catalog.get(o)).filter(|c| c.custom.is_some() && c.name.len() > e.label.len() && c.name.starts_with(e.label.as_str()));
-                        let label = full.map_or(e.label.as_str(), |c| c.name.as_str());
+                        let friendly = e.object_id.as_deref().filter(|_| !adv).and_then(glovebox_editor::presets::friendly_name);
+                        let label = friendly.or(full.map(|c| c.name.as_str())).unwrap_or(e.label.as_str());
                         let text = RichText::new(format!("{}   {}", label, tag)).color(color);
                         let mut r = ui.add(egui::Label::new(text).truncate().sense(egui::Sense::click()));
                         let fill = if on {

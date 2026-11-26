@@ -12,28 +12,44 @@ fn s<'a>(v: &'a serde_json::Value, key: &str) -> &'a str {
     v.get(key).and_then(|x| x.as_str()).unwrap_or("")
 }
 
+/// Starts a new row of the toolbar when the next `width` points don't fit on this one.
+fn keep_together(ui: &mut egui::Ui, width: f32) {
+    if ui.available_size_before_wrap().x < width {
+        ui.end_row();
+    }
+}
+
 fn sep(ui: &mut egui::Ui) {
-    ui.add(egui::Separator::default().vertical().spacing(6.0));
+    ui.add(egui::Separator::default().vertical().spacing(4.0));
 }
 
 pub fn ui(w: &mut Window, ui: &mut egui::Ui) {
     let frame = egui::Frame::new().fill(style::theme(ui.ctx()).deep).inner_margin(egui::Margin::symmetric(6, 4));
     let bar = egui::Panel::top("toolbar").frame(frame).show(ui, |ui| {
-        ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
-        ui.horizontal_wrapped(|ui| edit_row(w, ui));
-        ui.horizontal_wrapped(|ui| files_row(w, ui));
+        // Tighter than elsewhere: the toolbar fits two rows at the smallest window (960 points)
+        ui.spacing_mut().item_spacing = egui::vec2(3.0, 4.0);
+        ui.spacing_mut().button_padding.x = 5.0;
+        // One flow: the buttons fill a row before they wrap to the next
+        ui.horizontal_wrapped(|ui| {
+            edit_row(w, ui);
+            sep(ui);
+            files_row(w, ui);
+        });
     });
     w.tour.mark(Target::Toolbar, bar.response.rect);
 }
 
 fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
-    style::logo(ui, "Glovebox", 16.0);
-    ui.add_space(4.0);
+    // A narrow window leaves the logo out: the buttons then fit in two rows
+    if ui.ctx().content_rect().width() >= 1100.0 {
+        style::logo(ui, "Glovebox", 16.0);
+        ui.add_space(4.0);
+    }
 
     // The level list
     let current = w.ed.scene.as_ref().map(|x| w.scene_label(x).trim_start().to_string()).unwrap_or_else(|| "Loading level list…".to_string());
     let mut pick = None;
-    let combo = egui::ComboBox::from_id_salt("level").icon(style::combo_icon).selected_text(current).width(250.0).height(520.0).show_ui(ui, |ui| {
+    let combo = egui::ComboBox::from_id_salt("level").icon(style::combo_icon).selected_text(current).width(140.0).height(520.0).show_ui(ui, |ui| {
         let mut group = "";
         for sc in &w.ed.scenes {
             if s(sc, "group") != group {
@@ -83,12 +99,14 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
             w.ed.set_mode(m);
         }
     }
-    // Each label stays on the row of its list when the toolbar wraps
+    // Each label stays on the row of its list when the toolbar wraps. A nested row has no size before it's drawn, so
+    // the toolbar wraps before it by its width as set here.
+    keep_together(ui, 175.0);
     ui.horizontal(|ui| {
         ui.label(RichText::new(" Pivot").color(style::theme(ui.ctx()).muted));
         let pivots = [("group", "group center"), ("individual", "each origin")];
         let shown = pivots.iter().find(|p| p.0 == w.ed.pivot_mode).map_or("each origin", |p| p.1);
-        let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).show_ui(ui, |ui| {
+        let r = egui::ComboBox::from_id_salt("pivot").icon(style::combo_icon).selected_text(shown).width(105.0).show_ui(ui, |ui| {
             for (v, text) in pivots {
                 if ui.selectable_label(w.ed.pivot_mode == v, text).clicked() {
                     w.ed.pivot_mode = v.to_string();
@@ -98,6 +116,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
         r.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Pivot"));
         r.response.on_hover_text("Pick the center for rotating or scaling several objects");
     });
+    keep_together(ui, 105.0);
     ui.horizontal(|ui| {
         ui.label(RichText::new(" Snap").color(style::theme(ui.ctx()).muted));
         let snaps = [("off", 0.0), ("1", 1.0), ("10", 10.0), ("50", 50.0)];
@@ -129,7 +148,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
 fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let active = style::theme(ui.ctx());
     let info = style::info(ui.ctx());
-    let (mut theme, mut notes, mut tour, mut emulator) = (None, None, false, false);
+    let (mut theme, mut notes, mut tour, mut emulator, mut advanced) = (None, None, false, false, None);
     let (r, _) = egui::containers::menu::MenuButton::new("Options").ui(ui, |ui| {
         ui.set_width(238.0);
         style::h4(ui, "Theme");
@@ -154,6 +173,10 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
             if ui.selectable_label(i == info, i.name()).clicked() {
                 notes = Some(i);
             }
+        }
+        let mut adv = style::advanced(ui.ctx());
+        if style::checkbox(ui, &mut adv, "Advanced details").changed() {
+            advanced = Some(adv);
         }
         ui.add_space(4.0);
         ui.separator();
@@ -192,6 +215,9 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     if tour {
         w.acts.push(Box::new(|w: &mut Window| w.start_tour()));
     }
+    if let Some(on) = advanced {
+        w.acts.push(Box::new(move |w: &mut Window| w.set_advanced(on)));
+    }
     if emulator {
         w.acts.push(Box::new(|w: &mut Window| w.choose_emulator()));
     }
@@ -224,39 +250,52 @@ fn files_row(w: &mut Window, ui: &mut egui::Ui) {
         w.ed.set_layer(exits::LAYER, !shown);
     }
     sep(ui);
+    // Each button is disabled on its own: a scope around them all would wrap as a block of its own
     let ready = w.ed.has_level && !w.busy;
-    ui.add_enabled_ui(ready, |ui| {
-        if ui.button("Import XML").on_hover_text("Import a level from a libgarib XML file. The editor checks the file first. You can also drop a file on the window").clicked() {
-            crate::dialogs::open_import_dialog(w, None);
-        }
-        if ui.button("Export XML").on_hover_text("Save the level as libgarib XML").clicked() {
-            w.export("xml", None);
-        }
-        if ui.button(".lev").on_hover_text("Assemble the level and save the .lev").clicked() {
-            w.export("lev", None);
-        }
-        style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Make Build ROM boot straight into this level");
-        let r = ui.button("Export patch").on_hover_text("Export a BPS patch to share your level. Players apply it to their own ROM with the patcher");
+    {
+        keep_together(ui, 95.0);
+        ui.add_enabled_ui(ready, |ui| style::checkbox(ui, &mut w.quickboot, "boot here").on_hover_text("Make Build ROM boot straight into this level"));
+        let r = ui.add_enabled(ready, egui::Button::new("Export patch")).on_hover_text("Export a BPS patch to share your level. Players apply it to their own ROM with the patcher");
         w.tour.mark(Target::Patch, r.rect);
         if r.clicked() {
             crate::dialogs::open_patch_dialog(w);
         }
-        let r = ui.button("Test level").on_hover_text("Build the level into a ROM and open it in your emulator (T)");
+        let r = ui.add_enabled(ready, egui::Button::new("Test level")).on_hover_text("Build the level into a ROM and open it in your emulator (T)");
         w.tour.mark(Target::Build, r.rect);
         if r.clicked() {
             w.test_level();
         }
-        let r = ui.add(style::primary("Build ROM")).on_hover_text("Build a ROM with the edited level and any imported models");
+        let r = ui.add_enabled(ready, style::primary("Build ROM")).on_hover_text("Build a ROM with the edited level and any imported models");
         w.tour.mark(Target::Build, r.rect);
         if r.clicked() {
             w.export("rom", None);
         }
-        if ui.button("Build all…").on_hover_text("Build every edited level into one ROM or patch").clicked() {
-            crate::dialogs::open_all_dialog(w);
-        }
-        if ui.button("Patcher ↗").on_hover_text("Open the patcher page for players. It works offline, and the ROM isn't uploaded").clicked() {
-            w.open_patcher();
+        keep_together(ui, 60.0);
+        ui.add_enabled_ui(ready, |ui| more_menu(w, ui));
+    }
+    options_menu(w, ui);
+}
+
+/// The overflow menu: the buttons used less often. Each keeps its label and tooltip.
+fn more_menu(w: &mut Window, ui: &mut egui::Ui) {
+    let mut act: Option<fn(&mut Window)> = None;
+    let entries: [(&str, &str, fn(&mut Window)); 5] = [
+        ("Import XML", "Import a level from a libgarib XML file. The editor checks the file first. You can also drop a file on the window", |w| crate::dialogs::open_import_dialog(w, None)),
+        ("Export XML", "Save the level as libgarib XML", |w| w.export("xml", None)),
+        (".lev", "Assemble the level and save the .lev", |w| w.export("lev", None)),
+        ("Build all…", "Build every edited level into one ROM or patch", crate::dialogs::open_all_dialog),
+        ("Patcher ↗", "Open the patcher page for players. It works offline, and the ROM isn't uploaded", |w| w.open_patcher()),
+    ];
+    let (_, _) = egui::containers::menu::MenuButton::new("More").ui(ui, |ui| {
+        ui.set_min_width(140.0);
+        for (text, tip, f) in entries {
+            if ui.add(egui::Button::selectable(false, text)).on_hover_text(tip).clicked() {
+                act = Some(f);
+                ui.close();
+            }
         }
     });
-    options_menu(w, ui);
+    if let Some(f) = act {
+        w.acts.push(Box::new(f));
+    }
 }
