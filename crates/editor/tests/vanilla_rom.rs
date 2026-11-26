@@ -68,3 +68,29 @@ fn the_draw_load_of_vanilla_levels() {
     assert_eq!(draw_load_level(&mut ed), "err", "a busier hub 1 from its draft");
     let _ = std::fs::remove_dir_all(&home);
 }
+
+/// No object of a vanilla level is far outside the level (`far_checks`).
+#[test]
+fn no_vanilla_object_is_far_outside_its_level() {
+    let Ok(rom) = std::env::var("GLOVEBOX_ROM") else {
+        println!("skipped: GLOVEBOX_ROM is not set");
+        return;
+    };
+    let home = std::env::temp_dir().join(format!("glovebox-vanilla-far-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&home);
+    let backend: Arc<dyn Backend> = Arc::new(GameBackend::open(Path::new(&rom), home.clone()).expect("the ROM opens"));
+    let mut ed = Editor::new(backend.clone(), Drafts::new(home.join("drafts")), None);
+    ed.load_textures = false;
+    ed.start();
+    ed.set_catalog(backend.catalog().expect("the catalog"));
+    let sids: Vec<String> = ed.scenes.iter().map(|s| s["id"].as_str().unwrap().to_string()).collect();
+    let mut far = Vec::new();
+    for sid in &sids {
+        ed.load_scene(sid).unwrap_or_else(|e| panic!("{sid}: {e}"));
+        let (gap, label) = ed.farthest();
+        println!("{sid}: the farthest object is {label}, {gap:.2} level sizes out");
+        far.extend(ed.checks().into_iter().filter(|c| c.text.contains("far outside the level")).map(|c| format!("{sid}: {}", c.text)));
+    }
+    let _ = std::fs::remove_dir_all(&home);
+    assert!(far.is_empty(), "{far:#?}");
+}
