@@ -11,7 +11,7 @@ The `Checks` run the game's own level rules on your level, after every edit.
 - A check mark means all good.
 - Problems will say what's wrong, and on which object or puzzle when there's one.
 - Click a row that names an object to select it and look at it. A row that names a puzzle opens it.
-- Many rows link to the place in the game's code that makes the rule.
+- With `Advanced details` on (in `Options`), many rows link to the place in the game's code that makes the rule.
 - The links go to _[gloveworld](https://github.com/Eddie-Lack/gloveworld)_, the game's code turned back into C.
 - Problems the vanilla level already has are labeled. (those ones aren't yours)
 

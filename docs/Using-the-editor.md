@@ -190,7 +190,7 @@ Note: a ROM that boots straight into the level (`boot here`, `Test level`) plays
 - A checkpoint or start with no solid ground under it
 - `fog_distance` of 1000 or more, in `FogConfiguration`
 
-Some checks link to the game's code. Problems a vanilla level already has are labeled
+With `Advanced details` on, some checks link to the game's code. Problems a vanilla level already has are labeled
 
 The links go to _[gloveworld](https://github.com/Eddie-Lack/gloveworld)_, the game's code turned back into C
 
@@ -346,7 +346,9 @@ Note: the path is only a guide, the level doesn't keep it
 
 ## Options
 
-`Options` in the toolbar has the theme, the info texts, the panels and `Take the tour`. Under them: `Choose your emulator…`, `Open the user folder`, `Open the guide ↗` and the version
+`Options` in the toolbar has the theme, the info texts, `Advanced details`, the panels and `Take the tour`. Under them: `Choose your emulator…`, `Open the user folder`, `Open the guide ↗` and the version
+
+`Advanced details` (off at first) shows field types, command numbers, model and level ids, and the links into the game's code
 
 ### Theme
 
@@ -427,6 +429,7 @@ Note: a level that uses the game mod needs the emulator's Expansion Pak on _(mos
 
 ## Build ROM and export
 
+- `More` in the toolbar holds `Import XML`, `Export XML`, `.lev`, `Build all…` and `Patcher ↗`
 - `Export XML` and `.lev` save the level where you choose
 - `Import XML` (or drop an `.xml` on the window) checks the file before it touches your level
 - Drop a `.glb` or `.gltf` on the window to open `Import model` with it. A file dropped on an open `Import XML` or `Import model` goes into it
