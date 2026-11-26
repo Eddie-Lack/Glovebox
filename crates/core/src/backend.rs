@@ -134,6 +134,10 @@ pub trait Backend: Send + Sync {
     fn models(&self, sid: &str) -> Result<SceneModels>;
     /// The size of a vanilla level's file.
     fn orig_lev_size(&self, sid: &str) -> Option<usize>;
+    /// What Mr. Tip says for a message id, in English (`gamedata::tip_text`). None when the back end can't tell.
+    fn tip_text(&self, _id: i64) -> Option<String> {
+        None
+    }
     /// Every model of the game's banks and the author's imported models, by id.
     fn catalog(&self) -> Result<BTreeMap<String, CatalogEntry>>;
     fn model(&self, model: &ModelRef) -> Result<Arc<Model>>;
@@ -247,6 +251,10 @@ impl GameBackend {
 }
 
 impl Backend for GameBackend {
+    fn tip_text(&self, id: i64) -> Option<String> {
+        crate::gamedata::tip_text(self.game.rom_bytes(), usize::try_from(id).ok()?)
+    }
+
     fn scenes(&self) -> &Value {
         tables::scenes()
     }

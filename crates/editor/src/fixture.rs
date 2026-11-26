@@ -471,6 +471,11 @@ impl Backend for FixtureBackend {
         Ok(Built { filename, lev_size: Some(lev.len()), needs_mod: false, data: lev, ..Built::default() })
     }
 
+    /// A made-up message: the fixture has no ROM to read Mr. Tip's from.
+    fn tip_text(&self, id: i64) -> Option<String> {
+        Some(format!("MADE-UP MESSAGE {id}"))
+    }
+
     fn build_all(&self, _request: &BuildAllRequest) -> Result<Built> {
         no_rom()
     }

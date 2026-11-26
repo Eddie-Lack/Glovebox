@@ -303,7 +303,12 @@ fn stored_customs(home: &Path) -> Customs {
 
 /// The facts of a build as the reference dumps hold them: a JSON object of headers.
 fn headers(built: &Built, several: bool) -> Value {
-    let mut h = json!({"X-Needs-Mod": if built.needs_mod { "1" } else { "0" }, "filename": built.filename});
+    // The reference was recorded when a build of several levels was named after their count
+    let filename = match (several, built.filename.rsplit_once('.')) {
+        (true, Some((_, ext))) => format!("glover-{}-levels.{ext}", built.levels.len()),
+        _ => built.filename.clone(),
+    };
+    let mut h = json!({"X-Needs-Mod": if built.needs_mod { "1" } else { "0" }, "filename": filename});
     if let Some(n) = built.lev_size {
         h["X-Lev-Size"] = json!(n.to_string());
     }

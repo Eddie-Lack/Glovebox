@@ -701,6 +701,42 @@ fn decode(bank: &[u8], id: u32) -> Result<Image, GameError> {
     Ok(Image { width: t.width as u32, height: t.height as u32, rgba })
 }
 
+/// Where the English text of Mr. Tip is in the ROM: `tipTextEnglish` in gloveworld (RAM 0x801EB538, in the segment
+/// that the ROM holds from 0x1000 at RAM 0x80100000). Each line is a pointer to its text and a type: 0 a line, 1 the
+/// last line of a page, 2 the last line of the message.
+const TIP_TABLE: usize = 0xEC538;
+const TIP_SEGMENT: u32 = 0x800F_F000;
+
+/// What Mr. Tip says for message `id` (the `message_id` of a MrTip command), in English: its lines joined by spaces
+/// and its pages by an empty line. A byte that isn't plain ASCII is a sign of the game's font (a button), shown as
+/// "•". None when the ROM has no such message.
+pub fn tip_text(rom: &[u8], id: usize) -> Option<String> {
+    let mut message = 0;
+    let mut pages: Vec<Vec<String>> = vec![Vec::new()];
+    for i in 0..2000 {
+        let at = TIP_TABLE + 8 * i;
+        let ptr = u32::from_be_bytes(rom.get(at..at + 4)?.try_into().ok()?);
+        let kind = u32::from_be_bytes(rom.get(at + 4..at + 8)?.try_into().ok()?);
+        let start = usize::try_from(ptr.checked_sub(TIP_SEGMENT)?).ok()?;
+        if kind > 2 || start >= rom.len() {
+            return None;
+        }
+        if message == id {
+            let end = start + rom[start..].iter().take(80).position(|b| *b == 0)?;
+            let line: String = rom[start..end].iter().map(|&b| if (0x20..0x7F).contains(&b) { b as char } else { '•' }).collect();
+            pages.last_mut()?.push(line);
+            match kind {
+                1 => pages.push(Vec::new()),
+                2 => return Some(pages.iter().map(|p| p.join(" ")).collect::<Vec<_>>().join("\n\n")),
+                _ => {}
+            }
+        } else if kind == 2 {
+            message += 1;
+        }
+    }
+    None
+}
+
 /// The pixels of one texture of a texture bank that isn't the game's (an imported model's bank).
 pub fn texture_of(bank: &[u8], id: u32) -> Result<Image, GameError> {
     let data = fla2::data(bank).map_err(|e| GameError(e.to_string()))?;
