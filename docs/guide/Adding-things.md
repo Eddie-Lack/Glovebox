@@ -11,7 +11,7 @@ _Back to the [guide](README.md)_
 New things appear where the middle of the view meets the ground.
 
 1. Look at the spot.
-2. Click `Add` next to what you want.
+2. Click `Add` next to what you want (in `Collectables`, click the thing itself).
 3. Move it with the gizmo!
 
 The new thing is selected, ready to move.

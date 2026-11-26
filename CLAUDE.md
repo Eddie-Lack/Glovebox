@@ -37,18 +37,19 @@ built ROM has to keep on a console.
 
 ## Docs for players
 
-Write pages for players (the README, `docs/` except technical.md, `app/README.txt`) in the owner's style. The style
-is written out in the practice ROM's CLAUDE.md, "Writing style for docs" (github.com/Eddie-Lack/Glover-Practice-Rom).
-In short: talk to the player as "you", casually; one fact per line; no period at the end of table cells, bullets or
-one-line paragraphs; links in italics; choices in backticks; important warnings in headings with "!".
+Write pages for players (the README, `docs/` except technical.md, `app/README.txt`) in the owner's style. The
+practice ROM's CLAUDE.md no longer has a "Writing style for docs" section. The summary here is the whole style: talk
+to the player as "you", casually; one fact per line; no period at the end of table cells, bullets or one-line
+paragraphs; links in italics; choices in backticks; important warnings in headings with "!".
 
 The owner edits `README.md` and `app/README.txt` himself. They're the model for this style: match them, and keep his
 wording when you change something near it.
 
 ## Running it from source
 
-You need the Rust toolchain (stable) and the ROM. On Linux the window also needs `libxkbcommon-dev` and
-`libwayland-dev`, and a Vulkan driver (`mesa-vulkan-drivers` is enough).
+You need the Rust toolchain (stable) and the ROM. On Linux the window also needs `libxkbcommon-dev`,
+`libxkbcommon-x11-0` and `libwayland-dev`, and a Vulkan driver (`mesa-vulkan-drivers` is enough). The file dialogs
+need an `xdg-desktop-portal` or `zenity`. Without either, they fail, and the app shows `rfd`'s error.
 
 ```sh
 cargo run -p glovebox --release                 # the editor's window
@@ -89,7 +90,7 @@ cargo run -p glovebox-core --example gbtool -- hwcheck ROM     # a built ROM aga
   `gbtool pack ROM LEVEL XML OUTDIR NAME [--home DIR]` writes a level pack for g64coopdx, with the level's imports
   from the ROM and the user folder (docs/technical.md, "Level packs for g64coopdx"). `gbtool import ROM GLTF
   [--scale S] [--home DIR]` imports a glTF model into the user folder. `gbtool modelbanks GLTF OUT` writes a glTF
-  model as a pack's `models.bin`.
+  model as a pack's `models.bin`. LEVEL is the level's id, two hex digits (`0a`). `gbtool --help` prints the usage.
 - The game itself is tested in gloveworld's emulator harness (`tools/emu/emu.py SCRIPT.py --rom ROM`, set up with its
   `tools/emu/setup.sh`). It needs a built gloveworld: `make toolchain`, the ROM as `baserom.us.z64`, `make setup`,
   `make`. Make the ROM to test with `gbtool build`. Give every new ROM a new file name: the harness keeps data for a

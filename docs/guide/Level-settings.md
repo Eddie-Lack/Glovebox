@@ -40,11 +40,11 @@ To see less fog while you edit, use `Fog` in the toolbar. That one only changes 
 
 `File name` is the name inside the level file. It isn't the title.
 
-### Keep the file name 7 letters long!
+### Keep the file name 7 characters long!
 
-A name with an even number of letters crashes a console. Lol yea
+A name with an even number of characters crashes a console. Lol yea
 
-The vanilla levels' file names are 7 letters long.
+The vanilla levels' file names are 7 characters long. The dot and the digits count too.
 
 ---
 

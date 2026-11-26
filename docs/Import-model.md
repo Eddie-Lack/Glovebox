@@ -21,6 +21,9 @@ The game draws it and Glover can stand on it
 3. Click `Import and place`
 4. All the pieces appear as Scenery at the center of the view, in one undo step
 
+- At scale 1, one unit of the file (a meter in Blender) is one unit in the game
+- Glover is about 30 units across. A room made in meters needs a scale of about 50 to 100
+- The model's name in the level keeps its first 7 letters. The `Level` panel shows the whole name
 - A model over 1,500 triangles is cut into pieces along its longest side
 - Each texture becomes a small N64 texture (at most 2,048 pixels, power-of-two sides)
 - Transparent pixels become cut-outs

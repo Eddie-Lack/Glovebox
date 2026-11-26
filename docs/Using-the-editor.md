@@ -19,7 +19,8 @@ The first time a level opens, the editor asks if you want a quick tour
 
 - Pick a level in the list at the top. All 48 open
 - Drag to turn the camera, right-drag to pan, wheel (or middle-drag) to zoom
-- `F` frames the selection
+- `F` frames the selection. With nothing selected it frames the whole level
+- Zooming in stops close to what you look at, then the wheel moves you forward. Zooming out stops a few level sizes away
 
 `Fly` (or `C`) switches to a free camera:
 
@@ -43,6 +44,8 @@ Note: while you fly, those keys move the camera. Use the toolbar for Move (`W`) 
 - `Pivot` is the group's center or each object's own origin
 - Shift+click the ground to drop a garib
 - Undo, redo, duplicate and delete work on the whole selection
+- A duplicated platform loses its puzzle tag (`PlatSetTag`), so the original's puzzles don't move the copy
+- Deleting a platform also deletes a puzzle whose actions only moved it, like a `Lift`'s
 
 An enemy's script points (where it goes and looks) and a platform's path move with it
 
@@ -103,7 +106,7 @@ A model from another level or world is copied in when you build. `Checks` shows 
 
 Ready-made platforms, with their commands in the order the game reads them _(see [Commands](#commands))_
 
-- `Start ring`: Glover starts here. If the level has a start ring already, it moves that one
+- `Start ring`: Glover starts here. If the level has a checkpoint ring already, it moves the first one
 - `Checkpoint ring`: Glover restarts here once he's touched it
 - `Level exit (heart)`: bring the ball to it to end the level
 - `Bonus finish line`: five big hearts across the way, for a bonus level
@@ -336,6 +339,7 @@ Note: the path is only a guide, the level doesn't keep it
 - Reopen the level or the editor and your edits are back
 - The level list marks edited levels with ●
 - `Reset level` in the toolbar throws away a level's edits (you can still undo it)
+- Undo keeps its steps when you open another level and come back, for the last 8 levels you left. They're gone when you close the editor
 
 ## Options
 
@@ -414,7 +418,7 @@ Small gray texts explain how the game or the editor works. They belong to titles
 
 - The first time, pick your emulator's program (ares, simple64, Project64…)
 - The ROM goes in the user folder (`test/`)
-- To change the emulator, delete the `emulator` line in `settings.ini` in the user folder
+- To change the emulator, close the editor, then delete the `emulator` line in `settings.ini` in the user folder
 
 Note: a level that uses the game mod needs the emulator's Expansion Pak on _(most have it on)_
 
@@ -422,9 +426,10 @@ Note: a level that uses the game mod needs the emulator's Expansion Pak on _(mos
 
 - `Export XML` and `.lev` save the level where you choose
 - `Import XML` (or drop an `.xml` on the window) checks the file before it touches your level
+- Drop a `.glb` or `.gltf` on the window to open `Import model` with it. A file dropped on an open `Import XML` or `Import model` goes into it
 - `Build ROM` patches your edits into a ROM. `boot here` starts it in the edited level
 - `Export patch` makes a patch to share _(see [Sharing levels](Sharing-levels.md))_
-- `Build all…` puts every level you've edited into one ROM or patch. Pick the level it boots into, or a normal start
+- `Build all…` puts every level you've edited into one ROM or patch. Pick the level it boots into (one of the checked ones), or a normal start. It remembers your pick
 - `Export level pack`, in the `Export patch` dialog, saves the level as a level pack for _[g64coopdx](https://github.com/Eddie-Lack/g64coopdx)_, the online co-op game _(see [Sharing levels](Sharing-levels.md))_
 
 Every ROM and patch the editor builds uses Easy ball controls on every difficulty
