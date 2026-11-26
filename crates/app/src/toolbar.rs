@@ -129,7 +129,7 @@ fn edit_row(w: &mut Window, ui: &mut egui::Ui) {
 fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     let active = style::theme(ui.ctx());
     let info = style::info(ui.ctx());
-    let (mut theme, mut notes, mut tour) = (None, None, false);
+    let (mut theme, mut notes, mut tour, mut emulator) = (None, None, false, false);
     let (r, _) = egui::containers::menu::MenuButton::new("Options").ui(ui, |ui| {
         ui.set_width(238.0);
         style::h4(ui, "Theme");
@@ -164,6 +164,21 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
             tour = true;
             ui.close();
         }
+        ui.separator();
+        if ui.add(egui::Button::selectable(false, "Choose your emulator…")).clicked() {
+            emulator = true;
+            ui.close();
+        }
+        if ui.add(egui::Button::selectable(false, "Open the user folder")).on_hover_text(w.home.display().to_string()).clicked() {
+            let url = format!("file://{}{}", if cfg!(windows) { "/" } else { "" }, w.home.to_string_lossy().replace('\\', "/"));
+            ui.ctx().open_url(egui::OpenUrl::new_tab(url));
+            ui.close();
+        }
+        if ui.add(egui::Button::selectable(false, "Open the guide ↗")).on_hover_text(crate::tour::GUIDE).clicked() {
+            ui.ctx().open_url(egui::OpenUrl::new_tab(crate::tour::GUIDE));
+            ui.close();
+        }
+        ui.label(RichText::new(format!("Glovebox {}", crate::shell::VERSION)).color(style::theme(ui.ctx()).muted));
     });
     w.tour.mark(Target::Options, r.rect);
     r.on_hover_text("Change the theme, the info texts and the panels, or take the tour");
@@ -176,6 +191,9 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
     }
     if tour {
         w.acts.push(Box::new(|w: &mut Window| w.start_tour()));
+    }
+    if emulator {
+        w.acts.push(Box::new(|w: &mut Window| w.choose_emulator()));
     }
 }
 

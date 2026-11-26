@@ -115,6 +115,7 @@ impl eframe::App for App {
     fn on_exit(&mut self) {
         if let Screen::Editor(w) = &mut self.screen {
             w.ed.flush_draft();
+            w.ed.keep_camera();
         }
     }
 }
@@ -495,6 +496,25 @@ impl Window {
         self.view.set_fly(&mut self.ed, on);
     }
 
+    /// Puts the selection on the clipboard as level XML (`Editor::copy_selection`).
+    pub fn copy(&mut self) {
+        if let Some((text, n)) = self.ed.copy_selection() {
+            self.ctx.copy_text(text);
+            self.set_status(&format!("Copied {} object{}.", n, if n == 1 { "" } else { "s" }), "ok");
+        }
+    }
+
+    /// Asks for the emulator that Test level opens, and keeps it.
+    pub fn choose_emulator(&mut self) {
+        let filters: &[crate::dialogs::Filter] = if cfg!(windows) { &[("Programs", &["exe"]), ("All files", &[])] } else { &[("All files", &[])] };
+        match self.dialogs.open_file("Choose your emulator", None, filters) {
+            Some(p) => self.settings.set("emulator", &p.to_string_lossy()),
+            None => {
+                self.dialog_failed();
+            }
+        }
+    }
+
     /// Frames the selection, or with nothing selected the whole level.
     pub fn focus_selected(&mut self) {
         match self.ed.selected() {
@@ -853,6 +873,14 @@ impl Window {
         let popup = egui::Popup::is_any_open(ctx);
         let events = ctx.input(|i| i.events.clone());
         for e in events {
+            // Ctrl+C and Ctrl+V reach the window as Copy and Paste
+            match &e {
+                egui::Event::Copy => self.copy(),
+                egui::Event::Paste(text) => {
+                    self.ed.paste(text);
+                }
+                _ => {}
+            }
             let egui::Event::Key { key, pressed, repeat, modifiers, .. } = e else { continue };
             if key == egui::Key::Escape && popup {
                 continue;
@@ -896,6 +924,10 @@ impl Window {
             Key::Delete | Key::Backspace => ed.remove(),
             _ if repeat => {}
             Key::F => self.focus_selected(),
+            Key::Home => {
+                self.ed.frame_level();
+                self.view.dirty = true;
+            }
             Key::W => ed.set_mode(Mode::Translate),
             Key::E => ed.set_mode(Mode::Rotate),
             Key::R => ed.set_mode(Mode::Scale),

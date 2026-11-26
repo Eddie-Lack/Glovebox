@@ -221,6 +221,13 @@ fn fill(cx: &mut Cx, ui: &mut egui::Ui) {
         }
     }
     muted(ui, &sub);
+    // What Mr. Tip says, from the player's ROM
+    if ent.tag == "MrTip" {
+        let id = glovebox_editor::xmlutil::num0(&ed.doc, ent.node, "message_id");
+        if let Some(text) = ed.backend.tip_text(id as i64) {
+            ui.label(egui::RichText::new(format!("\u{201c}{text}\u{201d}")).italics());
+        }
+    }
     for (level, msg) in ed.issues_for(i) {
         check_line(ui, level, &msg, false, None, None, None);
     }
