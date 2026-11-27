@@ -380,8 +380,7 @@ nothing else. The program never runs them.
     before the drag. While a drag is open, the editor's keyboard shortcuts are off.
 - The Transform boxes (`style::num_input`) take a typed number only when it's finite. `inf`, `nan` and text keep
   the old value, and the status line says `<box> expects a number` (`style::take_refused`, read once a frame by
-  `Window::ui`). The boxes show three decimals and grow with the inspector up to 110 points. The pointer over one
-  shows the whole number.
+  `Window::ui`). The boxes show three decimals and grow with the inspector up to 110 points.
 - A raw `f4` field shows the shortest text of its 32-bit float (`3.7`, not `3.700000047683716`). Committing that
   text unchanged writes nothing.
 
@@ -418,7 +417,7 @@ nothing else. The program never runs them.
 - A Build all ROM or patch is named after its levels (`build::all_name`): up to three by name, joined by "and",
   then the first and how many more. The reference test still compares the older name, after the count.
 - **Build all** (`Dialog::BuildAll`) lists the edited levels. `Boot into` offers the checked ones and the title
-  screen, and the window keeps the last choice (`Window::boot_into`). Its note on copied models is always shown.
+  screen, and the window keeps the last choice (`Window::boot_into`).
   - Each kind of dialog is its own egui modal (`dialogs::dialog_id`). A modal keeps its size from its last showing,
     and the level pack's dialog had the height of the larger patch dialog.
   - A list in a dialog is a popup on the same layer order as the dialog (`Order::Foreground`). From the second

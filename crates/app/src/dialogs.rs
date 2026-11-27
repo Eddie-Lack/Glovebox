@@ -542,8 +542,7 @@ pub fn ui(w: &mut Window, ctx: &egui::Context) {
                     }
                     return;
                 }
-                // The note on copied models is always shown: it says when the ROM needs the game mod
-                muted(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
+                style::para(ui, "Every checked level goes into one ROM or patch, with its title, music and clock. Two levels of one world can't both copy models into their banks; the game mod then loads them from the ROM.");
                 egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
                     for (_, _, label, on) in levels.iter_mut() {
                         style::checkbox(ui, on, label.as_str());

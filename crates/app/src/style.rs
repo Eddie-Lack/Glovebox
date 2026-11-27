@@ -1555,11 +1555,6 @@ pub fn num_input(ui: &mut Ui, id: egui::Id, value: f64, width: f32, label: &str,
     let shown = num_text(value);
     let (text, r) = commit_number(ui, id, &shown, Some(spec), |t| t.desired_width(width));
     name(&r, label);
-    // The box shows three decimals. The pointer over it shows the whole number.
-    let full = glovebox_core::pyfmt::fmt(value);
-    if full != shown && value.is_finite() {
-        r.on_hover_text(full);
-    }
     // Text that isn't a finite number keeps the old value, and `take_refused` names the box
     let Some(v) = parse_f64(&text?).filter(|v| v.is_finite()) else {
         ui.ctx().data_mut(|d| d.insert_temp(egui::Id::unique(REFUSED), label.to_string()));
