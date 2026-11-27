@@ -192,12 +192,12 @@ fn options_menu(w: &mut Window, ui: &mut egui::Ui) {
             emulator = true;
             ui.close();
         }
-        if ui.add(egui::Button::selectable(false, "Open the user folder")).on_hover_text(w.home.display().to_string()).clicked() {
+        if ui.add(egui::Button::selectable(false, "Open the user folder")).clicked() {
             let url = format!("file://{}{}", if cfg!(windows) { "/" } else { "" }, w.home.to_string_lossy().replace('\\', "/"));
             ui.ctx().open_url(egui::OpenUrl::new_tab(url));
             ui.close();
         }
-        if ui.add(egui::Button::selectable(false, "Open the guide ↗")).on_hover_text(crate::tour::GUIDE).clicked() {
+        if ui.add(egui::Button::selectable(false, "Open the guide ↗")).clicked() {
             ui.ctx().open_url(egui::OpenUrl::new_tab(crate::tour::GUIDE));
             ui.close();
         }
